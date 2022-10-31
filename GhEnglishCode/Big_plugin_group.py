@@ -29,7 +29,7 @@ try:
         class NormalInfo(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@平面基础信息", "Niko_PanleInfo", """Common information of epidermis is adapted to flat plate""", "Hero", "Big_plug-in")
+                                                                   "HAE@Basic Plane Information", "Niko_PanleInfo", """Common information of epidermis is adapted to flat plate""", "Hero", "Big_plug-in")
                 return instance
 
             def get_ComponentGuid(self):
