@@ -17,7 +17,10 @@ def runtime(func):
 
 
 def powers(limit):
-    return [i ** 2 for i in range(limit)]
+    new_list = []
+    for i in range(limit):
+        new_list.append(i ** 2)
+    return new_list
 
 
 print(runtime(lambda: powers(5000000)))
