@@ -29,7 +29,7 @@ try:
         class NormalInfo(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@平面基础信息", "Niko_PanleInfo", """表皮常用信息适应平板""", "Hero", "Big_plug-in")
+                                                                   "Niko@平面基础信息", "Niko_PanleInfo", """Common information of epidermis is adapted to flat plate""", "Hero", "Big_plug-in")
                 return instance
 
             def get_ComponentGuid(self):
@@ -43,53 +43,53 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Guid()
-                self.SetUpParam(p, "Brep", "B", "面板")
+                self.SetUpParam(p, "Brep", "B", "panel")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Guid()
-                self.SetUpParam(p, "ID", "ID", "面板Guid")
+                self.SetUpParam(p, "ID", "ID", "Panel Guid")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Line()
-                self.SetUpParam(p, "Lower_Baseline", "DB", "下基线")
+                self.SetUpParam(p, "Lower_Baseline", "DB", "Lower baseline")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Line()
-                self.SetUpParam(p, "Right_Baseline", "RB", "右基线")
+                self.SetUpParam(p, "Right_Baseline", "RB", "Right Baseline")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Line()
-                self.SetUpParam(p, "Upper_Baseline", "UB", "上基线")
+                self.SetUpParam(p, "Upper_Baseline", "UB", "Upper baseline")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Line()
-                self.SetUpParam(p, "Left_Baseline", "LB", "左基线")
+                self.SetUpParam(p, "Left_Baseline", "LB", "Left Baseline")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Vector()
-                self.SetUpParam(p, "X", "X", "X向量")
+                self.SetUpParam(p, "X", "X", "X Vector")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Vector()
-                self.SetUpParam(p, "Y", "Y", "Y向量")
+                self.SetUpParam(p, "Y", "Y", "Y Vector")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Vector()
-                self.SetUpParam(p, "Z", "Z", "Z向量")
+                self.SetUpParam(p, "Z", "Z", "Z Vector")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Plane()
-                self.SetUpParam(p, "Plane", "P", "中心平面")
+                self.SetUpParam(p, "Plane", "P", "Center plane")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Plane()
-                self.SetUpParam(p, "Vertical_Plane", "VP", "竖平面")
+                self.SetUpParam(p, "Vertical_Plane", "VP", "Vertical plane")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Plane()
-                self.SetUpParam(p, "Transverse_Plane", "TP", "横平面")
+                self.SetUpParam(p, "Transverse_Plane", "TP", "Transverse plane")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -185,7 +185,7 @@ try:
         class ChainInfo(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@关联表皮信息存储", "Niko_Chain-Info", """表皮关联信息存储, 关联表皮ID、关联表皮角度(测试阶段)""", "Hero", "Big_plug-in")
+                                                                   "Niko@关联表皮信息存储", "Niko_Chain-Info", """Skin association information storage, association skin ID, association skin angle""", "Hero", "Big_plug-in")
                 return instance
 
             def get_ComponentGuid(self):
@@ -199,41 +199,41 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Guid()
-                self.SetUpParam(p, "Brep", "B", "面板")
+                self.SetUpParam(p, "Brep", "B", "panel")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Guid()
-                self.SetUpParam(p, "Below_Panel", "D", "底面板")
+                self.SetUpParam(p, "Below_Panel", "D", "Bottom panel")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Guid()
-                self.SetUpParam(p, "Right_Panel", "R", "右面板")
+                self.SetUpParam(p, "Right_Panel", "R", "Right panel")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Guid()
-                self.SetUpParam(p, "Top_Panle", "T", "顶面板")
+                self.SetUpParam(p, "Top_Panle", "T", "Top panel")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Guid()
-                self.SetUpParam(p, "Left_Panle", "L", "左面板")
+                self.SetUpParam(p, "Left_Panle", "L", "Left panel")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Below_Angle", "DA", "下角度")
+                self.SetUpParam(p, "Below_Angle", "DA", "Lower angle")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Right_Angle", "RA", "右角度")
+                self.SetUpParam(p, "Right_Angle", "RA", "Right angle")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Top_Angle", "TA", "上角度")
+                self.SetUpParam(p, "Top_Angle", "TA", "Up angle")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Left_Angle", "LA", "左角度")
+                self.SetUpParam(p, "Left_Angle", "LA", "Left angle")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -375,14 +375,14 @@ try:
                     Below_Panel, Right_Panel, Top_Panle, Left_Panle = zip_id_list
                     return Below_Panel, Right_Panel, Top_Panle, Left_Panle, Below_Angle, Right_Angle, Top_Angle, Left_Angle
                 else:
-                    self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, 'Brep不能为空！')
+                    self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, 'Brep cannot be empty!')
 
 
         # 角点强排序
         class SortBuilt(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@角点重排序", "Niko_PointSorted", """角点重新排序，不规律的四边角点按一定规律排序""", "Hero", "Big_plug-in")
+                                                                   "Niko@角点重排序", "Niko_PointSorted", """Reorder the corners, and sort the irregular corners according to a certain rule""", "Hero", "Big_plug-in")
                 return instance
 
             def get_ComponentGuid(self):
