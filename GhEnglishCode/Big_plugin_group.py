@@ -81,15 +81,15 @@ try:
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Plane()
-                self.SetUpParam(p, "Plane", "P", "Center plane")
+                self.SetUpParam(p, "Plane", "P", "Center Plane")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Plane()
-                self.SetUpParam(p, "Vertical_Plane", "VP", "Vertical plane")
+                self.SetUpParam(p, "Vertical_Plane", "VP", "Vertical Plane")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Plane()
-                self.SetUpParam(p, "Transverse_Plane", "TP", "Transverse plane")
+                self.SetUpParam(p, "Transverse_Plane", "TP", "Transverse Plane")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
