@@ -29,7 +29,7 @@ try:
         class NormalInfo(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "HAE@Basic Plane Information", "Niko_PanleInfo", """Common information of epidermis is adapted to flat plate""", "Hero", "Big_plug-in")
+                                                                   "HAE@平面基础信息", "Niko_PanleInfo", """Common information of epidermis is adapted to flat plate""", "Hero", "Big_plug-in")
                 return instance
 
             def get_ComponentGuid(self):
@@ -396,23 +396,23 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Curve()
-                self.SetUpParam(p, "Curve", "C", "作为参考的折线")
+                self.SetUpParam(p, "Curve", "C", "Polyline as reference")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Brep()
-                self.SetUpParam(p, "Surface", "S", "Script input Surface.")
+                self.SetUpParam(p, "Surface", "S", "Original Surface")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Tolerance", "T", "精度（指两点之间的距离）")
+                self.SetUpParam(p, "Tolerance", "T", "Precision (refers to the distance between two points)")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Surface()
-                self.SetUpParam(p, "New_Surface", "S", "重排序的面")
+                self.SetUpParam(p, "New_Surface", "S", "Reordered Faces")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -493,7 +493,7 @@ try:
         class StandRectangularElementPlate(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@RectEle", "Niko@测试矩形单元体数据处理", """标准矩形单元体原数据处理""", "Hero", "Big_plug-in")
+                                                                   "Niko@测试矩形单元体数据处理", "Niko_RectEle", """Original data processing of standard rectangular cell""", "Hero", "Big_plug-in")
                 return instance
 
             def get_ComponentGuid(self):
@@ -507,110 +507,110 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Geometry()
-                self.SetUpParam(p, "Brep_Plane", "P", "Brep面板")
+                self.SetUpParam(p, "Brep_Plane", "P", "Brep panel")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Guid()
-                self.SetUpParam(p, "Below_Beam_Section", "BBS", "下横梁截面")
+                self.SetUpParam(p, "Below_Beam_Section", "BBS", "Cross section of lower crossbeam")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Guid()
-                self.SetUpParam(p, "Right_Column_Section", "RCS", "右立柱截面")
+                self.SetUpParam(p, "Right_Column_Section", "RCS", "Section of right column")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Guid()
-                self.SetUpParam(p, "Upper_Beam_Section", "UBS", "上横梁截面")
+                self.SetUpParam(p, "Upper_Beam_Section", "UBS", "Upper beam section")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Guid()
-                self.SetUpParam(p, "Left_Column_Section", "LCS", "左立柱截面")
+                self.SetUpParam(p, "Left_Column_Section", "LCS", "Left column section")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Transverse_Extension_Length", "TLEN", "横向延伸长度")
+                self.SetUpParam(p, "Transverse_Extension_Length", "TLEN", "Transverse extension length")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Vertical_Extension_Length", "VLEN", "竖向延伸长度")
+                self.SetUpParam(p, "Vertical_Extension_Length", "VLEN", "Vertical extension length")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Geometry()
-                self.SetUpParam(p, "Upcut_Of_Column", "UC", "立柱上切")
+                self.SetUpParam(p, "Upcut_Of_Column", "UC", "Upcut of column")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Geometry()
-                self.SetUpParam(p, "Below_Of_Column", "BC", "立柱下切")
+                self.SetUpParam(p, "Below_Of_Column", "BC", "Column undercutting")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Geometry()
-                self.SetUpParam(p, "Upper_Beam_Of_LeftCut", "UBLC", "上横梁左切")
+                self.SetUpParam(p, "Upper_Beam_Of_LeftCut", "UBLC", "Left cutting of upper crossbeam")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Geometry()
-                self.SetUpParam(p, "Upper_Beam_Of_RightCut", "UBRC", "上横梁右切")
+                self.SetUpParam(p, "Upper_Beam_Of_RightCut", "UBRC", "Right cutting of upper crossbeam")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Geometry()
-                self.SetUpParam(p, "Upper_Beam_Of_Avoidance", "UBA", "上横梁立柱避位")
+                self.SetUpParam(p, "Upper_Beam_Of_Avoidance", "UBA", "Avoidance of upper beam column")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Geometry()
-                self.SetUpParam(p, "Inside_Left_Section_Of_Column", "ILSC", "立柱内侧切面左")
+                self.SetUpParam(p, "Inside_Left_Section_Of_Column", "ILSC", "Left side of column inner section")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Geometry()
-                self.SetUpParam(p, "Inside_Right_Section_Of_Column", "IRSC", "立柱内侧切面右")
+                self.SetUpParam(p, "Inside_Right_Section_Of_Column", "IRSC", "Right side of column inner section")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Geometry()
-                self.SetUpParam(p, "Outside_Left_Section_Of_Column", "OLSC", "立柱外侧切面左")
+                self.SetUpParam(p, "Outside_Left_Section_Of_Column", "OLSC", "Left side of column outer section")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Geometry()
-                self.SetUpParam(p, "Outside_Right_Section_Of_Column", "ORSC", "立柱外侧切面右")
+                self.SetUpParam(p, "Outside_Right_Section_Of_Column", "ORSC", "Right side of column outer section")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Geometry()
-                self.SetUpParam(p, "Below_Beam_Of_LeftCut", "BBLC", "下横梁左切")
+                self.SetUpParam(p, "Below_Beam_Of_LeftCut", "BBLC", "Left cutting of lower crossbeam")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Geometry()
-                self.SetUpParam(p, "Below_Beam_Of_RightCut", "BBRC", "下横梁右切")
+                self.SetUpParam(p, "Below_Beam_Of_RightCut", "BBRC", "Right cutting of lower crossbeam")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Brep()
-                self.SetUpParam(p, "Left_Col", "LC", "左立柱")
+                self.SetUpParam(p, "Left_Col", "LC", "Left column")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Brep()
-                self.SetUpParam(p, "Right_Col", "RC", "右立柱")
+                self.SetUpParam(p, "Right_Col", "RC", "Right column")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Brep()
-                self.SetUpParam(p, "Upper_Beam", "UB", "上横梁")
+                self.SetUpParam(p, "Upper_Beam", "UB", "Upper crossbeam")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Brep()
-                self.SetUpParam(p, "Below_Beam", "BB", "下横梁")
+                self.SetUpParam(p, "Below_Beam", "BB", "Lower crossbeam")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -815,7 +815,7 @@ try:
                     cut_brep_right = [_ for _ in ghp.run(self._general_methods_cut_brep, zip(close_ex_geo_section, towards_right))]
                     return cut_brep_left, cut_brep_right
                 else:
-                    return self.message2("上横梁避位切割Brep数量不一致！！！")
+                    return self.message2("The number of Brep of the upper crossbeam avoidance cutting is inconsistent!!!")
 
             def _secondary_cutting(self, tuple_sec_brep):
                 passive_brep = tuple_sec_brep[0]
@@ -867,7 +867,7 @@ try:
                             temp_flip_handle_brep = []
                             for k, v in total_of_dict_data.items():
                                 if v.keys()[0] is None:
-                                    temp_flip_handle_brep.append(self.message2("{}曲线为空".format(self.__dict_tips[k])))
+                                    temp_flip_handle_brep.append(self.message2("{} Curve is empty".format(self.__dict_tips[k])))
                                 else:
                                     temp_flip_handle_brep.append(self.__do_main_three(v))
                             col_inside_left = map(self.general_methods_is_brepflip, temp_flip_handle_brep[4])
@@ -876,7 +876,7 @@ try:
                                 upper_col_avo_left, upper_col_avo_right = self.additional_fun_create_brep(Upper_Beam_Of_Avoidance, zip_do_handle_data[2], col_inside_left, col_inside_right)
                             else:
                                 upper_col_avo_left = upper_col_avo_right = None
-                                self.message2("Upper_Beam_Of_Avoidance曲线为空")
+                                self.message2("Upper_Beam_Of_Avoidance Curve is empty")
 
                             temp_flip_handle_brep.insert(4, upper_col_avo_right)
                             temp_flip_handle_brep.insert(4, upper_col_avo_left)
@@ -895,9 +895,9 @@ try:
                             Left_Col, Right_Col, Upper_Beam, Below_Beam = result
                             return ght.list_to_tree(Left_Col), ght.list_to_tree(Right_Col), ght.list_to_tree(Upper_Beam), ght.list_to_tree(Below_Beam)
                     else:
-                        self.message1("Brep为空无法操作！！")
+                        self.message1("Brep is empty and cannot be operated!!")
                 finally:
-                    self.Message = "标准矩形单元体电池模块"
+                    self.Message = "Standard rectangular cell battery module"
 
 except:
     pass
