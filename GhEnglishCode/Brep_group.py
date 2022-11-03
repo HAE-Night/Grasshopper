@@ -30,7 +30,7 @@ try:
         class Seam_Merge(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@封面合并", "MyComponent", """Cover and merged surfaces""", "Hero",
+                                                                   "@封面合并", "MyComponent", """Cover and merged surfaces""", "Hero",
                                                                    "Brep")
                 return instance
 
