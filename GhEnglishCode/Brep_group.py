@@ -30,7 +30,7 @@ try:
         class Seam_Merge(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@封面合并", "MyComponent", """封面以及合并曲面""", "Hero",
+                                                                   "Niko@封面合并", "MyComponent", """Cover and merged surfaces""", "Hero",
                                                                    "Brep")
                 return instance
 
@@ -45,13 +45,13 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Brep()
-                self.SetUpParam(p, "Suface_Or_Brep_List", "M", "面以及Brep数据列表")
+                self.SetUpParam(p, "Suface_Or_Brep_List", "M", "Face and Brep data list")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Brep()
-                self.SetUpParam(p, "Brep", "B", "封顶缝合以及共面")
+                self.SetUpParam(p, "Brep", "B", "Capping stitching and coplanar")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -89,7 +89,7 @@ try:
         class MappingExtrusion(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@映射及挤出", "Niko_Mapping&Extrusion", """映射一个物体到指定平面，之后通过线段或者向量来挤出实体""", "Hero", "Brep")
+                                                                   "Niko@映射及挤出", "Niko_Mapping&Extrusion", """Map an object to a specified plane, and then extrude the entity through line segments or vectors""", "Hero", "Brep")
                 return instance
 
             def get_ComponentGuid(self):
@@ -103,32 +103,32 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Geometry()
-                self.SetUpParam(p, "Geometry", "G", "原始的几何物体")
+                self.SetUpParam(p, "Geometry", "G", "Original geometric objects")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Plane()
-                self.SetUpParam(p, "Origin_Plane", "A", "原始的平面")
+                self.SetUpParam(p, "Origin_Plane", "A", "Original plane")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Plane()
-                self.SetUpParam(p, "Plane", "B", "转换到的平面")
+                self.SetUpParam(p, "Plane", "B", "Plane converted to")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Mode", "M", "作为挤出的模板的线段或者向量")
+                self.SetUpParam(p, "Mode", "M", "Line segment or vector as the template of extrusion")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Geometry()
-                self.SetUpParam(p, "New_Geometry", "G", "新的几何物体")
+                self.SetUpParam(p, "New_Geometry", "G", "New geometric objects")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Transformed_Objects", "T", "平面转换后的物体")
+                self.SetUpParam(p, "Transformed_Objects", "T", "Object after plane transformation")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -183,7 +183,7 @@ try:
         class Brep_Diff(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "ZY_Brep实差切割", "Brep_Bool", """Brep的实差切割体..""",
+                                                                   "ZY_Brep实差切割", "Brep_Bool", """Brep's real difference cutting volume..""",
                                                                    "Hero",
                                                                    "Brep")
                 return instance
@@ -199,23 +199,23 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Brep()
-                self.SetUpParam(p, "A_Brep", "A", "第一组Brep物品")
+                self.SetUpParam(p, "A_Brep", "A", "Group 1 Brep items")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Brep()
-                self.SetUpParam(p, "B_Brep", "B", "第二组Brep物品")
+                self.SetUpParam(p, "B_Brep", "B", "Group 2 Brep items")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "PRE", "P", "精度[0.00-1.00]，当切割失败时，调动。其他情况勿动")
+                self.SetUpParam(p, "PRE", "P", "The precision is [0.00-1.00]. When the cutting fails, it will be adjusted. Do not move under other circumstances")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Brep", "B", "差集切割物体")
+                self.SetUpParam(p, "Brep", "B", "Difference cutting object")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -276,7 +276,7 @@ try:
         class Brep_Union(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "ZY_Brep结合", "Brep_Union", """将多个Brep结合成一个.并消除参考线""",
+                                                                   "ZY_Brep结合", "Brep_Union", """Combine multiple Breps into one and eliminate the reference line""",
                                                                    "Hero",
                                                                    "Brep")
                 return instance
@@ -292,18 +292,18 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Brep()
-                self.SetUpParam(p, "Breps", "B", "Brep物件，list类型数据")
+                self.SetUpParam(p, "Breps", "B", "Brep object, list type data")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "PRE", "P", "合并精度[0.00-1.00].成功情况下不改动")
+                self.SetUpParam(p, "PRE", "P", "Merge precision [0.00-1.00]. No change if successful")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Brep", "B", "结构之后的Brep")
+                self.SetUpParam(p, "Brep", "B", "Brep after structure")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -341,7 +341,7 @@ try:
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
                                                                    "ZY_炸开Brep", "Brep_Data",
-                                                                   """将Brep炸开，获取点线面。中心点坐标系，Brep的ID""",
+                                                                   """Explode Brep to obtain points, lines and surfaces. Center point coordinate system, Brep's ID""",
                                                                    "Hero", "Brep")
                 return instance
 
@@ -356,35 +356,35 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Guid()
-                self.SetUpParam(p, "Brep", "B", "Brep模型.")
+                self.SetUpParam(p, "Brep", "B", "Brep model.")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = GhPython.Assemblies.MarshalParam()
-                self.SetUpParam(p, "Index", "I", "中心点坐标系下标-根据Brep点序输入；"
-                                                 "默认[0, 1, 0, 3].")
+                self.SetUpParam(p, "Index", "I", "Subscript of center point coordinate system - input according to Brep point sequence;"
+                                                 "Default [0, 1, 0, 3]")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Point()
-                self.SetUpParam(p, "Point", "PT", "顶点.")
+                self.SetUpParam(p, "Point", "PT", "vertex.")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Curve()
-                self.SetUpParam(p, "Line", "LE", "边线.")
+                self.SetUpParam(p, "Line", "LE", "side line.")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Surface()
-                self.SetUpParam(p, "Face", "FE", "面.")
+                self.SetUpParam(p, "Face", "FE", "face.")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Plane()
-                self.SetUpParam(p, "Plane", "PE", "中心点坐标系.")
+                self.SetUpParam(p, "Plane", "PE", "Center point coordinate system.")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "GUID", "ID", "Brep的ID.")
+                self.SetUpParam(p, "GUID", "ID", "Brep's ID.")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -451,8 +451,7 @@ try:
         class ZY_YDB(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "ZY_压顶板实体", "MyComponent", """压顶板实体插件：
-            适用：直线压顶板。接口处需要延伸出一个接口。""", "Hero", "Brep")
+                                                                   "ZY_压顶板实体", "MyComponent", """Top plate solid plug-in:Application: Straight top plate. An interface needs to be extended at the interface.""", "Hero", "Brep")
                 return instance
 
             def get_ComponentGuid(self):
@@ -466,61 +465,61 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Brep()
-                self.SetUpParam(p, "Part", "PA", "整体实体大面")
+                self.SetUpParam(p, "Part", "PA", "Overall solid large face")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Curve()
-                self.SetUpParam(p, "Curve", "CE", "截面线（最终线段）")
+                self.SetUpParam(p, "Curve", "CE", "Section line (final segment)")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Distance", "D1", "截面线偏移距离")
+                self.SetUpParam(p, "Distance", "D1", "Section line offset distance")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Plane()
-                self.SetUpParam(p, "PLA", "PA", "截面线偏移参考Plane")
+                self.SetUpParam(p, "PLA", "PA", "Section line offset reference plane")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
-                self.SetUpParam(p, "Index", "IX", "需要延伸的线段下标")
+                self.SetUpParam(p, "Index", "IX", "Subscript of line segment to be extended")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Re_Sta", "RS", "延伸的线段起点缩短距离")
+                self.SetUpParam(p, "Re_Sta", "RS", "The starting point of the extended line segment reduces the distance")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Re_End", "RE", "延伸的线段终点缩短距离")
+                self.SetUpParam(p, "Re_End", "RE", "Shorten distance at the end of extended line segment")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Vector()
-                self.SetUpParam(p, "Vec1", "VE", "延伸线段的延伸向量")
+                self.SetUpParam(p, "Vec1", "VE", "Extension vector of extension segment")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Distance2", "D2", "偏移大小")
+                self.SetUpParam(p, "Distance2", "D2", "Offset Size")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Surface1", "SF", "延伸面")
+                self.SetUpParam(p, "Surface1", "SF", "Extend Face")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Breps", "BS", "未结合的Breps")
+                self.SetUpParam(p, "Breps", "BS", "Unbound Breps")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Brep", "B", "偏移结合的Brep")
+                self.SetUpParam(p, "Brep", "B", "Offset combined Brep")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -620,8 +619,7 @@ try:
         class ArcPanel(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "ZY_圆弧面实体", "ArcPanel", """圆弧铝板实体生成，参数较多，不易调试查看，
-        请将所有参数连接查看效果""", "Hero", "Brep")
+                                                                   "ZY_圆弧面实体", "ArcPanel", """Arc aluminum plate solid generation, many parameters, difficult to debug and view, please connect all parameters to view the effect""", "Hero", "Brep")
                 return instance
 
             def get_ComponentGuid(self):
@@ -635,52 +633,52 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Curve()
-                self.SetUpParam(p, "PolyLine", "PL", "偏移后的面折线, 生成大面")
+                self.SetUpParam(p, "PolyLine", "PL", "Offset face polyline to generate large face")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Curve()
-                self.SetUpParam(p, "Up Down", "UD", "横向线段(上下) ")
+                self.SetUpParam(p, "Up Down", "UD", "Horizontal line segment (upper and lower)")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Vector()
-                self.SetUpParam(p, "Vect1", "V1", "横向线段移动向量")
+                self.SetUpParam(p, "Vect1", "V1", "Horizontal segment movement vector")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Curve()
-                self.SetUpParam(p, "Left Right", "LR", "纵向线段(左右)")
+                self.SetUpParam(p, "Left Right", "LR", "Longitudinal line segment (left and right)")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Vector()
-                self.SetUpParam(p, "Vect2", "V2", "纵向线段移动向量")
+                self.SetUpParam(p, "Vect2", "V2", "Vertical segment movement vector")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Rotate", "RT", "纵向线段旋转角度(不用转为弧度)")
+                self.SetUpParam(p, "Rotate", "RT", "Rotation angle of vertical line segment (not converted to radians)")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Plane()
-                self.SetUpParam(p, "RPLA", "RP", "旋转依赖的平面")
+                self.SetUpParam(p, "RPLA", "RP", "Rotation dependent plane")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Distance", "DT", "所有面偏移大小")
+                self.SetUpParam(p, "Distance", "DT", "Offset size of all faces")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Surface", "S", "各线段最终生成的面")
+                self.SetUpParam(p, "Surface", "S", "Final face generated by each line segment")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Brep", "B", "面偏移生成的面板实体")
+                self.SetUpParam(p, "Brep", "B", "Panel solid generated by face offset")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -764,7 +762,7 @@ try:
         class ZY_Cylinder(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "ZY_圆柱开孔", "ZY_Cylinder", """在指定坐标原点生成开孔圆柱""",
+                                                                   "ZY_圆柱开孔", "ZY_Cylinder", """Generate an open cylinder at the specified coordinate origin""",
                                                                    "Hero",
                                                                    "Brep")
                 return instance
@@ -780,28 +778,28 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Plane()
-                self.SetUpParam(p, "Plane", "P", "指定Plane，以Plane为圆弧的中心")
+                self.SetUpParam(p, "Plane", "P", "Specify Plane, with Plane as the center of the arc")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Radius", "R", "圆柱半径.")
+                self.SetUpParam(p, "Radius", "R", "Cylinder radius.")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Vector()
-                self.SetUpParam(p, "CriVec", "C", "圆弧延伸向量，决定了圆柱的长度方向.")
+                self.SetUpParam(p, "CriVec", "C", "The arc extension vector determines the length direction of the cylinder.")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Vector()
-                self.SetUpParam(p, "Move", "M", "若需要生成多个，输入移动向量.")
+                self.SetUpParam(p, "Move", "M", "If you need to generate multiple, input the movement vector.")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Cylinder", "Cl", "切割孔--圆柱体.")
+                self.SetUpParam(p, "Cylinder", "Cl", "Cutting hole -- cylinder.")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -840,7 +838,7 @@ try:
         class BrepOffset(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@多边曲面偏移", "Niko_BrepOffset", """根据折线生成偏移曲面。""", "Hero", "Brep")
+                                                                   "Niko@多边曲面偏移", "Niko_BrepOffset", """Generate offset surfaces from polylines.""", "Hero", "Brep")
                 return instance
 
             def get_ComponentGuid(self):
@@ -854,28 +852,28 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Brep()
-                self.SetUpParam(p, "Brep", "B", "多边曲面")
+                self.SetUpParam(p, "Brep", "B", "Polygonal surface")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Distance", "D", "偏移距离")
+                self.SetUpParam(p, "Distance", "D", "Offset distance")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Vector()
-                self.SetUpParam(p, "Vector", "V", "各分线段各自的偏移方向")
+                self.SetUpParam(p, "Vector", "V", "Offset direction of each segment")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Tolerance", "T", "精度")
+                self.SetUpParam(p, "Tolerance", "T", "Tolerance")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Geometry()
-                self.SetUpParam(p, "New_Brep", "B", "偏移后的Brep")
+                self.SetUpParam(p, "New_Brep", "B", "Brep after offset")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -921,7 +919,7 @@ try:
         class SectionBody(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@截面体", "Niko_SectionBody", """截面成实体， N N一组的同数据截面进行放样，放样类型有{1: 'Normal', 2: 'Loose', 3: 'Tight', 4: 'Straight', 5: 'Uniform'}，输入对应的数字即可；当一组数据只有一个的时候，可以通过轨道线来sweep截面""", "Hero",
+                                                                   "Niko@截面体", "Niko_SectionBody", """Sections are solid. N N groups of the same data sections are lofted. The lofting types are {1: 'Normal', 2: 'Loose', 3: 'Tight', 4: 'Straight', 5: 'Uniform'}. Enter the corresponding numbers; When there is only one set of data, the sweep section can be obtained through the track line""", "Hero",
                                                                    "Brep")
                 return instance
 
@@ -936,28 +934,28 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Geometry()
-                self.SetUpParam(p, "Object", "O", "N N一组的数据")
+                self.SetUpParam(p, "Object", "O", "N N group of data")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Curve()
-                self.SetUpParam(p, "Curve", "C", "轨道线")
+                self.SetUpParam(p, "Curve", "C", "Track line")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
-                self.SetUpParam(p, "Style", "S", "放样的类型")
+                self.SetUpParam(p, "Style", "S", "Type of Loft")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Tolerance", "T", "精度")
+                self.SetUpParam(p, "Tolerance", "T", "Tolerance")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Geometry()
-                self.SetUpParam(p, "Brep", "B", "最后闭合的Brep")
+                self.SetUpParam(p, "Brep", "B", "Last closed Brep")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -1034,7 +1032,7 @@ try:
         class BrepCut(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@Brep切割（优化实用性）", "Niko_BrepCut", """Brep切割（优化版）,优化实用性，牺牲部分时间效率；注意当有Brep切割失败时，可以开启二次处理开关，此时插件的时间效率会大大降低，但会输出失败的Brep切割成功的部分""", "Hero", "Brep")
+                                                                   "Niko@Brep切割（优化实用性）", "Niko_BrepCut", """Brep cutting (optimized version), optimizing practicability and sacrificing part of time efficiency; Note that when there is a Brep cutting failure, the secondary processing switch can be turned on. At this time, the time efficiency of the plug-in will be greatly reduced, but the failed Brep cutting part will be output""", "Hero", "Brep")
                 return instance
 
             def get_ComponentGuid(self):
@@ -1048,48 +1046,48 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Brep()
-                self.SetUpParam(p, "A_Brep", "A", "待切割的Brep")
+                self.SetUpParam(p, "A_Brep", "A", "Brep to be cut")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Brep()
-                self.SetUpParam(p, "B_Brep", "B", "切割体Brep")
+                self.SetUpParam(p, "B_Brep", "B", "Cutting body Brep")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Tolerance", "T", "容差，部分切割失败时可调整")
+                self.SetUpParam(p, "Tolerance", "T", "Tolerance, adjustable in case of partial cutting failure")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Boolean()
-                self.SetUpParam(p, "Switch", "S", "二次处理的开关，默认为关（1：开）")
+                self.SetUpParam(p, "Switch", "S", "The switch of secondary processing is off by default (1: on)")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Brep()
-                self.SetUpParam(p, "Succ_Brep", "B", "成功切割的Brep")
+                self.SetUpParam(p, "Succ_Brep", "B", "Brep successfully cut")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Brep()
-                self.SetUpParam(p, "False_Brpe", "F", "切割失败的Brep")
+                self.SetUpParam(p, "False_Brpe", "F", "Brep failed to cut")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Brep()
-                self.SetUpParam(p, "False_Sub_B", "f", "切割失败的切割体Brep")
+                self.SetUpParam(p, "False_Sub_B", "f", "Cut body failed to cut Brep")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Brep()
-                self.SetUpParam(p, "Secondary_Brep", "Sec", "False_Brpe的二次处理，输出成功的部分")
+                self.SetUpParam(p, "Secondary_Brep", "Sec", "False_ Secondary processing of Brpe, output the successful part")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Brep()
-                self.SetUpParam(p, "Secondary_Fasle_Brep", "S-f", "二次处理后，剩余的切割失败的切割体Brep")
+                self.SetUpParam(p, "Secondary_Fasle_Brep", "S-f", "After secondary processing, the remaining failed cutting bodies Brep")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Tip_Fail_Brep", "I", "二次处理提示信息（第i次切割失败）")
+                self.SetUpParam(p, "Tip_Fail_Brep", "I", "Prompt information of secondary processing (the ith cutting failed)")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -1119,7 +1117,7 @@ try:
             def _second_handle(self, cut_brep):
                 passive_body, cutting_body = cut_brep[0], cut_brep[1]
                 res_brep = rg.Brep.CreateBooleanDifference(passive_body, cutting_body, self.Tol)
-                final_brpe = [_ for _ in res_brep] if res_brep is not None else "此Brep切割失败，请检查数据类型！"
+                final_brpe = [_ for _ in res_brep] if res_brep is not None else "This Brep cutting failed, please check the data type!"
                 return final_brpe
 
             def _third_handle(self, brep_data):
@@ -1177,7 +1175,7 @@ try:
                             tips_of_strs_list = [_[2] for _ in _secondary_brep_array]
                             _sec_brep_sub_list = map(lambda x, y: [y[index] for index in x], _sec_fail_brep_index, fail_b_leaf)
 
-                            tips_of_strs = map(lambda x: ["第{}次切割不成功".format("、".join([str(_) for _ in x]))], tips_of_strs_list)
+                            tips_of_strs = map(lambda x: ["The {} cutting failed".format("、".join([str(_) for _ in x]))], tips_of_strs_list)
                             Secondary_Brep, Secondary_Fasle_Brep, Tip_Fail_Brep = ght.list_to_tree(_sec_brep_brep_list), ght.list_to_tree(_sec_brep_sub_list), ght.list_to_tree(tips_of_strs)
                         else:
                             Secondary_Brep, Secondary_Fasle_Brep, Tip_Fail_Brep = None, None, None
