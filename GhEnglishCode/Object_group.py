@@ -31,7 +31,7 @@ try:
         class Data_message(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "ZY_获取数据详情", "Data_message", """获取数据详细信息.""", "Hero",
+                                                                   "ZY_获取数据详情", "Data_message", """Get Data Details.""", "Hero",
                                                                    "Object")
                 return instance
 
@@ -46,13 +46,13 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Data", "D", "数据")
+                self.SetUpParam(p, "Data", "D", "data")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Group", "G", "信息结果")
+                self.SetUpParam(p, "Group", "G", "Information results")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -77,7 +77,7 @@ try:
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
                                                                    "ZY_提取键值对", "Data_KV",
-                                                                   """对物件的键值对进行提取，当Key没有值输入时。提取所有的键值对.""", "Hero",
+                                                                   """Extract the key value pair of the object, when there is no value input for the Key. Extract all key value pairs.""", "Hero",
                                                                    "Object")
                 return instance
 
@@ -92,22 +92,22 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Guid()
-                self.SetUpParam(p, "Object", "O", "物件集合列表")
+                self.SetUpParam(p, "Object", "O", "Object Collection List")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Key", "K", "需要提取的Key-键,支持多键查询")
+                self.SetUpParam(p, "Key", "K", "The key to be extracted supports multi key query")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Keys", "KS", "提取的键；当Key没有值，它提取所有的key。反之只有Key")
+                self.SetUpParam(p, "Keys", "KS", "Extracted key; When the key has no value, it extracts all keys. On the contrary, only Key")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Value", "VS", "所提取的键")
+                self.SetUpParam(p, "Value", "VS", "Extracted Key")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -164,7 +164,7 @@ try:
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
                                                                    "ZY_赋值键值对", "DATAKEY",
-                                                                   """对物件的键值对进行f赋值，当多个物件赋值时，注意键值对顺序和数据结构；""", "Hero",
+                                                                   """Assign f to the key value pairs of objects. When assigning multiple objects, pay attention to the key value pair order and data structure;""", "Hero",
                                                                    "Object")
                 return instance
 
@@ -179,17 +179,17 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Guid()
-                self.SetUpParam(p, "Objects", "O", "物件集合列表")
+                self.SetUpParam(p, "Objects", "O", "Object Collection List")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Keys", "K", "Key-键,")
+                self.SetUpParam(p, "Keys", "K", "Key")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Values", "V", "Value-值")
+                self.SetUpParam(p, "Values", "V", "Value")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
@@ -220,7 +220,7 @@ try:
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
                                                                    "ZY_烘焙物体", "Bake",
-                                                                   """烘焙物体，Bake为True时进行烘焙。其中图层等信息可选填。""", "Hero",
+                                                                   """Bake objects when Bake is True. The layer and other information are optional.""", "Hero",
                                                                    "Object")
                 return instance
 
@@ -235,43 +235,43 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Geometrys", "GT", "Script variable Python_Pr")
+                self.SetUpParam(p, "Geometrys", "GT", "Objects to be baked")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "LayerName", "LN", "烘焙图层名字")
+                self.SetUpParam(p, "LayerName", "LN", "Bake Layer Name")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Name", "NA", "模型名赋值")
+                self.SetUpParam(p, "Name", "NA", "Assignment of model name")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "ObjKey", "OK", "键值对-Key值")
+                self.SetUpParam(p, "ObjKey", "OK", "Key Value Pair Key Value")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "ObjValue", "OV", "键值对-Value值")
+                self.SetUpParam(p, "ObjValue", "OV", "Key Value Pair Value")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Colour()
-                self.SetUpParam(p, "Color", "CR", "颜色")
+                self.SetUpParam(p, "Color", "CR", "colour")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Boolean()
-                self.SetUpParam(p, "Bake", "BK", "True进行烘焙，反之不运行")
+                self.SetUpParam(p, "Bake", "BK", "True to bake, otherwise not run")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "result", "RS", "成功时输出提示")
+                self.SetUpParam(p, "result", "RS", "Output prompt on success")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -337,7 +337,7 @@ try:
                         else:
                             Layername = sc.doc.Layers.CurrentLayer.Name
                         rs.ObjectLayer(GS[i], Layername)
-                    result = "烘焙成功!!!" + time.ctime().split(" ")[3]
+                    result = "Baked successfully!!!" + time.ctime().split(" ")[3]
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
                     sc.doc = ghdoc
                     return result
@@ -347,7 +347,7 @@ try:
         class PickItems(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@犀牛图层拾取", "Niko_PickItems", """拾取犀牛子图层的物件""", "Hero", "Object")
+                                                                   "Niko@犀牛图层拾取", "Niko_PickItems", """Pick the object of rhinoceros sub layer""", "Hero", "Object")
                 return instance
 
             def get_ComponentGuid(self):
@@ -361,27 +361,27 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
-                self.SetUpParam(p, "Father_Keys", "K", "父图层的下标")
+                self.SetUpParam(p, "Father_Keys", "K", "Subscript of parent layer")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Unique_ID", "U", "唯一标识")
+                self.SetUpParam(p, "Unique_ID", "U", "Unique identification")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Switch", "S", "插件运行按钮，输入‘t’执行，默认不执行")
+                self.SetUpParam(p, "Switch", "S", "Plug in run button, input't 'to execute, default to not execute")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Geometry()
-                self.SetUpParam(p, "Data", "D", "拾取的物件")
+                self.SetUpParam(p, "Data", "D", "Picked Items")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Info", "I", "拾取图层的信息")
+                self.SetUpParam(p, "Info", "I", "Pick information for layers")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -464,7 +464,7 @@ try:
         class ActiveFile(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@获取某些数据", "Niko_ActiveFile", """获取犀牛，Gh文件路径以及当前时间""", "Hero", "Object")
+                                                                   "Niko@获取某些数据", "Niko_ActiveFile", """Get rhinoceros, Gh file path and current time""", "Hero", "Object")
                 return instance
 
             def get_ComponentGuid(self):
@@ -478,21 +478,21 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Boolean()
-                self.SetUpParam(p, "x", "U", "更新时间的按钮")
+                self.SetUpParam(p, "x", "U", "Button for updating time")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "RP", "RP", "犀牛文件路径")
+                self.SetUpParam(p, "RP", "RP", "Rhino file path")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "GP", "GP", "Gh文件路径")
+                self.SetUpParam(p, "GP", "GP", "Gh file path")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Time", "T", "当前时间（打开Gh的时间）")
+                self.SetUpParam(p, "Time", "T", "Current time (time to open Gh)")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -541,7 +541,7 @@ try:
         class ExtractObject(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@提取图层物体", "Niko_ExtractObject", """提取图层信息，拿到指定图层物体""", "Hero", "Object")
+                                                                   "Niko@提取图层物体", "Niko_ExtractObject", """Extract layer information and get the object of the specified layer""", "Hero", "Object")
                 return instance
 
             def get_ComponentGuid(self):
@@ -555,23 +555,23 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "LayerName", "L", "图层全名")
+                self.SetUpParam(p, "LayerName", "L", "Layer Full Name")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
-                self.SetUpParam(p, "Layer_Type", "T", "默认拿图层全部的物体，输入数字去选择{0：全部物体，1：父图层物体，2：子图层物体}")
+                self.SetUpParam(p, "Layer_Type", "T", "By default, take all objects on the layer, and enter numbers to select {0: all objects, 1: parent layer objects, 2: child layer objects}")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
-                self.SetUpParam(p, "Geo_Type", "GT", "指定要选择输出的物体类型，{0：几何物体（默认），1：点，2：面，3：线，4：Brep}")
+                self.SetUpParam(p, "Geo_Type", "GT", "Specifies the type of object to select for output, {0: geometric object (default), 1: point, 2: face, 3: line, 4: Brep}")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Geometry()
-                self.SetUpParam(p, "Geo", "G", "提取的数据（Rhino真实存在过的物体）")
+                self.SetUpParam(p, "Geo", "G", "Extracted data (Rhino real objects)")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -625,7 +625,7 @@ try:
         class LayerRename(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@图层重命名", "Niko_LayerRename", """重命名图层，需要csv文件数据导入，会自动重命名图层""", "Hero", "Object")
+                                                                   "Niko@图层重命名", "Niko_LayerRename", """To rename a layer, you need to import the csv file data, and the layer will be renamed automatically""", "Hero", "Object")
                 return instance
 
             def get_ComponentGuid(self):
@@ -639,12 +639,12 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Boolean()
-                self.SetUpParam(p, "Button", "B", "开启翻译按钮")
+                self.SetUpParam(p, "Button", "B", "Turn on translation button")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "CSV_Flie", "F", "csv文件路径")
+                self.SetUpParam(p, "CSV_Flie", "F", "Csv file path")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
@@ -695,7 +695,7 @@ try:
                 old_word = []
                 for _ in word:
                     if _ not in self.data_csv.keys():
-                        self.message2("csv文件数据库中不存在：“{}”的翻译".format(_))
+                        self.message2("The translation of "{}" does not exist in the csv file database".format(_))
                     else:
                         old_word.append(_)
                 replace_str = self.iter_char(replace_str, old_word)
@@ -718,9 +718,9 @@ try:
                         rs.RenameLayer(old_layer_name, new_char[0])
                     else:
                         rs.RenameLayer(old_layer_name, new_char[-1])
-                    self.message3("{}图层已重命名为{}".format(format_char, new_char[-1]))
+                    self.message3("{} layer has been renamed to {}".format(format_char, new_char[-1]))
                 else:
-                    self.message1("{}图层名不存在！！！".format(format_char))
+                    self.message1("{} layer name does not exist!!!".format(format_char))
 
             def RunScript(self, Button, CSV_Flie):
                 sc.doc = Rhino.RhinoDoc.ActiveDoc
@@ -731,7 +731,7 @@ try:
 
                             all_layer_names_ch = self.find_have_ch([_ for _ in rs.LayerNames()])
                             if len(all_layer_names_ch) == 0:
-                                self.message2("图层已全部重命名！！！")
+                                self.message2("All layers have been renamed!!!")
                             else:
                                 all_ch_word = [re.findall("[\u4e00-\u9fa5]+", _) for _ in all_layer_names_ch]
                                 tuple_list_data = list(zip(all_ch_word, all_layer_names_ch))
@@ -741,11 +741,11 @@ try:
                                 ghp.run(self.replace_layers, final_zip_data)
                                 return
                         else:
-                            self.message2("文件路径不能为空！！！")
+                            self.message2("File path cannot be empty!!!")
                     else:
-                        self.message2("请开启按钮！")
+                        self.message2("Please open the button!")
                 finally:
-                    self.Message = '图层重命名'
+                    self.Message = 'Layer Rename'
                 ghdoc = GhPython.DocReplacement.GrasshopperDocument()
                 sc.doc = ghdoc
 
