@@ -25,7 +25,7 @@ try:
         class CreateView(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@新建视图", "Niko_CreateView", """创建新视图.""", "Hero", "Others")
+                                                                   "Niko@新建视图", "Niko_CreateView", """Create a new view.""", "Hero", "Others")
                 return instance
 
             def get_ComponentGuid(self):
@@ -39,22 +39,22 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Create", "C", "创建视图的开关（输入t开启）")
+                self.SetUpParam(p, "Create", "C", "Switch to create a view (input t on)")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Name", "N", "视图的名称")
+                self.SetUpParam(p, "Name", "N", "Name of the view")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Wide", "W", "窗口宽度")
+                self.SetUpParam(p, "Wide", "W", "Window Width")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "High", "H", "窗口的高度")
+                self.SetUpParam(p, "High", "H", "Window height")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
@@ -109,7 +109,7 @@ try:
         class StrHandle(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@字符串处理", "Niko_StrHandle", """字符串处理插件,处理存在的符号信息""", "Hero", "Others")
+                                                                   "Niko@字符串处理", "Niko_StrHandle", """String processing plug-in to process existing symbol information""", "Hero", "Others")
                 return instance
 
             def get_ComponentGuid(self):
@@ -123,39 +123,39 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Text", "T", "文本信息")
+                self.SetUpParam(p, "Text", "T", "Text information")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Symbol", "C", "要处理的符号, 不输入会默认全部清理")
+                self.SetUpParam(p, "Symbol", "C", "Symbols to be processed will be cleared by default if they are not entered")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
-                self.SetUpParam(p, "Index", "I", "选取列表中指定下标的字符串")
+                self.SetUpParam(p, "Index", "I", "Picks the string with the specified subscript in the list")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "a", "A", "字符串处理掉符号后所有的字符串")
+                self.SetUpParam(p, "a", "A", "All strings after the symbols are processed")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Start", "S", "头字符串")
+                self.SetUpParam(p, "Start", "S", "Header String")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "End", "E", "尾字符串")
+                self.SetUpParam(p, "End", "E", "Last String")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Result", "O", "指定的字符串,若Index没输入,和End一样")
+                self.SetUpParam(p, "Result", "O", "The specified string. If Index is not entered, it is the same as End")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Rest", "R", "从原列表中将指定字符串的删除的剩余列表")
+                self.SetUpParam(p, "Rest", "R", "The remaining list to delete the specified string from the original list")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -202,7 +202,7 @@ try:
         class StrHandle_02(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@字符处理", "Niko_StrHandle_02", """字符集的拆分""", "Hero", "Others")
+                                                                   "Niko@字符处理", "Niko_StrHandle_02", """Splitting of character sets""", "Hero", "Others")
                 return instance
 
             def get_ComponentGuid(self):
@@ -216,18 +216,18 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Text", "T", "字符串")
+                self.SetUpParam(p, "Text", "T", "character string")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Symbol", "S", "符号")
+                self.SetUpParam(p, "Symbol", "S", "Symbol")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Result", "R", "结果数据，列表形式")
+                self.SetUpParam(p, "Result", "R", "Result data, in tabular form")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -257,7 +257,7 @@ try:
         class TranslateByBAIDU(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@百度翻译", "Niko_TranslateByBAIDU", """通过百度API接口进行翻译，需要ID和密钥""", "Hero", "Others")
+                                                                   "Niko@百度翻译", "Niko_TranslateByBAIDU", """Translating through Baidu API interface requires ID and key""", "Hero", "Others")
                 return instance
 
             def get_ComponentGuid(self):
@@ -271,28 +271,28 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Text", "T", "待翻译的文本")
+                self.SetUpParam(p, "Text", "T", "Text to be translated")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Appid", "ID", "翻译的API接口ID，不输入会有默认ID")
+                self.SetUpParam(p, "Appid", "ID", "Translated API interface ID, if not entered, there will be a default ID")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Appkey", "KEY", "翻译的API接口密钥，不输入会有默认Key")
+                self.SetUpParam(p, "Appkey", "KEY", "Translated API interface key. If it is not entered, there will be a default key")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
-                self.SetUpParam(p, "To_lang", "L", "翻译成哪种语言 0 -> 英文，1 -> 中文，2 -> 粤语，默认为英文")
+                self.SetUpParam(p, "To_lang", "L", "Which language to translate into 0 ->English, 1 ->Chinese, 2 ->Cantonese, the default is English")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Result", "R", "翻译最后的结果")
+                self.SetUpParam(p, "Result", "R", "The final result of translation")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -347,9 +347,9 @@ try:
                         result = urllib.urlopen(url, form_data).read()
                         return [_['dst'] for _ in json.loads(result)['trans_result']]
                     else:
-                        self.message2("字符不能为空！！！")
+                        self.message2("Character cannot be empty!!!")
                 finally:
-                    self.Message = '百度翻译'
+                    self.Message = 'Baidu Translate'
 
     else:
         pass
@@ -362,7 +362,7 @@ import System
 
 class AssemblyInfo(GhPython.Assemblies.PythonAssemblyInfo):
     def get_AssemblyName(self):
-        return "Niko@新建视图"
+        return "Others_group"
 
     def get_AssemblyDescription(self):
         return """"""
