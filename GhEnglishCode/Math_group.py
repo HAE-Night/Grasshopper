@@ -23,7 +23,7 @@ try:
         class GetSectionValue(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@区间取值", "Niko_GetValue(Section)", """列表区间取值""", "Hero", "Math")
+                                                                   "Niko@区间取值", "Niko_GetValue(Section)", """List interval value""", "Hero", "Math")
                 return instance
 
             def get_ComponentGuid(self):
@@ -37,23 +37,23 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "List_Data", "D", "一组数据")
+                self.SetUpParam(p, "List_Data", "D", "A set of data")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
-                self.SetUpParam(p, "Start", "S", "开始的区间")
+                self.SetUpParam(p, "Start", "S", "Starting range")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
-                self.SetUpParam(p, "End", "E", "结束的区间")
+                self.SetUpParam(p, "End", "E", "End interval")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Result", "R", "返回的区间数据")
+                self.SetUpParam(p, "Result", "R", "Returned interval data")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -75,14 +75,14 @@ try:
                     Result = List_Data[Start: End + 1] if End is not None else List_Data[Start:]
                     return Result
                 else:
-                    self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, '列表数据为空！')
+                    self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, 'The list data is empty!')
 
 
         # 长度转树形数据
         class LenTree(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@定义长度树", "Niko_LenTree", """列表长度转树形""", "Hero", "Math")
+                                                                   "Niko@定义长度树", "Niko_LenTree", """Convert list length to tree""", "Hero", "Math")
                 return instance
 
             def get_ComponentGuid(self):
@@ -96,18 +96,18 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "List", "L", "一组数据")
+                self.SetUpParam(p, "List", "L", "A set of data")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
-                self.SetUpParam(p, "Spilt", "S", "以几组数据分割开（不输入则直接转成单一树）")
+                self.SetUpParam(p, "Spilt", "S", "Separated by several groups of data (directly converted to a single tree without input)")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Tree", "T", "分割后的数据（多树）")
+                self.SetUpParam(p, "Tree", "T", "Split data (multi tree)")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -132,14 +132,14 @@ try:
                     Tree = ght.list_to_tree(New_list)
                     return Tree
                 else:
-                    self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, '列表数据为空！')
+                    self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, 'The list data is empty!')
 
 
         # 根据长度得树形数据
         class GetTreeLen(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@根据长度取树形值", "Niko_GetTreeOfLen", """取指定长度的树形数据""", "Hero", "Math")
+                                                                   "Niko@根据长度取树形值", "Niko_GetTreeOfLen", """Get tree data of specified length""", "Hero", "Math")
                 return instance
 
             def get_ComponentGuid(self):
@@ -153,18 +153,18 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Tree", "T", "树形数据")
+                self.SetUpParam(p, "Tree", "T", "Tree Data")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
-                self.SetUpParam(p, "Length", "L", "长度，默认为1")
+                self.SetUpParam(p, "Length", "L", "Length, 1 by default")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Result", "R", "提取指定长度的树")
+                self.SetUpParam(p, "Result", "R", "Extract trees of specified length")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -192,17 +192,17 @@ try:
                 if len(leaf_list) != 0:
                     length_list = map(lambda x: len(x), leaf_list)
                     res_index = self.get_tree(length_list)
-                    Result = self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, '没有指定长度的树形数据！') if len(res_index) == 0 else ght.list_to_tree([leaf_list[_] for _ in res_index])
+                    Result = self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, 'No tree data of specified length!') if len(res_index) == 0 else ght.list_to_tree([leaf_list[_] for _ in res_index])
                     return Result
                 else:
-                    self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, '空树无法取值！')
+                    self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, "Empty tree can't take value!")
 
 
         # 通过下标取树形数据
         class GetTreeDataByIndex(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@树形下标取值", "Niko_GetTreeByIndex", """树形数据根据下标提取的方式；支持多下标（树形路径的模式为{0; 第N列表 - 1; 果实数据}排列）""", "Hero", "Math")
+                                                                   "Niko@树形下标取值", "Niko_GetTreeByIndex", """Tree data extraction method based on subscripts; Support multiple subscripts (tree path mode is {0; Nth list - 1; fruit data} arrangement)""", "Hero", "Math")
                 return instance
 
             def get_ComponentGuid(self):
@@ -216,18 +216,18 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Tree_Data", "T", "原始树形数据")
+                self.SetUpParam(p, "Tree_Data", "T", "Original tree data")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Index", "I", "下标")
+                self.SetUpParam(p, "Index", "I", "Index")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Result", "R", "最终数据")
+                self.SetUpParam(p, "Result", "R", "Final data")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -261,18 +261,18 @@ try:
                         new_index_list.append([int(_) for _ in single_str.split(',')])
                     leaf_result = [list(_) for _ in Tree_Data.Branches]
                     if len(leaf_result) == 0:
-                        self.message2('原数据树为空')
+                        self.message2('The original data tree is empty')
                     else:
                         Result = []
                         for single_index in range(len(new_index_list)):
                             try:
                                 Result.append([leaf_result[_] for _ in new_index_list[single_index]])
                             except IndexError:
-                                self.message1('超出索引范围！第{}列表数据错误,原数据列表从0开始到{}结束'.format(single_index + 1, len(leaf_result) - 1))
+                                self.message1('Out of index range! Data error in the {} list. The original data list starts from 0 and ends at {}'.format(single_index + 1, len(leaf_result) - 1))
                                 Result.append(None)
                         return ght.list_to_tree(Result)
                 finally:
-                    self.Message = '树形数据取值'
+                    self.Message = 'Tree data value'
 
 
 except:
