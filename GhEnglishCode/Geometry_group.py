@@ -26,7 +26,7 @@ try:
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
                                                                    "Niko@几何物体的分解", "Niko_DestructionGeometry",
-                                                                   """多个几何物体的分解（Brep，Curve等），注意直线的平面输出与曲线不一致""", "Hero",
+                                                                   """Decomposition of multiple geometric objects (Brep, Curve, etc.). Note that the plane output of a line is inconsistent with the curve""", "Hero",
                                                                    "Geometry")
                 return instance
 
@@ -41,33 +41,33 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Geometry()
-                self.SetUpParam(p, "Geometry", "G", "几何物体，支持多个不同的几何物体")
+                self.SetUpParam(p, "Geometry", "G", "Geometric objects, supporting multiple different geometric objects")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Point()
-                self.SetUpParam(p, "Vertex", "V", "物体分解后得到的点")
+                self.SetUpParam(p, "Vertex", "V", "Points obtained after object decomposition")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Curve()
-                self.SetUpParam(p, "Edge", "E", "物体分解后得到的边")
+                self.SetUpParam(p, "Edge", "E", "Edge of object after decomposition")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Face", "F", "Brep分解后得到的面，曲线返回空")
+                self.SetUpParam(p, "Face", "F", "The surface obtained after Brep decomposition, and the curve returns null")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Plane()
-                self.SetUpParam(p, "PlaneA", "PA", "几何物体的标准中心坐标")
+                self.SetUpParam(p, "PlaneA", "PA", "Standard central coordinates of geometric objects")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Plane()
-                self.SetUpParam(p, "PlaneB", "PB", "几何物体中心坐标沿X轴向量确定坐标")
+                self.SetUpParam(p, "PlaneB", "PB", "The central coordinates of geometric objects are determined along the X-axis vector")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Plane()
-                self.SetUpParam(p, "PlaneC", "PC", "几何物体中心坐标沿Y轴向量确定坐标")
+                self.SetUpParam(p, "PlaneC", "PC", "The central coordinates of geometric objects are determined along the Y axis vector")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -175,7 +175,7 @@ try:
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
                                                                    "Niko@几何排序", "Niko_Value_And_Sort",
-                                                                   """几何物体的排序，排序完成进行才会进行取值，支持面积和长度的排序，但是同一组数据必须是一样的；增加点序的排序，在点序排序时输入要作为参考的坐标轴（默认为X轴对比）""", "Hero", "Geometry")
+                                                                   """The sorting of geometric objects can only be carried out after the sorting is completed. The sorting of area and length is supported, but the same group of data must be the same; Increase the sorting of point sequence, and input the coordinate axis to be used as reference during point sequence sorting (the default is X axis comparison)""", "Hero", "Geometry")
                 return instance
 
             def get_ComponentGuid(self):
@@ -189,45 +189,45 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Geometry", "G", "几何物体")
+                self.SetUpParam(p, "Geometry", "G", "Geometric object")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
-                self.SetUpParam(p, "Index", "I", "提取下标，不输入默认全部输出")
+                self.SetUpParam(p, "Index", "I", "Extract subscripts, do not input, and output all by default")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Loop", "L", "遍历取值，默认开启，会取0到index的值，关闭输入f，此时只会取第index+1个的值")
+                self.SetUpParam(p, "Loop", "L", "The traversal value is enabled by default, and the value from 0 to index will be taken. If f is disabled, only the index+1 value will be taken")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Sort", "S", "选择排序方式，默认降序，升序输入a")
+                self.SetUpParam(p, "Sort", "S", "Select the sorting method, and enter a in descending order and ascending order by default")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Axis", "A", "在点序排序时输入，其他几何物体的排序不用输入")
+                self.SetUpParam(p, "Axis", "A", "Input during point sequence sorting, and do not input other geometric objects")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "A_Objects", "AO", "若输入下标则取出0到index的几何物体，不输入默认全部输出")
+                self.SetUpParam(p, "A_Objects", "AO", "If the subscript is input, the geometric objects from 0 to index will be taken out, and the default output will be all")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "A_Values", "A", "若输入下标则取出0到index的值，不输入默认全部输出")
+                self.SetUpParam(p, "A_Values", "A", "If subscripts are entered, the values from 0 to index will be taken, and all outputs will be output by default")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "B_Objects", "BO", "若输入下标则取出index到末端的几何物体，不输入默认全部输出")
+                self.SetUpParam(p, "B_Objects", "BO", "If the subscript is input, the geometric objects from the index to the end will be taken out, and the default output will be all")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "B_Values", "B", "若输入下标则取出index到末端的值，不输入默认全部输出")
+                self.SetUpParam(p, "B_Values", "B", "If the subscript is entered, the value from index to the end will be taken, and the default output will be all")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -291,7 +291,7 @@ try:
                         if len(temp2) == 1:
                             return True, type(list_data[0])
                         else:
-                            return False, '数据类型不一致！！'
+                            return False, 'Data types are inconsistent!!'
 
             def switch_handing(self, array_data, index, loop):
                 if index is None:
@@ -322,7 +322,7 @@ try:
         class TypeClassification(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@GH数据类型分类", "Niko_TypeClassification", """GH几何数据类型分类""", "Hero", "Geometry")
+                                                                   "Niko@GH数据类型分类", "Niko_TypeClassification", """GH Geometric Data Type Classification""", "Hero", "Geometry")
                 return instance
 
             def get_ComponentGuid(self):
@@ -336,37 +336,37 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Geometry()
-                self.SetUpParam(p, "Geo", "G", "Grasshopper实例化的数据类型列表")
+                self.SetUpParam(p, "Geo", "G", "List of data types instantiated by Grasshopper")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Guid()
-                self.SetUpParam(p, "Id", "ID", "物体ID（包含引用类型的物体）")
+                self.SetUpParam(p, "Id", "ID", "Object ID (including objects of reference type)")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Point()
-                self.SetUpParam(p, "Point", "P", "点类型")
+                self.SetUpParam(p, "Point", "P", "Point Type")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Vector()
-                self.SetUpParam(p, "Vector", "V", "向量类型")
+                self.SetUpParam(p, "Vector", "V", "Vector Type")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Curve()
-                self.SetUpParam(p, "Curve", "C", "线段类型")
+                self.SetUpParam(p, "Curve", "C", "Segment Type")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Plane()
-                self.SetUpParam(p, "Plane", "P", "平面类型")
+                self.SetUpParam(p, "Plane", "P", "Plane type")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Brep()
-                self.SetUpParam(p, "Brep", "B", "Brep类型")
+                self.SetUpParam(p, "Brep", "B", "Brep Type")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Surface()
-                self.SetUpParam(p, "Surface", "S", "面类型")
+                self.SetUpParam(p, "Surface", "S", "Face Type")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -428,12 +428,12 @@ try:
                             elif isinstance(_, (rg.Surface, rg.SumSurface, rg.NurbsSurface)) is True:
                                 Surface.append(_)
                             else:
-                                self.message3("数据组未添加")
+                                self.message3("Data group not added")
                         return Id, Point, Vector, Curve, Plane, Brep, Surface
                     else:
-                        self.message2("数据列表为空！")
+                        self.message2("Data list is empty!")
                 finally:
-                    self.Message = "GH数据类型分类"
+                    self.Message = "GH Data Type Classification"
 
     else:
         pass
