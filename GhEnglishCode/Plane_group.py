@@ -26,7 +26,7 @@ try:
         class RotatePlane(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@平面坐标旋转", "Niko_RotatePlane", """平面旋转以及跟随平面旋转的两个物体，Direction（旋转的轴方向）""", "Hero", "Plane")
+                                                                   "Niko@平面坐标旋转", "Niko_RotatePlane", """Plane rotation and two objects rotating with the plane, Direction""", "Hero", "Plane")
                 return instance
 
             def get_ComponentGuid(self):
@@ -40,41 +40,41 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Plane()
-                self.SetUpParam(p, "Rotated_Plane", "P", "原始平面")
+                self.SetUpParam(p, "Rotated_Plane", "P", "Original plane")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Angle", "A", "旋转的角度，不输入默认为0.5*pi")
+                self.SetUpParam(p, "Angle", "A", "Rotation angle, default to 0.5 * pi if not entered")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Direction", "D", "旋转轴方向")
+                self.SetUpParam(p, "Direction", "D", "Rotation axis direction")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Geometry()
-                self.SetUpParam(p, "Follow_rotation1", "F1", "跟随旋转的几何物体之一")
+                self.SetUpParam(p, "Follow_rotation1", "F1", "One of the geometric objects following the rotation")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Geometry()
-                self.SetUpParam(p, "Follow_rotation2", "F2", "跟随旋转的几何物体之二")
+                self.SetUpParam(p, "Follow_rotation2", "F2", "The second geometric object following rotation")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Plane()
-                self.SetUpParam(p, "New_Plane", "P", "旋转后平面")
+                self.SetUpParam(p, "New_Plane", "P", "Rotate back plane")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Geometry()
-                self.SetUpParam(p, "Rotated_object1", "R1", "旋转后的几何物体之一")
+                self.SetUpParam(p, "Rotated_object1", "R1", "One of the geometric objects after rotation")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Geometry()
-                self.SetUpParam(p, "Rotated_object2", "R2", "旋转后的几何物体之二")
+                self.SetUpParam(p, "Rotated_object2", "R2", "The second geometric object after rotation")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -149,7 +149,7 @@ try:
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
                                                                    "Niko@重构Plane", "Niko_Refactoring_Plane",
-                                                                   """输入代替XY轴的轴向量来重构XY轴平面""", "Hero", "Plane")
+                                                                   """Input axial quantity instead of XY axis to reconstruct XY axis plane""", "Hero", "Plane")
                 return instance
 
             def get_ComponentGuid(self):
@@ -163,51 +163,51 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Plane()
-                self.SetUpParam(p, "Plane", "P", "原始的平面")
+                self.SetUpParam(p, "Plane", "P", "Original plane")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "New_Axis", "A", "需要重构成XY轴的向量轴，输入的是原平面的轴向量名称")
+                self.SetUpParam(p, "New_Axis", "A", "The vector axis of XY axis needs to be reconstructed. The input is the axis vector name of the original plane")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Switch", "S", "是否翻转重构后的向量轴,t为翻转所有向量，t1，t2为翻转X轴向量和Y轴向量")
+                self.SetUpParam(p, "Switch", "S", "Whether to flip the reconstructed vector axis, t is to flip all vectors, t1 and t2 are to flip the X axis vector and Y axis vector")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Plane()
-                self.SetUpParam(p, "Symmetry_Plane", "P", "重构后的平面")
+                self.SetUpParam(p, "Symmetry_Plane", "P", "Reconstructed plane")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Point()
-                self.SetUpParam(p, "Origin_Point", "O", "平面的中心点")
+                self.SetUpParam(p, "Origin_Point", "O", "Center point of the plane")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Vector()
-                self.SetUpParam(p, "Origin_XAxis", "OX", "原平面的X轴向量")
+                self.SetUpParam(p, "Origin_XAxis", "OX", "X axis vector of the original plane")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Vector()
-                self.SetUpParam(p, "Origin_YAxis", "OY", "原平面的Y轴向量")
+                self.SetUpParam(p, "Origin_YAxis", "OY", "Y axis vector of the original plane")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Vector()
-                self.SetUpParam(p, "Origin_ZAxis", "OZ", "原平面的Y轴向量")
+                self.SetUpParam(p, "Origin_ZAxis", "OZ", "Z-axis vector of the original plane")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Vector()
-                self.SetUpParam(p, "a", "NX", "新平面的X轴向量")
+                self.SetUpParam(p, "a", "NX", "X axis vector of the new plane")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Vector()
-                self.SetUpParam(p, "b", "NY", "新平面的Y轴向量")
+                self.SetUpParam(p, "b", "NY", "Y axis vector of the new plane")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Vector()
-                self.SetUpParam(p, "c", "NZ", "新平面的Z轴向量")
+                self.SetUpParam(p, "c", "NZ", "Z axis vector of the new plane")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
