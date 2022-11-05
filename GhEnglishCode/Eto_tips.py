@@ -6,14 +6,6 @@
 # @File : Eto_tips
 # @Time : 2022/11/5 17:10
 
-# -*- ecoding: utf-8 -*-
-# -------------------------------
-# @Author : 水密菠罗
-# @Email : smblscr47@163.com
-# -------------------------------
-# @File : Eto_tip
-# @Time : 2022/8/3 11:32
-
 import Rhino
 import scriptcontext
 import System
