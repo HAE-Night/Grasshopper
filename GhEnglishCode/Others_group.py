@@ -25,7 +25,7 @@ try:
         class CreateView(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@新建视图", "Niko_CreateView", """Create a new view.""", "Hero", "Others")
+                                                                   "HAE@新建视图", "HAE_CreateView", """Create a new view.""", "Hero", "Others")
                 return instance
 
             def get_ComponentGuid(self):
@@ -109,7 +109,7 @@ try:
         class StrHandle(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@字符串处理", "Niko_StrHandle", """String processing plug-in to process existing symbol information""", "Hero", "Others")
+                                                                   "HAE@字符串处理", "HAE_StrHandle", """String processing plug-in to process existing symbol information""", "Hero", "Others")
                 return instance
 
             def get_ComponentGuid(self):
@@ -202,7 +202,7 @@ try:
         class StrHandle_02(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@字符处理", "Niko_StrHandle_02", """Splitting of character sets""", "Hero", "Others")
+                                                                   "HAE@字符处理", "HAE_StrHandle_02", """Splitting of character sets""", "Hero", "Others")
                 return instance
 
             def get_ComponentGuid(self):
@@ -257,7 +257,7 @@ try:
         class TranslateByBAIDU(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@百度翻译", "Niko_TranslateByBAIDU", """Translating through Baidu API interface requires ID and key""", "Hero", "Others")
+                                                                   "HAE@百度翻译", "HAE_TranslateByBAIDU", """Translating through Baidu API interface requires ID and key""", "Hero", "Others")
                 return instance
 
             def get_ComponentGuid(self):

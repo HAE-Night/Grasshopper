@@ -1,7 +1,10 @@
-# -*- ecoding: utf-8 -*-
-# @ModuleName: Plane_group
-# @Author: invincible
-# @Time: 2022/7/8 11:11
+# -- coding: utf-8 --
+# -------------------------------
+# @Author : 水密菠罗
+# @Email : smblscr47@163.com
+# -------------------------------
+# @File : Brep_group
+# @Time : 2022/11/5 16:37
 
 from ghpythonlib.componentbase import dotnetcompiledcomponent as component
 import Grasshopper, GhPython
@@ -26,7 +29,7 @@ try:
         class RotatePlane(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@平面坐标旋转", "Niko_RotatePlane", """Plane rotation and two objects rotating with the plane, Direction""", "Hero", "Plane")
+                                                                   "HAE@平面坐标旋转", "HAE_RotatePlane", """Plane rotation and two objects rotating with the plane, Direction""", "Hero", "Plane")
                 return instance
 
             def get_ComponentGuid(self):
@@ -148,7 +151,7 @@ try:
         class Refactoring_Plane(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@重构Plane", "Niko_Refactoring_Plane",
+                                                                   "HAE@重构Plane", "HAE_Refactoring_Plane",
                                                                    """Input axial quantity instead of XY axis to reconstruct XY axis plane""", "Hero", "Plane")
                 return instance
 
