@@ -1,7 +1,10 @@
-# -*- ecoding: utf-8 -*-
-# @ModuleName: Object_group
-# @Author: invincible
-# @Time: 2022/7/8 11:10
+# -- coding: utf-8 --
+# -------------------------------
+# @Author : 水密菠罗
+# @Email : smblscr47@163.com
+# -------------------------------
+# @File : Brep_group
+# @Time : 2022/11/5 16:34
 
 import Rhino
 import System
@@ -31,7 +34,7 @@ try:
         class Data_message(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "ZY_获取数据详情", "Data_message", """Get Data Details.""", "Hero",
+                                                                   "HAE@获取数据详情", "HAE_Data_message", """Get Data Details.""", "Hero",
                                                                    "Object")
                 return instance
 
@@ -76,7 +79,7 @@ try:
         class Data_KV(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "ZY_提取键值对", "Data_KV",
+                                                                   "HAE@提取键值对", "HAE_Data_KV",
                                                                    """Extract the key value pair of the object, when there is no value input for the Key. Extract all key value pairs.""", "Hero",
                                                                    "Object")
                 return instance
@@ -163,7 +166,7 @@ try:
         class DATAKEY(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "ZY_赋值键值对", "DATAKEY",
+                                                                   "HAE@赋值键值对", "HAE_DATAKEY",
                                                                    """Assign f to the key value pairs of objects. When assigning multiple objects, pay attention to the key value pair order and data structure;""", "Hero",
                                                                    "Object")
                 return instance
@@ -219,7 +222,7 @@ try:
         class Bake(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "ZY_烘焙物体", "Bake",
+                                                                   "HAE@烘焙物体", "HAE_Bake",
                                                                    """Bake objects when Bake is True. The layer and other information are optional.""", "Hero",
                                                                    "Object")
                 return instance
@@ -347,7 +350,7 @@ try:
         class PickItems(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@犀牛图层拾取", "Niko_PickItems", """Pick the object of rhinoceros sub layer""", "Hero", "Object")
+                                                                   "HAE@犀牛图层拾取", "HAE_PickItems", """Pick the object of rhinoceros sub layer""", "Hero", "Object")
                 return instance
 
             def get_ComponentGuid(self):
@@ -464,7 +467,7 @@ try:
         class ActiveFile(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@获取某些数据", "Niko_ActiveFile", """Get rhinoceros, Gh file path and current time""", "Hero", "Object")
+                                                                   "HAE@获取某些数据", "HAE_ActiveFile", """Get rhinoceros, Gh file path and current time""", "Hero", "Object")
                 return instance
 
             def get_ComponentGuid(self):
@@ -541,7 +544,7 @@ try:
         class ExtractObject(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@提取图层物体", "Niko_ExtractObject", """Extract layer information and get the object of the specified layer""", "Hero", "Object")
+                                                                   "HAE@提取图层物体", "HAE_ExtractObject", """Extract layer information and get the object of the specified layer""", "Hero", "Object")
                 return instance
 
             def get_ComponentGuid(self):
@@ -625,7 +628,7 @@ try:
         class LayerRename(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@图层重命名", "Niko_LayerRename", """To rename a layer, you need to import the csv file data, and the layer will be renamed automatically""", "Hero", "Object")
+                                                                   "HAE@图层重命名", "HAE_LayerRename", """To rename a layer, you need to import the csv file data, and the layer will be renamed automatically""", "Hero", "Object")
                 return instance
 
             def get_ComponentGuid(self):
@@ -695,7 +698,7 @@ try:
                 old_word = []
                 for _ in word:
                     if _ not in self.data_csv.keys():
-                        self.message2("The translation of "{}" does not exist in the csv file database".format(_))
+                        self.message2("The translation of '{}' does not exist in the csv file database".format(_))
                     else:
                         old_word.append(_)
                 replace_str = self.iter_char(replace_str, old_word)

@@ -184,7 +184,7 @@ try:
         class Brep_Diff(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "ZY_Brep实差切割", "Brep_Bool", """Brep's real difference cutting volume..""",
+                                                                   "HAE_Brep实差切割", "HAE_Brep_Bool", """Brep's real difference cutting volume..""",
                                                                    "Hero",
                                                                    "Brep")
                 return instance
@@ -277,7 +277,7 @@ try:
         class Brep_Union(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "ZY_Brep结合", "Brep_Union", """Combine multiple Breps into one and eliminate the reference line""",
+                                                                   "HAE_Brep结合", "Brep_Union", """Combine multiple Breps into one and eliminate the reference line""",
                                                                    "Hero",
                                                                    "Brep")
                 return instance
@@ -341,7 +341,7 @@ try:
         class Brep_Data(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "ZY_炸开Brep", "Brep_Data",
+                                                                   "HAE@炸开Brep", "HAE_Brep_Data",
                                                                    """Explode Brep to obtain points, lines and surfaces. Center point coordinate system, Brep's ID""",
                                                                    "Hero", "Brep")
                 return instance
@@ -452,7 +452,7 @@ try:
         class ZY_YDB(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "ZY_压顶板实体", "MyComponent", """Top plate solid plug-in:Application: Straight top plate. An interface needs to be extended at the interface.""", "Hero", "Brep")
+                                                                   "HAE@压顶板实体", "HAE_Topplateentity", """Top plate solid plug-in:Application: Straight top plate. An interface needs to be extended at the interface.""", "Hero", "Brep")
                 return instance
 
             def get_ComponentGuid(self):
@@ -620,7 +620,7 @@ try:
         class ArcPanel(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "ZY_圆弧面实体", "ArcPanel", """Arc aluminum plate solid generation, many parameters, difficult to debug and view, please connect all parameters to view the effect""", "Hero", "Brep")
+                                                                   "HAE@圆弧面实体", "HAE_ArcPanel", """Arc aluminum plate solid generation, many parameters, difficult to debug and view, please connect all parameters to view the effect""", "Hero", "Brep")
                 return instance
 
             def get_ComponentGuid(self):
@@ -763,7 +763,7 @@ try:
         class ZY_Cylinder(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "ZY_圆柱开孔", "ZY_Cylinder", """Generate an open cylinder at the specified coordinate origin""",
+                                                                   "HAE@圆柱开孔", "HAE_Cylinder", """Generate an open cylinder at the specified coordinate origin""",
                                                                    "Hero",
                                                                    "Brep")
                 return instance

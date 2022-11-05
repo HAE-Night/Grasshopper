@@ -23,7 +23,7 @@ try:
         class GetSectionValue(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@区间取值", "Niko_GetValue(Section)", """List interval value""", "Hero", "Math")
+                                                                   "HAE@区间取值", "HAE_GetValue(Section)", """List interval value""", "Hero", "Math")
                 return instance
 
             def get_ComponentGuid(self):
@@ -82,7 +82,7 @@ try:
         class LenTree(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@定义长度树", "Niko_LenTree", """Convert list length to tree""", "Hero", "Math")
+                                                                   "HAE@定义长度树", "HAE_LenTree", """Convert list length to tree""", "Hero", "Math")
                 return instance
 
             def get_ComponentGuid(self):
@@ -139,7 +139,7 @@ try:
         class GetTreeLen(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@根据长度取树形值", "Niko_GetTreeOfLen", """Get tree data of specified length""", "Hero", "Math")
+                                                                   "HAE@根据长度取树形值", "HAE_GetTreeOfLen", """Get tree data of specified length""", "Hero", "Math")
                 return instance
 
             def get_ComponentGuid(self):
@@ -202,7 +202,7 @@ try:
         class GetTreeDataByIndex(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@树形下标取值", "Niko_GetTreeByIndex", """Tree data extraction method based on subscripts; Support multiple subscripts (tree path mode is {0; Nth list - 1; fruit data} arrangement)""", "Hero", "Math")
+                                                                   "HAE@树形下标取值", "HAE_GetTreeByIndex", """Tree data extraction method based on subscripts; Support multiple subscripts (tree path mode is {0; Nth list - 1; fruit data} arrangement)""", "Hero", "Math")
                 return instance
 
             def get_ComponentGuid(self):

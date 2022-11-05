@@ -1,8 +1,10 @@
-# -*- ecoding: utf-8 -*-
-# @ModuleName: Line_group
-# @Author: invincible
-# @Time: 2022/7/8 11:04
-# coding=utf-8
+# -- coding: utf-8 --
+# -------------------------------
+# @Author : 水密菠罗
+# @Email : smblscr47@163.com
+# -------------------------------
+# @File : Brep_group
+# @Time : 2022/11/5 16:32
 
 from ghpythonlib.componentbase import dotnetcompiledcomponent as component
 import Grasshopper, GhPython
@@ -65,7 +67,7 @@ try:
         class DTS_Get_Vale(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@曲线取值", "DTS_Get_Vale",
+                                                                   "HAE@曲线取值", "HAE_DTS_Get_Vale",
                                                                    """Decomposition line segment and subscript value (S is the boundary, V is the point)""",
                                                                    "Hero", "Line")
                 return instance
@@ -191,7 +193,7 @@ try:
         class PlineOffset(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@折线偏移", "Niko_PlineOffset", """Segment offset of broken line, three different offset modes""", "Hero", "Line")
+                                                                   "HAE@折线偏移", "HAE_PlineOffset", """Segment offset of broken line, three different offset modes""", "Hero", "Line")
                 return instance
 
             def get_ComponentGuid(self):
@@ -320,7 +322,7 @@ try:
         class Dotted_Line_Conversion(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@点线转换", "Niko_StartToStrat,EndToEnd",
+                                                                   "HAE@点线转换", "HAE_StartToStrat,EndToEnd",
                                                                    """Start and start connection, end and end connection of curve set""", "Hero", "Line")
                 return instance
 
@@ -402,7 +404,7 @@ try:
         class PCLINE(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@最近点连线", "Niko_PCLINE", """The nearest segment from the geometry to the specified segment""", "Hero", "Line")
+                                                                   "HAE@最近点连线", "HAE_PCLINE", """The nearest segment from the geometry to the specified segment""", "Hero", "Line")
                 return instance
 
             def get_ComponentGuid(self):
@@ -567,7 +569,7 @@ try:
         class LineLength(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "ZY_求线长度", "ZY_GeneratedLines", """Find the line length and reserve the specified decimal places.""", "Hero",
+                                                                   "HAE@求线长度", "HAE_GeneratedLines", """Find the line length and reserve the specified decimal places.""", "Hero",
                                                                    "Line")
                 return instance
 
@@ -619,7 +621,7 @@ try:
         class ZYLLenght(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "ZY_根据线长排序", "ZYLLenght", """Sort according to the length of the curve, from small to large.""",
+                                                                   "HAE@根据线长排序", "HAE_LLenght", """Sort according to the length of the curve, from small to large.""",
                                                                    "Hero",
                                                                    "Line")
                 return instance
@@ -681,7 +683,7 @@ try:
         class ZLine(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "ZY_指定线段", "ZLine", """In the line segment list, take the specified line segment (top line or bottom line) according to the Z coordinate of the line segment And unifies the direction of the line.""", "Hero", "Line")
+                                                                   "HAE@指定线段", "HAE_ZLine", """In the line segment list, take the specified line segment (top line or bottom line) according to the Z coordinate of the line segment And unifies the direction of the line.""", "Hero", "Line")
                 return instance
 
             def get_ComponentGuid(self):
@@ -757,7 +759,7 @@ try:
         class CurveJoin(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@合并曲线", "Niko_Curve_Join", """Curve Merge Operation (Multi Process)""", "Hero", "Line")
+                                                                   "HAE@合并曲线", "HAE_Curve_Join", """Curve Merge Operation (Multi Process)""", "Hero", "Line")
                 return instance
 
             def get_ComponentGuid(self):
@@ -820,7 +822,7 @@ try:
         class ArcPick(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@圆弧拾取", "Niko_ArcPick", """Simple arc picking plug-in to rebuild a new arc through parameter modification""", "Hero", "Line")
+                                                                   "HAE@圆弧拾取", "HAE_ArcPick", """Simple arc picking plug-in to rebuild a new arc through parameter modification""", "Hero", "Line")
                 return instance
 
             def get_ComponentGuid(self):
@@ -939,7 +941,7 @@ try:
         class FilterCurve(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@曲线筛选", "Niko_FilterCurve", """Select curves by curvature""", "Hero", "Line")
+                                                                   "HAE@曲线筛选", "HAE_FilterCurve", """Select curves by curvature""", "Hero", "Line")
                 return instance
 
             def get_ComponentGuid(self):
