@@ -29,7 +29,7 @@ try:
         class NormalInfo(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "HAE@平面基础信息", "Niko_PanleInfo", """Common information of epidermis is adapted to flat plate""", "Hero", "Big_plug-in")
+                                                                   "HAE@平面基础信息", "HAE_PanleInfo", """Common information of epidermis is adapted to flat plate""", "Hero", "Big_plug-in")
                 return instance
 
             def get_ComponentGuid(self):
@@ -185,7 +185,7 @@ try:
         class ChainInfo(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@关联表皮信息存储", "Niko_Chain-Info", """Skin association information storage, association skin ID, association skin angle""", "Hero", "Big_plug-in")
+                                                                   "HAE@关联表皮信息存储", "HAE_Chain-Info", """Skin association information storage, association skin ID, association skin angle""", "Hero", "Big_plug-in")
                 return instance
 
             def get_ComponentGuid(self):
@@ -382,7 +382,7 @@ try:
         class SortBuilt(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@角点重排序", "Niko_PointSorted", """Reorder the corners, and sort the irregular corners according to a certain rule""", "Hero", "Big_plug-in")
+                                                                   "HAE@角点重排序", "HAE_PointSorted", """Reorder the corners, and sort the irregular corners according to a certain rule""", "Hero", "Big_plug-in")
                 return instance
 
             def get_ComponentGuid(self):
@@ -493,7 +493,7 @@ try:
         class StandRectangularElementPlate(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@测试矩形单元体数据处理", "Niko_RectEle", """Original data processing of standard rectangular cell""", "Hero", "Big_plug-in")
+                                                                   "HAE@测试矩形单元体数据处理", "HAE_RectEle", """Original data processing of standard rectangular cell""", "Hero", "Big_plug-in")
                 return instance
 
             def get_ComponentGuid(self):
