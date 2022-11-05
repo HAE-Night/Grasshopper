@@ -1,7 +1,10 @@
-# -*- ecoding: utf-8 -*-
-# @ModuleName: Geometry_group
-# @Author: invincible
-# @Time: 2022/7/8 11:21
+# -- coding: utf-8 --
+# -------------------------------
+# @Author : 水密菠罗
+# @Email : smblscr47@163.com
+# -------------------------------
+# @File : Brep_group
+# @Time : 2022/11/5 16:31
 
 from ghpythonlib.componentbase import dotnetcompiledcomponent as component
 import Grasshopper, GhPython
@@ -25,7 +28,7 @@ try:
         class DestructionGeometry(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@几何物体的分解", "Niko_DestructionGeometry",
+                                                                   "HAE@几何物体的分解", "HAE_DestructionGeometry",
                                                                    """Decomposition of multiple geometric objects (Brep, Curve, etc.). Note that the plane output of a line is inconsistent with the curve""", "Hero",
                                                                    "Geometry")
                 return instance
@@ -174,7 +177,7 @@ try:
         class Value_And_Sort(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@几何排序", "Niko_Value_And_Sort",
+                                                                   "HAE@几何排序", "HAE_Value_And_Sort",
                                                                    """The sorting of geometric objects can only be carried out after the sorting is completed. The sorting of area and length is supported, but the same group of data must be the same; Increase the sorting of point sequence, and input the coordinate axis to be used as reference during point sequence sorting (the default is X axis comparison)""", "Hero", "Geometry")
                 return instance
 
@@ -322,7 +325,7 @@ try:
         class TypeClassification(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@GH数据类型分类", "Niko_TypeClassification", """GH Geometric Data Type Classification""", "Hero", "Geometry")
+                                                                   "HAE@GH数据类型分类", "HAE_TypeClassification", """GH Geometric Data Type Classification""", "Hero", "Geometry")
                 return instance
 
             def get_ComponentGuid(self):

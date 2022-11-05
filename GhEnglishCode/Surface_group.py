@@ -1,7 +1,10 @@
-# -*- ecoding: utf-8 -*-
-# @ModuleName: Surface_group
-# @Author: invincible
-# @Time: 2022/7/8 11:10
+# -- coding: utf-8 --
+# -------------------------------
+# @Author : 水密菠罗
+# @Email : smblscr47@163.com
+# -------------------------------
+# @File : Brep_group
+# @Time : 2022/11/5 16:37
 
 from ghpythonlib.componentbase import dotnetcompiledcomponent as component
 import Grasshopper, GhPython
@@ -23,7 +26,7 @@ try:
         class SweepOutFitting(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@曲线扫出", "SweepOutFitting", """Solve the problem of scanning out the original plug-in""",
+                                                                   "HAE@曲线扫出", "HAE_SweepOutFitting", """Solve the problem of scanning out the original plug-in""",
                                                                    "Hero",
                                                                    "Surface")
                 return instance
@@ -79,7 +82,7 @@ try:
         class Brep_Arae(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "ZY_根据面积排序", "Brep_Arae", """Sort according to the area of the face, from small to large""",
+                                                                   "HAE@根据面积排序", "HAE_Brep_Arae", """Sort according to the area of the face, from small to large""",
                                                                    "Hero",
                                                                    "Surface")
                 return instance
@@ -142,7 +145,7 @@ try:
         class Surface_Area2(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "ZY_面积取值", "Surface_Area2",
+                                                                   "HAE@面积取值", "HAE_Surface_Area2",
                                                                    """Breps Calculate Area: divide the area by the divisor, and retain decimals;""", "Hero",
                                                                    "Surface")
                 return instance
@@ -204,7 +207,7 @@ try:
         class Surface_PLA(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "ZY_面_Plane", "Surface_PLA",
+                                                                   "HAE@面_Plane", "HAE_Surface_PLA",
                                                                    """The plane is generated according to the point order of the face, and the index subscript sequence determines the direction of the plane""", "Hero",
                                                                    "Surface")
                 return instance
@@ -315,7 +318,7 @@ try:
         class ZYBrep(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "ZY_偏移曲面", "ZYBrepOff", """Generate offset surfaces from polylines.""", "Hero",
+                                                                   "HAE@偏移曲面", "HAE_BrepOff", """Generate offset surfaces from polylines.""", "Hero",
                                                                    "Surface")
                 return instance
 
@@ -386,7 +389,7 @@ try:
         class Curve_Trim_Offset(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@曲面挤出（修剪、移动）", "Niko_Curve_Trim_Offset",
+                                                                   "HAE@曲面挤出（修剪、移动）", "HAE_Curve_Trim_Offset",
                                                                    """Trim the curve, select the extrusion amount and extrude the surface. If the extrusion amount is not input, output the trimmed line segment""", "Hero",
                                                                    "Surface")
                 return instance
@@ -596,7 +599,7 @@ try:
         class MyComponent(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@BrepFlip", "Niko_Brep反转", """Reverse surfaces by vectors""", "Hero", "Surface")
+                                                                   "HAE@BrepFlip", "HAE_Brep反转", """Reverse surfaces by vectors""", "Hero", "Surface")
                 return instance
 
             def get_ComponentGuid(self):
@@ -688,7 +691,7 @@ try:
         class ShrinkSurface(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@曲面收边", "Niko_ShrinkSurface", """On TrimSurface Boundary""", "Hero", "Surface")
+                                                                   "HAE@曲面收边", "HAE_ShrinkSurface", """On TrimSurface Boundary""", "Hero", "Surface")
                 return instance
 
             def get_ComponentGuid(self):

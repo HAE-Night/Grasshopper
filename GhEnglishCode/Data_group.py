@@ -1,7 +1,10 @@
-# -*- ecoding: utf-8 -*-
-# @ModuleName: Data_group
-# @Author: invincible
-# @Time: 2022/7/8 11:04
+# -- coding: utf-8 --
+# -------------------------------
+# @Author : 水密菠罗
+# @Email : smblscr47@163.com
+# -------------------------------
+# @File : Data_group
+# @Time : 2022/11/5 16:30
 
 from ghpythonlib.componentbase import dotnetcompiledcomponent as component
 import Grasshopper, GhPython
@@ -30,7 +33,7 @@ try:
         class TreeData(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@树形数据处理", "Niko_TreeData",
+                                                                   "HAE@树形数据处理", "HAE_TreeData",
                                                                    """Tree data processing: As long as B is, so long as A is""",
                                                                    "Hero", "Data")
                 return instance
@@ -206,7 +209,7 @@ try:
         class NewRound(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@数据精度提取", "Niko_NewRound", """Redefine data precision and optimize data (rounding)""", "Hero", "Data")
+                                                                   "HAE@数据精度提取", "HAE_NewRound", """Redefine data precision and optimize data (rounding)""", "Hero", "Data")
                 return instance
 
             def get_ComponentGuid(self):
@@ -330,7 +333,7 @@ try:
         class list_values(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "ZY_list下标取值", "list_values",
+                                                                   "HAE@list下标取值", "HAE_list_values",
                                                                    """The value of the list is based on the subscript, and the subscript space interval is taken""",
                                                                    "Hero", "Data")
                 return instance
@@ -385,7 +388,7 @@ try:
         class Tree_Values(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "ZY_树形规划取值", "Tree_Values", """Explode True splits tree data into unified paths.
+                                                                   "HAE@树形规划取值", "HAE_Tree_Values", """Explode True splits tree data into unified paths.
 Explore False retrieves the value of branch path""", "Hero", "Data")
                 return instance
 
@@ -479,7 +482,7 @@ Explore False retrieves the value of branch path""", "Hero", "Data")
         class List_Cut(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "ZY_列表切割", "List_Cut", """Cut the list at the specified subscript of the list, and output it in tree structure;
+                                                                   "HAE@列表切割", "HAE_List_Cut", """Cut the list at the specified subscript of the list, and output it in tree structure;
 (The last subscript of the primary battery is not for reference and has been changed)""", "Hero", "Data")
                 return instance
 
@@ -555,7 +558,7 @@ Explore False retrieves the value of branch path""", "Hero", "Data")
 
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "ZY_数据清洗", "Data_rinse", """Remove null and space values""", "Hero",
+                                                                   "HAE@数据清洗", "HAE_Data_rinse", """Remove null and space values""", "Hero",
                                                                    "Data")
                 return instance
 
@@ -735,7 +738,7 @@ Explore False retrieves the value of branch path""", "Hero", "Data")
         class Subscript_Value(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@多下标取值", "Niko_Subscript_Value",
+                                                                   "HAE@多下标取值", "HAE_Subscript_Value",
                                                                    """Multiple subscript values, up to six sets of data""", "Hero", "Data")
                 return instance
 
@@ -801,7 +804,7 @@ Explore False retrieves the value of branch path""", "Hero", "Data")
                         self.marshal.SetOutput(result[5], DA, 5, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAR1SURBVEhLzVVZTFxlFP5LbVEfjEubEH2hLrFPNmmqpljbtLamLVEqdFgGhmEb9oGBoS22NiNjoYgFhpnLMAwgUKAsszEbVLrQOkKhMaYJ1GIwPvigJr6ZtNWo/Tz/nR87Vm2wvPglJ3fu/c/5zjnfOfcO+3/Ba93FzvcWMnfrDvFkBQhYn2A+m5FNdDuYp1XLXFINu3AabLIP7FwPKMm7ZJXyud92nPW1PCYilwm3NMiuOO4SBuxgo1YwVytd28L3/Dk/nyE/p9QhIu8DX/s6CjSyUVsnVf0du9CDuJajeEV6DyzYESZ3k/HrWAe2mY/iZek4uB91+C113ElmYJ7mxwVjBAyGKHKaYlPDIJ2x2tuGgoYafKPWYPBQFWJGLOEOeAI6e3qgGe6KCnydpUGOqQ5RgXY5jk1TvLt1QrDeA6d0iZ3tAmmKF9pPAtsPAClFwFu5MJ4wUBc2Iieb6IJRWwLsTKHzYkCRj9h+k5yYnf2YurEEBWMEHJKGBe2zzE+VeKxYS5VWHtYhlJaFbm05NvQ3kyx2xPTWY91gE57rOYXenDyEVLnQG49hDcWQrCCZuZxTzGFRC2aCW0pgoUEi6ORahmXgAUQoy+KjyoLteJ6qdBZkYZdkpErJl8sySr4B6orHyPOh+HFS4fIADd66O5zAI71B5L/L27HkuGS8o6AdcaYa/JaYBWSW4WaWFq92nZKllM/vjeFSBey/MrdlazgBx4gllZLc/DMJ78BrxUa7EVE+K23LCfzwZhLNQ4UflfnY3N2EhzwSXqRzuUPuv0Qe7PiJOVoSBLOAS/qEjXfeCZOT+WxQNRrgI0meHDbLXaw/3YjXmt7HU32NsmQxZ0wI5KuhMPEkETKNd90hPo9gFnC3XpZXjM+BNK3XaYHEPCBDizmtHtFcWy4JJeLXR4dMuKbMkc+RXIh6vmV+qp7rPz3CZzEmmAWGW9azQEctreGnfICVRypwe/dBIEGNcV0l1spbImSgwT/itMCnVAP70nArMRv6+hr55aNOLjK/vUb+1Pwj3FI1mxqSq3y2+yO81FbH9/ruS7ZkfFbU1SZrLWJpZWXteZxTKhVM/wKXeRNtxlfyC+O33SKtf/nLdkX+Dm/LzzTk28J/njnNGwXTfWAwPMwmz2xhnrbY6BGzn032UzBpT4N8ZoAGzF8mfk8fumiHZYh5zRvYZO8W1p6/RjAsH31JeyxlH1Yhwf4Bqk/qMV2mgp7u37YZcazVgAmduk64PhjG9mxt+zJtP64XpWGxOBU3yjOwWJSKuYIUfK9T44sSZYNwfTCci9/e1q2IR4M6GUOaVBQdPABHfipq05MQKFVjXpe5sgTevdukUGYCQloVzhcr0ZmTjIvF6bhUko75Q7mYLVOtTCLX3jjX1ex38LkuE1fLMnCtXCVfuS0czsVUqbJHuP5nrBrd/3p8KGUfFvTZWDiShxtUcaQtVmswR2czWuVOEbN8jCgUq73xOxSzeYrC2Qq15kqp8m/2Gdn1quyimdIM+mfCKhEaAcb+AExwGzY8QBvkAAAAAElFTkSuQmCC"
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAR1SURBVEhLzVVZTFxlFP5LbVEfjEubEH2hLrFPNmmqpljbtLamLVEqdFgGhmEb9oGBoS22NiNjoYgFhpnLMAwgUKAsszEbVLrQOkKhMaYJ1GIwPvigJr6ZtNWo/Tz/nR87Vm2wvPglJ3fu/c/5zjnfOfcO+3/Ba93FzvcWMnfrDvFkBQhYn2A+m5FNdDuYp1XLXFINu3AabLIP7FwPKMm7ZJXyud92nPW1PCYilwm3NMiuOO4SBuxgo1YwVytd28L3/Dk/nyE/p9QhIu8DX/s6CjSyUVsnVf0du9CDuJajeEV6DyzYESZ3k/HrWAe2mY/iZek4uB91+C113ElmYJ7mxwVjBAyGKHKaYlPDIJ2x2tuGgoYafKPWYPBQFWJGLOEOeAI6e3qgGe6KCnydpUGOqQ5RgXY5jk1TvLt1QrDeA6d0iZ3tAmmKF9pPAtsPAClFwFu5MJ4wUBc2Iieb6IJRWwLsTKH kCRj9h+k5yYnf2YurEEBWMEHJKGBe2zzE+VeKxYS5VWHtYhlJaFbm05NvQ3kyx2xPTWY91gE57rOYXenDyEVLnQG49hDcWQrCCZuZxTzGFRC2aCW0pgoUEi6ORahmXgAUQoy+KjyoLteJ6qdBZkYZdkpErJl8sySr4B6orHyPOh+HFS4fIADd66O5zAI71B5L/L27HkuGS8o6AdcaYa/JaYBWSW4WaWFq92nZKllM/vjeFSBey/MrdlazgBx4gllZLc/DMJ78BrxUa7EVE+K23LCfzwZhLNQ4UflfnY3N2EhzwSXqRzuUPuv0Qe7PiJOVoSBLOAS/qEjXfeCZOT+WxQNRrgI0meHDbLXaw/3YjXmt7HU32NsmQxZ0wI5KuhMPEkETKNd90hPo9gFnC3XpZXjM+BNK3XaYHEPCBDizmtHtFcWy4JJeLXR4dMuKbMkc+RXIh6vmV+qp7rPz3CZzEmmAWGW9azQEctreGnfICVRypwe/dBIEGNcV0l1spbImSgwT/itMCnVAP70nArMRv6+hr55aNOLjK/vUb+1Pwj3FI1mxqSq3y2+yO81FbH9/ruS7ZkfFbU1SZrLWJpZWXteZxTKhVM/wKXeRNtxlfyC+O33SKtf/nLdkX+Dm/LzzTk28J/njnNGwXTfWAwPMwmz2xhnrbY6BGzn032UzBpT4N8ZoAGzF8mfk8fumiHZYh5zRvYZO8W1p6/RjAsH31JeyxlH1Yhwf4Bqk/qMV2mgp7u37YZcazVgAmduk64PhjG9mxt+zJtP64XpWGxOBU3yjOwWJSKuYIUfK9T44sSZYNwfTCci9/e1q2IR4M6GUOaVBQdPABHfipq05MQKFVjXpe5sgTevdukUGYCQloVzhcr0ZmTjIvF6bhUko75Q7mYLVOtTCLX3jjX1ex38LkuE1fLMnCtXCVfuS0czsVUqbJHuP5nrBrd/3p8KGUfFvTZWDiShxtUcaQtVmswR2czWuVOEbN8jCgUq73xOxSzeYrC2Qq15kqp8m/2Gdn1quyimdIM+mfCKhEaAcb+AExwGzY8QBvkAAAAAElFTkSuQmCC"
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def handling(self, sub):
@@ -829,7 +832,7 @@ Explore False retrieves the value of branch path""", "Hero", "Data")
         class ListExtremum(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@列表极值", "Niko_ListExtremum", """Find the extreme value in a group of data, {1: maximum, 2: minimum, 3: average, 4: sum, 5: cumulative}""", "Hero", "Data")
+                                                                   "HAE@列表极值", "HAE_ListExtremum", """Find the extreme value in a group of data, {1: maximum, 2: minimum, 3: average, 4: sum, 5: cumulative}""", "Hero", "Data")
                 return instance
 
             def get_ComponentGuid(self):
@@ -907,7 +910,7 @@ Explore False retrieves the value of branch path""", "Hero", "Data")
         class PickingFruit(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@树形取值", "Niko_PickingFruit", """Take the branches of tree data and enter the number of branch labels to be taken""", "Hero", "Data")
+                                                                   "HAE@树形取值", "HAE_PickingFruit", """Take the branches of tree data and enter the number of branch labels to be taken""", "Hero", "Data")
                 return instance
 
             def get_ComponentGuid(self):
@@ -1034,7 +1037,7 @@ Explore False retrieves the value of branch path""", "Hero", "Data")
         class CompareSize(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@数据比较", "Niko_CompareSize", """Data comparison, used to compare the values of length and area (geometric objects), or pure data comparison""", "Hero", "Data")
+                                                                   "HAE@数据比较", "HAE_CompareSize", """Data comparison, used to compare the values of length and area (geometric objects), or pure data comparison""", "Hero", "Data")
                 return instance
 
             def get_ComponentGuid(self):
@@ -1126,7 +1129,7 @@ Explore False retrieves the value of branch path""", "Hero", "Data")
         class RandomData(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@随机数据", "Niko_RandomData", """Random data group""", "Hero", "Data")
+                                                                   "HAE@随机数据", "HAE_RandomData", """Random data group""", "Hero", "Data")
                 return instance
 
             def get_ComponentGuid(self):

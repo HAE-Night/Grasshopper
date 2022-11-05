@@ -1,8 +1,10 @@
-# -*- ecoding: utf-8 -*-
-# @ModuleName: Vector_group
-# @Author: invincible
-# @Time: 2022/7/8 11:10
-# coding=utf-8
+# -- coding: utf-8 --
+# -------------------------------
+# @Author : 水密菠罗
+# @Email : smblscr47@163.com
+# -------------------------------
+# @File : Brep_group
+# @Time : 2022/11/5 16:38
 
 from ghpythonlib.componentbase import dotnetcompiledcomponent as component
 import Grasshopper, GhPython
@@ -23,7 +25,7 @@ try:
         class Skewing(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@多向量偏移", "Niko_Skewing", """Multi vector displacement""", "Hero", "Vector")
+                                                                   "HAE@多向量偏移", "HAE_Skewing", """Multi vector displacement""", "Hero", "Vector")
                 return instance
 
             def get_ComponentGuid(self):
@@ -144,7 +146,7 @@ try:
         class VectorAccumulation(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@多向量偏移取值", "Niko_VectorAccumulation",
+                                                                   "HAE@多向量偏移取值", "HAE_VectorAccumulation",
                                                                    """Multi vector value taking, vector accumulation, and multiple geometric offsets to obtain geometric objects for each offset""", "Hero",
                                                                    "Vector")
                 return instance
@@ -294,7 +296,7 @@ try:
         class PointsSort(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@点排序", "Niko_PointsSort", """Arrange the corners in point order, and automatically sort the lattice according to the reference point""", "Hero", "Vector")
+                                                                   "HAE@点排序", "HAE_PointsSort", """Arrange the corners in point order, and automatically sort the lattice according to the reference point""", "Hero", "Vector")
                 return instance
 
             def get_ComponentGuid(self):
@@ -392,7 +394,7 @@ try:
         class PointOrderGroupingSort(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@点序排序（分组排序）", "Niko-PointOrderSort", """Sort by point sequence and group by X-Y-Z axis""", "Hero", "Vector")
+                                                                   "HAE@点序排序（分组排序）", "HAE_PointOrderSort", """Sort by point sequence and group by X-Y-Z axis""", "Hero", "Vector")
                 return instance
 
             def get_ComponentGuid(self):
@@ -502,7 +504,7 @@ try:
         class CullPoints(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@删除重复的点", "Niko_CullPoints", """Delete duplicate points in the point list""", "Hero", "Vector")
+                                                                   "HAE@删除重复的点", "HAE_CullPoints", """Delete duplicate points in the point list""", "Hero", "Vector")
                 return instance
 
             def get_ComponentGuid(self):
