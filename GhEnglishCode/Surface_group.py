@@ -23,7 +23,7 @@ try:
         class SweepOutFitting(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@曲线扫出", "SweepOutFitting", """解决原插件扫出的问题""",
+                                                                   "Niko@曲线扫出", "SweepOutFitting", """Solve the problem of scanning out the original plug-in""",
                                                                    "Hero",
                                                                    "Surface")
                 return instance
@@ -39,18 +39,18 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Curve()
-                self.SetUpParam(p, "Sweep_Curve", "S", "作为轨道的曲线")
+                self.SetUpParam(p, "Sweep_Curve", "S", "Curve as rail")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Curve()
-                self.SetUpParam(p, "Shape_Curve", "C", "模型曲线")
+                self.SetUpParam(p, "Shape_Curve", "C", "Model curve")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Brep", "B", "一个新的Brep")
+                self.SetUpParam(p, "Brep", "B", "A new Brep")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -70,16 +70,16 @@ try:
                     Brep = rg.Brep.CreateFromSweep(Sweep_Curve, Shape_Curve, 1, 1.0)
                     return Brep
                 elif Sweep_Curve is None:
-                    return '轨道线不能为空！'
+                    return 'The track line cannot be empty!'
                 elif Shape_Curve is None:
-                    return '曲线不能为空！'
+                    return 'The curve cannot be empty!'
 
 
         # Surface面积排序
         class Brep_Arae(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "ZY_根据面积排序", "Brep_Arae", """根据face的面积进行排序,从小到大""",
+                                                                   "ZY_根据面积排序", "Brep_Arae", """Sort according to the area of the face, from small to large""",
                                                                    "Hero",
                                                                    "Surface")
                 return instance
@@ -95,17 +95,17 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Brep()
-                self.SetUpParam(p, "Faces", "F", "需要排序的面")
+                self.SetUpParam(p, "Faces", "F", "Faces to be sorted")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Faces", "F", "排序后的面")
+                self.SetUpParam(p, "Faces", "F", "Sorted Faces")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Area_Arc", "A", "排序后的面积")
+                self.SetUpParam(p, "Area_Arc", "A", "Sorted Area")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -143,7 +143,7 @@ try:
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
                                                                    "ZY_面积取值", "Surface_Area2",
-                                                                   """Breps求面积：面积除以divisor，保留decimals位小数；""", "Hero",
+                                                                   """Breps Calculate Area: divide the area by the divisor, and retain decimals;""", "Hero",
                                                                    "Surface")
                 return instance
 
@@ -158,23 +158,23 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Brep()
-                self.SetUpParam(p, "Breps", "B", "Brep/Surface物体列表")
+                self.SetUpParam(p, "Breps", "B", "Brep/Surface Object List")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Divisor", "D1", "除数，默认百万1000000")
+                self.SetUpParam(p, "Divisor", "D1", "Divider, default 1000000")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Decimals", "D2", "保留小数位，默认三位")
+                self.SetUpParam(p, "Decimals", "D2", "Decimal digits reserved, three digits by default")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Area", "A", "面积")
+                self.SetUpParam(p, "Area", "A", "the measure of area")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -205,7 +205,7 @@ try:
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
                                                                    "ZY_面_Plane", "Surface_PLA",
-                                                                   """根据面的点序生成Plane,Indexs下标顺讯决定Plane的方向.""", "Hero",
+                                                                   """The plane is generated according to the point order of the face, and the index subscript sequence determines the direction of the plane""", "Hero",
                                                                    "Surface")
                 return instance
 
@@ -220,18 +220,18 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Brep()
-                self.SetUpParam(p, "Surface", "S", "参数Brep、Surface。")
+                self.SetUpParam(p, "Surface", "S", "Parameters Brep, Surface.")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
-                self.SetUpParam(p, "Indexs", "I", "Plane生成参考的点序 默认：【0,1,0,3】注：每两个点为一组向量，第一个点为两点向量终点")
+                self.SetUpParam(p, "Indexs", "I", "Default point sequence of reference generated by Plane: [0,1,0,3] Note: every two points are a group of vectors, and the first point is the end point of two-point vector")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "PLA", "P", "生成Plane")
+                self.SetUpParam(p, "PLA", "P", "Generate Plane")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -315,7 +315,7 @@ try:
         class ZYBrep(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "ZY_偏移曲面", "ZYBrepOff", """根据折线生成偏移曲面。""", "Hero",
+                                                                   "ZY_偏移曲面", "ZYBrepOff", """Generate offset surfaces from polylines.""", "Hero",
                                                                    "Surface")
                 return instance
 
@@ -335,18 +335,18 @@ try:
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Vector()
-                self.SetUpParam(p, "Vector", "V", "各分线段各自的偏移方向")
+                self.SetUpParam(p, "Vector", "V", "Offset direction of each segment")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Distance", "D", "偏移距离")
+                self.SetUpParam(p, "Distance", "D", "Offset distance")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Brep", "B", "偏移后的Brep")
+                self.SetUpParam(p, "Brep", "B", "Brep after offset")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -387,7 +387,7 @@ try:
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
                                                                    "Niko@曲面挤出（修剪、移动）", "Niko_Curve_Trim_Offset",
-                                                                   """修剪曲线，选择挤出量，挤出曲面，若不输入挤出量，则输出修剪后的线段""", "Hero",
+                                                                   """Trim the curve, select the extrusion amount and extrude the surface. If the extrusion amount is not input, output the trimmed line segment""", "Hero",
                                                                    "Surface")
                 return instance
 
@@ -402,38 +402,38 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Curve()
-                self.SetUpParam(p, "Curve", "C", "待修剪的曲线")
+                self.SetUpParam(p, "Curve", "C", "Curve to trim")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Type", "T", "挤出的类型，{0： Line， 1： Arc， 2： Smooth}")
+                self.SetUpParam(p, "Type", "T", "Type of extrusion, {0: Line, 1: Arc, 2: Smooth}")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Start", "S", "曲线起始点延长的长度")
+                self.SetUpParam(p, "Start", "S", "Length of curve starting point extension")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "End", "E", "曲线终点延长的长度")
+                self.SetUpParam(p, "End", "E", "Length of curve end extension")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Extrusion", "V", "作为挤出的参考（可以是向量或是曲线）")
+                self.SetUpParam(p, "Extrusion", "V", "As a reference for extrusion (can be a vector or a curve)")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Vector()
-                self.SetUpParam(p, "Move", "M", "移动物体的向量")
+                self.SetUpParam(p, "Move", "M", "Vector of moving object")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Geometry()
-                self.SetUpParam(p, "Objects", "O", "处理后的物体（曲面或者曲线）")
+                self.SetUpParam(p, "Objects", "O", "Processed object (surface or curve)")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -511,7 +511,7 @@ try:
         class SurfaceAngle(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Sur_Angle", "Sur_Angle", """求两个面的夹角和补角""", "Hero", "Surface")
+                                                                   "Sur_Angle", "Sur_Angle", """Find the included angle and complementary angle of two faces""", "Hero", "Surface")
                 return instance
 
             def get_ComponentGuid(self):
@@ -596,7 +596,7 @@ try:
         class MyComponent(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@BrepFlip", "Niko_Brep反转", """通过向量反转曲面""", "Hero", "Surface")
+                                                                   "Niko@BrepFlip", "Niko_Brep反转", """Reverse surfaces by vectors""", "Hero", "Surface")
                 return instance
 
             def get_ComponentGuid(self):
@@ -610,18 +610,18 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Brep()
-                self.SetUpParam(p, "Brep", "B", "Brep或面")
+                self.SetUpParam(p, "Brep", "B", "Brep or noodles")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Vector()
-                self.SetUpParam(p, "Vector", "V", "指定方向（向量）")
+                self.SetUpParam(p, "Vector", "V", "Specify direction (vector)")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Brep()
-                self.SetUpParam(p, "New_Brep", "B", "处理后Brep")
+                self.SetUpParam(p, "New_Brep", "B", "After treatment Brep")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -661,10 +661,10 @@ try:
             def RunScript(self, Brep, Vector):
                 try:
                     if Brep is None:
-                        self.message2("Brep不能为空！！！")
+                        self.message2("Brep cannot be empty!!!")
                     else:
                         if Brep is None:
-                            self.message2("Brep不能为空！！！")
+                            self.message2("Brep cannot be empty!!!")
                         else:
                             if Vector:
                                 normal_vector = self._get_normal_vector(Brep)
@@ -676,19 +676,19 @@ try:
                                     Brep.Flip()
                                     New_Brep = Brep
                             else:
-                                self.message3("向量未设置，默认反转Brep")
+                                self.message3("Vector is not set, Brep is reversed by default")
                                 Brep.Flip()
                                 New_Brep = Brep
                             return New_Brep
                 finally:
-                    self.Message = "Brep根据向量反转"
+                    self.Message = "Brep inverts according to vector"
 
 
         # 曲面收边
         class ShrinkSurface(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@曲面收边", "Niko_ShrinkSurface", """关于TrimSurface边界的问题""", "Hero", "Surface")
+                                                                   "Niko@曲面收边", "Niko_ShrinkSurface", """On TrimSurface Boundary""", "Hero", "Surface")
                 return instance
 
             def get_ComponentGuid(self):
@@ -702,18 +702,18 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Brep()
-                self.SetUpParam(p, "Surface", "S", "初始面（多边曲面自动分解收边）")
+                self.SetUpParam(p, "Surface", "S", "Initial face (polygonal surface auto explode edge)")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
-                self.SetUpParam(p, "Type", "T", "{0: \"不收东边\", 1: \"不收北边\", 2: \"不收南边\", 3: \"不收西边\", 4: \"收至最小\"}")
+                self.SetUpParam(p, "Type", "T", '{0:  "No east side ", 1:  "No north side ", 2:  "No south side ", 3:  "No west side ", 4:  "Minimum side "}')
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Result", "R", "收边后的结果")
+                self.SetUpParam(p, "Result", "R", "Result after edge trimming")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -751,9 +751,9 @@ try:
                         Result = list_of_surf
                         return Result
                     else:
-                        self.message2("请输入一个曲面！")
+                        self.message2("Please enter a surface!")
                 finally:
-                    self.Message = "修剪曲面收边"
+                    self.Message = "Trimming surface trimming"
     else:
         pass
 except:
