@@ -23,7 +23,7 @@ try:
         class Skewing(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@多向量偏移", "Niko_Skewing", """多向量位移""", "Hero", "Vector")
+                                                                   "Niko@多向量偏移", "Niko_Skewing", """Multi vector displacement""", "Hero", "Vector")
                 return instance
 
             def get_ComponentGuid(self):
@@ -37,37 +37,37 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Geometry()
-                self.SetUpParam(p, "Object", "G", "几何物体")
+                self.SetUpParam(p, "Object", "G", "Geometric object")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Plane()
-                self.SetUpParam(p, "Ref_Plane", "P", "参考向量")
+                self.SetUpParam(p, "Ref_Plane", "P", "Reference vector")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "XVector", "X", "X轴的向量")
+                self.SetUpParam(p, "XVector", "X", "X axis vector")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "YVector", "Y", "Y轴的向量")
+                self.SetUpParam(p, "YVector", "Y", "Vector of Y axis")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "ZVector", "Z", "Z轴的向量")
+                self.SetUpParam(p, "ZVector", "Z", "Vector of Z axis")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Geometry()
-                self.SetUpParam(p, "Objcet", "G", "位移后的物体")
+                self.SetUpParam(p, "Objcet", "G", "Displaced object")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Vector()
-                self.SetUpParam(p, "Transform", "T", "偏移后的总量")
+                self.SetUpParam(p, "Transform", "T", "Total amount after offset")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -134,10 +134,10 @@ try:
                         else:
                             return None, Transform
                     else:
-                        self.message2("物体为空！！")
+                        self.message2("The object is empty!!")
                         return None, Transform
                 finally:
-                    self.Message = "多向量位移"
+                    self.Message = "Multi vector displacement"
 
 
         # 向量多次偏移取值
@@ -145,7 +145,7 @@ try:
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
                                                                    "Niko@多向量偏移取值", "Niko_VectorAccumulation",
-                                                                   """多向量取值，向量累加，将几何多次偏移得到每次偏移的几何物体""", "Hero",
+                                                                   """Multi vector value taking, vector accumulation, and multiple geometric offsets to obtain geometric objects for each offset""", "Hero",
                                                                    "Vector")
                 return instance
 
@@ -160,68 +160,68 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Geometry()
-                self.SetUpParam(p, "Geometry", "G", "原始的几何物体")
+                self.SetUpParam(p, "Geometry", "G", "Original geometric objects")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Vector()
-                self.SetUpParam(p, "Vector1", "V1", "第一组向量")
+                self.SetUpParam(p, "Vector1", "V1", "First set of vectors")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Vector()
-                self.SetUpParam(p, "Vector2", "V2", "第二组向量")
+                self.SetUpParam(p, "Vector2", "V2", "Second set of vectors")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Vector()
-                self.SetUpParam(p, "Vector3", "V3", "第三组向量")
+                self.SetUpParam(p, "Vector3", "V3", "Third set of vectors")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Vector()
-                self.SetUpParam(p, "Vector4", "V4", "第四组向量")
+                self.SetUpParam(p, "Vector4", "V4", "Fourth set of vectors")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Vector()
-                self.SetUpParam(p, "Vector5", "V5", "第五组向量")
+                self.SetUpParam(p, "Vector5", "V5", "Fifth set of vectors")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = GhPython.Assemblies.MarshalParam()
-                self.SetUpParam(p, "Vector6", "V6", "第六组向量")
+                self.SetUpParam(p, "Vector6", "V6", "Sixth group of vectors")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "GetSingle", "S", "是否单个取值，输入't'则不会累加向量数据")
+                self.SetUpParam(p, "GetSingle", "S", "Whether to take a single value. Entering't 'will not accumulate vector data")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Geometry1", "G1", "第一次偏移的几何物体")
+                self.SetUpParam(p, "Geometry1", "G1", "First offset geometry")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Geometry2", "G2", "第二次偏移的几何物体")
+                self.SetUpParam(p, "Geometry2", "G2", "Second offset geometry")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Geometry3", "G3", "第三次偏移的几何物体")
+                self.SetUpParam(p, "Geometry3", "G3", "Geometry object of the third offset")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Geometry4", "G4", "第四次偏移的几何物体")
+                self.SetUpParam(p, "Geometry4", "G4", "Geometry object of the fourth offset")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Geometry5", "G5", "第五次偏移的几何物体")
+                self.SetUpParam(p, "Geometry5", "G5", "Geometry object of the fifth offset")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Geometry6", "G6", "第六次偏移的几何物体")
+                self.SetUpParam(p, "Geometry6", "G6", "Geometry object of the sixth offset")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -294,7 +294,7 @@ try:
         class PointsSort(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@点排序", "Niko_PointsSort", """点序排列角点，根据参照点自动排序点阵""", "Hero", "Vector")
+                                                                   "Niko@点排序", "Niko_PointsSort", """Arrange the corners in point order, and automatically sort the lattice according to the reference point""", "Hero", "Vector")
                 return instance
 
             def get_ComponentGuid(self):
@@ -308,23 +308,23 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Point()
-                self.SetUpParam(p, "Ref_Point", "P", "参照点，默认为世界坐标原点（0，0，0）")
+                self.SetUpParam(p, "Ref_Point", "P", "Reference point, default to world coordinate origin (0, 0, 0)")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Ref_Curve", "V", "参照向量；当数据组出现不同类型的矩阵，可以统一点序的初始方向")
+                self.SetUpParam(p, "Ref_Curve", "V", "Reference vector; When different types of matrices appear in the data group, the initial direction of point order can be unified")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Point()
-                self.SetUpParam(p, "Points", "Pts", "点序列")
+                self.SetUpParam(p, "Points", "Pts", "Point sequence")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Point()
-                self.SetUpParam(p, "Result", "R", "成功排序的点序")
+                self.SetUpParam(p, "Result", "R", "Dot order successfully sorted")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -392,7 +392,7 @@ try:
         class PointOrderGroupingSort(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@点序排序（分组排序）", "Niko-PointOrderSort", """点序排序，按X-Y-Z轴分组排序""", "Hero", "Vector")
+                                                                   "Niko@点序排序（分组排序）", "Niko-PointOrderSort", """Sort by point sequence and group by X-Y-Z axis""", "Hero", "Vector")
                 return instance
 
             def get_ComponentGuid(self):
@@ -406,23 +406,23 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Point()
-                self.SetUpParam(p, "PTS", "P", "点序列")
+                self.SetUpParam(p, "PTS", "P", "Point sequence")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Axis", "A", "坐标轴")
+                self.SetUpParam(p, "Axis", "A", "Axis")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Tolerance", "T", "分组的容差")
+                self.SetUpParam(p, "Tolerance", "T", "Tolerance of grouping")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Point()
-                self.SetUpParam(p, "Result", "R", "排序后结果")
+                self.SetUpParam(p, "Result", "R", "Results after sorting")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -489,20 +489,20 @@ try:
                         self.axis = "X" if Axis is None else Axis.upper()
                         self.Tol = Tolerance if Tolerance is not None else 50.0
                         if self.axis not in ["X", "Y", "Z"]:
-                            self.message1("请输入正确的坐标轴！")
+                            self.message1("Please enter the correct coordinate axis!")
                         sort_by_axis = self.find_collinear_pts(PTS)
                         result_point_sort = self.handing_sort_re(sort_by_axis)
                         return result_point_sort
                     else:
-                        self.message2("点序不能空！")
+                        self.message2("The point sequence cannot be empty!")
                 finally:
-                    self.Message = "点序排序（分组排序）"
+                    self.Message = "Point sort (group sort)"
 
         # 删除重复的点
         class CullPoints(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@删除重复的点", "Niko_CullPoints", """删除点列表中重复的点""", "Hero", "Vector")
+                                                                   "Niko@删除重复的点", "Niko_CullPoints", """Delete duplicate points in the point list""", "Hero", "Vector")
                 return instance
 
             def get_ComponentGuid(self):
@@ -516,27 +516,27 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Point()
-                self.SetUpParam(p, "Points", "P", "点列表")
+                self.SetUpParam(p, "Points", "P", "Point List")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Tolerance", "T", "容差度")
+                self.SetUpParam(p, "Tolerance", "T", "Tolerance")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
-                self.SetUpParam(p, "Output Format", "O", "输出的方式（0：只输出剔除后的数据，1：将重复的数据分组）")
+                self.SetUpParam(p, "Output Format", "O", "Output method (0: output only the rejected data, 1: group the duplicate data)")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Point()
-                self.SetUpParam(p, "Reuslt_Pt", "R", "结果列表")
+                self.SetUpParam(p, "Reuslt_Pt", "R", "Results List")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
-                self.SetUpParam(p, "Index_Pt", "I", "重合点的下标组")
+                self.SetUpParam(p, "Index_Pt", "I", "Subscript group of coincident points")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -588,11 +588,11 @@ try:
                 try:
                     Output_Format = 0 if Output_Format is None else Output_Format
                     if Output_Format > 1:
-                        self.message2("请输入正确的数据类型！！")
+                        self.message2("Please enter the correct data type!!")
 
                     self.tol = 0.01 if Tolerance is None else Tolerance
                     if len(Points) == 0:
-                        self.message2("点序列表不能为空！！")
+                        self.message2("The point order list cannot be empty!!")
                     else:
                         self.copy_pts = Points[:]
                         tree_data_pts = []
@@ -609,7 +609,7 @@ try:
                             Reuslt_Pt, Index_Pt = ght.list_to_tree(tree_data_pts), ght.list_to_tree(tree_data_indexs)
                         return Reuslt_Pt, Index_Pt
                 finally:
-                    self.Message = '删除重复点'
+                    self.Message = 'Delete duplicate points'
 
     else:
         pass
