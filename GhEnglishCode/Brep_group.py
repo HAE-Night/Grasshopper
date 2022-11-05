@@ -1,9 +1,10 @@
-# -*- ecoding: utf-8 -*-
-# @ModuleName: 001
-# @Author: invincible
-# @Time: 2022/7/8 11:02
-
-# coding=utf-8
+# -- coding: utf-8 --
+# -------------------------------
+# @Author : 水密菠罗
+# @Email : smblscr47@163.com
+# -------------------------------
+# @File : Brep_group
+# @Time : 2022/9/17 17:06
 
 from ghpythonlib.componentbase import dotnetcompiledcomponent as component
 import Grasshopper, GhPython
@@ -89,7 +90,7 @@ try:
         class MappingExtrusion(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@映射及挤出", "Niko_Mapping&Extrusion", """Map an object to a specified plane, and then extrude the entity through line segments or vectors""", "Hero", "Brep")
+                                                                   "HAE@映射及挤出", "HAE_Mapping&Extrusion", """Map an object to a specified plane, and then extrude the entity through line segments or vectors""", "Hero", "Brep")
                 return instance
 
             def get_ComponentGuid(self):
@@ -838,7 +839,7 @@ try:
         class BrepOffset(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@多边曲面偏移", "Niko_BrepOffset", """Generate offset surfaces from polylines.""", "Hero", "Brep")
+                                                                   "HAE@多边曲面偏移", "HAE_BrepOffset", """Generate offset surfaces from polylines.""", "Hero", "Brep")
                 return instance
 
             def get_ComponentGuid(self):
@@ -919,7 +920,9 @@ try:
         class SectionBody(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@截面体", "Niko_SectionBody", """Sections are solid. N N groups of the same data sections are lofted. The lofting types are {1: 'Normal', 2: 'Loose', 3: 'Tight', 4: 'Straight', 5: 'Uniform'}. Enter the corresponding numbers; When there is only one set of data, the sweep section can be obtained through the track line""", "Hero",
+                                                                   "HAE@截面体", "HAE_SectionBody",
+                                                                   """Sections are solid. N N groups of the same data sections are lofted. The lofting types are {1: 'Normal', 2: 'Loose', 3: 'Tight', 4: 'Straight', 5: 'Uniform'}. Enter the corresponding numbers; When there is only one set of data, the sweep section can be obtained through the track line""",
+                                                                   "Hero",
                                                                    "Brep")
                 return instance
 
@@ -1032,7 +1035,9 @@ try:
         class BrepCut(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Niko@Brep切割（优化实用性）", "Niko_BrepCut", """Brep cutting (optimized version), optimizing practicability and sacrificing part of time efficiency; Note that when there is a Brep cutting failure, the secondary processing switch can be turned on. At this time, the time efficiency of the plug-in will be greatly reduced, but the failed Brep cutting part will be output""", "Hero", "Brep")
+                                                                   "HAE@Brep切割（优化实用性）", "HAE_BrepCut",
+                                                                   """Brep cutting (optimized version), optimizing practicability and sacrificing part of time efficiency; Note that when there is a Brep cutting failure, the secondary processing switch can be turned on. At this time, the time efficiency of the plug-in will be greatly reduced, but the failed Brep cutting part will be output""",
+                                                                   "Hero", "Brep")
                 return instance
 
             def get_ComponentGuid(self):
