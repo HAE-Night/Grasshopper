@@ -6,6 +6,8 @@
 # @File : Brep_group
 # @Time : 2022/11/5 16:32
 
+import init__
+
 from ghpythonlib.componentbase import dotnetcompiledcomponent as component
 import Grasshopper, GhPython
 import System
@@ -27,8 +29,7 @@ from itertools import chain
 
 def decryption():
     hostname = socket.gethostname()
-    designer_names = ['Niko', 'John', 'MARY', 'Alan', 'Levi', 'Bella', 'Claire', 'Landon', 'Nancy', 'Charles',
-                      'XIANNEW', 'Link', 'Dong', 'Jiang', 'Jack', 'Lauren', 'Night', 'Bobo', 'Harry', 'Leo', 'Zach', 'Mohamed Gomaa', 'windy', 'Mikey', 'kiki']
+    designer_names = init__.designer_database
     origin_data_list = []
     now_time = int(time.time())
     for name in designer_names:
@@ -683,7 +684,9 @@ try:
         class ZLine(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "HAE@指定线段", "HAE_ZLine", """In the line segment list, take the specified line segment (top line or bottom line) according to the Z coordinate of the line segment And unifies the direction of the line.""", "Hero", "Line")
+                                                                   "HAE@指定线段", "HAE_ZLine",
+                                                                   """In the line segment list, take the specified line segment (top line or bottom line) according to the Z coordinate of the line segment And unifies the direction of the line.""",
+                                                                   "Hero", "Line")
                 return instance
 
             def get_ComponentGuid(self):
@@ -852,7 +855,7 @@ try:
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Result", "R", "Final arc segment")
+                self.SetUpParam(p, "Result", "RC", "Final arc segment")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -886,6 +889,7 @@ try:
                         return index_curve
 
             def filter_by_line(self, wait_curves):
+                wait_curves = wait_curves if isinstance(wait_curves, (list)) is True else [wait_curves]
                 count = 0
                 fit_curve_list = []
                 while len(wait_curves) > count:
@@ -902,15 +906,19 @@ try:
                 base_pts = map(lambda arc_line: ghc.DivideCurve(arc_line, 3, False)['points'][0:3], arc_curve)
                 new_circle = map(lambda pts: rg.Circle(pts[0], pts[1], pts[2]), base_pts)
                 filter_cir = [_ for _ in new_circle if _.Radius > self.r]
-                min_cir = filter_cir[0]
-                for other_cir in filter_cir:
-                    if other_cir.Radius < min_cir.Radius:
-                        min_cir = other_cir
-                return [min_cir]
+                if len(filter_cir) != 0:
+                    min_cir = filter_cir[0]
+                    for other_cir in filter_cir:
+                        if other_cir.Radius < min_cir.Radius:
+                            min_cir = other_cir
+                    return [min_cir]
 
             def _join_handle(self, curve_list):
-                new_line = [_ for _ in rg.Curve.JoinCurves(curve_list, 0.001, False) if _.IsClosed is True]
-                explode_line = map(lambda line_single: ghc.Explode(line_single, True)['segments'], new_line)
+                temp_line = [_ for _ in rg.Curve.JoinCurves(curve_list, 0.001, False)]
+                false_fun = map(lambda x: None if x.IsClosed is False else x, temp_line)
+                temp_line = filter(None, false_fun) if filter(None, false_fun) else [temp_line[0]]
+
+                explode_line = map(lambda line_single: ghc.Explode(line_single, True)['segments'], temp_line)
                 filtered_curve = map(self.filter_by_line, explode_line)
                 rebu_cir = map(self.rebuild_circle, filtered_curve)
                 return rebu_cir
@@ -1026,6 +1034,111 @@ try:
                         self.message2("The curve list is empty!")
                 finally:
                     self.Message = 'Filter Curve (Curvature)'
+
+
+        # 曲线按照参照平面排序
+        class LineSortByXYZ(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "HAE@曲线排序", "HAE_LineSortByXYZ",
+                                                                   """Sort the curve list. When the axis input end is empty, sort by line length. Enter x, y, z to sort by x, y, z axis coordinates. CP can specify a plane""", "Hero", "Line")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("ff552258-2c50-4fe8-b032-9ec25ef804b5")
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Curve()
+                self.SetUpParam(p, "Curve", "C", "Curve List")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_String()
+                self.SetUpParam(p, "Axis", "A", "axis")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Plane()
+                self.SetUpParam(p, "CP", "CP", "Sort by coordinate axis XYZ, default to world XY")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Curve()
+                self.SetUpParam(p, "Sort_Curve", "C", "Sorted curve list")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                p1 = self.marshal.GetInput(DA, 1)
+                p2 = self.marshal.GetInput(DA, 2)
+                result = self.RunScript(p0, p1, p2)
+
+                if result is not None:
+                    self.marshal.SetOutput(result, DA, 0, True)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAADfSURBVEhL7dS9DsFQGIfxug8RQgwmC4uBgbswWOxmNh8jdldhlBgY3ITFYrdYbDz/Jke0HFXRIOmT/IYifU/ibZ24n6yABbLu1YfLY48zdsjA1MAohBo8VXCCbm4cUYaa4fa7IFNcS6CFPlbQD5YYoAlVRS8EHfhhXWhAx72KoCE0QKeIpK8NCNqiu62xZRsQtEWerXmWbYBOqM9srFvj7///5EieAz3JbYyxgQasMYGecFXHW1tjKkHvHt3cOKAI5d8iDQ9dGnqL6gZbJGHyb9HLW+MvhzlS7lVctDnOBW5zXVOZwwLKAAAAAElFTkSuQmCC"
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def __init__(self):
+                self.dict_axis = {'X': 'x_coordinate', 'Y': 'y_coordinate', 'Z': 'z_coordinate'}
+
+            def message1(self, msg1):
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
+
+            def message2(self, msg2):
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
+
+            def message3(self, msg3):
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
+
+            def _sort_by_length(self, list_data):
+                for f in range(len(list_data)):
+                    for s in range(len(list_data) - 1 - f):
+                        first_line = list_data[s].GetLength()
+                        second_line = list_data[s + 1].GetLength()
+                        if first_line > second_line:
+                            list_data[s], list_data[s + 1] = list_data[s + 1], list_data[s]
+                return list_data
+
+            def _other_by_xyz(self, data, axis, coord_pl):
+                for index1 in range(len(data)):
+                    min_index = index1
+                    for index2 in range(min_index + 1, len(data)):
+                        first = ghc.PlaneCoordinates(ghc.CurveMiddle(data[min_index]), coord_pl)[self.dict_axis[axis]]
+                        second = ghc.PlaneCoordinates(ghc.CurveMiddle(data[index2]), coord_pl)[self.dict_axis[axis]]
+                        if first > second:
+                            min_index = index2
+                    if min_index != index1:
+                        data[index1], data[min_index] = data[min_index], data[index1]
+                return data
+
+            def RunScript(self, Curve, Axis, CP):
+                try:
+                    CP = ghc.XYPlane(rg.Point3d(0, 0, 0)) if CP is None else CP
+                    if Curve:
+                        if Axis is None:
+                            self.message3("Axis coordinate is not entered, it will be sorted by length!")
+                            Sort_Curve = self._sort_by_length(Curve)
+                            return Sort_Curve
+                        else:
+                            Axis = Axis.upper()
+                            if Axis in ['X', 'Y', 'Z']:
+                                Sort_Curve = self._other_by_xyz(Curve, Axis, CP)
+                                return Sort_Curve
+                            else:
+                                self.message2("Please enter correct axis coordinates!")
+                    else:
+                        self.message2("The curve list is empty!!")
+                finally:
+                    self.Message = "Curve sorting"
 
     else:
         pass

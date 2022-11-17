@@ -6,6 +6,8 @@
 # @File : Eto_tips
 # @Time : 2022/11/5 17:10
 
+import init__
+
 import Rhino
 import scriptcontext
 import System
@@ -19,8 +21,7 @@ import base64
 
 
 def decryption():
-    designer_names = ['Niko', 'John', 'MARY', 'Alan', 'Levi', 'Bella', 'Claire', 'Landon', 'Nancy', 'Charles',
-                      'XIANNEW', 'Link', 'Dong', 'Jiang', 'Jack', 'Lauren', 'Night', 'Bobo', 'Harry', 'Leo', 'Zach', 'Mohamed Gomaa', 'windy', 'Mikey', 'kiki']
+    designer_names = init__.designer_database
     origin_data_list = []
     now_time = int(time.time())
     for name in designer_names:

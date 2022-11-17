@@ -752,6 +752,94 @@ try:
                 ghdoc = GhPython.DocReplacement.GrasshopperDocument()
                 sc.doc = ghdoc
 
+        # Rhino文本物体提取
+        class PickText(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "HAE@文本提取", "HAE_PickText", """提取Rhino物件（可单独选择）中所有的文字""", "Hero", "Object")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("7965623e-a903-49b1-b217-165075d74605")
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Guid()
+                self.SetUpParam(p, "Objects", "O", "Rhino object")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Text_Entity", "TE", "Text Entity")
+                self.Params.Output.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_String()
+                self.SetUpParam(p, "Text", "T", "Text")
+                self.Params.Output.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Point()
+                self.SetUpParam(p, "Center_Pt", "C", "Text entity center point")
+                self.Params.Output.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Curve()
+                self.SetUpParam(p, "Contour_Line", "CL", "Text Solid Outline")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                result = self.RunScript(p0)
+
+                if result is not None:
+                    if not hasattr(result, '__getitem__'):
+                        self.marshal.SetOutput(result, DA, 0, True)
+                    else:
+                        self.marshal.SetOutput(result[0], DA, 0, True)
+                        self.marshal.SetOutput(result[1], DA, 1, True)
+                        self.marshal.SetOutput(result[2], DA, 2, True)
+                        self.marshal.SetOutput(result[3], DA, 3, True)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAFUSURBVEhL5dXNK0RRGMfxKxLyWv4NCy9l5WXhH2A1ZaG8/Auy4s+QLSUba6WUt7IiC/IHYIUFK2z4/p45Z0Inc7rPZONXn6bnmTP3uTNz7r3FX6YXFSxhwUGfn0YLaunHNT4aaA+tsMxCzWccOZ3gDTreCCyLUOPQKn9uoeNNWEXmocaxVb604Q463pgaSmpAE7rRk6ETMe3IGtCFGzzgKXgMtV6/1geIyR6gs3+B+vVcISZ7gL76K9SfwxD2Q72BQayGWt80JnuALhTtgik0q0G2oHUrVlVPQu+PWlVN9oBUdqB1a1al888HbELrlq1Kp/QA/eFn0LpdaFelUnrAJbQm2kYqpQes4wLn4TVu1Z9x/Qc5+XWA7ufe6AKNt+vaAD3m1DiFbrcefbiHjjcJywzUeIeme8SfRwZg6YCeofGNRtCm0DPlW4ah/T7uoM+HMy+KT1711l2S3UdKAAAAAElFTkSuQmCC"
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def __init__(self):
+                pass
+
+            def message1(self, msg1):
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
+
+            def message2(self, msg2):
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
+
+            def message3(self, msg3):
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
+
+            def get_center_pt(self, single_pt):
+                center_pt = single_pt.GetBoundingBox(True).Center
+                return center_pt, single_pt.Explode()
+
+            def RunScript(self, Objects):
+                try:
+                    if Objects:
+                        temp_geo = ghp.run(lambda x: Rhino.DocObjects.ObjRef(x).Geometry(), Objects)
+                        filter_t_list = [_ for _ in temp_geo if isinstance(_, (rg.TextEntity,)) is True]
+                        Text_Entity = filter_t_list
+                        Text = [_.PlainText for _ in filter_t_list]
+
+                        Center_Pts, Contour_Line = zip(*[_ for _ in ghp.run(self.get_center_pt, Text_Entity)])
+                        self.message3("{} Rhino objects have been selected, and {} characters have been extracted!".format(len(temp_geo), len(filter_t_list)))
+                        return Text_Entity, Text, Center_Pts, ght.list_to_tree(Contour_Line)
+                    else:
+                        self.message2("No objects in Rhino have been selected")
+                finally:
+                    self.Message = 'Rhino object extraction'
+
     else:
         pass
 except:
