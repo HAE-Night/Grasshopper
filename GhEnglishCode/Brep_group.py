@@ -1056,43 +1056,27 @@ try:
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Brep()
-                self.SetUpParam(p, "B_Brep", "B", "Cutting body Brep")
+                self.SetUpParam(p, "B_Brep", "B", "Cut Brep")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Tolerance", "T", "Tolerance, adjustable in case of partial cutting failure")
+                self.SetUpParam(p, "Tolerance", "T", "Tolerance, default 0.001")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
-                p = Grasshopper.Kernel.Parameters.Param_Boolean()
-                self.SetUpParam(p, "Switch", "S", "The switch of secondary processing is off by default (1: on)")
+                p = Grasshopper.Kernel.Parameters.Param_String()
+                self.SetUpParam(p, "Second", "S", "The secondary processing switch cuts Brep separately (with the lowest time efficiency and the highest cutting accuracy), which is off by default")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Brep()
-                self.SetUpParam(p, "Succ_Brep", "B", "Brep successfully cut")
+                self.SetUpParam(p, "Breps", "B", "Brep set cut")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Brep()
-                self.SetUpParam(p, "False_Brpe", "F", "Brep failed to cut")
-                self.Params.Output.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_Brep()
-                self.SetUpParam(p, "False_Sub_B", "f", "Cut body failed to cut Brep")
-                self.Params.Output.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_Brep()
-                self.SetUpParam(p, "Secondary_Brep", "Sec", "False_ Secondary processing of Brpe, output the successful part")
-                self.Params.Output.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_Brep()
-                self.SetUpParam(p, "Secondary_Fasle_Brep", "S-f", "After secondary processing, the remaining failed cutting bodies Brep")
-                self.Params.Output.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Tip_Fail_Brep", "I", "Prompt information of secondary processing (the ith cutting failed)")
+                self.SetUpParam(p, "False_Breps", "F", "Cutting body failed to cut")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -1108,84 +1092,100 @@ try:
                     else:
                         self.marshal.SetOutput(result[0], DA, 0, True)
                         self.marshal.SetOutput(result[1], DA, 1, True)
-                        self.marshal.SetOutput(result[2], DA, 2, True)
-                        self.marshal.SetOutput(result[3], DA, 3, True)
-                        self.marshal.SetOutput(result[4], DA, 4, True)
-                        self.marshal.SetOutput(result[5], DA, 5, True)
 
             def get_Internal_Icon_24x24(self):
                 o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAG+SURBVEhLxdVLK0VRGMbxTSJSbt/C/X6/E7kbSJhJikx8AQMyYqIw8RlEQrmU20QxMBIDt7HPoPg/i3XOOkcHm12e+nV6d533rL3X2u/x/iOl6EexqX6eBGQgHclIRESysI9Xxw70he9SiQscYAO32EIo8TiCmi6iD0sf9S6+Sh0e0Ggqz+vCE/SjoZRBzRZMFc4KdD3PVJ+j5o8oN5Xn1eMORaZyMgg1ajBVOB3Q9R5TRSa6eRO08hJTRUUbqkZ6LG7WoOs5pgrHV3MlDntQs2UMwTbXRrvx3dxGp2Ubamppg09RCEXP+FfN3eSjHdmmem9yjnFc40/NY2UaLygwVcDNa6GXyB69GtwgkOZ6Ae8xaar3x6O9GTFVQNGpOcYYTjAF3VEgd2AzCq1cx1dphk6TBqPvaGxomtoVVkArnsAlbFPNHl8/ommqaei+B5quZ6iColFyBXuatOFuHTNfTdNDuJnDM3qh/4D5j1p3rZe1Dfq+PpNgYqepmrtZha7badoC1dZsVD0TVVfD5KfTNAXdGEAnMmFX3IqYd+B3mvqOO031WIZhm28ikKRB/6Nqaq0jFYEmF+40/UM87w2FQn0odJBCcwAAAABJRU5ErkJggg=="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
-            Tol, Factor = 0, None
+            def __init__(self):
+                self.tol = None
 
-            def _second_handle(self, cut_brep):
-                passive_body, cutting_body = cut_brep[0], cut_brep[1]
-                res_brep = rg.Brep.CreateBooleanDifference(passive_body, cutting_body, self.Tol)
-                final_brpe = [_ for _ in res_brep] if res_brep is not None else "This Brep cutting failed, please check the data type!"
-                return final_brpe
+            def message1(self, msg1):
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
 
-            def _third_handle(self, brep_data):
-                data_one, data_two = brep_data[0], brep_data[1]
-                final_brep, sec_fail_index, tip_times = [], [], []
-                for single_brep in data_one:
-                    count = 0
-                    while len(data_two) > count:
-                        temp_brep = single_brep
-                        change_brep = rg.Brep.CreateBooleanDifference(single_brep, data_two[count], self.Tol)
-                        if len(change_brep) != 0:
-                            single_brep = change_brep[0]
+            def message2(self, msg2):
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
+
+            def message3(self, msg3):
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
+
+            def first_handle(self, tuple_data):
+                passive_body, cut_body = tuple_data
+                mb_res_brep = rg.Brep.CreateBooleanDifference(passive_body, cut_body, self.tol)
+                return mb_res_brep if mb_res_brep is not None else passive_body
+
+            def second_handle(self, wait_han_bs):
+                passive_body, cut_body = wait_han_bs
+                res_data, res_sub_tips = [], []
+                if filter(None, cut_body):
+                    passive_body = rg.Brep.CreateBooleanUnion(passive_body, 0.001) if len(passive_body) > 1 else passive_body
+                    for f_sub, p_entity in enumerate(passive_body):
+                        count = 0
+                        while len(cut_body) > count:
+                            temp_brep = p_entity
+                            change_brep = rg.Brep.CreateBooleanDifference(p_entity, cut_body[count], self.tol)
+                            if change_brep:
+                                p_entity = change_brep[0]
+                                sub_tips = None
+                            else:
+                                p_entity = temp_brep
+                                sub_tips = (f_sub + 1, count + 1)
+                            res_sub_tips.append(sub_tips)
+                            count += 1
+                        res_data.append(p_entity)
+                    return res_data, res_sub_tips
+                else:
+                    return passive_body, None
+
+            def RunScript(self, A_Brep, B_Brep, Tolerance, Second):
+                try:
+                    self.tol = 0.001 if Tolerance is None else Tolerance
+                    a_trunk = [list(_) for _ in A_Brep.Branches]
+                    b_trunk = [list(_) for _ in B_Brep.Branches]
+                    if a_trunk:
+                        if len(a_trunk) == len(b_trunk):
+                            handle_tree = list(zip(a_trunk, b_trunk))
+                            Breps = ghp.run(self.first_handle, handle_tree)
+                            mapping_index = [_ if isinstance(Breps[_], (list)) is True else None for _ in range(len(Breps))]
+                            False_Breps = [[None] if _ is None else b_trunk[_] for _ in mapping_index]
+                            if Second is not None:
+                                Second = Second.upper()
+                                if Second in ['F', 'T']:
+                                    if Second == 'T':
+                                        self.message3("Secondary processing has been started!")
+                                        second_h_breps = list(zip(Breps, False_Breps))
+                                        data_sets = ghp.run(self.second_handle, second_h_breps)
+                                        count_by_tips = 0
+                                        Breps = []
+                                        False_Breps = []
+                                        while len(data_sets) > count_by_tips:
+                                            entity_coll, tip = data_sets[count_by_tips]
+                                            if tip is None:
+                                                Breps.append(a_trunk[count_by_tips])
+                                                False_Breps.append(None)
+                                            else:
+                                                Breps.append(a_trunk[count_by_tips])
+                                                False_Breps.append(b_trunk[count_by_tips])
+                                                for _ in tip:
+                                                    if _ is not None:
+                                                        self.message1("Secondary processing: the {} Brep of the {} A cutting body failed in the {} Brep cutting!".format(count_by_tips + 1, _[0], _[1]))
+                                            count_by_tips += 1
+                                        return ght.list_to_tree(Breps), ght.list_to_tree(False_Breps)
+                                else:
+                                    self.message2("Please enter t or f to enable or disable the secondary processing!")
+                            else:
+                                count = 0
+                                while len(mapping_index) > count:
+                                    if mapping_index[count] is not None:
+                                        self.message1("The {} entity failed to cut".format(count + 1))
+                                    count += 1
+                                return ght.list_to_tree(Breps), ght.list_to_tree(False_Breps)
                         else:
-                            single_brep = temp_brep
-                            sec_fail_index.append(count)
-                            tip_times.append(count + 1)
-                        count += 1
-                    final_brep.append(single_brep)
-                return final_brep, sec_fail_index, tip_times
-
-            def RunScript(self, A_Brep, B_Brep, Tolerance, Switch):
-                self.Tol = 0.001 if Tolerance is None else Tolerance
-                self.Factor = False if Switch is None else True
-
-                a_leaf_list = [list(_) for _ in A_Brep.Branches]
-                b_leaf_list = [list(_) for _ in B_Brep.Branches]
-                a_len = len(a_leaf_list)
-                b_len = len(b_leaf_list)
-
-                if a_len != 0 and b_len != 0:
-                    _first_handle_of_a = map(lambda x: [_ for _ in rg.Brep.CreateBooleanUnion(x, 0.001)], a_leaf_list)
-                    _first_handle = list(zip(_first_handle_of_a, b_leaf_list))
-
-                    if len(_first_handle) == len(_first_handle_of_a) == b_len:
-                        result = [_ for _ in ghp.run(self._second_handle, _first_handle)]
-
-                        fail_index_list = [_ for _ in range(len(result)) if type(result[_]) is str]
-                        success_index_list = [_ for _ in range(len(result)) if _ not in fail_index_list]
-
-                        succ_res = [result[_] for _ in success_index_list]
-                        fail_a_leaf = [a_leaf_list[_] for _ in fail_index_list]
-                        fail_b_leaf = [b_leaf_list[_] for _ in fail_index_list]
-
-                        Succ_Brep = ght.list_to_tree(succ_res)
-                        False_Brpe = ght.list_to_tree(fail_a_leaf)
-                        False_Sub_B = ght.list_to_tree(fail_b_leaf)
-
-                        if self.Factor is True:
-                            union_a_f = map(lambda x: [_ for _ in rg.Brep.CreateBooleanUnion(x, 0.001)], fail_a_leaf)
-                            _secondary_brep_zip = list(zip(union_a_f, fail_b_leaf))
-                            _secondary_brep_array = [_ for _ in ghp.run(self._third_handle, _secondary_brep_zip)]
-
-                            _sec_brep_brep_list = [_[0] for _ in _secondary_brep_array]
-                            _sec_fail_brep_index = [_[1] for _ in _secondary_brep_array]
-                            tips_of_strs_list = [_[2] for _ in _secondary_brep_array]
-                            _sec_brep_sub_list = map(lambda x, y: [y[index] for index in x], _sec_fail_brep_index, fail_b_leaf)
-
-                            tips_of_strs = map(lambda x: ["The {} cutting failed".format("、".join([str(_) for _ in x]))], tips_of_strs_list)
-                            Secondary_Brep, Secondary_Fasle_Brep, Tip_Fail_Brep = ght.list_to_tree(_sec_brep_brep_list), ght.list_to_tree(_sec_brep_sub_list), ght.list_to_tree(tips_of_strs)
-                        else:
-                            Secondary_Brep, Secondary_Fasle_Brep, Tip_Fail_Brep = None, None, None
-
-                        return Succ_Brep, False_Brpe, False_Sub_B, Secondary_Brep, Secondary_Fasle_Brep, Tip_Fail_Brep
+                            self.message1("The data structures of the cut body and the cut body are inconsistent!")
+                    else:
+                        self.message2("The body to be cut cannot be empty!")
+                finally:
+                    self.Message = 'Brep cutting'
 
     else:
         pass

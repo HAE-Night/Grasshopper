@@ -500,6 +500,7 @@ try:
                 finally:
                     self.Message = "Point sort (group sort)"
 
+
         # 删除重复的点
         class CullPoints(component):
             def __new__(cls):
@@ -612,6 +613,97 @@ try:
                         return Reuslt_Pt, Index_Pt
                 finally:
                     self.Message = 'Delete duplicate points'
+
+
+        # 按照参照平面排序
+        class PtsSortByXYZ(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "HAE@点排序", "HAE_PtsSortByXYZ", """The point sequence will be sorted according to the given reference plane. The default is world XY""", "Hero", "Vector")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("4d413cd7-9c52-47a6-9af6-92502286f023")
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Point()
+                self.SetUpParam(p, "Pts", "P", "Point sequence")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_String()
+                self.SetUpParam(p, "Axis", "A", "Axis（x，y，z）")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Plane()
+                self.SetUpParam(p, "CP", "CP", "Reference plane")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Point()
+                self.SetUpParam(p, "Sort_Pts", "P", "Sorted point sequence")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                p1 = self.marshal.GetInput(DA, 1)
+                p2 = self.marshal.GetInput(DA, 2)
+                result = self.RunScript(p0, p1, p2)
+
+                if result is not None:
+                    self.marshal.SetOutput(result, DA, 0, True)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAGhSURBVEhLpda9LwRBHMbxxXl/Lby1/AFeOoVCJP4TCgWFRBQiQkEiJCKRKDQ6GhGKqzQaodARBUpEI4iEhPB95naTdTezt3Oe5JPbmdvZ397O7N4GltRjFouYQTXSpAejuc3kdOAn9I0mpMkpNKbPtBLShldo5yc0oliGEJ3UgTqSUkqBc9xhDRrXC2d8C0RnP4YyfCALZ3wL6Oxvc5smE9DYftOyxKdAdPYXWMYKtsI+51z4FDiB9nsLP+Ur1rbORdoC0dlPozlPN5xzkaZAJS7xjCp1WKIbVccoSJoCutu1LMdNy54WXOc2/ybtJaoIP5Ni3cdnkkuKb4FWhxpY41NgEtovTsv0Bbo3MiiITwE9ouexEJrDPjR2B3p0FOS/c3CGezSYliXl0E9UgUd1eCR6mo6YVizD2MAS1vEJ7fiOVahf3w/ClQFozLZp5aUT0T+SyzG0OmzRna0n6gPq1GGLZvwQtoPvIinOS5MfW5FiB48uzaZppYiKHEGD9tSREK2UG2i1daE9pBeHWjijV5UpaEUlRa818V8bdxUEQeYXu2uXtVyxgvoAAAAASUVORK5CYII="
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def __init__(self):
+                self.dict_axis = {'X': 'x_coordinate', 'Y': 'y_coordinate', 'Z': 'z_coordinate'}
+
+            def message1(self, msg1):
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
+
+            def message2(self, msg2):
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
+
+            def message3(self, msg3):
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
+
+            def normal_sort_pts(self, data_list):
+                print(data_list)
+
+            def _other_sort_pts(self, pts_list, coord_pl, axis):
+                for f_index in range(len(pts_list)):
+                    for s_index in range(len(pts_list) - 1 - f_index):
+                        start_pt = ghc.PlaneCoordinates(pts_list[s_index], coord_pl)[self.dict_axis[axis]]
+                        end_pt = ghc.PlaneCoordinates(pts_list[s_index + 1], coord_pl)[self.dict_axis[axis]]
+                        if start_pt > end_pt:
+                            pts_list[s_index], pts_list[s_index + 1] = pts_list[s_index + 1], pts_list[s_index]
+                return pts_list
+
+            def RunScript(self, Pts, Axis, CP):
+                try:
+                    CP = CP if CP is not None else ghc.XYPlane(rg.Point3d(0, 0, 0))
+                    Axis = 'X' if Axis is None else Axis
+                    if len(Pts) != 0:
+                        Axis = Axis.upper()
+                        if Axis not in ['X', 'Y', 'Z']:
+                            self.message1("Please enter the correct coordinate axis!")
+                        else:
+                            Sort_P = self._other_sort_pts(Pts, CP, Axis)
+                            return Sort_P
+                    else:
+                        self.message2("Point sequence cannot be empty!")
+                finally:
+                    self.Message = 'Point sort'
 
     else:
         pass

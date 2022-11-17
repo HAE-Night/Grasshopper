@@ -13,6 +13,7 @@ import Rhino
 import rhinoscriptsyntax as rs
 from functools import reduce
 import Rhino.Geometry as rg
+import ghpythonlib.components as ghc
 import Line_group
 from itertools import chain
 import ghpythonlib.components as ghbc
@@ -757,6 +758,111 @@ try:
                         self.message2("Please enter a surface!")
                 finally:
                     self.Message = "Trimming surface trimming"
+
+            # 曲面按照参照平面排序
+            class SurfaceSortByXYZ(component):
+                def __new__(cls):
+                    instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                       "HAE@面排序", "HAE_SurfaceSortByXYZ", """Surface sorting: enter the xyz axis to sort by reference plane""", "Hero", "Surface")
+                    return instance
+
+                def get_ComponentGuid(self):
+                    return System.Guid("c5d243ad-a60f-46ff-8314-851545506bc1")
+
+                def SetUpParam(self, p, name, nickname, description):
+                    p.Name = name
+                    p.NickName = nickname
+                    p.Description = description
+                    p.Optional = True
+
+                def RegisterInputParams(self, pManager):
+                    p = Grasshopper.Kernel.Parameters.Param_Geometry()
+                    self.SetUpParam(p, "Geo", "G", "Surface List Data")
+                    p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+                    self.Params.Input.Add(p)
+
+                    p = Grasshopper.Kernel.Parameters.Param_String()
+                    self.SetUpParam(p, "Axis", "A", "Axis（x，y，z）")
+                    p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                    self.Params.Input.Add(p)
+
+                    p = Grasshopper.Kernel.Parameters.Param_Plane()
+                    self.SetUpParam(p, "CP", "CP", "Reference plane")
+                    p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                    self.Params.Input.Add(p)
+
+                def RegisterOutputParams(self, pManager):
+                    p = Grasshopper.Kernel.Parameters.Param_Geometry()
+                    self.SetUpParam(p, "Sort_Geo", "G", "Sorted Surfaces")
+                    self.Params.Output.Add(p)
+
+                def SolveInstance(self, DA):
+                    p0 = self.marshal.GetInput(DA, 0)
+                    p1 = self.marshal.GetInput(DA, 1)
+                    p2 = self.marshal.GetInput(DA, 2)
+                    result = self.RunScript(p0, p1, p2)
+
+                    if result is not None:
+                        self.marshal.SetOutput(result, DA, 0, True)
+
+                def get_Internal_Icon_24x24(self):
+                    o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAEZSURBVEhL1dUxS0JRGMbxk9UQlbsEfoC+hEODfYcQHB0cdQycFfoSOtTmpBC1BYZjSzgoSFODESEuCvp/z+Xo8WJ51HMDH/jhfYX3fXCQq/4zp4gFj/5zjj7KeoogF5iirqcIkoAUPOgpguxVQQrXweMivgqO8YmKnqz4KihB7hT0ZMVHwSXGkDtF+cKOj4IXyA0vBVk8I60npXIwx3cuSOIH5pgUfVmz2KngCfaxVZwLbtBCBkfII3xsFaeCE3zALL1jZM1/cSq4RXjR1doCmYcIL7r6teBeT8FneGkT8uuXYgqqOMQbeuhuSHY6uMJSTEFNTxHEvNEGeEQTjS3Jrty4w/wdf4ZXfGPiSRvy35lH2uIeHSil1AxX8Lwjz7Z6iQAAAABJRU5ErkJggg=="
+                    return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+                def __init__(self):
+                    self.dict_axis = {'X': 'x_coordinate', 'Y': 'y_coordinate', 'Z': 'z_coordinate'}
+
+                def message1(self, msg1):
+                    return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
+
+                def message2(self, msg2):
+                    return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
+
+                def message3(self, msg3):
+                    return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
+
+                def _normal_fun(self, geo_list):
+                    for f_index in range(len(geo_list)):
+                        min_index = f_index
+                        for s_index in range(min_index + 1, len(geo_list)):
+                            if geo_list[min_index].GetArea() > geo_list[s_index].GetArea():
+                                min_index = s_index
+                        if min_index != f_index:
+                            geo_list[f_index], geo_list[min_index] = geo_list[min_index], geo_list[f_index]
+                    return geo_list
+
+                def get_center_pt(self, pt_list):
+                    center_pt = reduce(lambda pt1, pt2: pt1 + pt2, pt_list) / len(pt_list)
+                    return center_pt
+
+                def _other_fun(self, data_list, axis, coord_pl):
+                    for f_index in range(len(data_list)):
+                        for s_index in range(len(data_list) - 1 - f_index):
+                            first_center_pt = ghc.PlaneCoordinates(self.get_center_pt([_.Location for _ in data_list[s_index].Vertices]), coord_pl)[self.dict_axis[axis]]
+                            second_center_pt = ghc.PlaneCoordinates(self.get_center_pt([_.Location for _ in data_list[s_index + 1].Vertices]), coord_pl)[self.dict_axis[axis]]
+                            if first_center_pt > second_center_pt:
+                                data_list[s_index], data_list[s_index + 1] = data_list[s_index + 1], data_list[s_index]
+                    return data_list
+
+                def RunScript(self, Geo, Axis, CP):
+                    try:
+                        CP = CP if CP is not None else ghc.XYPlane(rg.Point3d(0, 0, 0))
+                        if len(Geo) == 0:
+                            self.message2("The surface list cannot be empty!")
+                        else:
+                            if Axis:
+                                Axis = Axis.upper()
+                                if Axis in ['X', 'Y', 'Z']:
+                                    Sort_Geo = self._other_fun(Geo, Axis, CP)
+                                    return Sort_Geo
+                                else:
+                                    self.message1("Please enter correct axis coordinates!")
+                            else:
+                                self.message3("Axis coordinate is not entered, it will be sorted by area!")
+                                Sort_Geo = self._normal_fun(Geo)
+                                return Sort_Geo
+                    finally:
+                        self.Message = 'Surface sorting'
     else:
         pass
 except:

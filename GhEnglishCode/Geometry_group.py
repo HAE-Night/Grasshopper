@@ -13,6 +13,7 @@ import Rhino
 import rhinoscriptsyntax as rs
 import Rhino.Geometry as rg
 import scriptcontext as sc
+import ghpythonlib.components as ghc
 import copy
 import math
 import socket
@@ -49,6 +50,10 @@ try:
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_String()
+                self.SetUpParam(p, "ID", "ID", "Object ID")
+                self.Params.Output.Add(p)
+
                 p = Grasshopper.Kernel.Parameters.Param_Point()
                 self.SetUpParam(p, "Vertex", "V", "Points obtained after object decomposition")
                 self.Params.Output.Add(p)
@@ -87,6 +92,7 @@ try:
                         self.marshal.SetOutput(result[3], DA, 3, True)
                         self.marshal.SetOutput(result[4], DA, 4, True)
                         self.marshal.SetOutput(result[5], DA, 5, True)
+                        self.marshal.SetOutput(result[6], DA, 6, True)
 
             def get_Internal_Icon_24x24(self):
                 o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAKASURBVEhLzdXZr41nGIbxXYoOplZbpaZqzdQ8lNKiaMyzA0FFHNSBiAhJK06JA+mf3OuHj+yuhGzZEndyJWuv9X3PcD/P++6xD02fxrKY+/yvSZKgi2N9rIzVsTG2hGSfxIQ1JRaFIGtjeSyNP+LP+CKmh4TbY1MsjKnxRs2KNbEjtsX3sScuxtP4N47F3jgTC+KzUMxPsTNWxMwYkaq9dCS0PicEuBLXY3ecf/n5cdyMH0MwM5kR38UvcTpGrNPyruDxb+FBVX0eX8W6kPznOBEHY3ZIILCOt4aihsTjpAMPzQ8/zgsz2B/aZp+AfGfF76EY7yjE74PMzHKMEy95K4gAqlH9l6F6FpnNt7E5JJfMe2TIZ0Ng348kOBonwyZciKthHW3RtBCIbZdDsmFjeM/Cf+KAL5JZijFOS8Iaysxrwz0cp8KLLPg4/EZW1Yp6RsC7wVa6EX+/+PhafL8Whi3RnWDVqpd/CwjWkMGywsY9ieMxyFm59+LjaxnWXyGBXdeBM+BFSayieTgnHwUZvq6GoQ+6Hd5/JRuk+vvBb0EfxqHYFx7Wod3eEEMCZ8UhtAyKsT2kwFsxWPa8zUchsw6sHR89KIHuzAZ+GxL4/kGYkXkoUrGW5Vm8Wl2bYPU8xALVOg8OlRNr0IbLc5tFrGGpLq2oDqy4qq2zzRqRygRQmYF+Hc6GhE6uK8KKkkOma/cVKVIBbt2RM/B/GSivDc5NyWvngm0/BBt0PFTJe4UpaEJSvQ0SwG3KJokHSawAZ2jCMuxfw8sSsMYwz4XTbUVdIax5Jxmi+0gSCb4J/3Ss8qVQ/aRI8OHm1IUEky4Xne2wsjbsvemt/3PHa2zsP4tgPuzdUnpeAAAAAElFTkSuQmCC"
@@ -95,18 +101,25 @@ try:
             def __init__(self):
                 pass
 
-            def which_geometry(self, objects):
-                Curve_list = [rg.Curve, rg.PolyCurve, rg.LineCurve, rg.NurbsCurve, rg.PolylineCurve]
-                o_type = type(objects)
-                if o_type in Curve_list:
-                    return self.explode_curve__get_plane(objects)
-                elif o_type is rg.Brep:
-                    return self.explode_brep__get_plane(objects)
+            def message1(self, msg1):
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
+
+            def message2(self, msg2):
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
+
+            def message3(self, msg3):
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
 
             def explode_curve__get_plane(self, curve):
                 origin_list = curve.DuplicateSegments()
-                if len(origin_list) > 1:
-                    c_list = [i for i in origin_list]
+                length_point = len(origin_list)
+                if length_point == 1:
+                    c_list = [curve]
+                    curve_plane = self.get_normal_plane(curve)
+                    points = [curve.PointAtStart, curve.PointAtEnd]
+                    return points, c_list, None, curve_plane
+                elif length_point > 1:
+                    c_list = [_ for _ in origin_list]
                     point = []
                     for line in c_list:
                         point.append(line.PointAtStart)
@@ -114,22 +127,16 @@ try:
                     p_list = [point[i] for i in range(len(point)) if i % 2 != 0]
                     p_list.insert(0, point[0])
                     if curve.IsClosed is True:
-                        curve_plane = self.get_polygon_plane(p_list)
-                        return p_list, c_list, None, curve_plane
+                        curve_plane = self.get_polygon_plane(p_list) if length_point != 3 else ghc.XYPlane(ghc.Area(curve)['centroid'])
                     else:
                         curve_plane = self.get_normal_plane(curve)
-                        return p_list, c_list, None, curve_plane
-                elif len(origin_list) <= 1:
-                    single_curve = curve
-                    c_list = [single_curve]
-                    curve_plane = self.get_normal_plane(single_curve)
-                    points = [single_curve.PointAtStart, single_curve.PointAtEnd]
-                    return points, c_list, None, curve_plane
+                    return p_list, c_list, None, curve_plane
 
             def explode_brep__get_plane(self, brep):
                 V, E, F = brep.Vertices, brep.Edges, brep.Faces
+                length_brep = len([_ for _ in E])
                 vertex_list = [i.Location for i in V]
-                brep_plane = self.get_polygon_plane(vertex_list)
+                brep_plane = self.get_polygon_plane(vertex_list) if length_brep != 3 else ghc.XYPlane(ghc.Area(brep)['centroid'])
                 return V, E, F, brep_plane
 
             def get_polygon_plane(self, points_list):
@@ -165,12 +172,21 @@ try:
                 return rot_plane
 
             def RunScript(self, Geometry):
-                if Geometry:
-                    Vertex, Edge, Face, Plane = self.which_geometry(Geometry)
-                    PlaneA, PlaneB, PlaneC = Plane, self.base_rotate(Plane, 1), self.base_rotate(Plane, 2)
-                    return Vertex, Edge, Face, PlaneA, PlaneB, PlaneC
-                else:
-                    pass
+                try:
+                    if Geometry:
+                        ID = str(Geometry)
+                        temp_geo = Rhino.DocObjects.ObjRef(Geometry).Geometry()
+                        Vertex, Edge, Face, Plane = None, None, None, None
+                        if isinstance(temp_geo, (rg.Curve, rg.PolyCurve, rg.Polyline, rg.PolylineCurve, rg.NurbsCurve,)) is True:
+                            Vertex, Edge, Face, Plane = self.explode_curve__get_plane(temp_geo)
+                        elif isinstance(temp_geo, (rg.Brep, rg.Surface, rg.NurbsSurface,)) is True:
+                            Vertex, Edge, Face, Plane = self.explode_brep__get_plane(temp_geo)
+                        PlaneA, PlaneB, PlaneC = Plane, self.base_rotate(Plane, 1), self.base_rotate(Plane, 2)
+                        return ID, Vertex, Edge, Face, PlaneA, PlaneB, PlaneC
+                    else:
+                        self.message2("Geometry is null!")
+                finally:
+                    self.Message = 'Geometric decomposition'
 
 
         # 几何排序
