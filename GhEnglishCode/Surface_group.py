@@ -127,19 +127,19 @@ try:
                 o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAANpSURBVEhLrZXdS5NRHMeHd6UZ1h8giAhS6TLfoJnhEsMrpQs1vJREvfRKTcWbKdWglXgjoqJ0K0GEVhAzl7UcMsu9uT2bL3PsBXTLTff2fDvnbE86N71wnvHl2Y/nPN/P77z8zhHNL2oe6y07I99Xfl+6qK9IvfpHwQNwu92XLp4Yi36trstoYDQaoNfpoEtTggf1o77/ATqDCZxtG9bNHXBpSPheT/zcblcM4HK5YDJziESj4ImiaYpOjYXbhNPpTAQEQyGEiUJpKhyOwMzZTgE2OBwFgwgRBc+QkGGqdycVCoUJwArXacDh4RHZT7HGk3EeHR3HtNG1cjgcJMNwSmNBqQFmK/twamoKw8PD4DiOxSqVCjKZDAsLC+jt7UVfXx/8fj+bCppAKgWDoWTAhsXGsiwoKIBIJMLY2BiLW1paWNzW1oaZmRn09PRgb2/vAgAyArr6FRXlzLCjo4MBSktLWdzZ2YnJyUk0Nzdj125n76LRSJKEXbhhIQBXCkBZWRmys7NRU1OD/f195ObmIjMzkwEMBgOWl5fh/evH1s4u7A4ndk6Ixtt2B5yePTYjCQC6BtEoj+LiYlRXV6OoqAhzc3PIz8+HWCxGa2sry5q2j58XcefeA9wtr0JJRXWCbokr8OTpM1ZsHqGSBUAkEkVhYSHa29uZaWNjI6RSKerq6thaCO3L1yVczbrBpi6VSisfwra9mxpAMx4aGkJtbS0yMjLQ3d2NhoYGNDU1xe0pQIWs7LMBlZJHiQB3HEArMC8vD3K5HF1dXazz9PR0CsASrl2/mWQsKAaww+NJANCjIoycnBy270dHR1lntVoNiUSC+vr6uD1PAN/OB9yXwrp1CmA0WUgBBTAwMID5+XlotVo2Co/HA4VCgfHxcValFPD+wydidCXJWNDtkqpkgMFoJgW0z3KkRoFAgP33+XzsSY8Oum0PDwPQaHWQvXiNkVdvMCJ/m6DhlwpMv5sjhbZ1fFxTgD4OoCbniVZxgBwV5zWe/IwmM6mDOMDr88JApujg4IBk7oeXGHm93ouLjNq4YYkBNFq9bG1tDet6E9QaLX6oV7BJtpjFun1hmYmoH7syVT9XZf39/VAqlXhOnoODg7CTs4bdsXr9xXTyTlYuqRXUnB7PExMTmJ2dZfNMdw/tkI54nsc/OdtNDSsgkJoAAAAASUVORK5CYII="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
-            def bubbling(self, Face):
-                Area_Arc = [rs.SurfaceArea(i)[0] for i in Face]  # 面积列表
-                # for循环排序
-                for i in range(1, len(Area_Arc)):
-                    for j in range(0, len(Area_Arc) - 1):
-                        if Area_Arc[j] > Area_Arc[j + 1]:
-                            Area_Arc[j], Area_Arc[j + 1] = Area_Arc[j + 1], Area_Arc[j]
-                            Face[j], Face[j + 1] = Face[j + 1], Face[j]
-                return Face, Area_Arc
+            def SurArea(self, x):
+                return rs.SurfaceArea(x)[0]
 
-            def RunScript(self, Faces):
-                Faces, Area_Arc = self.bubbling(Faces)
-                return Faces, Area_Arc
+            def RunScript(self, x, y):
+                try:
+                    Area = ghp.run(self.SurArea, x)
+                    zipsur = dict(sorted(zip(x, Area)))
+                    return zipsur.keys(), zipsur.values()
+                except Exception, e:
+                    self.message2(str(e))
+                finally:
+                    self.Message = "HAE-Sur-Area"
+
 
 
         # 计算Surface面积
