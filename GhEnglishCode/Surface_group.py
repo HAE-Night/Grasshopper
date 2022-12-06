@@ -130,15 +130,18 @@ try:
             def SurArea(self, x):
                 return rs.SurfaceArea(x)[0]
 
+
             def RunScript(self, x, y):
                 try:
                     Area = ghp.run(self.SurArea, x)
-                    zipsur = dict(sorted(zip(x, Area)))
-                    return zipsur.keys(), zipsur.values()
+                    zipsur = dict(zip(x, Area))
+                    brep = [i [0] for i in sorted(zipsur.items(), key=lambda x: x[1])]
+
+                    return brep
                 except Exception, e:
                     self.message2(str(e))
                 finally:
-                    self.Message = "HAE-Sur-Area"
+                    self.Message = "HAE-SurArea"
 
 
 
