@@ -77,12 +77,14 @@ try:
 
 
         # Surface面积排序
-        class Brep_Arae(component):
+        class GeometryArea(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@根据面积排序", "RPP_Brep_Arae", """根据face的面积进行排序,从小到大""",
-                                                                   "Scavenger",
-                                                                   "Surface")
+                               "Area sort",
+                               "RPP@面积排序",
+                               """根据face的面积进行排序""",
+                               "Scavenger",
+                               "Surface")
                 return instance
 
             def get_ComponentGuid(self):
@@ -95,22 +97,27 @@ try:
                 p.Optional = True
 
             def RegisterInputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_Brep()
-                self.SetUpParam(p, "Faces", "F", "需要排序的面")
+                p = Grasshopper.Kernel.Parameters.Param_Geometry()
+                self.SetUpParam(p, "Geometry", "G", "面、Brep等几何体")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Faces", "F", "排序后的面")
+                p = Grasshopper.Kernel.Parameters.Param_Geometry()
+                self.SetUpParam(p, "Geometry", "G", "排序后的几何")
                 self.Params.Output.Add(p)
 
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                p = Grasshopper.Kernel.Parameters.Param_Number()
                 self.SetUpParam(p, "Area_Arc", "A", "排序后的面积")
+                self.Params.Output.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Point()
+                self.SetUpParam(p, "Centroid", "C", "质心")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
                 p0 = self.marshal.GetInput(DA, 0)
+                if isinstance(p0, Rhino.Geometry.Brep) and p0.Faces.Count == 1: p0 = p0.Faces[0].DuplicateSurface()
                 result = self.RunScript(p0)
 
                 if result is not None:
@@ -119,24 +126,45 @@ try:
                     else:
                         self.marshal.SetOutput(result[0], DA, 0, True)
                         self.marshal.SetOutput(result[1], DA, 1, True)
+                        self.marshal.SetOutput(result[2], DA, 2, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAANpSURBVEhLrZXdS5NRHMeHd6UZ1h8giAhS6TLfoJnhEsMrpQs1vJREvfRKTcWbKdWglXgjoqJ0K0GEVhAzl7UcMsu9uT2bL3PsBXTLTff2fDvnbE86N71wnvHl2Y/nPN/P77z8zhHNL2oe6y07I99Xfl+6qK9IvfpHwQNwu92XLp4Yi36trstoYDQaoNfpoEtTggf1o77/ATqDCZxtG9bNHXBpSPheT/zcblcM4HK5YDJziESj4ImiaYpOjYXbhNPpTAQEQyGEiUJpKhyOwMzZTgE2OBwFgwgRBc+QkGGqdycVCoUJwArXacDh4RHZT7HGk3EeHR3HtNG1cjgcJMNwSmNBqQFmK/twamoKw8PD4DiOxSqVCjKZDAsLC+jt7UVfXx/8fj+bCppAKgWDoWTAhsXGsiwoKIBIJMLY2BiLW1paWNzW1oaZmRn09PRgb2/vAgAyArr6FRXlzLCjo4MBSktLWdzZ2YnJyUk0Nzdj125n76LRSJKEXbhhIQBXCkBZWRmys7NRU1OD/f195ObmIjMzkwEMBgOWl5fh/evH1s4u7A4ndk6Ixtt2B5yePTYjCQC6BtEoj+LiYlRXV6OoqAhzc3PIz8+HWCxGa2sry5q2j58XcefeA9wtr0JJRXWCbokr8OTpM1ZsHqGSBUAkEkVhYSHa29uZaWNjI6RSKerq6thaCO3L1yVczbrBpi6VSisfwra9mxpAMx4aGkJtbS0yMjLQ3d2NhoYGNDU1xe0pQIWs7LMBlZJHiQB3HEArMC8vD3K5HF1dXazz9PR0CsASrl2/mWQsKAaww+NJANCjIoycnBy270dHR1lntVoNiUSC+vr6uD1PAN/OB9yXwrp1CmA0WUgBBTAwMID5+XlotVo2Co/HA4VCgfHxcValFPD+wydidCXJWNDtkqpkgMFoJgW0z3KkRoFAgP33+XzsSY8Oum0PDwPQaHWQvXiNkVdvMCJ/m6DhlwpMv5sjhbZ1fFxTgD4OoCbniVZxgBwV5zWe/IwmM6mDOMDr88JApujg4IBk7oeXGHm93ouLjNq4YYkBNFq9bG1tDet6E9QaLX6oV7BJtpjFun1hmYmoH7syVT9XZf39/VAqlXhOnoODg7CTs4bdsXr9xXTyTlYuqRXUnB7PExMTmJ2dZfNMdw/tkI54nsc/OdtNDSsgkJoAAAAASUVORK5CYII="
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAI6SURBVEhLYxgFJIMF2x4qLzvwJnDh9sdBC7ffh+Bdj4OW7n8dMHfbLVGQmsW7nnsv2fUMIQ9Uu/zAm6C5W+6Zgw3BBeZseKI+a+P9xpUH3vkt2vnEd9HOh77ztz/2Xr79oe3yg+/8Z226Vz9z0/2OxbteRC7dA5GH4RUHXvvO3nS/YvaWRx5Q4zDB3C33I1ccfW0K5cJB19ZbwSB65qZ7sUA8HyyIBazafZd/3rYHJVAuJgB5s2XGNl9tDY2Cf//+cXJxcRmFRMaWLjr+4tSqK1d4Zm18GDZ7870pUOUYYNmeu+Jzdz4shHIxwc6L/zzTirqylRTl/1dWVmZLSEjss7a1fXv0wXfn////M8/a/CB61sZ7U6HKMcD8Lfcl5u94WADlYoJt5/55hSdX5Tg62D23tLR86uXl9dHZ2XkbVJphxsY78RRZsPXcP8/4rPqK2JjILWZmZrfj4uL2uru7r4NKM8zafC+OIgvm73gcvHDrZZ8dOzZpHDlyRP3EiROKq1ev1oNKU27BvK33whfvf2EB5WIAii1YsP1h2MLdD22gXAwwasGoBYPCgkeRi3c/wihNYWDW5rv4y6L99wXmbX9YBOVigjlb7jvO3nw3Z+WhZ6JL9z8VQcZrj34WAxbVdbM231+x6vA7OXR5EJ6z5YH37C330qDGYYL6+v9Ms7fej1qx/03lop2PK4FBBsYg9jKg2LytD5wWb3ugtXjX06olu5/C5UEYpGfO5nv5i7fd4oMaNywAAwMAGY/CV6U66jwAAAAASUVORK5CYII="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
-            def bubbling(self, Face):
-                Area_Arc = [rs.SurfaceArea(i)[0] for i in Face]  # 面积列表
-                # for循环排序
-                for i in range(1, len(Area_Arc)):
-                    for j in range(0, len(Area_Arc) - 1):
-                        if Area_Arc[j] > Area_Arc[j + 1]:
-                            Area_Arc[j], Area_Arc[j + 1] = Area_Arc[j + 1], Area_Arc[j]
-                            Face[j], Face[j + 1] = Face[j + 1], Face[j]
-                return Face, Area_Arc
+            def message1(self, msg1):  # 爆红
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
 
-            def RunScript(self, Faces):
-                Faces, Area_Arc = self.bubbling(Faces)
-                return Faces, Area_Arc
+            def message2(self, msg2):  # 黄泡
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
+
+            def message3(self, msg3):  # 白泡
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
+
+            def bubbling(self, Face):
+                # 面积质量属性
+                FaceAMP = [rg.AreaMassProperties.Compute(i) for i in Face]
+
+                Area_Arc = [ap.Area for ap in FaceAMP]  # 面积
+                Centroid = [ap.Centroid for ap in FaceAMP]  # 质心
+                nice = zip(Face, Area_Arc, Centroid)
+
+                # 字典遍历元组排序
+                AREAS = sorted(nice, key=lambda x: x[1], reverse=False)
+                # 取值
+                Faces = [_i[0] for _i in AREAS]
+                Area_Arcs = [_i[1] for _i in AREAS]
+                Centroids = [_i[2] for _i in AREAS]
+                return Faces, Area_Arcs, Centroids
+
+            def RunScript(self, Geometry):
+                try:
+                    Face, Area_Arc, Centroid = self.bubbling(Geometry)
+                    return Face, Area_Arc, Centroid
+                except Exception as e:
+                    self.message1("运行报错：\n{}".format(str(e)))
+                finally:
+                    self.Message = 'HAE 面积排序'
 
 
         # 计算Surface面积
