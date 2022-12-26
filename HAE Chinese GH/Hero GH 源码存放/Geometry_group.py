@@ -445,6 +445,82 @@ try:
                 finally:
                     self.Message = "GH数据类型分类"
 
+        # 几何体中心点
+        class GeoCenter(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                       "RPP@中心点",
+                       "RPP_GeoCenter",
+                       """求几何物体的中心点""",
+                       "Scavenger",
+                       "Geometry")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("5a71f66c-d43d-4631-9a69-7c04cafb71a1")
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Geometry()
+                self.SetUpParam(p, "Geometry", "G", "几何物体")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Point()
+                self.SetUpParam(p, "Center", "C", "中心点")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                result = self.RunScript(p0)
+
+                if result is not None:
+                    self.marshal.SetOutput(result, DA, 0, True)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAALdSURBVEhLtZbrS6JBFMb79/ZfCLp8q7b7/Uq2S6VCgqTsVhARtETQBwvBTHclotuHtutuuUooZJFblEWQlj77nvMe653MChZ/MDjPmdd53pk5Z7Qok8l8AGApVCMDh9YpGEVaI6eC8S6D29tb7O3tYWlpCSsrKzg6OpKRt3nV4PT0FENDQ2hsbERvby8sFgvMZjM6OjpQX1+P6elpeTI/eQ18Ph/KysowMTGB4+NjPDw8yAi4HwwG0d/fj8rKSn6RfLxo4PV6efJQKCSR/CwuLqK0tBRnZ2cSUckxiEajKCkp4U8j5+fn2NjYwPb2NtLptER1aLUNDQ2iVHIM+vr64HK5ROmMjIygpqYGg4Nm7SxMvC3Ly8syqjMwMACPxyPqCcXg5OQEdXV1SKVSEgHsdjt6enp4BVlo/8vLy7G2tiYRIBKJoL29XdQTioHb7cbw8LAo4PDwENXVH5FMJlnf/fJrzcd9mpBe5v7+njXR1dWFWCwmSkcxGB0dxdzcnChwBk1NfeP+Xew3rj02btQnKIt2dna4T9hsNqyurorSUQycTif8fr8owOFw4PuPAJBJIeG24Mb1Cdeuz7hyW7XRNJxfvirPP/8+oRiMj49jfn5eFLiQsitIXseR8NpxpbXUzV+OdXd3KyuwWq2vr4DcjWdAh04Zk93nu8hPJKNb3N/c3ERtba2SEM3NzVyURhSDy8tLzmdj1c7OznKKBoN/WKcyVFx6lW9t6WYE3VWtra2inlAMCErLmZkZUToLCwucMTQBvSXdRcatIWiMqvo5OQaJRIJznHLdCKVqOBzm9DSmJjE5OYnOzk5RKjkGxP7+PoqLi7G+vi6R/IyNjaGqqgoXFxcSUXnRgKCLrqKigq+A3d3dx2Ij6Kyy9w9d48Yqf05eA4K2gs6jra0NLS0tnJZUrU1NTTCZTAgEAkpCvMSrBlm0322+AmjrDg4OEI/HZeRt3mXwPxT4XwXwD/Z9PBDIsPB/AAAAAElFTkSuQmCC"
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def __init__(self):
+                pass
+
+            def message1(self, msg1):  # 报错红
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
+
+            def message2(self, msg2):  # 警告黄
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
+
+            def message3(self, msg3):  # 提示白
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
+
+            def mes_box(self, info, button, title):
+                return rs.MessageBox(info, button, title)
+
+            # 求边界框的中心点
+            def center_box(self, Box):
+                return Box.Center
+
+            def GeoCenter(self, Geo):
+                box = [g.GetBoundingBox(True) for g in Geo]  # 获取几何边界
+                center = map(self.center_box, box)
+                return center
+
+            def RunScript(self, Geometry):
+                try:
+                    if len(Geometry) > 0:
+                        Cenpt = self.GeoCenter(Geometry)
+                        return Cenpt
+                    else:
+                        self.message2("无几何体输入")
+                finally:
+                    self.Message = 'HAE 中心点'
+
     else:
         pass
 except:
