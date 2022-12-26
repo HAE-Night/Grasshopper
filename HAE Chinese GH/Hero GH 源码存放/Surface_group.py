@@ -233,8 +233,8 @@ try:
         class Surface_PLA(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@面_Plane", "RPP_Surface_PLA",
-                                                                   """根据面的点序生成Plane,Indexs下标顺讯决定Plane的方向.""", "Scavenger",
+                                                                   "RPP@求中心平面", "RPP_Surface Plane",
+                                                                   """求几何物体的中心平面PLane""", "Scavenger",
                                                                    "Surface")
                 return instance
 
@@ -248,63 +248,78 @@ try:
                 p.Optional = True
 
             def RegisterInputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_Brep()
-                self.SetUpParam(p, "Surface", "S", "参数Brep、Surface。")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
-                self.Params.Input.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_Integer()
-                self.SetUpParam(p, "Indexs", "I", "Plane生成参考的点序 默认：【0,1,0,3】注：每两个点为一组向量，第一个点为两点向量终点")
+                p = Grasshopper.Kernel.Parameters.Param_Surface()
+                self.SetUpParam(p, "Surface", "S", "面")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "PLA", "P", "生成Plane")
+                p = Grasshopper.Kernel.Parameters.Param_Plane()
+                self.SetUpParam(p, "Plane", "P", "依附中心点生成的Plane")
+                self.Params.Output.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Boolean()
+                self.SetUpParam(p, "B", "B", "查看Sur是否有效")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
                 p0 = self.marshal.GetInput(DA, 0)
-                p1 = self.marshal.GetInput(DA, 1)
-                result = self.RunScript(p0, p1)
+                if isinstance(p0, Rhino.Geometry.Brep) and p0.Faces.Count == 1: p0 = p0.Faces[0].DuplicateSurface()
+                result = self.RunScript(p0)
 
                 if result is not None:
-                    self.marshal.SetOutput(result, DA, 0, True)
+                    if not hasattr(result, '__getitem__'):
+                        self.marshal.SetOutput(result, DA, 0, True)
+                    else:
+                        self.marshal.SetOutput(result[0], DA, 0, True)
+                        self.marshal.SetOutput(result[1], DA, 1, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAANJSURBVEhLvZVJT1NRFMdZEvgMbFgRVnwJEr4AKzVRogkuKImEsczVytalxoCKtBTaMnRQZLQ1dIYyFNrKkEaNhGihdB7g7z23vNqHhQUQb/JPX17/9/zOucN5RWVlZV9KSkpwUZWVlX6FQjFwE+n1+oEiClZdXY2ampqcqqqqUFpaCma4kcxmMziAgpaXl4MG/RYXF/MqBofeXE+DQ3g3PAyDwfAXkD8EwOb2zrW05dvDp3kTJiYnr67gJmN1zQO1Wp0F0JpTUEH0jvYglUpxJRJJBI9PCur30QlOwtGcl0TDubIGjUaDooqKCj8FvKja2lokk0lu3g98R69MDtmz53gqHxBJ2tULlXqK+8gvzHG4zgFK5Yhco9HC69/lfwimfPPufgBt7R2QSqXo6uwUqanpCd4rVNyXP0cM0J4Dzs7YciREoncEkHZ2obu7Gz09PSK1tLRAMTrGg+bmsOFwuf8zYNu3g7PTU8TjcZHo3c7e5YBWBhhRZgG5OSwpu7MA4DQPQM9kpPHtxwF6evtYwN7rA7a8X5HJZBCLxbgcDgeWlpZgsVgwOqbG/Qd1aG5uRl8fgf4FUC7CXErO7lwtDKAMgsEg1tfX4fV6cXDwE8YPM2iQNKKxUYL+/v4CABXPOh9gcxQApNNpbgiFQpidneW9xGT6jJevXuPO3XuQSBogkxUGUNBoNMpFiV4ATMCz7ee3kAxUgdPphMvlwu7uDtTaKdQ9fIT6+sdo75CipbUtJwmrbPDtCAdEIhGudDrFACtiwOaWj18SMhDAZrPBarViY2MDH2dmMTyiwsS0ASusx9jYBgpatrn4AYnFogiHw1ypVBJWewFAIhHnBgLMzc3BaDRiYWEBOp0OZpMJfp+PnxbKUFCGLSvNC4VYTzrJKsnugtXuEgM2PF62wTFuODw85Evkdrvh9/tht9vh8Xj4xtMhoD26SuSxsMqoBXGAlgHWN7d5mYKJlmd+fh6Li4u8GqokEAjwJTw+Pr5SdFAsNqcYIFQgAKjsbPNKIHXexCKRMEIsgOC5TLkK2OnMAVxuD4JHIRwc/rqxguwbYV62Q5sFKOV6vQ5K1ThU49pbk5I1QIpLgBf09dfppjE9PXVronhmsxl/AIqlHEPE5LaXAAAAAElFTkSuQmCC"
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAM6SURBVEhL7ZNrSFNhGMfnZTqmVEODmFpTtMT60BevOHTMSxrmBZW0KZIT04lOsSwT85a2TN3CzbykZ5t5yXmBFPM257XCDCk1L6SEVBpiKmkfRufpPboPUoSmBH3oDw/n5bzv8/+d53nOS/qvvy4A0COeOI6bLqzh9svLy4e2Ng4iZKqNDI3EQ7it4sVaQ6Z8+MndKmxJ8KgVRmaW3TXH9i7CcAnAcHAWTy3r/izOkav6ciseLopKEtRtdX4w2WoD6yoyCMUx3zky3FKTtrtwfMOheXiuMkfa9TJLXLBQXpkAysbzMNNmDhs9ZIAhxB5GMYjiGQlEEp7aswQYmvTdhdrgKFbIYLWPDjCqDfAcGRGmhGEfCtWOQO9Fkji1Txlurkn/VagVR+Lj41N9fX3z/P39BWFRCfIIri9en04CRYY2fO3Q2QbsNN4rAJlTkHGTm5vbvKenp5zFYmEBwWGd/sFeIIjRhWuh+hDCpsCmSgug/yfzPQKo1tbWE0KhsKizszNZJpPZYy3KhNzC6zBXS4G5RgPwsjeASUx3u+/7AOiYmpp2x8XFRUgkEm4Y55IyT1jZmn4nUT0lJ8N0AwWCWVQYJwBooPsB6JqZmSnDw8M5aWlpl5lODp94iRmvMvL43yalZBiv0YNAFypMHARAp9N7eDxeMp/P92G5MJtEpXW9aXlX1RMYGWYa9CHIVQPYZ4vIJiYmHWjQTikpKcfPubMbo6Jj318IDsGvBFnCtMIQIr314U3VwWag5HA4yUlJSRGRkZHcLEFhE5cfAzW3DGC0UgsuuurBu2p0lLgPfwpAl8qAwWAMoK/3KS0ttc3Pzz+jUg0EVLd2j+UUFy1mFN5YdbCzgnYJA9b7qdu/KlEJMt5a76ECGpPJfO3s7HzT2NjYCs3jJINBP1UsvMfOLZB6h8YXJp61c91MFbf0CrDajw+kmfBY6gcjChtY6Tq8Nfjikmi1+/3fAAhhGObBZrOVFhYWCtSuejSTOhqNJjMyomGnbaybY6O5UUQrUbUn2mdxR9HT9ZSKjum32eW1UxJpNtyuqoausRVnjd3BhWAUBDtKVD/yAfdoGfkSOD8/f0yz/V//hEikH9g9dLOaG7vaAAAAAElFTkSuQmCC"
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
-            def Point(self, pts):  # 获取所有点坐标信息
-                for i in pts:
-                    yield i.Location
+            def __init__(self):
+                pass
 
-            def Count(self, num1, num2):  # reduce调用+方法
-                return num1 + num2
+            def message1(self, msg1):  # 报错红
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
 
-            def Vector(self, PTS, Index):
-                return [PTS[i] for i in Index]
+            def message2(self, msg2):  # 警告黄
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
 
-            def RunScript(self, Surface, Indexs):
-                if Surface:
-                    pts = Surface.Vertices  # 取顶点
-                    pt = self.Point(pts)  # 惰性取值
-                    Pt1, Pt2, Pt3, Pt4 = next(pt), next(pt), next(pt), next(pt)
+            def message3(self, msg3):  # 提示白
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
 
-                    Cx = reduce(self.Count, [Pt1[0], Pt2[0], Pt3[0], Pt4[0]]) / 4
-                    Cy = reduce(self.Count, [Pt1[1], Pt2[1], Pt3[1], Pt4[1]]) / 4
-                    Cz = reduce(self.Count, [Pt1[2], Pt2[2], Pt3[2], Pt4[2]]) / 4
-                    Center_PT = rg.Point3d(Cx, Cy, Cz)
+            def mes_box(self, info, button, title):
+                return rs.MessageBox(info, button, title)
 
-                    PTS = [Pt1, Pt2, Pt3, Pt4]
-                    if Indexs:
-                        pt = self.Vector(PTS, Indexs)
-                    else:
-                        pt = self.Vector(PTS, [0, 1, 0, 3])
-                    PLA = rg.Plane(Center_PT, pt[1] - pt[0], pt[3] - pt[2])
-                    # return outputs if you have them; here I try it for you:
-                    return PLA
+            # 根据中心点求面 -- U,V与原生不符，却与SEG相符
+            def Plane_box(self, box):
+                Center = box.Center
+                UPT = (box.GetCorners()[0] + box.GetCorners()[1]) / 2
+                VPT = (box.GetCorners()[1] + box.GetCorners()[2]) / 2
+                Plane = rg.Plane(Center, UPT, VPT)
+                return Plane
 
+            # 判断Surface的有效性
+            def IsValid(self, Sur):
+                return Sur.IsValid
+
+            def GeoBox(self, Surface):
+                boxs = [g.GetBoundingBox(False) for g in Surface]  # 获取几何边界
+
+                Plane = map(self.Plane_box, boxs)
+                Bool = map(self.IsValid, Surface)
+                return Plane, Bool
+
+            def RunScript(self, Geometry):
+                try:
+                    PB = self.GeoBox(Geometry)
+                    return PB
+                except Exception as e:
+                    self.message2(str(e))
+                finally:
+                    self.Message = 'HAE 中心平面'
 
         # 曲面挤出（曲线修剪）
         class Curve_Trim_Offset(component):
