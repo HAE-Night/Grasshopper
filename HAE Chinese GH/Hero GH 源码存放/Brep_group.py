@@ -247,7 +247,7 @@ try:
                     return Brep
 
 
-        # ZY_压顶板实体
+        # 压顶板实体
         class ZY_YDB(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
@@ -560,13 +560,15 @@ try:
                     return Surface, Brep
 
 
-        # 孔 - 圆柱
-        class ZY_Cylinder(component):
+        # 圆柱切割体
+        class CirBrep(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@圆柱开孔", "RPP_Cylinder", """在指定坐标原点生成开孔圆柱""",
-                                                                   "Scavenger",
-                                                                   "Brep")
+                       "CirBrep",
+                       "RPP@开孔圆柱",
+                       """根据点、Plane生成圆柱切割体""",
+                       "Scavenger",
+                       "Brep")
                 return instance
 
             def get_ComponentGuid(self):
@@ -580,60 +582,76 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Plane()
-                self.SetUpParam(p, "Plane", "P", "指定Plane，以Plane为圆弧的中心")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
-                self.Params.Input.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Radius", "R", "圆柱半径.")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
-                self.Params.Input.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_Vector()
-                self.SetUpParam(p, "CriVec", "C", "圆弧延伸向量，决定了圆柱的长度方向.")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
-                self.Params.Input.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_Vector()
-                self.SetUpParam(p, "Move", "M", "若需要生成多个，输入移动向量.")
+                self.SetUpParam(p, "Plane", "P", "参考平面")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
+                p = Grasshopper.Kernel.Parameters.Param_Number()
+                self.SetUpParam(p, "Radius", "R", "圆柱半径")
+                Radius = 0
+                p.SetPersistentData(gk.Types.GH_Number(Radius))  # 为参数设置缺省值
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Vector()
+                self.SetUpParam(p, "CriVec", "V", "延伸方向大小")
+                cVAS_value = rg.Vector3d(0, 0, 20)
+                p.SetPersistentData(gk.Types.GH_Vector(cVAS_value))  # 为参数设置缺省值
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
             def RegisterOutputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Cylinder", "Cl", "切割孔--圆柱体.")
+                p = Grasshopper.Kernel.Parameters.Param_Brep()
+                self.SetUpParam(p, "Geometry", "G", "圆柱体")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
                 p0 = self.marshal.GetInput(DA, 0)
                 p1 = self.marshal.GetInput(DA, 1)
                 p2 = self.marshal.GetInput(DA, 2)
-                p3 = self.marshal.GetInput(DA, 3)
-                result = self.RunScript(p0, p1, p2, p3)
+                result = self.RunScript(p0, p1, p2)
 
                 if result is not None:
                     self.marshal.SetOutput(result, DA, 0, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAOzSURBVEhLzVZbT1NZFO5vIJHLGw+E8AOIPiBQeKNCnNECSglQMG3thRaoaDtDgYChPRlhKJQSCgZSERsvOMLUQNQKqDRSriWUQJjIIJCQISE8CAyXz7N3D9YES6LpJPMlq91rnb3Wd9bu2muVt7+/f+Ho6IhZW1tjhEIhExMTw8TFxf2wxMbGMnl5eczW1hZD4vLYD8vu7i7KysrgcDjg9Xrh8/kwNzf33UL8pqenYbfbUV5eDgLexsYGo9frMTs7Sw2hwujoKKqrq8HTarVMT08PZw4tbDYbeKmpqczk5CRnCi2Ghob8BFNTU5zJj/X1dTQ2NqK9vZ1KS0sLmpub6bqjo4N+E91qtX7Rm5qasLm5yUXwY2Rk5NsZkAd8Ph8lahVKNCqwexAVFQV1MaurFVApFThzJhwCgcC/h5Xk5GT6A3+N4eHhbxOwlYXMzExYO+7DYrNDoZDj0aOHyC+U4N5DJ66I8tD37BkKCgpwt/sx7phtyM3N5bwDCEpAIJaoUNjyNyTWv/CLoRpvXc8hkDRA5wQE4tvwvHuJ4lIdlJ3/QPSbF6riUs4zgFMJrubLcLHOB6HRC+2tXzH8oh8JOXWQsQV3PqsC798MQqLQIuf3DxBUuCG9Xsx5BnAqQU6BDJeMPmSZvLjBESSK6iB/ACRl+wmkSi1yGz8g3fB/JBCJ5fjJuAgh48NNvQHvXj9HgsiE6w4gMbsSE+5XkKnKkWP+CIHBA5lcw3kGcDpB/jX8XOFCVuULqNQleOKwIzlbD0nbCviXS/Dn0wcQX5NDVOfGBe0fkEjlnGcAQQk8Hg8iIyMgk0pRWCjGuXNnac2npPChVCqReD4B6enpiI+P/7InPDwci4uLXAQ/ghIMDg4iOjqarnd2PqG2thb9/f3o6uqiNoulGQMDA6g0GKh+sP8vIiIiMDExQfVjBCVwuVxsBpF0vbe3B51Oh76+PtoyCEwmE32J0lJ/7R8cHCAsLAwzMzNUP0ZQArfbjbS0NNTU1NAg3d3d2N7epjeX9KiioiKQGUJ6EWn1BjaTjIyMEy0/KIHT6URbWxtaW1vZ47BgdXWVCulR5LjGxsaovrKygoaGBnR2dsJsNtPnX4MSsE3tRDddWlpCVVUVPRIi5EiMRiMNRkjr6+upTuwkC/ISJAt27HIR/KDdNCkp6UQGoQKdBwqFgiGz+L8AmRO85eVlhh2bWFhY4Myhwfj4OK0+3uHhoYVMIrVajd7eXszPz1OyHxFy0cg/C3IiGo2GvUM7+Ax9rTRuGbJ7sAAAAABJRU5ErkJggg=="
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAKwSURBVEhL7ZNdSFNhGMeloCLqpotuuogoqjspujCi7iJI/JjiR2kpWkqF0URRpCIrDExpmm7uw5pLcWPHphlmfk4r3dx2tjPd5ubO2ebYXNbEUYqinqfXeC+6yVx6I/iDh/fwPM//fx6ec96IbbYWALCTZdkjAao/Cp37cXrzQKYHWvt1Yzm8DrhZ8KgKpzcOMj7MLv8srFAOa6MyyyCW74A7TyUfcHljIPNI96S74Il8ZDGtcQrO3ZNBmaA56PO6StXtyvOovhu3hs+q2Gij1cVyC0SjqZNqDGybzj3ipu0kVzQIqUW1i13KhjO4PTyQ+XFFn6krTWBYjqlzQm49CdQ4rdHZp8hLd18uny0gILuqe+WHz3wRS9bPwjfmxAuVfjTjjQsSJS4obNDOTH/1dSsGbO5kkRViay2Qwn0+7WQYQiBVVsrl8lT0h+3B8rWhaUd6qUIfSJF6IK52DCpUemo2ODXwWKF3xfFtEM+3QhlhNM3Pz/UU85rcyWIH5D6s+c6yc4ewxdoQREtrIk8DmdIJaB+yjkzQ9OtbYm0oXsTAlTozvP1stXi9nsb8Rmom8no5XH6gApXaOItWehRbrI3dQl0oKRd1qTUU/5PZqc8UGyFWyECWULdE2uieYbOjN1tMQrzEA3kyM/AEEiEyT0Ar2ost/g0SnJZ2aAeThDaIEzqBK9VMBwLeTsXAmINTTQIHfZe8es281sLcR73HsGz9LIb81/J5xO9917ynfKGgv/sZYZjk1I3DalS2mRYCfk8Obg8fNNVBuaKlUkZ0KplJ7+Dtem2QI3ZBusQKzf2js+xSKDqslfwN09DHmIxq9UqC1A83JAZo6SNl6OXpKP7/9v5Jc4P4amLJKyhqMrAmq52Hpt6BS5sDMtxXlJd1avzLu5PoeRdOb7OliIj4BUsSrwSajTfFAAAAAElFTkSuQmCC"
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
-            def circle(self, Plane, Rad, Vec):  # 根据面生成圆柱Brep
-                circle = rg.Arc(Plane, Rad, math.radians(360)).ToNurbsCurve()
-                Surface = rg.Surface.CreateExtrusion(circle, Vec).ToBrep()
-                Brep = ghc.CapHoles(Surface)
-                return Brep
+            def __init__(self):
+                pass
 
-            def RunScript(self, Plane, Radius, CriVec, Move):
-                if Plane and Radius and CriVec:
-                    cir = self.circle(Plane, Radius, CriVec)
-                    cylinder = [cir]
-                    if Move:
-                        for mo in Move:  # 移动生成
-                            msur = ghc.Move(cir, mo).geometry
-                            cylinder.append(msur)
+            def message1(self, msg1):  # 报错红气泡
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
 
-                    return cylinder
+            def message2(self, msg2):  # 警告黄
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
+
+            def message3(self, msg3):  # 白气泡
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
+
+            def mes_box(self, info, button, title):
+                return rs.MessageBox(info, button, title)
+
+            def circle(self, Data):  # 根据面生成圆柱Brep
+                circle = rg.Arc(Data[0], Data[1], math.radians(360)).ToNurbsCurve()  # 圆弧转曲线
+                Surface = rg.Surface.CreateExtrusion(circle, Data[2]).ToBrep()
+                CirBrep = Surface.CapPlanarHoles(0.001)
+                if CirBrep.SolidOrientation == rg.BrepSolidOrientation.Inward:
+                    CirBrep.Flip()
+                return CirBrep
+
+            def RunScript(self, Plane, Radi, CriVec):
+                try:
+                    Geometry = ghp.run(self.circle,
+                                zip(Plane, [Radi for i in range(len(Plane))], [CriVec for i in range(len(Plane))]))
+                    return Geometry
+                #        except Exception as e:
+                #            self.message1("运行报错：\n{}".format(str(e)))
+                finally:
+                    # 预知代码Bug之前（抛异常）可用
+                    #            self.mes_box("开发组测试", 1 | 32, "标题")
+                    self.Message = 'HAE 切割圆柱'
 
 
         # 多边曲面偏移
