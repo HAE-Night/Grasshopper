@@ -619,12 +619,12 @@ try:
 
 
         # 根据线长排序
-        class ZYLLenght(component):
+        class LenghtSort(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@根据线长排序", "RPP_LLenght", """根据Curve的长度进行排序，从小到大。""",
-                                                                   "Scavenger",
-                                                                   "Line")
+                       "LenghtSort", "RPP@长度排序",
+                       """根据Curve的长度进行排序，从小到大。""", "Scavenger",
+                       "Line")
                 return instance
 
             def get_ComponentGuid(self):
@@ -643,12 +643,12 @@ try:
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                p = Grasshopper.Kernel.Parameters.Param_Curve()
                 self.SetUpParam(p, "Curve", "C", "排序后的线段")
                 self.Params.Output.Add(p)
 
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Lenght", "L", "排序后的长度")
+                p = Grasshopper.Kernel.Parameters.Param_Number()
+                self.SetUpParam(p, "Length", "L", "排序后的长度")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -663,21 +663,24 @@ try:
                         self.marshal.SetOutput(result[1], DA, 1, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAOlSURBVEhLxZXbT1NZFMYbEv4DXiCEF3wxmZg4D8rDxHgjSmIiGi/jAyNGnTgXmakYHCKGKlLLjHHG6JMJMQYTBiqioyYOmZmA1jIRCBm17TmnLVRpeYAEWjic3k77zVq7tFAKatDElXznsvfK/u291tp7Gx4/Gdrp8vot9ucvszW4RKvod7j9FsPz4VdXkwAmJyc/upI0sGFg2GHmH1mW4HQ6P5pkWRaQDMAlKxh57cfoe8j3JoDXYyn50m9qS7fzOC5JWQBMTEzA7fUhkUiSEhSwlCVpjfyfI1o6h5U9+S1Ej0w7fSgeL3jcRYBRxOJxxGIxSJIEh8OBcDiM+HxbWgy9casTP9abYbJcx+VrN3G85iz+6rXjz79tOFj9g/Bxe0eWADyj0Gl24bCG4uJi5OfnY3x8nOYDRKPRjNjON/+Cit2HcPjYSdTUnsUXmyvQ2XUf7Z3dWLuuTPisDNA0FBYWIi8vb0WA+effsOfgEXz93Wmcrr+A7RV70XXvETrvPsDnZVuFTw5AIUBc16Fpc5kVBAIB4RyJRDJia54HHP+WAecF4E73Q1rFHwTYInzcnk8B4CTPzWUDOGGc7LTYmlsIcKA6BfgpDXiAjjv33wGIEUBVMwC/378ioFIAalFLgG2LARvTgCVlqhAxSmWoqrNZAK57jRKfFtvFll9zAFZK8GJAzj5Q3CMU4yhmZxcAY2Nj0CkvHLa02C5aUoBj3xDgjEkAOP6/W+9hPQF4s70FMPPBAN7hywLC4QhmZkIoKioSAJXysZw1Wa6gcv9hATjFgJ17UhttHqDTEhT3IsAkfcgE0LQwQqEgSkpKxEarq6tDU1MTTCYTGhsb0dramgJcuoLd+77C0RNGGOsasW1HpZh9e8ddrN+wGXFawjIAL4VAQ3B6GgUFBTAYDDkqLS0VgIYLLdi+60scqv4eJ2rqsXFTBdrau3DrthVrPitDTIcYLxugeCn+KqYJUFVVhfLy8hwZjUZx4PUPvMDDnqfo6f0Xvc+G0P3oHzgkL1463ejo7sGsOgdJ8WQDJAJMB4MIkvgEzTmiSTw4TyBCB6Iej9I/n08RJHTeoKpQMqFjinwk2b0A4MRyDlSqEq71UChEyZ7JFbVz37sUDIboApsHDP8nmQcHB+FwybD1D+CJrV/cWgpdQKuV7PGJ8cSNZusfMjc0nENfX5+oGq6YAB3TTpdr1XKRMndyn23gqt1uh8/nQ1tbG6xWK6ampkTnhyqZTOJ/lvFWWS2o6H0AAAAASUVORK5CYII="
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAKkSURBVEhL7ZJNaNJxGMcHRXQoGAtqLFaXXg5rh2qjU8EIOgSD2KlAPETQYQfR2ph0LaZz5NZARcP5koqGr0RtzuE7orNtOZ1va25MLYpNNt1UZtrX+J1Kt8tu+YGH3/P//Z/359fUoMGBFArlq+Vy+Tz5PHpKpdJQrlDkZbPZs+TqcNRq9SUKhdLb3d19p5709fX1PqFSO8rl/Z6pWL7i/7p1m7gfTjgcbtNoNDfHxsYuj46OXqmef8v4+HjP9c7OuxhPly5UqPiWN68R9yPjeHt7axcStLw2r/+yxjIf9orFR+RffeBwxul09hsMhiE+n08Vi8VP5XI5DRU/VigUL0QiEZfJZOqCwaCZyRx8CPv7rvjWhjuxtwP9VaVSOUZC1QYGrV+A1Wr9MTs7m3E4HPs2m20H+gb079PT02mpVPrNbrdXMD6byWRi61QS2jvhRL9Op6MhSQcJVRsYXPT7/Vo4qo1G40ecVq1WO4PTjtOuVCqn9Hq9i8fj5el0etZsNuctFosWrqchzSjwxJ9A9YDBhVgs5p2bm1tBohiaSczPz3twukOhkBv/fIlEwhYIBBTRaNQSiUQ2M5mMBH4nSYiDqe7A5XIFUO2aSqWK4zWtoOoQ9CB24ZfJZD6hUPgJu6mKi8FgrPl8vujS0pKn2j0JczC7u7sPtre3GalUipZMJp+trq4OxOPx53i+Awg0iAW/RCcy6EqPxzOD7jbR0ToS3IOcI2Fqg1ab8VpYbDb7LYvFmhwZGZFwOJzJ4eFhAe4EXC5XjBclgT4hEAhUWPh7dBjHPlY+AyRN5XK5GyTcvyDBqXQ6zULV+oWFBT7m/wbVaeCoQeWWxcVFI+600N24d0DsXq93Bot2w+Yn9lbEBG6RcEcLxtMCaSOfDf4fmpp+A8zZ1v7/j2shAAAAAElFTkSuQmCC"
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
-            def bubbling(self, Curve):
+            # 排序
+            def CurveLen(self, Curve):
                 Length = [i.GetLength() for i in Curve]
-                for i in range(1, len(Length)):
-                    for j in range(0, len(Length) - 1):
-                        if Length[j] > Length[j + 1]:
-                            Length[j], Length[j + 1] = Length[j + 1], Length[j]
-                            Curve[j], Curve[j + 1] = Curve[j + 1], Curve[j]
-                return Curve, Length
+                CL = zip(Curve, Length)
+                AREAS = sorted(CL, key=lambda x: x[1], reverse=False)
+                return [_i[0] for _i in AREAS], [_i[1] for _i in AREAS]
 
             def RunScript(self, Curve):
-                Faces, Length = self.bubbling(Curve)
-                return Curve, Length
+                try:
+                    Curve, Length = self.CurveLen(Curve)
+                    return Curve, Length
+                except Exception as e:
+                    self.message1("运行报错：\n{}".format(str(e)))
+                finally:
+                    self.Message = 'HAE 长度排序'
 
 
         # 指定线段 取顶线底线
