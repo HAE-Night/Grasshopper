@@ -251,8 +251,8 @@ try:
         class CirBrep(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                       "CirBrep",
                        "RPP@开孔圆柱",
+                       "CirBrep",
                        """根据点、Plane生成圆柱切割体""",
                        "Scavenger",
                        "Brep")
