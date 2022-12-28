@@ -1241,6 +1241,84 @@ try:
                 finally:
                     self.Message = '曲线修剪（S）'
 
+
+        # 曲线显示方向
+        class CurvesDirection(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP@Crv Dir", "RPP_Crv Dir", """显示曲线方向""",
+                                                                   "Scavenger", "Line")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("e83cf93b-04ac-4105-98c0-3c35462fc7f3")
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Curve()
+                self.SetUpParam(p, "Curve", "C", "显示方向的曲线")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                pass
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                result = self.RunScript(p0)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAFlSURBVEhL3ZW7SgNRFEU3IQQfiNqLCrGyCH6AD7SztUntB4iIAW2irfj4D9FPEKKdoLYhRdCgjWUKiSEQGNdxzsg0NjO30Q2bO3POZS/umRlG/0dH0iPu4faxdMlaZS15O78Ie8JR2jvS24TUpN3Ht3jW9mbWoTRN8BKucYLmHBAtnEda60cqn0ZsacQ7AwhIsSANtPoRaT2KtNI1QDfuhlND5ZM4fL4ejfF8vB5MNvObovQ5w7hGpeG4tBG3AsrGxTNpbQMBZmNajjsBBWDP3qyqdMftOw4LIXzRAICeubXwsBDCpxxg34QpPITwnkEM5qWwEBuPAypeMqUhHStkFoBrH9O+lxIlEPsYs4vwLQe0WHljf/SKLXz4fZdVhJYI7/xyijBKnWJQlza9HFaEXyQQvMt1elz5RWCB4DODOKjJWsOVA2nSt+UXwfbXe0lAKT/4lvwibMRBV6xtbL/de2//eUlfCm+BqTOvCJUAAAAASUVORK5CYII="
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def __init__(self):
+                self.pts = []
+
+            def RunScript(self, C):
+                self.c = C
+                if not self.c: return
+                self.bb = rg.BoundingBox()
+                self.plist = []
+                self.tlist = []
+
+                for i in range(len(self.c)):
+                    if not self.c[i]: return
+                    # 检测曲线是否闭合 不闭合则终点也进行标注
+                    if self.c[i].IsClosed == True:
+                        n = 4
+                    else:
+                        n = 3
+
+                    for j in range(1):
+                        self.pt = rs.DivideCurve(self.c[i], n, True)  # 平切成N曲线 - 返回点
+
+                        for k in range(len(self.pt)):
+                            self.bb.Union(self.pt[k])  # 更新box边框
+                            self.pts = rs.CurveClosestPoint(self.c[i], self.pt[k])  # 获取最近点
+                            self.tg = rs.CurveTangent(self.c[i], self.pts)  # 切线
+                            self.plist.append(self.pt[k])
+                            self.tlist.append(self.tg)
+
+                parts = len(self.c)
+                self.p = [self.plist[(i * len(self.plist)) // parts:((i + 1) * len(self.plist)) // parts] for i in
+                          range(parts)]
+                self.t = [self.tlist[(i * len(self.plist)) // parts:((i + 1) * len(self.plist)) // parts] for i in
+                          range(parts)]
+
+            def DrawViewportWires(self, arg):
+                if not self.c: return
+                for i in range(len(self.c)):
+                    if not self.c[i]: return
+                    for j in range(4):
+                        arg.Display.DrawDirectionArrow(self.p[i][j], self.t[i][j], System.Drawing.Color.White)
+
+            def get_ClippingBox(self):
+                return self.bb
     else:
         pass
 except:
