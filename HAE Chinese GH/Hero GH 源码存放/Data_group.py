@@ -8,24 +8,18 @@
 
 from ghpythonlib.componentbase import dotnetcompiledcomponent as component
 import Grasshopper, GhPython
-import System
 import Rhino
-from System.Windows.Forms import ToolStripSeparator
 import Rhino.Geometry as rg
+import scriptcontext as sc
 import ghpythonlib.treehelpers as th
-from Grasshopper import DataTree as ghdt
+from Grasshopper import DataTree as gd
 from Grasshopper.Kernel.Data import GH_Path
 from Grasshopper import DataTree
 import ghpythonlib.treehelpers as ght
 import ghpythonlib.parallel as ghp
 import rhinoscriptsyntax as rs
-import math
 from itertools import chain
 from decimal import Decimal as dd
-import socket
-import time
-import getpass
-import base64
 import re
 import random
 import Line_group
@@ -330,7 +324,7 @@ try:
             def treegroup(self, Group):
                 GP = Group.Paths
                 treetype = type(Group.Branch(GP[0])[0])
-                Objects = ghdt[treetype]()
+                Objects = gd[treetype]()
                 gplist = []
 
                 for i in range(len(GP)):
@@ -358,7 +352,7 @@ try:
                     else:
                         GP = Tree.Paths
                         treetype = type(Tree.Branch(GP[0])[0])
-                        Objects = ghdt[treetype]()
+                        Objects = gd[treetype]()
 
                         if Branch:
                             for br in range(len(Branch)):
@@ -416,7 +410,7 @@ try:
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def ListToTree(self, List, index):
-                DataTree = ghdt[object]()
+                DataTree = gd[object]()
                 for i in range(List.BranchCount):
                     list = List.Branch(i)
                     if len(index) == 1:
@@ -486,7 +480,7 @@ try:
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def RunScript(self, Data):
-                Datas = ghdt[object]()
+                Datas = gd[object]()
                 serial = 0
                 for data in Data.Branches:
                     one = [da for da in data if da and da != " "]
@@ -1175,6 +1169,146 @@ try:
                         self.message2("树形数据为空！")
                 finally:
                     self.Message = 'Simplify'
+
+
+        # 树形数据修剪
+        class TrimTree(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP@树形修剪", "RPP_TrimTree", """树形修剪插件，Depth为树形修剪深度""", "Scavenger", "Data")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("6334661a-78f2-4b9b-be00-a425575c9abd")
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Data_Tree", "T", "待修剪的树形数据")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Integer()
+                self.SetUpParam(p, "Depth", "DP", "修剪深度")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Result", "R", "修剪后的结果")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                p1 = self.marshal.GetInput(DA, 1)
+                result = self.RunScript(p0, p1)
+
+                if result is not None:
+                    self.marshal.SetOutput(result, DA, 0, True)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAH3SURBVEhLzdVdaM1xHMfxfzJWHkJzs0RZ7pDH9pAbI5oapbjZhVFCIknTNk1au9B2RS6EtVZau6DIBbdu3dnFmufigjw0XKAR7/fvd/6cc+Zhp/O/8KlX/9/3/Nbv/+v38F/yv2c2dqAdR7EWFcgk+/Ae3/ESr3NtX1Z22uBgvVjkD2QD/K02VGVkBRzoSKh+5TruxmayFadjs/RcxcPY/Jm5+IbbuA8noOUoOS/QHZsha+DADvgBV1CHcRxCyXmKM9iJe3DgURzAAqTxBcdj8+/ZhpOxmdTgCdIluIlNKM5i2L85VL9JFY7hMdLB7uSeY7BvFv6UQbzFjFDlZR0GMIEvuIT1eICPaISpximsDFVhuuBEvIAFuQA7HMwjOB9p9uIVmuFx9O+cgJt6C2dxEc9h334UZDvscOOKswR9sD81DJfIFzzDI4zgHJZhUrwUXvv8uHluogP6GejAFnxFA5rgUs7DP7MaDnQZnhhnZO0xbEElTA/SF37GDUw5u+AZd/f74QXKj0vyCW6ia+zL3fgTKCnTcs/iHISznxOqOAFrP3KZxDsxFJsh1+ANziT1cLarQpUkC2G9J1QZxM30K5mmE25yuvllxUH8FLeGKuYNzsdm+ZmOd/CmzoQnyOVZisyyGw7qsfTpfcg8/qs8jI2hmlKS5AeHHXx0WNKFhQAAAABJRU5ErkJggg=="
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def __init__(self):
+                self.origin_data = None
+
+            def message1(self, msg1):
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
+
+            def message2(self, msg2):
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
+
+            def message3(self, msg3):
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
+
+            def mes_box(self, info, button, title):
+                return rs.MessageBox(info, button, title)
+
+            def _handle_path(self, data):
+                temp_res_list = []
+                count, total = 0, 0
+                while len(data) > total:
+                    flatten_list = list(chain(*temp_res_list))
+                    if count not in flatten_list:
+                        sub_index = []
+                        for _ in range(len(data)):
+                            if str(data[count]) == str(data[_]):
+                                sub_index.append(_)
+                        temp_res_list.append(sub_index)
+                        total += len(sub_index)
+                    count += 1
+                temp_new_ghpath = [data[_[0]] for _ in temp_res_list]
+
+                res_list = temp_res_list if len(temp_res_list) != 0 else [[_] for _ in range(len(data))]
+                new_ghpath = temp_new_ghpath if len(temp_new_ghpath) != 0 else data
+                return zip(res_list, new_ghpath)
+
+            def _trim_tree(self, origin_tree, depths):
+                try:
+                    origin_tree = [eval("_{}".format(depths[0])) for _ in origin_tree]
+                    depths.pop(0)
+                    if len(depths) != 0:
+                        return self._trim_tree(origin_tree, depths)
+                    else:
+                        return origin_tree
+                except:
+                    return origin_tree
+
+            def _deepest_length(self, path, factor):
+                if factor < 0:
+                    return -1
+                else:
+                    for _ in path.Paths:
+                        if factor >= _.Length:
+                            return False
+                    return True
+
+            def RunScript(self, Data_Tree, Depth):
+                try:
+                    sc.doc = Rhino.RhinoDoc.ActiveDoc
+
+                    Depth = 1 if Depth is None else Depth
+                    Result = gd[object]()
+                    if Depth == 0:
+                        return Data_Tree
+                    Data_Tree.SimplifyPaths()
+                    self.origin_data = [list(_) for _ in Data_Tree.Branches]
+                    if self.origin_data and len(self.origin_data) > 1:
+                        result_boolean = self._deepest_length(Data_Tree, Depth)
+                        if result_boolean is False:
+                            self.message3("修剪已达最深！")
+
+                        new_depth = Data_Tree.Paths[0].Length - 1 if result_boolean is False or result_boolean == -1 else Depth
+                        depth_cull = ['.CullElement()' for _ in range(new_depth)]
+                        origin_path = self._trim_tree([_ for _ in Data_Tree.Paths], depth_cull)
+                        index_list, new_paths = zip(*self._handle_path(origin_path))
+
+                        trunk_list = map(lambda x: list(chain(*[self.origin_data[_] for _ in x])), index_list)
+                        Result = ght.list_to_tree(trunk_list)
+                        [Result.Paths[_].FromString(str(new_paths[_])) for _ in range(len(Result.Paths))]
+
+                        return Result
+                    elif len(self.origin_data) == 1:
+                        Result = Data_Tree
+                        return Result
+                    else:
+                        self.message2("树形数据为空！")
+                        return Result
+                finally:
+                    sc.doc.Views.Redraw()
+                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                    sc.doc = ghdoc
+                    if -1 >= Depth:
+                        self.Message = 'Simplest'
+                    else:
+                        self.Message = '修剪深度：{}'.format(Depth)
+
 
 
     else:

@@ -15,17 +15,16 @@ import rhinoscriptsyntax as rs
 import Rhino.Geometry as rg
 import scriptcontext as sc
 import Grasshopper.Kernel as gk
-import Grasshopper.DataTree as ghdt
+import Grasshopper.DataTree as gd
 import Grasshopper.Kernel.Data.GH_Path as ghpath
 import ghpythonlib.components as ghc
 import ghpythonlib.treehelpers as ght
 import ghpythonlib.parallel as ghp
-from functools import reduce
+import Rhino.DocObjects.ObjRef as objref
 from itertools import chain
 import math
 import Line_group
 import time
-import random
 
 Result = Line_group.decryption()
 
@@ -241,7 +240,7 @@ try:
                     for i in range(Breps.BranchCount):
                         breplist.append([Breps.Branch(i), PRE])  # 参数添加
                     res = ghp.run(self.brepbp, breplist)
-                    Brep = ghdt[rg.Brep]()
+                    Brep = gd[rg.Brep]()
                     for i in range(len(res)):
                         Brep.AddRange([res[i]], ghpath(i))
                     return Brep
@@ -251,11 +250,11 @@ try:
         class CirBrep(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                       "RPP@开孔圆柱",
-                       "CirBrep",
-                       """根据点、Plane生成圆柱切割体""",
-                       "Scavenger",
-                       "Brep")
+                                                                   "RPP@开孔圆柱",
+                                                                   "CirBrep",
+                                                                   """根据点、Plane生成圆柱切割体""",
+                                                                   "Scavenger",
+                                                                   "Brep")
                 return instance
 
             def get_ComponentGuid(self):
@@ -331,7 +330,7 @@ try:
             def RunScript(self, Plane, Radi, CriVec):
                 try:
                     Geometry = ghp.run(self.circle,
-                                zip(Plane, [Radi for i in range(len(Plane))], [CriVec for i in range(len(Plane))]))
+                                       zip(Plane, [Radi for i in range(len(Plane))], [CriVec for i in range(len(Plane))]))
                     return Geometry
                 #        except Exception as e:
                 #            self.message1("运行报错：\n{}".format(str(e)))
@@ -641,7 +640,7 @@ try:
                     sc.doc = Rhino.RhinoDoc.ActiveDoc
                     self.tol = 0.01 if Tolerance is None else Tolerance
 
-                    Res_Breps, Disjoint, False_Breps = (ghdt[object]() for _ in range(3))
+                    Res_Breps, Disjoint, False_Breps = (gd[object]() for _ in range(3))
                     _a_trunk, _b_trunk = [list(_) for _ in A_Brep.Branches], [list(_) for _ in B_Brep.Branches]
                     if len(_a_trunk) == 0 and len(_b_trunk) == 0:
                         self.message2("A、B端不能为空！")
@@ -1049,6 +1048,363 @@ try:
                     sc.doc = ghdoc
                 finally:
                     self.Message = 'Brep修复'
+
+
+        # 模型比较
+        class ModelComparison(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP@模型比较", "RPP_ModelComparison", """通过面积以及长度进行模型比较""", "Scavenger", "Brep")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("df42aa2d-1097-49b7-8560-9af741b3ddbc")
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Guid()
+                self.SetUpParam(p, "A_Model", "A", "一组模型")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Brep()
+                self.SetUpParam(p, "B_Set", "B", "一组截面比较体")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Number()
+                self.SetUpParam(p, "Area_Tolerance", "T0", "面积公差")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Number()
+                self.SetUpParam(p, "Length_Tolerance", "T1", "长度公差")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Guid()
+                self.SetUpParam(p, "Result", "R", "比较结果")
+                self.Params.Output.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Integer()
+                self.SetUpParam(p, "Index", "I", "比较后下标")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                p1 = self.marshal.GetInput(DA, 1)
+                p2 = self.marshal.GetInput(DA, 2)
+                p3 = self.marshal.GetInput(DA, 3)
+                result = self.RunScript(p0, p1, p2, p3)
+
+                if result is not None:
+                    if not hasattr(result, '__getitem__'):
+                        self.marshal.SetOutput(result, DA, 0, True)
+                    else:
+                        self.marshal.SetOutput(result[0], DA, 0, True)
+                        self.marshal.SetOutput(result[1], DA, 1, True)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAALASURBVEhL7ZS7a1VBEMavKD7AQoKX3LNnd8/NNTF4DSg+SXwliOADCwsL0UoLu2hQQTRgE3wEm1Q2FkHwHxAtRNHCJuCjCyriAwslAQuVNKKJv9mdE5N7LyGt6AfD7s58MzszO+cU/uPvgnPp+XLZvWDtU1WhWCwuN8a4LCutUdX8YK1tStO0LctMJ/tD3tsryBTBH+j6GhlHfopkmZuCd1Td54Zz5qD37guOU+IoAXNBd1tWa9P78IY4n2J9XKlkonuuIeYGDiOVSlkchslqs/e+UiqVitaaoSyznwg6qNQAzu+R0ZhEsk3VjUFbtmq2Y/PJyNrkhFTJO7STwDvknpoag6B3hOhcsqNc9lNcuF9NDUG1b/B5Evdpn75FGoy1EIMQhChn1lfSrmBsAO9NlySB3145Z1m2gsp/keDVQKgFWQ8KQYhyJvtjEoA3qAZCDQh0lyQ+s10QNaEDw+i+t7a2LlFVBFksI/gEGd9UVaFarS6G/I1At1Q1jbxabGdUFeBc81qtavbIQjwuBh5rtaoCiDMgj45Dk6oC4Mt3McF2YdT8gYwtfqN6jMDhLYa6CdDKflDJBVWFr5fz1xhIxth05UKCfJjmkibbGRww7I5lmX4cdtH77lxkrtE/JeC4XCZ83moP34MMw6S0qVbQ5+v1cAHl3EAxGQ22TtD/lDYReHu8wG3in8QIJ70ksEGqmCky4rGtpl8vMJdRECTZSNbrKG19Ljh0YD8rGXlfyqdpEZd+dM4+0vMswD8nfPzbVWE7pEU4nQ6KGnifPqPKl2ynx5FEeqKPfShZy2hT2SppS0tL+C8NKDUiTc01MQgB57YkSVbiuJPKRqQd7LcodRrwDmAfm9n32EpzUSmzIT0TQk6UwKwf0rS5Wyl1IPOlWZbuo8pekjhCFUZNjYFDCfJhMjqJYw+qujn/l1Ao/AZ669f6U1RgEQAAAABJRU5ErkJggg=="
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def __init__(self):
+                self.local_tol, self.area_tol, self.length_tol = None, None, None
+
+            def message1(self, msg1):
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
+
+            def message2(self, msg2):
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
+
+            def message3(self, msg3):
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
+
+            def mes_box(self, info, button, title):
+                return rs.MessageBox(info, button, title)
+
+            def _origin_data(self, single_brep):
+                center_pt = single_brep.GetBoundingBox(True).Center
+                center_plane = rg.Plane(center_pt, rg.Plane.WorldXY.ZAxis)
+                curve_list = rg.Intersect.Intersection.BrepPlane(single_brep, center_plane, self.local_tol)[1]
+                section_brep = rg.Brep.CreatePlanarBreps(curve_list, self.local_tol)[0]
+
+                by_area, by_length = self._get_area(section_brep), self._get_length(curve_list)
+                return section_brep, by_area, by_length
+
+            def _get_area(self, a_data):
+                return abs(rg.AreaMassProperties.Compute(a_data).Area)
+
+            def _get_length(self, l_data):
+                return abs(rg.LengthMassProperties.Compute(l_data).Length)
+
+            def _compare_area_to_get_brep_index(self, origin, handle):
+                total, count, res_index = 0, 0, []
+                while len(handle) > count:
+                    flatten_list = list(chain(*res_index))
+                    sub_index = []
+                    for _ in range(len(origin)):
+                        if _ not in flatten_list:
+                            if abs(handle[count] - origin[_]) < self.area_tol:
+                                sub_index.append(_)
+                    res_index.append(sub_index)
+                    count += 1
+                return res_index
+
+            def _compare_length_to_get_brep_index(self, len_origin, len_handle):
+                total, count, res_index = 0, 0, []
+                while len(len_handle) > count:
+                    flatten_list = list(chain(*res_index))
+                    sub_index = []
+                    for _ in range(len(len_origin)):
+                        if _ not in flatten_list:
+                            if abs(len_handle[count] - len_origin[_]) < self.length_tol:
+                                sub_index.append(_)
+                    res_index.append(sub_index)
+                    count += 1
+                return res_index
+
+            def RunScript(self, A_Model, B_Set, Area_Tolerance, Length_Tolerance):
+                try:
+                    sc.doc = Rhino.RhinoDoc.ActiveDoc
+                    self.local_tol = sc.doc.ModelAbsoluteTolerance
+                    self.area_tol = 0.1 if Area_Tolerance is None else Area_Tolerance
+                    self.length_tol = 0.5 if Length_Tolerance is None else Length_Tolerance
+
+                    Result, Index = (gd[object]() for _ in range(2))
+                    if A_Model:
+                        str_guid_model = [str(_) for _ in A_Model]
+                        True_Model = map(lambda x: objref(x).Geometry(), A_Model)
+                        temp_result, area_value, length_value = zip(*ghp.run(self._origin_data, True_Model))
+
+                        if B_Set:
+                            com_area_value, com_length_value = ghp.run(self._get_area, B_Set), ghp.run(lambda brep: self._get_length(rg.Curve.JoinCurves([_ for _ in brep.Edges])), B_Set)
+                            index_by_area = self._compare_area_to_get_brep_index(area_value, com_area_value)
+                            index_by_length = self._compare_length_to_get_brep_index(length_value, com_length_value)
+                            if index_by_area == index_by_length:
+                                temp_index = index_by_area
+                                Result = ght.list_to_tree([[str_guid_model[_] for _ in sub] for sub in temp_index])
+                            else:
+                                self.message2("角度公差和长度公差得出结果不一致！")
+                                temp_index = index_by_area
+                                Result = ght.list_to_tree([[str_guid_model[_] for _ in sub] for sub in temp_index])
+                            Index = ght.list_to_tree(temp_index)
+                        else:
+                            Result = temp_result
+                        return Result, Index
+                    else:
+                        self.message2("模型列表不能为空！")
+                        return Result, Index
+                finally:
+                    sc.doc.Views.Redraw()
+                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                    sc.doc = ghdoc
+                    self.Message = 'HAE开发组'
+
+
+        # 不规则几何物体最小外包围盒
+        class GenerateMinBox3d(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP@最小外包围盒（不规则3d）", "RPP_GenerateMinBox3d", """通过点阵列生成不规则几何物体的最小外包围盒（3d）""", "Scavenger", "Brep")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("1930f7b3-b706-456f-9303-c909f907ebd9")
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Point()
+                self.SetUpParam(p, "Pts", "P", "点阵列、点集（建议去重）")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Integer()
+                self.SetUpParam(p, "Count", "C", "迭代次数，默认为18（建议15~18之间）")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Box()
+                self.SetUpParam(p, "BBox", "B", "最后生成的包围盒")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                p1 = self.marshal.GetInput(DA, 1)
+                result = self.RunScript(p0, p1)
+
+                if result is not None:
+                    self.marshal.SetOutput(result, DA, 0, True)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAHrSURBVEhL3dXLSxVhGMfxSdt0MVeZaGGQWrgJ8oK6N6JoERRiRLUJ2qRFQRCiRtBGpdTaBBpdFkUXlQi6YpSYtWyRf0Q791Lf74wDx8MZ54y28gcfmHk8nmfOzDvPG2TIUdzErvDsP6YZr/EOQ/iOAWzHurIHo/iGcxaWUwXr87iETcgUb8EgFjFrISEH8BhfcdpCWraiDz/hLWjDQ7xFB5LSiil8wBEL+dmMLnzGfexGbo7Dv71Eo4WEuAh8ThNosBDnGv7iQniWnPPwlvkF+ywkxGezBJ9VmLvwob3AU6zonhd/7VX8wDB2Is4ZfMFt+IsPIcw9nIgOg4uYg7VqCwkpxw28xy28gbewCeYZWqLDIBiDPz/OFvTCq/Sfd6BQ6uHF+Ln8RfAKvj9hbJC7zuNU4A68p5dRCpO7PE9aKJCiGsSpwyN8hA296m6UICmZGsTxZVpAMSNiTQ0O4nl0mJo1NXBVOPSKyQZr8ACnosNVk6WBn3MIhrkO17rTc7UU08Cl6zvzG3stxOmEg+wJ9lsokLQGLmO/w3lWayE/du+Br/4IKpGbpAaH4UyaRruFtJTBzd1G/dgG4yCbjA7DeO7D/IRjFrLGee4Kc5N3r3CzcWTUYBzu1Wex7jjc3GR+4Q9mcAXuDSkJgn+6omYHjfac9gAAAABJRU5ErkJggg=="
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def __init__(self):
+                self.count, self._global_tol, self.tot_ang = None, None, None
+
+            def message1(self, msg1):
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
+
+            def message2(self, msg2):
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
+
+            def message3(self, msg3):
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
+
+            def mes_box(self, info, button, title):
+                return rs.MessageBox(info, button, title)
+
+            def rotateplanes(self, count, init_planes, dir_vec):
+                init_planes = [init_planes] if isinstance(init_planes, rg.Plane) else init_planes
+                inc = self.tot_ang / (count - 1)
+                origin_pt = rg.Point3d(0, 0, 0)
+
+                planes = []
+                for i in range(count):
+                    for init_plane in init_planes:
+                        new_plane = Rhino.Geometry.Plane(init_plane)
+                        new_plane.Rotate(inc * i, dir_vec, origin_pt)
+                        planes.append(new_plane)
+                return planes
+
+            def get_octant_plane(self, _count):
+                yz_plane = rg.Plane.WorldYZ
+
+                dir_vec_x = rg.Vector3d(1, 0, 0)
+                x_planes = self.rotateplanes(_count, yz_plane, dir_vec_x)
+
+                dir_vec_y = rg.Vector3d(0, -1, 0)
+                xy_planes = self.rotateplanes(_count, x_planes, dir_vec_y)
+
+                dir_vec_z = Rhino.Geometry.Vector3d(0, 0, 1)
+                xyz_planes = self.rotateplanes(_count, xy_planes, dir_vec_z)
+                return xyz_planes
+
+            def rotate_plane_array(self, data_handle):
+                plane, tot_ang, divs, axis = data_handle
+                out_planes = []
+                plane.Rotate(-tot_ang * 0.5, axis)
+                out_planes.append(Rhino.Geometry.Plane(plane))
+                inc = tot_ang / (divs - 1)
+                for i in range(divs - 1):
+                    plane.Rotate(inc, axis)
+                    out_planes.append(Rhino.Geometry.Plane(plane))
+                return out_planes
+
+            def rotate_plane_array3d(self, view_plane, tot_ang, divs):
+                view_planes = [view_plane] if isinstance(view_plane, (rg.Plane)) else view_plane
+                one_tot_ang = [tot_ang] * len(view_planes)
+                one_divs = [divs] * len(view_planes)
+                z_axis = map(lambda z: z.ZAxis, view_planes)
+                one_zip_res = list(chain(*ghp.run(self.rotate_plane_array, zip(view_planes, one_tot_ang, one_divs, z_axis))))
+
+                two_tot_ang = [tot_ang] * len(one_zip_res)
+                two_divs = [divs] * len(one_zip_res)
+                y_axis = map(lambda y: y.YAxis, one_zip_res)
+                two_zip_res = list(chain(*ghp.run(self.rotate_plane_array, zip(one_zip_res, two_tot_ang, two_divs, y_axis))))
+
+                three_tot_ang = [tot_ang] * len(two_zip_res)
+                three_divs = [divs] * len(two_zip_res)
+                x_axis = map(lambda x: x.YAxis, two_zip_res)
+                three_zip_res = list(chain(*ghp.run(self.rotate_plane_array, zip(two_zip_res, three_tot_ang, three_divs, x_axis))))
+
+                return three_zip_res
+
+            def min3dbox(self, obj):
+                init_plane = rg.Plane.WorldXY
+                curr_bb = self.get_bbox_by_plane(obj, init_plane)
+                curr_vol = curr_bb.Volume
+
+                tot_ang = math.pi * 0.5
+                factor = 0.1
+                max_passes = 20
+
+                """-------时间进度消耗最多（并行迭代）-------"""
+                xyz_planes = self.get_octant_plane(self.count)
+                b_box_list = ghp.run(lambda xyz: self.get_bbox_by_plane(obj, xyz), xyz_planes)
+                min_index = 0
+                for box_index in range(len(b_box_list)):
+                    if b_box_list[box_index].Volume < curr_vol:
+                        curr_vol = b_box_list[box_index].Volume
+                        min_index = box_index
+                best_plane = xyz_planes[min_index]
+                curr_bb = b_box_list[min_index]
+
+                for f_index in range(max_passes):
+                    prev_vol = curr_vol
+                    tot_ang *= factor
+                    ref_planes = self.rotate_plane_array3d(best_plane, tot_ang, self.count)
+                    sub_bbox_list = ghp.run(lambda x_pl: self.get_bbox_by_plane(obj, x_pl), ref_planes)
+                    sub_min_index = 0
+                    for sub_index in range(len(sub_bbox_list)):
+                        if sub_bbox_list[sub_index].Volume < curr_vol:
+                            curr_vol = sub_bbox_list[sub_index].Volume
+                            sub_min_index = sub_index
+                    best_plane = ref_planes[sub_min_index]
+                    curr_bb = sub_bbox_list[sub_min_index]
+                    vol_diff = prev_vol - curr_vol
+                    if vol_diff < sc.doc.ModelAbsoluteTolerance:
+                        break
+                """-------分割线-------"""
+                return curr_bb
+
+            def get_bbox_by_plane(self, object, plane):
+                world_xy = rg.Plane.WorldXY
+
+                def __objectbbox(geom, xform):
+                    if isinstance(geom, rg.Point):
+                        pass
+                    return geom.GetBoundingBox(xform) if xform else geom.GetBoundingBox(True)
+
+                xform = rg.Transform.ChangeBasis(world_xy, plane)
+                bbox = rg.BoundingBox.Empty
+                if isinstance(object, (list, tuple)):
+                    pass
+                else:
+                    object_bbox = __objectbbox(object, xform)
+                    bbox = rg.BoundingBox.Union(bbox, object_bbox)
+
+                if bbox.IsValid is False:
+                    pass
+                else:
+                    plane_to_world = rg.Transform.ChangeBasis(plane, world_xy)
+                    box = rg.Box(bbox)
+                    box.Transform(plane_to_world)
+                    return box
+
+            def RunScript(self, Pts, Count):
+                try:
+                    sc.doc = Rhino.RhinoDoc.ActiveDoc
+                    self.count = 15 if Count is None else Count
+                    self._global_tol = sc.doc.ModelAbsoluteTolerance
+                    self.tot_ang = math.pi * 0.5
+
+                    BBox = gd[object]()
+                    trunk_list = [list(_) for _ in Pts.Branches]
+                    if trunk_list:
+                        pts_cloud = ghp.run(lambda pts: rg.PointCloud(pts), trunk_list)
+                        BBox = map(self.min3dbox, pts_cloud)
+                    else:
+                        self.message2("点列表不能为空！")
+                    sc.doc.Views.Redraw()
+                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                    sc.doc = ghdoc
+                    return BBox
+                finally:
+                    self.Message = '最小外包围盒（不规则3d）'
 
     else:
         pass

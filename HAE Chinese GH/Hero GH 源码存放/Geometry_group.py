@@ -185,7 +185,8 @@ try:
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
                                                                    "RPP@几何排序", "RPP_Value_And_Sort",
-                                                                   """几何物体的排序，排序完成进行才会进行取值，支持面积和长度的排序，但是同一组数据必须是一样的；增加点序的排序，在点序排序时输入要作为参考的坐标轴（默认为X轴对比）""", "Scavenger", "Geometry")
+                                                                   """几何物体的排序，排序完成进行才会进行取值，支持面积和长度的排序，但是同一组数据必须是一样的；增加点序的排序，在点序排序时输入要作为参考的坐标轴（默认为X轴对比）""", "Scavenger",
+                                                                   "Geometry")
                 return instance
 
             def get_ComponentGuid(self):
@@ -445,15 +446,16 @@ try:
                 finally:
                     self.Message = "GH数据类型分类"
 
+
         # 几何体中心点
         class GeoCenter(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                       "RPP@中心点",
-                       "RPP_GeoCenter",
-                       """求几何物体的中心点""",
-                       "Scavenger",
-                       "Geometry")
+                                                                   "RPP@中心点",
+                                                                   "RPP_GeoCenter",
+                                                                   """求几何物体的中心点""",
+                                                                   "Scavenger",
+                                                                   "Geometry")
                 return instance
 
             def get_ComponentGuid(self):

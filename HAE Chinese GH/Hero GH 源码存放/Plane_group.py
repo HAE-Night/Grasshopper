@@ -5,16 +5,8 @@
 
 from ghpythonlib.componentbase import dotnetcompiledcomponent as component
 import Grasshopper, GhPython
-from System.Windows.Forms import ToolStripSeparator
-import System
-import Rhino
-import rhinoscriptsyntax as rs
 import Rhino.Geometry as rg
 import math
-import time
-import getpass
-import base64
-import socket
 import re
 import copy
 import Line_group

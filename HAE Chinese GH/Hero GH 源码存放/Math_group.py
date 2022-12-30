@@ -8,12 +8,7 @@
 
 from ghpythonlib.componentbase import dotnetcompiledcomponent as component
 import Grasshopper, GhPython
-import System
-import Rhino
-import rhinoscriptsyntax as rs
-import Rhino.Geometry as rg
 import ghpythonlib.treehelpers as ght
-from Grasshopper.Kernel import GH_RuntimeMessageLevel as RML
 import Line_group
 
 Result = Line_group.decryption()

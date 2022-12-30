@@ -6,14 +6,12 @@
 
 from ghpythonlib.componentbase import dotnetcompiledcomponent as component
 import Grasshopper, GhPython
-import System
 import Rhino
 import scriptcontext as sc
 import rhinoscriptsyntax as rs
 import Rhino.Geometry as rg
 import ghpythonlib.components as ghc
 import ghpythonlib.treehelpers as ght
-import copy
 import Line_group
 from itertools import chain
 

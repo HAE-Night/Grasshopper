@@ -8,9 +8,7 @@
 
 from ghpythonlib.componentbase import dotnetcompiledcomponent as component
 import Grasshopper, GhPython
-import System
 import Rhino
-import scriptcontext as sc
 import rhinoscriptsyntax as rs
 import ghpythonlib.parallel as ghp
 import urllib
@@ -479,6 +477,83 @@ try:
                         self.message3("开启按钮替换图层名")
                 finally:
                     self.Message = '图层名称替换'
+
+
+        # 获取文件路径
+        class ActiveFile(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP@获取某些数据", "RPP_ActiveFile", """获取犀牛，Gh文件路径以及当前时间""", "Scavenger", "Others")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("a7f1dc8c-0093-4c72-8c53-bfde0f8d0365")
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Boolean()
+                self.SetUpParam(p, "x", "U", "更新时间的按钮")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "RP", "RP", "犀牛文件路径")
+                self.Params.Output.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "GP", "GP", "Gh文件路径")
+                self.Params.Output.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Time", "T", "当前时间（打开Gh的时间）")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                result = self.RunScript(p0)
+
+                if result is not None:
+                    if not hasattr(result, '__getitem__'):
+                        self.marshal.SetOutput(result, DA, 0, True)
+                    else:
+                        self.marshal.SetOutput(result[0], DA, 0, True)
+                        self.marshal.SetOutput(result[1], DA, 1, True)
+                        self.marshal.SetOutput(result[2], DA, 2, True)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAATsSURBVEhLlVZbT1RnFB0f2vjStOkP6EOf+9Dn9qUPrYkhrZEWGx+AtoKiDnKZOzAMiNYophWjiDYEK2pFYC5nYIByOTNz5sIdhpvFCrVSqIhFasutga7u/XFGRi4hXcnOzJw531rft/de+xzNTjA1333d3C7tsYTcRqPfcckclEoNiqPEFHRmWEL17x/uvvqKeuv/g1mpeTunve6COeSetPY0oWCgFTaOyNon/87tbIAl7B41B93WrMaqN9WlO8MUcGbldNT/WTgoI6e9HkbFCdr95qDrOZ0eFAy2ge7/1eh3fqZSbItdhoDzeuGwlxfA6LNvSWyiyPLWIL3tLnS+WhjovrzuRuT3NdMah1Xl2gy68fuie36Ygi5BZOlw0y43k2fI1TgZ9iAwOYbH888xPvcUtqAbtDkUDsnQyzVmlXIdhraajJMjXkGefLoYCel5OFZZviYWI8I7LwzXY3ZxHgL/AteUJmS0VEFPJ9GRiLW3CWbF+aFKTTlXpLfMAWkhl/JJ6ohPNSEuPp1Ci9TSy7B01b0Q0LZWITw1LrgXl5dwUa7DEc8N6Ok/k9+J890tyKF0GfyOn21yxW4hQKm5yEej/IFaEl+VfIO4T9Px8YFMxKeYYJBrYQ5JIte8S04LwzPSiy/dFdDTCbkefU8m8NPsNH2vEoUnvkMayttrtHBGdAvvglKio+MetBViX1I24vZrkVR0TtSDugsniGjs2RMhEKYaHG65LciD9J3RNz1Bp7xDafqRNxTWGBXXR9znsa1oCrig91Yj7dYVJGTnYe8nx5F85jyyAnbkBiVMPZ8TZIzhp1MYm5tRfwEVvX4hSIZkrn801IoW2wAdRyWPFeF0ZTbexOd6Kz7Yk4KU4guYWFgn3whldBDahptrTUHBG9cQ2SV250YBDioUzGEJae7rSMw/hZHBByoVsEqh3B9BgEg5yrweHHVRPWLWM6+GKl8WK7DRRCeo53NDbjz6e3aNWcXQUBsO1V7FF/ZypNq/wzE6qZFqFOVZF/A5SqICG000+decMNG02jVRTA43YkbWoaunFNkBN/W+BNMW48QWaYHG4Hdm8fDiC5tMtAGrZKoImWjGa8By5AzQfwodnZeR6XMhmzwQS86CPD6oyI732GB8IdZEKysrkPraId+LEDFnHAiOjyLxxrdQ2s4Cg19joY9FirYUofHObTqvsQ0NvWrw2h/yVOScP1texCqRs0OT7NeQWF2G/t9+EQJdvz/EUXJ6mlQJfyuLnH5JREcC0SLn9zdTk9gb15ys2PMKyMns1PE/psVsOdJQCT0bi/zwQDVW7/QjaMmlOoU6i0QUFhlQRSJFkDrKofVR/1M2bP0t7Pp9QsAmO96gvn3MOTPV3UJ60+0X9g+pKWNETcTNIERc6yfBYBE8wSs47pVEcQ2+2pAG2CUEGHpv7X5xLNq13m8XNYmQS6N4yUQkEBXRuitxp64Yds9ZGOjUlq5Gfsot6eTad1TqdejlaquY5+Tic+1N6Bm/v62JoiIGxUXprEJq/Q8wdzTAypO0tTpBpdwMHh08qCztdUghA3FsZaLY4LGy9tj0zOu89gMq1fYweu17qauG+NGZT8Xilot96IigFPJ1TisXlF4QvHrZ8a5KsTOSKyp2Uy5T6a1CoR0u8eBix4u3CyoiN4QlJM3RSd0WxRWvLtsAjeY/RdWqVSmQw40AAAAASUVORK5CYII="
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def __init__(self):
+                self.factor = True
+
+            def format_time(self):
+                time_array = time.time()
+                local_time = time.localtime(time_array)
+                date = time.strftime("%Y-%m-%d %H:%M:%S", local_time)
+                return date
+
+            def RunScript(self, Updatetime):
+
+                if Updatetime:
+                    self.factor = True if Updatetime is True else False
+                else:
+                    self.factor = True
+                if self.factor is True:
+                    Rhino_File = Rhino.RhinoDoc.ActiveDoc.Path
+                    Grashhoper_File = Grasshopper.Instances.DocumentServer.Document[0].FilePath
+
+                    RP = Rhino_File
+                    GP = Grashhoper_File
+                    Time = self.format_time()
+                    self.factor = False
+                    return RP, GP, Time
 
 
     else:

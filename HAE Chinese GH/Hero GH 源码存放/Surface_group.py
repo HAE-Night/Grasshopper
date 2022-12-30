@@ -12,8 +12,6 @@ from functools import reduce
 import Rhino.Geometry as rg
 import ghpythonlib.components as ghc
 import Line_group
-from itertools import chain
-import ghpythonlib.components as ghbc
 import math
 
 Result = Line_group.decryption()

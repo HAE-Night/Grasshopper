@@ -8,14 +8,11 @@ import init__
 
 from ghpythonlib.componentbase import dotnetcompiledcomponent as component
 import Grasshopper, GhPython
-import System
-import Rhino
 import rhinoscriptsyntax as rs
 import scriptcontext as sc
 import Rhino.Geometry as rg
 import ghpythonlib.parallel as ghp
 import ghpythonlib.components as ghc
-import Grasshopper as gh
 import Grasshopper.DataTree as gd
 import ghpythonlib.treehelpers as ght
 import re
@@ -23,7 +20,6 @@ import socket
 import time
 import getpass
 import base64
-from itertools import chain
 
 
 def decryption():
@@ -1345,12 +1341,12 @@ try:
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
-                self.SetUpParam(p, "Items", "I", "多折线序号")
+                self.SetUpParam(p, "Items", "I", "多折线序号，默认为第一根")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Distance", "D", "偏移距离")
+                self.SetUpParam(p, "Distance", "D", "偏移距离，默认偏移-10")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
@@ -1373,7 +1369,7 @@ try:
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
-                self.index, self.dis, self.center_pts = None, None, None
+                self.index, self.dis, self.pts, self.curves = None, None, None, None
 
             def message1(self, msg1):
                 return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
@@ -1434,45 +1430,36 @@ try:
 
             def RunScript(self, Curve, Items, Distance):
                 try:
-                    sc.doc = Rhino.RhinoDoc.ActiveDoc
-                    Result_Curve = gd[object]()
+                    Result_Curve, center_pts = (gd[object]() for _ in range(2))
                     if Curve:
                         self.index = Items if Items else [0]
                         self.dis = Distance if Distance else [-10.0]
 
                         temp_curves = [list(_.DuplicateSegments()) for _ in Curve]
-                        explode_curves = map(lambda cur: cur if isinstance(cur, (list)) is True else [cur], temp_curves)
+                        explode_curves = ghp.run(lambda cur: cur if isinstance(cur, (list)) is True else [cur], temp_curves)
 
                         if len(Items) != len(Distance):
                             self.message2("序号和距离列表不一致！")
 
-                        array_pts = list(ghp.run(self._do_main, explode_curves))
-                        Result_Curve, self.center_pts = zip(*map(self._closed_curve, zip(Curve, array_pts)))
-
-                        self.curves = Result_Curve
-                        sc.doc.Views.Redraw()
-                        ghdoc = GhPython.DocReplacement.GrasshopperDocument()
-                        sc.doc = ghdoc
-                        return Result_Curve
+                        array_pts = list(map(self._do_main, explode_curves))
+                        Result_Curve, center_pts = zip(*map(self._closed_curve, zip(Curve, array_pts)))
                     else:
                         self.message2("曲线不能为空！")
-                        return Result_Curve
+                    self.pts = center_pts
+                    self.curves = Result_Curve
+                    return Result_Curve
                 finally:
-                    sc.doc.Views.Redraw()
-                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
-                    sc.doc = ghdoc
                     self.Message = '多折线按序号偏移'
 
             def DrawViewportWires(self, args):
                 try:
                     for _c in self.curves:
                         args.Display.DrawCurve(_c, System.Drawing.Color.Pink, 2)
-                    for f_pts in self.center_pts:
-                        for _ in range(len(f_pts)):
-                            args.Display.DrawDot(f_pts[_], str(_), System.Drawing.Color.FromArgb(248, 141, 30), System.Drawing.Color.FromArgb(255, 255, 255))
-                except Exception as e:
+                    for f_items in self.pts:
+                        for sub_index in range(len(f_items)):
+                            args.Display.DrawDot(f_items[sub_index], str(sub_index), System.Drawing.Color.FromArgb(248, 141, 30), System.Drawing.Color.FromArgb(255, 255, 255))
+                except:
                     pass
-
     else:
         pass
 except:

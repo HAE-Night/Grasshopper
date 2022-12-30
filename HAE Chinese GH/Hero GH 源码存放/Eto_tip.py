@@ -9,8 +9,6 @@
 import init__
 
 import Rhino
-import scriptcontext
-import System
 import Rhino.UI
 import Eto.Drawing as drawing
 import Eto.Forms as forms
