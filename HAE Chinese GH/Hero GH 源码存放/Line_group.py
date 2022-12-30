@@ -16,6 +16,7 @@ import Rhino.Geometry as rg
 import ghpythonlib.parallel as ghp
 import ghpythonlib.components as ghc
 import Grasshopper as gh
+import Grasshopper.DataTree as gd
 import ghpythonlib.treehelpers as ght
 import re
 import socket
@@ -622,9 +623,9 @@ try:
         class LenghtSort(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                       "LenghtSort", "RPP@长度排序",
-                       """根据Curve的长度进行排序，从小到大。""", "Scavenger",
-                       "Line")
+                                                                   "LenghtSort", "RPP@长度排序",
+                                                                   """根据Curve的长度进行排序，从小到大。""", "Scavenger",
+                                                                   "Line")
                 return instance
 
             def get_ComponentGuid(self):
@@ -1319,6 +1320,159 @@ try:
 
             def get_ClippingBox(self):
                 return self.bb
+
+
+        # 多折线按线段序号偏移
+        class OffsetBySerial(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP@多折线偏移（按线段序号）", "RPP_OffsetBySerial", """多折线指定序号进行偏移""", "Scavenger", "Line")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("f86b09ae-745e-4577-90b9-f5c72b7d6fe1")
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Curve()
+                self.SetUpParam(p, "Curve", "C", "多折线")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Integer()
+                self.SetUpParam(p, "Items", "I", "多折线序号")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Number()
+                self.SetUpParam(p, "Distance", "D", "偏移距离")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Curve()
+                self.SetUpParam(p, "Result_Curve", "R", "偏移后的多折线")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                p1 = self.marshal.GetInput(DA, 1)
+                p2 = self.marshal.GetInput(DA, 2)
+                result = self.RunScript(p0, p1, p2)
+
+                if result is not None:
+                    self.marshal.SetOutput(result, DA, 0, True)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAGZSURBVEhL1dQ9KEZRHMfxx7vyMlAmUmSwkSQWKZOJQSIlKdlsGEwWpWQwSCkGT7FYWIjJIIVBkTJh8VImJRn4/q576uQ59+ne2zX41aeec+5z7j3n3Hv+qT9KCXpR57USTh6O8IVXdSQdzf4TeoBESicW0O613FmBbvyEHXWETQU+oMFvKMLvLEPXZ1GmjigZhVm2rKIcJktQ/5zXipAczECDL7GLbb/9AG3Dmd+eR+h04ARX0OAN2NvShnvompwjdDTrC5jBW3DF3ja93MAUoAbFGMYtzEDpgyu5mMA0StXhShW0vHeYJWuv+6EZBt08dAZgz1btRFOLO+jm6+pIIBm1qBKtPz+zph5j0KSCErsW6VA9QgO1YvuQ2Yldi3pgBkkDXHHWonGsodlrZUZflGb1ghvoBvsohB1nLeqCmdUzRtCEFmxiD7p2jGroEA75fYcwpzuwFnXDPCDIAXSo7AxC166hkqLfgbVoEmloNY3QlpzCPECrckXbav4TqRYp+nQXMYV8dTiid2cekLUWxU2oWvSfk0p9A8GZfDm6ge+4AAAAAElFTkSuQmCC"
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def __init__(self):
+                self.index, self.dis, self.center_pts = None, None, None
+
+            def message1(self, msg1):
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
+
+            def message2(self, msg2):
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
+
+            def message3(self, msg3):
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
+
+            def mes_box(self, info, button, title):
+                return rs.MessageBox(info, button, title)
+
+            def _offset_curve(self, tuple_data):
+                single_data, dis = tuple_data
+                new_offset = ghc.OffsetCurve(single_data, dis, None, 1)
+                return new_offset
+
+            def _replace_curves(self, origin_list, zip_list):
+                for items in zip_list:
+                    origin_list[items[0]] = items[1]
+                return origin_list
+
+            def _find_closest_pt(self, data_list):
+                count, close_pts = 0, []
+                while len(data_list) > count:
+                    one_index, two_index = count, count + 1
+                    if two_index < len(data_list):
+                        single_pt = rs.LineLineIntersection(data_list[one_index], data_list[two_index])
+                        if abs(single_pt[0].DistanceTo(single_pt[1])) < sc.doc.ModelAbsoluteTolerance:
+                            close_pts.append(single_pt[0])
+                    count += 1
+                return close_pts
+
+            def _do_main(self, curve_list):
+                wait_offset_curves = [curve_list[_] for _ in self.index]
+                res_curves = ghp.run(self._offset_curve, zip(wait_offset_curves, self.dis))
+                replace_curves = self._replace_curves(curve_list, zip(self.index, res_curves))
+
+                closest_pt = self._find_closest_pt(replace_curves)
+                closest_pt.insert(0, replace_curves[0].PointAtStart)
+                closest_pt.append(replace_curves[-1].PointAtEnd)
+
+                return closest_pt
+
+            def _get_midpt(self, single_line):
+                single_line.Domain = rg.Interval(0, 1)
+                single_point = single_line.PointAt(0.5)
+                return single_point
+
+            def _closed_curve(self, tuple_data):
+                se_tol = 0 if tuple_data[0].IsClosed is False else abs(tuple_data[1][0].DistanceTo(tuple_data[1][-1]))
+                res_line = rg.PolylineCurve(tuple_data[1])
+                res_line.MakeClosed(se_tol)
+
+                local_center_pt = ghp.run(self._get_midpt, list(res_line.DuplicateSegments()))
+                return res_line, local_center_pt
+
+            def RunScript(self, Curve, Items, Distance):
+                try:
+                    sc.doc = Rhino.RhinoDoc.ActiveDoc
+                    Result_Curve = gd[object]()
+                    if Curve:
+                        self.index = Items if Items else [0]
+                        self.dis = Distance if Distance else [-10.0]
+
+                        temp_curves = [list(_.DuplicateSegments()) for _ in Curve]
+                        explode_curves = map(lambda cur: cur if isinstance(cur, (list)) is True else [cur], temp_curves)
+
+                        if len(Items) != len(Distance):
+                            self.message2("序号和距离列表不一致！")
+
+                        array_pts = list(ghp.run(self._do_main, explode_curves))
+                        Result_Curve, self.center_pts = zip(*map(self._closed_curve, zip(Curve, array_pts)))
+
+                        self.curves = Result_Curve
+                        sc.doc.Views.Redraw()
+                        ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                        sc.doc = ghdoc
+                        return Result_Curve
+                    else:
+                        self.message2("曲线不能为空！")
+                        return Result_Curve
+                finally:
+                    sc.doc.Views.Redraw()
+                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                    sc.doc = ghdoc
+                    self.Message = '多折线按序号偏移'
+
+            def DrawViewportWires(self, args):
+                try:
+                    for _c in self.curves:
+                        args.Display.DrawCurve(_c, System.Drawing.Color.Pink, 2)
+                    for f_pts in self.center_pts:
+                        for _ in range(len(f_pts)):
+                            args.Display.DrawDot(f_pts[_], str(_), System.Drawing.Color.FromArgb(248, 141, 30), System.Drawing.Color.FromArgb(255, 255, 255))
+                except Exception as e:
+                    pass
+
     else:
         pass
 except:
