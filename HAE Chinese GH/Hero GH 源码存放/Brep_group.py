@@ -9,7 +9,6 @@
 
 from ghpythonlib.componentbase import dotnetcompiledcomponent as component
 import Grasshopper, GhPython
-import System
 import Rhino
 import rhinoscriptsyntax as rs
 import Rhino.Geometry as rg
@@ -1208,7 +1207,7 @@ try:
                     self.Message = 'HAE开发组'
 
 
-        # 不规则几何物体最小外包围盒
+        # 不规则几何物体最小外包围盒(3D)
         class GenerateMinBox3d(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
