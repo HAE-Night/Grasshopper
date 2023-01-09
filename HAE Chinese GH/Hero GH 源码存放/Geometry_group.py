@@ -10,9 +10,9 @@ import Rhino.Geometry as rg
 import ghpythonlib.components as ghc
 import copy
 import math
-import Line_group
+import Curve_group
 
-Result = Line_group.decryption()
+Result = Curve_group.decryption()
 try:
     if Result is True:
         # 分解几何物体

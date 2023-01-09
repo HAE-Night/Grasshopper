@@ -22,10 +22,10 @@ import ghpythonlib.parallel as ghp
 import Rhino.DocObjects.ObjRef as objref
 from itertools import chain
 import math
-import Line_group
+import Curve_group
 import time
 
-Result = Line_group.decryption()
+Result = Curve_group.decryption()
 
 try:
     if Result is True:

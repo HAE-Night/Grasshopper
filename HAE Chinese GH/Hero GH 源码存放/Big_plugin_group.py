@@ -8,21 +8,17 @@
 
 from ghpythonlib.componentbase import dotnetcompiledcomponent as component
 import Grasshopper, GhPython
-import System
-import Rhino
-import rhinoscriptsyntax as rs
 import Rhino.Geometry as rg
 import ghpythonlib.parallel as ghp
 import ghpythonlib.components as ghc
 import ghpythonlib.treehelpers as ght
 import Rhino.DocObjects.ObjRef as objref
-import Line_group
+import Curve_group
 import Rhino.DocObjects.ObjRef as obj
-from Grasshopper.Kernel import GH_RuntimeMessageLevel as RML
 from itertools import chain
 import math
 
-Result = Line_group.decryption()
+Result = Curve_group.decryption()
 try:
     if Result is True:
         # 表皮常用信息适应平板
