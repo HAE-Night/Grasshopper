@@ -15,9 +15,9 @@ import Rhino.Geometry as rg
 import ghpythonlib.treehelpers as ght
 import ghpythonlib.parallel as ghp
 import Grasshopper.DataTree as gd
-import Line_group
+import Curve_group
 
-Result = Line_group.decryption()
+Result = Curve_group.decryption()
 try:
     if Result is True:
 
