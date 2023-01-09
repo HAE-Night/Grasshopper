@@ -22,9 +22,9 @@ from itertools import chain
 from decimal import Decimal as dd
 import re
 import random
-import Line_group
+import Curve_group
 
-Result = Line_group.decryption()
+Result = Curve_group.decryption()
 try:
     if Result is True:
         # 树形数据处理
