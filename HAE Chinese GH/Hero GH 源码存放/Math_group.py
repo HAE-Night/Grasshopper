@@ -9,9 +9,9 @@
 from ghpythonlib.componentbase import dotnetcompiledcomponent as component
 import Grasshopper, GhPython
 import ghpythonlib.treehelpers as ght
-import Line_group
+import Curve_group
 
-Result = Line_group.decryption()
+Result = Curve_group.decryption()
 try:
     if Result is True:
         # 区间取值

@@ -18,9 +18,9 @@ import Rhino.Geometry as rg
 import ghpythonlib.parallel as ghp
 from itertools import chain
 
-import Line_group
+import Curve_group
 
-Result = Line_group.decryption()
+Result = Curve_group.decryption()
 try:
     if Result is True:
         # 获取数据详细信息
