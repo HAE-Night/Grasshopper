@@ -5,18 +5,11 @@
 
 from ghpythonlib.componentbase import dotnetcompiledcomponent as component
 import Grasshopper, GhPython
-import System
-import Rhino
 import rhinoscriptsyntax as rs
 import Rhino.Geometry as rg
-import scriptcontext as sc
 import ghpythonlib.components as ghc
 import copy
 import math
-import socket
-import time
-import getpass
-import base64
 import Line_group
 
 Result = Line_group.decryption()
