@@ -1275,9 +1275,9 @@ try:
 
                     Depth = 1 if Depth is None else Depth
                     Result = gd[object]()
+                    Data_Tree.SimplifyPaths()
                     if Depth == 0:
                         return Data_Tree
-                    Data_Tree.SimplifyPaths()
                     self.origin_data = [list(_) for _ in Data_Tree.Branches]
                     if self.origin_data and len(self.origin_data) > 1:
                         result_boolean = self._deepest_length(Data_Tree, Depth)
