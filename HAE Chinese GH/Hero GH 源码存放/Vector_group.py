@@ -12,10 +12,10 @@ import rhinoscriptsyntax as rs
 import Rhino.Geometry as rg
 import ghpythonlib.components as ghc
 import ghpythonlib.treehelpers as ght
-import Line_group
+import Curve_group
 from itertools import chain
 
-Result = Line_group.decryption()
+Result = Curve_group.decryption()
 try:
     if Result is True:
         # 多重向量偏移

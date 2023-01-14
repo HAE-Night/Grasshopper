@@ -9,9 +9,9 @@ import Rhino.Geometry as rg
 import math
 import re
 import copy
-import Line_group
+import Curve_group
 
-Result = Line_group.decryption()
+Result = Curve_group.decryption()
 try:
     if Result is True:
         # 平面旋转
