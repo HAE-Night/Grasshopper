@@ -5,16 +5,15 @@
 
 from ghpythonlib.componentbase import dotnetcompiledcomponent as component
 import Grasshopper, GhPython
-import System
 import Rhino
 import rhinoscriptsyntax as rs
 from functools import reduce
 import Rhino.Geometry as rg
 import ghpythonlib.components as ghc
-import Line_group
+import Curve_group
 import math
 
-Result = Line_group.decryption()
+Result = Curve_group.decryption()
 
 try:
     if Result is True:
