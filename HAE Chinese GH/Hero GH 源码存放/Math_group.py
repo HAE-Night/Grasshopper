@@ -18,7 +18,7 @@ try:
         class GetSectionValue(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@区间取值", "RPP_GetValue(Section)", """列表区间取值""", "Scavenger", "Math")
+                                                                   "RPP-区间取值", "RPP_GetValue(Section)", """列表区间取值""", "Scavenger", "Math")
                 return instance
 
             def get_ComponentGuid(self):
@@ -77,7 +77,7 @@ try:
         class LenTree(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@定义长度树", "RPP_LenTree", """列表长度转树形""", "Scavenger", "Math")
+                                                                   "RPP-定义长度树", "RPP_LenTree", """列表长度转树形""", "Scavenger", "Math")
                 return instance
 
             def get_ComponentGuid(self):
@@ -134,7 +134,7 @@ try:
         class GetTreeLen(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@根据长度取树形值", "RPP_GetTreeOfLen", """取指定长度的树形数据""", "Scavenger", "Math")
+                                                                   "RPP-根据长度取树形值", "RPP_GetTreeOfLen", """取指定长度的树形数据""", "Scavenger", "Math")
                 return instance
 
             def get_ComponentGuid(self):
@@ -197,7 +197,7 @@ try:
         class GetTreeDataByIndex(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@树形下标取值", "RPP_GetTreeByIndex", """树形数据根据下标提取的方式；支持多下标（树形路径的模式为{0; 第N列表 - 1; 果实数据}排列）""", "Scavenger", "Math")
+                                                                   "RPP-树形下标取值", "RPP_GetTreeByIndex", """树形数据根据下标提取的方式；支持多下标（树形路径的模式为{0; 第N列表 - 1; 果实数据}排列）""", "Scavenger", "Math")
                 return instance
 
             def get_ComponentGuid(self):

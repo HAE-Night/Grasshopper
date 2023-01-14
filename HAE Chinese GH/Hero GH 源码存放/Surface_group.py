@@ -22,7 +22,7 @@ try:
         class SweepOutFitting(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@曲线扫出", "RPP_SweepOutFitting", """解决原插件扫出的问题""",
+                                                                   "RPP-曲线扫出", "RPP_SweepOutFitting", """解决原插件扫出的问题""",
                                                                    "Scavenger",
                                                                    "Surface")
                 return instance
@@ -79,7 +79,7 @@ try:
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
                                "Area sort",
-                               "RPP@面积排序",
+                               "RPP-面积排序",
                                """根据face的面积进行排序""",
                                "Scavenger",
                                "Surface")
@@ -169,7 +169,7 @@ try:
         class Surface_Area2(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@面积取值", "RPP_Surface_Area2",
+                                                                   "RPP-面积取值", "RPP_Surface_Area2",
                                                                    """Breps求面积：面积除以divisor，保留decimals位小数；""", "Scavenger",
                                                                    "Surface")
                 return instance
@@ -231,7 +231,7 @@ try:
         class Surface_PLA(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@求中心平面", "RPP_Surface Plane",
+                                                                   "RPP-求中心平面", "RPP_Surface Plane",
                                                                    """求几何物体的中心平面PLane""", "Scavenger",
                                                                    "Surface")
                 return instance
@@ -323,7 +323,7 @@ try:
         class Curve_Trim_Offset(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@曲面挤出（修剪、移动）", "RPP_Curve_Trim_Offset",
+                                                                   "RPP-曲面挤出（修剪、移动）", "RPP_Curve_Trim_Offset",
                                                                    """修剪曲线，选择挤出量，挤出曲面，若不输入挤出量，则输出修剪后的线段""", "Scavenger",
                                                                    "Surface")
                 return instance
@@ -448,7 +448,7 @@ try:
         class SurfaceAngle(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@Sur_Angle", "RPP_Sur_Angle", """求两个面的夹角和补角""", "Scavenger", "Surface")
+                                                                   "RPP-Sur_Angle", "RPP_Sur_Angle", """求两个面的夹角和补角""", "Scavenger", "Surface")
                 return instance
 
             def get_ComponentGuid(self):
@@ -533,7 +533,7 @@ try:
         class BrepFilp(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@BrepFlip", "RPP_Brep反转", """通过向量反转曲面""", "Scavenger", "Surface")
+                                                                   "RPP-BrepFlip", "RPP_Brep反转", """通过向量反转曲面""", "Scavenger", "Surface")
                 return instance
 
             def get_ComponentGuid(self):
@@ -625,7 +625,7 @@ try:
         class ShrinkSurface(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@曲面收边", "RPP_ShrinkSurface", """关于TrimSurface边界的问题""", "Scavenger", "Surface")
+                                                                   "RPP-曲面收边", "RPP_ShrinkSurface", """关于TrimSurface边界的问题""", "Scavenger", "Surface")
                 return instance
 
             def get_ComponentGuid(self):
@@ -697,7 +697,7 @@ try:
         class SurfaceSortByXYZ(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@面排序", "RPP_SurfaceSortByXYZ", """曲面排序，输入xyz轴排序，可按照参照平面进行排序""", "Scavenger", "Surface")
+                                                                   "RPP-面排序", "RPP_SurfaceSortByXYZ", """曲面排序，输入xyz轴排序，可按照参照平面进行排序""", "Scavenger", "Surface")
                 return instance
 
             def get_ComponentGuid(self):

@@ -22,7 +22,7 @@ try:
         class Skewing(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@多向量偏移", "RPP_Skewing", """多向量位移""", "Scavenger", "Vector")
+                                                                   "RPP-多向量偏移", "RPP_Skewing", """多向量位移""", "Scavenger", "Vector")
                 return instance
 
             def get_ComponentGuid(self):
@@ -143,7 +143,7 @@ try:
         class PointsSort(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@点排序", "RPP_PointsSort", """点序排列角点，根据参照点自动排序点阵""", "Scavenger", "Vector")
+                                                                   "RPP-点排序", "RPP_PointsSort", """点序排列角点，根据参照点自动排序点阵""", "Scavenger", "Vector")
                 return instance
 
             def get_ComponentGuid(self):
@@ -241,7 +241,7 @@ try:
         class PointOrderGroupingSort(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@点序排序（分组排序）", "RPP_PointOrderSort", """点序排序，按X-Y-Z轴分组排序""", "Scavenger", "Vector")
+                                                                   "RPP-点序排序（分组排序）", "RPP_PointOrderSort", """点序排序，按X-Y-Z轴分组排序""", "Scavenger", "Vector")
                 return instance
 
             def get_ComponentGuid(self):
@@ -352,7 +352,7 @@ try:
         class CullPoints(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@删除重复的点", "RPP_CullPoints", """删除点列表中重复的点""", "Scavenger", "Vector")
+                                                                   "RPP-删除重复的点", "RPP_CullPoints", """删除点列表中重复的点""", "Scavenger", "Vector")
                 return instance
 
             def get_ComponentGuid(self):
@@ -466,7 +466,7 @@ try:
         class PtsSortByXYZ(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@点排序", "RPP_PtsSortByXYZ", """点序列排序，将按照给定的参照平面排序，不给默认为世界XY""", "Scavenger", "Vector")
+                                                                   "RPP-点排序", "RPP_PtsSortByXYZ", """点序列排序，将按照给定的参照平面排序，不给默认为世界XY""", "Scavenger", "Vector")
                 return instance
 
             def get_ComponentGuid(self):
@@ -564,7 +564,7 @@ try:
         class SortPt(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@点排序", "RPP_SortPt", """以初始点依次进行排序""", "Scavenger", "Vector")
+                                                                   "RPP-点排序", "RPP_SortPt", """以初始点依次进行排序""", "Scavenger", "Vector")
                 return instance
 
             def get_ComponentGuid(self):

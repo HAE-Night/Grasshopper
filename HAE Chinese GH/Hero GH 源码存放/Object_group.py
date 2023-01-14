@@ -27,7 +27,7 @@ try:
         class Data_message(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@获取数据详情", "RPP_Data_message", """获取数据详细信息.""", "Scavenger",
+                                                                   "RPP-获取数据详情", "RPP_Data_message", """获取数据详细信息.""", "Scavenger",
                                                                    "Object")
                 return instance
 
@@ -72,7 +72,7 @@ try:
         class Data_KV(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@提取键值对", "RPP_Data_KV",
+                                                                   "RPP-提取键值对", "RPP_Data_KV",
                                                                    """对物件的键值对进行提取，当Key没有值输入时。提取所有的键值对.""", "Scavenger",
                                                                    "Object")
                 return instance
@@ -159,7 +159,7 @@ try:
         class DATAKEY(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@赋值键值对", "RPP_DATAKEY", """对物件的键值对进行f赋值，当多个物件赋值时，注意键值对顺序和数据结构；""", "Scavenger", "Object")
+                                                                   "RPP-赋值键值对", "RPP_DATAKEY", """对物件的键值对进行f赋值，当多个物件赋值时，注意键值对顺序和数据结构；""", "Scavenger", "Object")
                 return instance
 
             def get_ComponentGuid(self):
@@ -243,7 +243,7 @@ try:
         class PickItems(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@犀牛图层拾取", "RPP_PickItems", """拾取犀牛子图层的物件""", "Scavenger", "Object")
+                                                                   "RPP-犀牛图层拾取", "RPP_PickItems", """拾取犀牛子图层的物件""", "Scavenger", "Object")
                 return instance
 
             def get_ComponentGuid(self):
@@ -360,7 +360,7 @@ try:
         class ExtractObject(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@提取图层物体", "RPP_ExtractObject", """提取图层信息，拿到指定图层物体""", "Scavenger", "Object")
+                                                                   "RPP-提取图层物体", "RPP_ExtractObject", """提取图层信息，拿到指定图层物体""", "Scavenger", "Object")
                 return instance
 
             def get_ComponentGuid(self):
@@ -444,7 +444,7 @@ try:
         class PickText(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@文本提取", "RPP_PickText", """提取Rhino物件（可单独选择）中所有的文字""", "Scavenger", "Object")
+                                                                   "RPP-文本提取", "RPP_PickText", """提取Rhino物件（可单独选择）中所有的文字""", "Scavenger", "Object")
                 return instance
 
             def get_ComponentGuid(self):
@@ -533,7 +533,7 @@ try:
         class Add_Layer(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@创建图层", "RPP_AddLayer", """生成未存在的图层（只考虑最优时间，除图层名和颜色之外全为默认值）""", "Scavenger", "Object")
+                                                                   "RPP-创建图层", "RPP_AddLayer", """生成未存在的图层（只考虑最优时间，除图层名和颜色之外全为默认值）""", "Scavenger", "Object")
                 return instance
 
             def get_ComponentGuid(self):

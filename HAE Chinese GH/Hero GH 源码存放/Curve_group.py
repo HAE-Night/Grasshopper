@@ -64,7 +64,7 @@ try:
         class DTS_Get_Vale(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@曲线取值", "RPP_DTS_Get_Vale",
+                                                                   "RPP-曲线取值", "RPP_DTS_Get_Vale",
                                                                    """分解线段，以及下标取值（S为边线，V为点）""",
                                                                    "Scavenger", "Curve")
                 return instance
@@ -190,7 +190,7 @@ try:
         class PlineOffset(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@折线偏移", "RPP_PlineOffset", """折线段分段偏移，三种不同的偏移模式""", "Scavenger", "Curve")
+                                                                   "RPP-折线偏移", "RPP_PlineOffset", """折线段分段偏移，三种不同的偏移模式""", "Scavenger", "Curve")
                 return instance
 
             def get_ComponentGuid(self):
@@ -320,7 +320,7 @@ try:
         class Dotted_Line_Conversion(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@点线转换", "RPP_StartToStrat,EndToEnd",
+                                                                   "RPP-点线转换", "RPP_StartToStrat,EndToEnd",
                                                                    """曲线集的起点和起点连接，终点和终点连接""", "Scavenger", "Curve")
                 return instance
 
@@ -402,7 +402,7 @@ try:
         class PCLINE(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@最近点连线", "RPP_PCLINE", """几何图形到指定线段的最近线段""", "Scavenger", "Curve")
+                                                                   "RPP-最近点连线", "RPP_PCLINE", """几何图形到指定线段的最近线段""", "Scavenger", "Curve")
                 return instance
 
             def get_ComponentGuid(self):
@@ -496,7 +496,7 @@ try:
         class VectorLineTaking(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@PDWL", "RPP_VectorLineTaking", """点向式绘制直线.""", "Scavenger", "Curve")
+                                                                   "RPP-PDWL", "RPP_VectorLineTaking", """点向式绘制直线.""", "Scavenger", "Curve")
                 return instance
 
             def get_ComponentGuid(self):
@@ -567,7 +567,7 @@ try:
         class LineLength(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@求线长度", "RPP_求线长度", """求线长度，并保留规定的小数位。""", "Scavenger",
+                                                                   "RPP-求线长度", "RPP_求线长度", """求线长度，并保留规定的小数位。""", "Scavenger",
                                                                    "Curve")
                 return instance
 
@@ -619,7 +619,7 @@ try:
         class LenghtSort(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "LenghtSort", "RPP@长度排序",
+                                                                   "LenghtSort", "RPP-长度排序",
                                                                    """根据Curve的长度进行排序，从小到大。""", "Scavenger",
                                                                    "Curve")
                 return instance
@@ -684,7 +684,7 @@ try:
         class ZLine(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@指定线段", "RPP_Line", """在线段列表中，根据线段Z坐标取出指定的线段（顶线 or 底线）
+                                                                   "RPP-指定线段", "RPP_Line", """在线段列表中，根据线段Z坐标取出指定的线段（顶线 or 底线）
         并统一该直线的方向。""", "Scavenger", "Curve")
                 return instance
 
@@ -761,7 +761,7 @@ try:
         class CurveJoin(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@合并曲线", "RPP_Curve_Join", """曲线合并操作（多进程）""", "Scavenger", "Curve")
+                                                                   "RPP-合并曲线", "RPP_Curve_Join", """曲线合并操作（多进程）""", "Scavenger", "Curve")
                 return instance
 
             def get_ComponentGuid(self):
@@ -824,7 +824,7 @@ try:
         class ArcPick(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@圆弧拾取", "RPP_ArcPick", """简单圆弧拾取插件，通过参数修改，重建一个新的圆弧""", "Scavenger", "Curve")
+                                                                   "RPP-圆弧拾取", "RPP_ArcPick", """简单圆弧拾取插件，通过参数修改，重建一个新的圆弧""", "Scavenger", "Curve")
                 return instance
 
             def get_ComponentGuid(self):
@@ -948,7 +948,7 @@ try:
         class FilterCurve(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@曲线筛选", "RPP_FilterCurve", """通过曲率选择曲线""", "Scavenger", "Curve")
+                                                                   "RPP-曲线筛选", "RPP_FilterCurve", """通过曲率选择曲线""", "Scavenger", "Curve")
                 return instance
 
             def get_ComponentGuid(self):
@@ -1039,7 +1039,7 @@ try:
         class LineSortByXYZ(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@曲线排序", "RPP_LineSortByXYZ", """曲线列表排序，当轴输入端为空时，按线长排序，输入x，y，z将按照x，y，z的轴坐标进行排序，CP可指定平面""", "Scavenger", "Curve")
+                                                                   "RPP-曲线排序", "RPP_LineSortByXYZ", """曲线列表排序，当轴输入端为空时，按线长排序，输入x，y，z将按照x，y，z的轴坐标进行排序，CP可指定平面""", "Scavenger", "Curve")
                 return instance
 
             def get_ComponentGuid(self):
@@ -1143,7 +1143,7 @@ try:
         class CurveTrim_S(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@Ext_Simplify", "RPP_CurveExtendTrim", """修剪曲线，输入负数时修剪曲线，输入正数时延长曲线.""", "Scavenger", "Curve")
+                                                                   "RPP-Ext_Simplify", "RPP_CurveExtendTrim", """修剪曲线，输入负数时修剪曲线，输入正数时延长曲线.""", "Scavenger", "Curve")
                 return instance
 
             def get_ComponentGuid(self):
@@ -1243,7 +1243,7 @@ try:
         class CurvesDirection(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@Crv Dir", "RPP_Crv Dir", """显示曲线方向""",
+                                                                   "RPP-Crv Dir", "RPP_Crv Dir", """显示曲线方向""",
                                                                    "Scavenger", "Curve")
                 return instance
 
@@ -1322,7 +1322,7 @@ try:
         class OffsetBySerial(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@多折线偏移（按线段序号）", "RPP_OffsetBySerial", """多折线指定序号进行偏移""", "Scavenger", "Curve")
+                                                                   "RPP-多折线偏移（按线段序号）", "RPP_OffsetBySerial", """多折线指定序号进行偏移""", "Scavenger", "Curve")
                 return instance
 
             def get_ComponentGuid(self):

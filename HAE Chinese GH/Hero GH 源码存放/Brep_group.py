@@ -33,7 +33,7 @@ try:
         class Seam_Merge(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@封面合并", "RPP_CoverMerge", """封面以及合并曲面""", "Scavenger", "Brep")
+                                                                   "RPP-封面合并", "RPP_CoverMerge", """封面以及合并曲面""", "Scavenger", "Brep")
                 return instance
 
             def get_ComponentGuid(self):
@@ -91,7 +91,7 @@ try:
         class MappingExtrusion(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@映射及挤出", "RPP_Mapping&Extrusion", """映射一个物体到指定平面，之后通过线段或者向量来挤出实体""", "Scavenger", "Brep")
+                                                                   "RPP-映射及挤出", "RPP_Mapping&Extrusion", """映射一个物体到指定平面，之后通过线段或者向量来挤出实体""", "Scavenger", "Brep")
                 return instance
 
             def get_ComponentGuid(self):
@@ -185,7 +185,7 @@ try:
         class Brep_Union(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@结合", "RPP_Brep_Union", """将多个Brep结合成一个.并消除参考线""",
+                                                                   "RPP-结合", "RPP_Brep_Union", """将多个Brep结合成一个.并消除参考线""",
                                                                    "Scavenger",
                                                                    "Brep")
                 return instance
@@ -249,7 +249,7 @@ try:
         class CirBrep(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@开孔圆柱",
+                                                                   "RPP-开孔圆柱",
                                                                    "CirBrep",
                                                                    """根据点、Plane生成圆柱切割体""",
                                                                    "Scavenger",
@@ -343,7 +343,7 @@ try:
         class BrepOffset(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@多边曲面偏移", "RPP_BrepOffset", """根据折线生成偏移曲面。""", "Scavenger", "Brep")
+                                                                   "RPP-多边曲面偏移", "RPP_BrepOffset", """根据折线生成偏移曲面。""", "Scavenger", "Brep")
                 return instance
 
             def get_ComponentGuid(self):
@@ -424,7 +424,7 @@ try:
         class SectionBody(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@截面体", "RPP_SectionBody", """原截面成实体（已删除），Loft（EX版，可放样面或者线），时间效率达到最高""", "Scavenger", "Brep")
+                                                                   "RPP-截面体", "RPP_SectionBody", """原截面成实体（已删除），Loft（EX版，可放样面或者线），时间效率达到最高""", "Scavenger", "Brep")
                 return instance
 
             def get_ComponentGuid(self):
@@ -536,7 +536,7 @@ try:
         class BrepCut(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@Brep切割（优化实用性）", "RPP_BrepCut", """Brep切割优化数据（时间效率最高）""", "Scavenger", "Brep")
+                                                                   "RPP-Brep切割（优化实用性）", "RPP_BrepCut", """Brep切割优化数据（时间效率最高）""", "Scavenger", "Brep")
                 return instance
 
             def get_ComponentGuid(self):
@@ -689,7 +689,7 @@ try:
         class SplitBrepFace(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@分割Brep（面）", "RPP_SplitBrepFace", """面或实体切割，分割面或者实体（类似小刀平切面饼）""", "Scavenger", "Brep")
+                                                                   "RPP-分割Brep（面）", "RPP_SplitBrepFace", """面或实体切割，分割面或者实体（类似小刀平切面饼）""", "Scavenger", "Brep")
                 return instance
 
             def get_ComponentGuid(self):
@@ -824,7 +824,7 @@ try:
         class CullBrep(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@删除重合Brep", "RPP_CullDuplicateBrep", """将重合的Brep删除""", "Scavenger",
+                                                                   "RPP-删除重合Brep", "RPP_CullDuplicateBrep", """将重合的Brep删除""", "Scavenger",
                                                                    "Brep")
                 return instance
 
@@ -915,7 +915,7 @@ try:
         class Fix_Brep(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@Brep修复", "RPP_Fix_Brep", """修复损坏的面，不成功时爆红，有开放的Brep（Open Brep爆黄），修复成功会有提示（注：此程序不能适用所有模型和情况，请合理使用）""", "Scavenger", "Brep")
+                                                                   "RPP-Brep修复", "RPP_Fix_Brep", """修复损坏的面，不成功时爆红，有开放的Brep（Open Brep爆黄），修复成功会有提示（注：此程序不能适用所有模型和情况，请合理使用）""", "Scavenger", "Brep")
                 return instance
 
             def get_ComponentGuid(self):
@@ -1053,7 +1053,7 @@ try:
         class ModelComparison(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@模型比较", "RPP_ModelComparison", """通过面积以及长度进行模型比较""", "Scavenger", "Brep")
+                                                                   "RPP-模型比较", "RPP_ModelComparison", """通过面积以及长度进行模型比较""", "Scavenger", "Brep")
                 return instance
 
             def get_ComponentGuid(self):
@@ -1211,7 +1211,7 @@ try:
         class GenerateMinBox3d(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@最小外包围盒（不规则3d）", "RPP_GenerateMinBox3d", """通过点阵列生成不规则几何物体的最小外包围盒（3d）""", "Scavenger", "Brep")
+                                                                   "RPP-最小外包围盒（不规则3d）", "RPP_GenerateMinBox3d", """通过点阵列生成不规则几何物体的最小外包围盒（3d）""", "Scavenger", "Brep")
                 return instance
 
             def get_ComponentGuid(self):

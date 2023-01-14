@@ -18,7 +18,7 @@ try:
         class RotatePlane(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@平面坐标旋转", "RPP_RotatePlane", """平面旋转以及跟随平面旋转的两个物体，Direction（旋转的轴方向）""", "Scavenger", "Plane")
+                                                                   "RPP-平面坐标旋转", "RPP_RotatePlane", """平面旋转以及跟随平面旋转的两个物体，Direction（旋转的轴方向）""", "Scavenger", "Plane")
                 return instance
 
             def get_ComponentGuid(self):
@@ -140,7 +140,7 @@ try:
         class Refactoring_Plane(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@重构Plane", "RPP_Refactoring_Plane",
+                                                                   "RPP-重构Plane", "RPP_Refactoring_Plane",
                                                                    """输入代替XY轴的轴向量来重构XY轴平面""", "Scavenger", "Plane")
                 return instance
 

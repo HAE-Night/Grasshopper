@@ -25,7 +25,7 @@ try:
         class NormalInfo(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@平面基础信息", "RPP_PanleInfo", """表皮常用信息适应平板""", "Scavenger", "Big_plug-in")
+                                                                   "RPP-平面基础信息", "RPP_PanleInfo", """表皮常用信息适应平板""", "Scavenger", "Big_plug-in")
                 return instance
 
             def get_ComponentGuid(self):
@@ -181,7 +181,7 @@ try:
         class ChainInfo(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@关联表皮信息存储", "RPP_Chain-Info", """表皮关联信息存储, 关联表皮ID、关联表皮角度(测试阶段)""", "Scavenger", "Big_plug-in")
+                                                                   "RPP-关联表皮信息存储", "RPP_Chain-Info", """表皮关联信息存储, 关联表皮ID、关联表皮角度(测试阶段)""", "Scavenger", "Big_plug-in")
                 return instance
 
             def get_ComponentGuid(self):
@@ -378,7 +378,7 @@ try:
         class SortBuilt(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@角点重排序", "RPP_PointSorted", """角点重新排序，不规律的四边角点按一定规律排序""", "Scavenger", "Big_plug-in")
+                                                                   "RPP-角点重排序", "RPP_PointSorted", """角点重新排序，不规律的四边角点按一定规律排序""", "Scavenger", "Big_plug-in")
                 return instance
 
             def get_ComponentGuid(self):
@@ -489,7 +489,7 @@ try:
         class StandRectangularElementPlate(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@RectEle", "RPP@测试矩形单元体数据处理", """标准矩形单元体原数据处理""", "Scavenger", "Big_plug-in")
+                                                                   "RPP-RectEle", "RPP-测试矩形单元体数据处理", """标准矩形单元体原数据处理""", "Scavenger", "Big_plug-in")
                 return instance
 
             def get_ComponentGuid(self):

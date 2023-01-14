@@ -31,7 +31,7 @@ try:
         class TreeData(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@树形数据处理", "RPP_TreeData",
+                                                                   "RPP-树形数据处理", "RPP_TreeData",
                                                                    """树形数据处理的问题，B有多长A就会有多长""",
                                                                    "Scavenger", "Data")
                 return instance
@@ -92,7 +92,7 @@ try:
         class NewRound(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@数据精度提取", "RPP_NewRound", """数据精度的重定义，优化数据（四舍五入）""", "Scavenger", "Data")
+                                                                   "RPP-数据精度提取", "RPP_NewRound", """数据精度的重定义，优化数据（四舍五入）""", "Scavenger", "Data")
                 return instance
 
             def get_ComponentGuid(self):
@@ -219,7 +219,7 @@ try:
         class list_values(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@list下标取值", "RPP_list_values",
+                                                                   "RPP-list下标取值", "RPP_list_values",
                                                                    """列表根据下标取值，取值下标空格间隔""",
                                                                    "Scavenger", "Data")
                 return instance
@@ -274,7 +274,7 @@ try:
         class Tree_Values(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@树形规划取值", "RPP_Tree_Values", """Explode-True 对树形数据拆分 统一路径.
+                                                                   "RPP-树形规划取值", "RPP_Tree_Values", """Explode-True 对树形数据拆分 统一路径.
         Explode-False 取出branch路径的值""", "Scavenger", "Data")
                 return instance
 
@@ -368,7 +368,7 @@ try:
         class List_Cut(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@列表切割", "RPP_List_Cut", """在列表指定下标处切割列表，树形结构输出；
+                                                                   "RPP-列表切割", "RPP_List_Cut", """在列表指定下标处切割列表，树形结构输出；
         （原电池最后一个下标不做参考，已改）""", "Scavenger", "Data")
                 return instance
 
@@ -444,7 +444,7 @@ try:
 
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@数据清洗", "RPP_Data_rinse", """去除空值和空格值""", "Scavenger",
+                                                                   "RPP-数据清洗", "RPP_Data_rinse", """去除空值和空格值""", "Scavenger",
                                                                    "Data")
                 return instance
 
@@ -494,7 +494,7 @@ try:
         class DataComparison(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@数据对比", "RPP_Data Comparison", """Group根据条件分组.""",
+                                                                   "RPP-数据对比", "RPP_Data Comparison", """Group根据条件分组.""",
                                                                    "Scavenger",
                                                                    "Data")
                 return instance
@@ -624,7 +624,7 @@ try:
         class Subscript_Value(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@多下标取值", "RPP_Subscript_Value",
+                                                                   "RPP-多下标取值", "RPP_Subscript_Value",
                                                                    """多下标取值，最多取到六组数据""", "Scavenger", "Data")
                 return instance
 
@@ -718,7 +718,7 @@ try:
         class ListExtremum(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@列表极值", "RPP_ListExtremum", """求一组数据中的极值，{1:最大值，2:最小值，3:平均值，4:求和，5:累乘}""", "Scavenger", "Data")
+                                                                   "RPP-列表极值", "RPP_ListExtremum", """求一组数据中的极值，{1:最大值，2:最小值，3:平均值，4:求和，5:累乘}""", "Scavenger", "Data")
                 return instance
 
             def get_ComponentGuid(self):
@@ -796,7 +796,7 @@ try:
         class PickingFruit(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@树形取值", "RPP_PickingFruit", """取树形数据的分支，输入要取的分支标数""", "Scavenger", "Data")
+                                                                   "RPP-树形取值", "RPP_PickingFruit", """取树形数据的分支，输入要取的分支标数""", "Scavenger", "Data")
                 return instance
 
             def get_ComponentGuid(self):
@@ -923,7 +923,7 @@ try:
         class CompareSize(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@数据比较", "RPP_CompareSize", """数据比较，用于比较长度和面积的取值（几何物体），也可纯数据比较""", "Scavenger", "Data")
+                                                                   "RPP-数据比较", "RPP_CompareSize", """数据比较，用于比较长度和面积的取值（几何物体），也可纯数据比较""", "Scavenger", "Data")
                 return instance
 
             def get_ComponentGuid(self):
@@ -1015,7 +1015,7 @@ try:
         class RandomData(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@随机数据", "RPP_RandomData", """随机数据组""", "Scavenger", "Data")
+                                                                   "RPP-随机数据", "RPP_RandomData", """随机数据组""", "Scavenger", "Data")
                 return instance
 
             def get_ComponentGuid(self):
@@ -1095,7 +1095,7 @@ try:
         class Simplify_Data(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@简化树形数据", "RPP_Simplify_Data", """将所有传进来的树形结构简化至最简状态""", "Scavenger", "Data")
+                                                                   "RPP-简化树形数据", "RPP_Simplify_Data", """将所有传进来的树形结构简化至最简状态""", "Scavenger", "Data")
                 return instance
 
             def get_ComponentGuid(self):
@@ -1175,7 +1175,7 @@ try:
         class TrimTree(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@树形修剪", "RPP_TrimTree", """树形修剪插件，Depth为树形修剪深度""", "Scavenger", "Data")
+                                                                   "RPP-树形修剪", "RPP_TrimTree", """树形修剪插件，Depth为树形修剪深度""", "Scavenger", "Data")
                 return instance
 
             def get_ComponentGuid(self):
