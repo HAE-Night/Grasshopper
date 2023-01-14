@@ -560,7 +560,7 @@ try:
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Tolerance", "T", "容差，默认0.01")
+                self.SetUpParam(p, "Tolerance", "T", "容差，默认犀牛公差0.001")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
@@ -607,37 +607,46 @@ try:
             def message3(self, msg3):
                 return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
 
-            def _is_not_intersect(self, tuple_data):
-                a_breps, b_breps = tuple_data
-                _disjoint = []
-                for single_brep in a_breps:
-                    count = 0
-                    if single_brep:
-                        while len(b_breps) > count:
-                            if b_breps[count]:
-                                interse_sets = rg.Intersect.Intersection.BrepBrep(single_brep, b_breps[count], sc.doc.ModelAbsoluteTolerance)
-                                if len(interse_sets[1]) == 0 and len(interse_sets[2]) == 0:
-                                    _disjoint.append(count)
-                            count += 1
-                _intersect_indexs = [_ for _ in range(len(b_breps)) if _ not in _disjoint]
-                return _disjoint, _intersect_indexs
-
-            def _first_handle(self, w_cut_breps):
+            def _second_handle(self, w_cut_breps):
                 passive_body, cut_body = w_cut_breps
                 if cut_body:
-                    mb_res_brep = rg.Brep.CreateBooleanDifference(passive_body, cut_body, self.tol)
-                    if mb_res_brep is not None:
-                        res_breps = tuple(mb_res_brep)
-                    else:
-                        res_breps = cut_body
-                    return res_breps
+                    res_body = []
+                    false_set_body = []
+                    no_intersect_set_body = []
+                    false_set_tip = []
+                    no_intersect_set_tip = []
+                    for sub_index, sub_body in enumerate(passive_body):
+                        count = 0
+                        false_count, false_brep = [], []
+                        no_intersect_count, no_intersect_brep = [], []
+                        while len(cut_body) > count:
+                            temp_brep = rg.Brep.CreateBooleanDifference(sub_body, cut_body[count], self.tol)
+                            if temp_brep is not None and len(temp_brep) == 1:
+                                sub_body = temp_brep[0]
+                            else:
+                                interse_sets = rg.Intersect.Intersection.BrepBrep(sub_body, cut_body[count], self.tol)
+                                if len(interse_sets[1]) != 0 or len(interse_sets[2]) != 0:
+                                    false_count.append(str(count + 1))
+                                    false_brep.append(cut_body[count])
+                                else:
+                                    no_intersect_count.append(str(count + 1))
+                                    no_intersect_brep.append(cut_body[count])
+                                sub_body = sub_body
+                            count += 1
+                        res_body.append(sub_body)
+                        false_set_body.append(false_brep)
+                        no_intersect_set_body.append(no_intersect_brep)
+                        false_set_tip.append(false_count)
+                        no_intersect_set_tip.append(no_intersect_count)
+
+                    return res_body, false_set_body, no_intersect_set_body, false_set_tip, no_intersect_set_tip
                 else:
                     return False
 
             def RunScript(self, A_Brep, B_Brep, Tolerance):
                 try:
                     sc.doc = Rhino.RhinoDoc.ActiveDoc
-                    self.tol = 0.01 if Tolerance is None else Tolerance
+                    self.tol = sc.doc.ModelAbsoluteTolerance if Tolerance is None else Tolerance
 
                     Res_Breps, Disjoint, False_Breps = (gd[object]() for _ in range(3))
                     _a_trunk, _b_trunk = [list(_) for _ in A_Brep.Branches], [list(_) for _ in B_Brep.Branches]
@@ -649,33 +658,22 @@ try:
                         self.message2("B端不能为空！")
                     else:
                         _w_handle_tree = list(zip(_a_trunk, _b_trunk))
-                        _after_handle_indexs = map(self._is_not_intersect, _w_handle_tree)
+                        _res_breps, _fail_breps, _no_intersect_breps, _fail_tips, _no_intersect_tips = zip(*ghp.run(self._second_handle, _w_handle_tree))
+                        Res_Breps = ght.list_to_tree(_res_breps)
 
-                        _no_inter_indexs, _inter_indexs = zip(*_after_handle_indexs)
+                        if bool(list(chain(*_fail_tips))):
+                            False_Breps = ght.list_to_tree(_fail_breps)
+                            for t_index, tip in enumerate(_fail_tips):
+                                full_list = list(chain(*tip))
+                                if bool(full_list):
+                                    self.message1("第{}组数据 切割体{}切割失败！".format(t_index + 1, "，".join(full_list)))
 
-                        _no_inter_breps, _inter_breps = [], []
-                        for _n_index in range(len(_no_inter_indexs)):
-                            _no_inter_breps.append([_b_trunk[_n_index][_] for _ in _no_inter_indexs[_n_index]])
-                            if len(_no_inter_indexs[_n_index]) != 0:
-                                [self.message2("A端第{}个Brep集合与B端第{}个Brep不相交".format(_n_index + 1, _ + 1)) for _ in _no_inter_indexs[_n_index]]
-                        for _t_index in range(len(_inter_indexs)):
-                            _inter_breps.append([_b_trunk[_t_index][_] for _ in _inter_indexs[_t_index]])
-
-                        _true_result, _temp_fail_result = [], []
-                        _true_handle_tree = ghp.run(self._first_handle, zip(_a_trunk, _inter_breps))
-                        for _ in range(len(_true_handle_tree)):
-                            if isinstance(_true_handle_tree[_], (bool)) is True:
-                                _temp_fail_result.append([])
-                            elif isinstance(_true_handle_tree[_], (list)) is True:
-                                self.message1("A端第{}Brep集合与B端第{}Brep集合切割失败，已初始化数据".format(_ + 1, _ + 1))
-                                _temp_fail_result.append(_true_handle_tree[_])
-                            elif isinstance(_true_handle_tree[_], (tuple)) is True:
-                                _true_result.append(_true_handle_tree[_])
-
-                        Res_Breps = ght.list_to_tree(_true_result) if len(list(chain(*_true_result))) != 0 else Res_Breps
-                        Disjoint = ght.list_to_tree(_no_inter_breps) if len(list(chain(*_no_inter_breps))) != 0 else Disjoint
-                        False_Breps = ght.list_to_tree(_temp_fail_result) if len(list(chain(*_temp_fail_result))) != 0 else False_Breps
-                        return Res_Breps, Disjoint, False_Breps
+                        elif bool(list(chain(*_no_intersect_tips))):
+                            Disjoint = ght.list_to_tree(_no_intersect_breps)
+                            for t_index, tip in enumerate(_fail_tips):
+                                full_list = list(chain(*tip))
+                                if bool(full_list):
+                                    self.message2("第{}组数据 切割体{}为相交！".format(t_index + 1, "，".join(full_list)))
 
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
@@ -886,7 +884,7 @@ try:
             def RunScript(self, Breps, Tolerance):
                 try:
                     if Breps:
-                        Tolerance = 0.001 if Tolerance is None else Tolerance
+                        Tolerance = sc.doc.ModelAbsoluteTolerance if Tolerance is None else Tolerance
                         total, count, no_need_index = 0, 0, []
                         while len(Breps) > total:
                             flatten_list = list(chain(*no_need_index))
@@ -1252,7 +1250,7 @@ try:
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
-                self.count, self._global_tol, self.tot_ang = None, None, None
+                self.count, self._gl_tol, self.tot_ang = None, None, math.pi * 0.5
 
             def message1(self, msg1):
                 return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
@@ -1266,18 +1264,16 @@ try:
             def mes_box(self, info, button, title):
                 return rs.MessageBox(info, button, title)
 
-            def rotateplanes(self, count, init_planes, dir_vec):
-                init_planes = [init_planes] if isinstance(init_planes, rg.Plane) else init_planes
-                inc = self.tot_ang / (count - 1)
-                origin_pt = rg.Point3d(0, 0, 0)
+            def coplanarity(self, pt_list):
+                coplanarity_bool = rg.Point3d.ArePointsCoplanar(pt_list, self._gl_tol)
+                if coplanarity_bool:
+                    res_set = rg.Plane.FitPlaneToPoints(pt_list)
+                    ini_plane = res_set[1] if res_set[0] == rg.PlaneFitResult.Success else rg.Plane.WorldXY
+                else:
+                    ini_plane = rg.Plane.WorldXY
 
-                planes = []
-                for i in range(count):
-                    for init_plane in init_planes:
-                        new_plane = Rhino.Geometry.Plane(init_plane)
-                        new_plane.Rotate(inc * i, dir_vec, origin_pt)
-                        planes.append(new_plane)
-                return planes
+                pt_set = rg.PointCloud(pt_list)
+                return pt_set, ini_plane
 
             def get_octant_plane(self, _count):
                 yz_plane = rg.Plane.WorldYZ
@@ -1292,46 +1288,29 @@ try:
                 xyz_planes = self.rotateplanes(_count, xy_planes, dir_vec_z)
                 return xyz_planes
 
-            def rotate_plane_array(self, data_handle):
-                plane, tot_ang, divs, axis = data_handle
-                out_planes = []
-                plane.Rotate(-tot_ang * 0.5, axis)
-                out_planes.append(Rhino.Geometry.Plane(plane))
-                inc = tot_ang / (divs - 1)
-                for i in range(divs - 1):
-                    plane.Rotate(inc, axis)
-                    out_planes.append(Rhino.Geometry.Plane(plane))
-                return out_planes
+            def rotateplanes(self, count, init_planes, dir_vec):
+                init_planes = [init_planes] if isinstance(init_planes, rg.Plane) else init_planes
+                inc = self.tot_ang / (count - 1)
+                origin_pt = rg.Point3d(0, 0, 0)
 
-            def rotate_plane_array3d(self, view_plane, tot_ang, divs):
-                view_planes = [view_plane] if isinstance(view_plane, (rg.Plane)) else view_plane
-                one_tot_ang = [tot_ang] * len(view_planes)
-                one_divs = [divs] * len(view_planes)
-                z_axis = map(lambda z: z.ZAxis, view_planes)
-                one_zip_res = list(chain(*ghp.run(self.rotate_plane_array, zip(view_planes, one_tot_ang, one_divs, z_axis))))
+                planes = []
+                for i in range(count):
+                    for init_plane in init_planes:
+                        new_plane = Rhino.Geometry.Plane(init_plane)
+                        new_plane.Rotate(inc * i, dir_vec, origin_pt)
+                        planes.append(new_plane)
+                return planes
 
-                two_tot_ang = [tot_ang] * len(one_zip_res)
-                two_divs = [divs] * len(one_zip_res)
-                y_axis = map(lambda y: y.YAxis, one_zip_res)
-                two_zip_res = list(chain(*ghp.run(self.rotate_plane_array, zip(one_zip_res, two_tot_ang, two_divs, y_axis))))
-
-                three_tot_ang = [tot_ang] * len(two_zip_res)
-                three_divs = [divs] * len(two_zip_res)
-                x_axis = map(lambda x: x.YAxis, two_zip_res)
-                three_zip_res = list(chain(*ghp.run(self.rotate_plane_array, zip(two_zip_res, three_tot_ang, three_divs, x_axis))))
-
-                return three_zip_res
-
-            def min3dbox(self, obj):
-                init_plane = rg.Plane.WorldXY
-                curr_bb = self.get_bbox_by_plane(obj, init_plane)
+            def min3dbox(self, tuple_data):
+                obj, pl = tuple_data
+                sub_ini_plane = pl
+                curr_bb = self.get_bbox_by_plane(obj, sub_ini_plane)
                 curr_vol = curr_bb.Volume
 
                 tot_ang = math.pi * 0.5
                 factor = 0.1
                 max_passes = 20
 
-                """-------时间进度消耗最多（并行迭代）-------"""
                 xyz_planes = self.get_octant_plane(self.count)
                 b_box_list = ghp.run(lambda xyz: self.get_bbox_by_plane(obj, xyz), xyz_planes)
                 min_index = 0
@@ -1343,22 +1322,40 @@ try:
                 curr_bb = b_box_list[min_index]
 
                 for f_index in range(max_passes):
-                    prev_vol = curr_vol
                     tot_ang *= factor
-                    ref_planes = self.rotate_plane_array3d(best_plane, tot_ang, self.count)
-                    sub_bbox_list = ghp.run(lambda x_pl: self.get_bbox_by_plane(obj, x_pl), ref_planes)
-                    sub_min_index = 0
-                    for sub_index in range(len(sub_bbox_list)):
-                        if sub_bbox_list[sub_index].Volume < curr_vol:
-                            curr_vol = sub_bbox_list[sub_index].Volume
-                            sub_min_index = sub_index
-                    best_plane = ref_planes[sub_min_index]
-                    curr_bb = sub_bbox_list[sub_min_index]
-                    vol_diff = prev_vol - curr_vol
-                    if vol_diff < sc.doc.ModelAbsoluteTolerance:
-                        break
-                """-------分割线-------"""
+                    ref_planes = self.RotatePlaneArray3D(best_plane, tot_ang, self.count)
+                    best_plane, curr_bb, curr_vol = self.MinBBPlane(obj, best_plane, ref_planes, curr_bb, curr_vol)
                 return curr_bb
+
+            def MinBBPlane(self, objs, best_plane, planes, curr_box, curr_vol):
+                for plane in planes:
+                    bb = self.get_bbox_by_plane(objs, plane)
+                    if bb.Volume < curr_vol:
+                        curr_vol = bb.Volume
+                        best_plane = plane
+                        curr_box = bb
+                return best_plane, curr_box, curr_vol
+
+            def RotatePlaneArray3D(self, view_plane, tot_ang, divs):
+                out_planes = []
+                yaw_planes = self.RotatedPlaneArray(view_plane, tot_ang, divs, view_plane.ZAxis)
+                for y_plane in yaw_planes:
+                    roll_planes = self.RotatedPlaneArray(y_plane, tot_ang, divs, y_plane.YAxis)
+                    for r_plane in roll_planes:
+                        pitch_planes = self.RotatedPlaneArray(r_plane, tot_ang, divs, r_plane.XAxis)
+                        for p_plane in pitch_planes:
+                            out_planes.append(p_plane)
+                return out_planes
+
+            def RotatedPlaneArray(self, plane, tot_ang, divs, axis):
+                out_planes = []
+                plane.Rotate(-tot_ang * 0.5, axis)
+                out_planes.append(Rhino.Geometry.Plane(plane))
+                inc = tot_ang / (divs - 1)
+                for i in range(divs - 1):
+                    plane.Rotate(inc, axis)
+                    out_planes.append(Rhino.Geometry.Plane(plane))
+                return out_planes
 
             def get_bbox_by_plane(self, object, plane):
                 world_xy = rg.Plane.WorldXY
@@ -1387,15 +1384,14 @@ try:
             def RunScript(self, Pts, Count):
                 try:
                     sc.doc = Rhino.RhinoDoc.ActiveDoc
-                    self.count = 15 if Count is None else Count
-                    self._global_tol = sc.doc.ModelAbsoluteTolerance
-                    self.tot_ang = math.pi * 0.5
-
+                    self._gl_tol = sc.doc.ModelAbsoluteTolerance
+                    self.count = Count if Count else 17
                     BBox = gd[object]()
+
                     trunk_list = [list(_) for _ in Pts.Branches]
                     if trunk_list:
-                        pts_cloud = ghp.run(lambda pts: rg.PointCloud(pts), trunk_list)
-                        BBox = map(self.min3dbox, pts_cloud)
+                        zip_list_data = map(self.coplanarity, trunk_list)
+                        BBox = map(self.min3dbox, zip_list_data)
                     else:
                         self.message2("点列表不能为空！")
                     sc.doc.Views.Redraw()

@@ -17,7 +17,7 @@ import json
 from hashlib import md5
 import re
 import sys
-import Line_group
+import Curve_group
 import csv
 from itertools import chain
 import getpass
@@ -26,7 +26,7 @@ import time
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
-Result = Line_group.decryption()
+Result = Curve_group.decryption()
 try:
     if Result is True:
         # 新建视图
