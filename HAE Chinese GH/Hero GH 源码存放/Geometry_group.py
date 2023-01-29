@@ -15,6 +15,244 @@ import Curve_group
 Result = Curve_group.decryption()
 try:
     if Result is True:
+        """
+            切割 -- primary
+        """
+        # 几何体中心点
+        class GeoCenter(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP-中心点",
+                                                                   "RPP_GeoCenter",
+                                                                   """求几何物体的中心点""",
+                                                                   "Scavenger",
+                                                                   "Geometry")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("5a71f66c-d43d-4631-9a69-7c04cafb71a1")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.primary
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Geometry()
+                self.SetUpParam(p, "Geometry", "G", "几何物体")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Point()
+                self.SetUpParam(p, "Center", "C", "中心点")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                result = self.RunScript(p0)
+
+                if result is not None:
+                    self.marshal.SetOutput(result, DA, 0, True)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAP9SURBVEhL7VRdTNtVFG+cLuo0i9Fo5mJiNHvRRB+IZjNuDxMlpvhgpRAKBQoSIHw8FEKAYGFUKGkYDaQLLSEQIEGiDDcEFkpWxz74XisjtF2FIkMIdBa69WtQ6PV3mste1i34kfjiLzn5/8/vfNx7zzn3Cv7HvwKxWHy4oKAgNiMj4+vMzMxUoVD4figUeo6b/z6Kiorei4mJac7OznY1Njaynp4e1t3dzWpra1lqauqd5ORkFWPsTe6+fyDoQHp6ujwlJcU/Pj7OVlZWtoPB4HXsWgc5t729fclut+/SgjjVal9f31c8dH+Qy+VniouL2ebmJkPCs5DXuekhwB2FlE5PT7PCwkI2MTFRyE1PBhIfR52DGxsbu0gg4bQgISHhjfz8fGlpaalkYWHhMKdpIeHY2Ji/srKS4WQfcDoyUJqnUNcps9lMO08kDt/XoqOjz+bm5t7X6/Wsvr6epaWlOevq6pTkz31EHR0drKuraxbcM8RFRGtr66cqlYoFAoFrnBLIZLKBtrY25nK5aFELZMpqtW2oamoo4Xd7i5hMpt6WlhbyEYYDIwG1Vw8NDZFTuGlVVVUiOvrOzo4DXKLf9KM1cPO8Gf8xDodjQlOvYR6PJ1xGcJ/QArOzs3rSI6KkpOQqFgjCOdxUlKWLL1jht1/vf3BZy3zDDSGfY2oa3BcY3dDIyIiRfKEfQtkCBoNhbu9UjwC7tQ8MDNyDw0HSFQrF7QsXf1oIbbkT2Q098/V9y7wXUfoxKoXvuOJM1e3+/v7VcDBQXV29jPg/HtsHtVpt6+3tDWA3L5KOHZpx7FXoJ7furVkDPzcx7+VzId/dxXYkeSknJ+f3yclJRzgYKC8vXzMajb9x9VF0dnYaIMgXOkY66qnTaDTM7XZngXvZbzUOPfj1hplsKKesBo3GQHxPOuyvgtudn58fJz0i0DhFc3Mz83q9aaQj6N3h4WGGp+JuXl7eaUpyxxf6EJNVgFvuWV9fx0HYx+SrVCqlTU1N1K860iMCxnfa29uZTqejRh3gnHxmZoZholhSUpI1Pj7e0tDQwJxOJyVTkg98n42LizPNzc0Rd4q4xwLvznl6zAYHB9WcokU+h1zF8T2Li4v38W+AfEk2JH8a71YL7hDDe3UFeuQJ2gMCj9psttWysjK6td9wOgwEPw/7w2ea/kUikRbTw3w+3zr0t7npyYDjR8vLyy661SjJJTRPXFFR8QI3C6Kiol6JjY2VIfkvdMuRfAsxp7l5f0DAMez4yujoKNNqtSwrK8spkUhuSqXSWxhPN5VkaWmJaj4KOcHD/joQ/BnkB/RmzWKxMPSBYXroblzABsTUA+76z4BEB5H0CL5v4XuI0/81BII/AYxC1ZsWbaMIAAAAAElFTkSuQmCC"
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def __init__(self):
+                pass
+
+            def message1(self, msg1):  # 报错红
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
+
+            def message2(self, msg2):  # 警告黄
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
+
+            def message3(self, msg3):  # 提示白
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
+
+            def mes_box(self, info, button, title):
+                return rs.MessageBox(info, button, title)
+
+            # 求边界框的中心点
+            def center_box(self, Box):
+                return Box.Center
+
+            def GeoCenter(self, Geo):
+                box = [g.GetBoundingBox(True) for g in Geo]  # 获取几何边界
+                center = map(self.center_box, box)
+                return center
+
+            def RunScript(self, Geometry):
+                try:
+                    if len(Geometry) > 0:
+                        Cenpt = self.GeoCenter(Geometry)
+                        return Cenpt
+                    else:
+                        self.message2("无几何体输入")
+                finally:
+                    self.Message = 'HAE 中心点'
+
+        # 几何排序
+        class Value_And_Sort(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP-几何排序", "RPP_Value_And_Sort",
+                                                                   """几何物体的排序，排序完成进行才会进行取值，支持面积和长度的排序，但是同一组数据必须是一样的；增加点序的排序，在点序排序时输入要作为参考的坐标轴（默认为X轴对比）""", "Scavenger",
+                                                                   "Geometry")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("a2cd7d1d-1260-43f9-8164-1f356db3927d")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.primary
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Geometry", "G", "几何物体")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Integer()
+                self.SetUpParam(p, "Index", "I", "提取下标，不输入默认全部输出")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_String()
+                self.SetUpParam(p, "Loop", "L", "遍历取值，默认开启，会取0到index的值，关闭输入f，此时只会取第index+1个的值")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_String()
+                self.SetUpParam(p, "Sort", "S", "选择排序方式，默认降序，升序输入a")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_String()
+                self.SetUpParam(p, "Axis", "A", "在点序排序时输入，其他几何物体的排序不用输入")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "A_Objects", "AO", "若输入下标则取出0到index的几何物体，不输入默认全部输出")
+                self.Params.Output.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "A_Values", "A", "若输入下标则取出0到index的值，不输入默认全部输出")
+                self.Params.Output.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "B_Objects", "BO", "若输入下标则取出index到末端的几何物体，不输入默认全部输出")
+                self.Params.Output.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "B_Values", "B", "若输入下标则取出index到末端的值，不输入默认全部输出")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                p1 = self.marshal.GetInput(DA, 1)
+                p2 = self.marshal.GetInput(DA, 2)
+                p3 = self.marshal.GetInput(DA, 3)
+                p4 = self.marshal.GetInput(DA, 4)
+                result = self.RunScript(p0, p1, p2, p3, p4)
+
+                if result is not None:
+                    if not hasattr(result, '__getitem__'):
+                        self.marshal.SetOutput(result, DA, 0, True)
+                    else:
+                        self.marshal.SetOutput(result[0], DA, 0, True)
+                        self.marshal.SetOutput(result[1], DA, 1, True)
+                        self.marshal.SetOutput(result[2], DA, 2, True)
+                        self.marshal.SetOutput(result[3], DA, 3, True)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAADBSURBVEhLzdOxCgJBDATQxU8QBL9GS+0sLCy0VEtbSy0trP1dnRwMeGfW3WSDOPCKg70J2ePSv2UHD9h0T8G5wfPNFcIyLA8dkiunC7hTKifXJrXlZBpiLaeq6/KWU3aTEbSWkzpkCdphrzn0MgH5Uw+wbyDvb2EMv80UjnAKIFvIjfSyAO0uvWbwEfn62mGrM2TTOuRrOSN/pPZySVU5Y93EVM7UDnGVM6XraipncpuElDPDTULLmTXcYdU9FZPSC6yo6H2TptWGAAAAAElFTkSuQmCC"
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def __init__(self):
+                self.axis = None
+
+            def get_value_sort(self, object_list, data_type, sorting):
+                origin_data = None
+                if data_type == rg.Brep:
+                    origin_data = [o.GetArea() for o in object_list]
+                elif data_type == rg.Curve:
+                    origin_data = [o.GetLength() for o in object_list]
+                elif data_type == rg.Point3d:
+                    origin_data = eval('[o.{} for o in object_list]'.format(self.axis))
+                values = sorted(origin_data)
+                temp_list = sorted(enumerate(origin_data), key=lambda x: x[1])
+                index_list = [t[0] for t in temp_list]
+                objects = [object_list[index] for index in index_list]
+                if sorting is None:
+                    return objects, values
+                else:
+                    if sorting.upper() == "D":
+                        return objects, values
+                    elif sorting.upper() == "A":
+                        values = values[::-1]
+                        objects = objects[::-1]
+                        return objects, values
+
+            def is_sametype(self, list_data):
+                Curve = [rg.PolyCurve, rg.LineCurve, rg.Curve, rg.ArcCurve, rg.PolylineCurve, rg.Polyline, rg.Line, rg.NurbsCurve]
+                temp1 = [type(t) for t in list_data]
+                temp1 = set(temp1)
+                for x in temp1:
+                    if x in Curve:
+                        return True, rg.Curve
+                    else:
+                        copy_list = copy.copy(list_data)
+                        for i in range(len(list_data)):
+                            copy_list[i] = type(list_data[i])
+                        temp2 = set(copy_list)
+                        if len(temp2) == 1:
+                            return True, type(list_data[0])
+                        else:
+                            return False, '数据类型不一致！！'
+
+            def switch_handing(self, array_data, index, loop):
+                if index is None:
+                    return array_data, array_data
+                else:
+                    a_list_data = b_list_data = None
+                    if loop is None or loop == 'T' or loop == 't':
+                        a_list_data, b_list_data = array_data[0:index], array_data[index:len(array_data)]
+                    elif loop == 'F' or loop == 'f':
+                        a_list_data, b_list_data = array_data[index], array_data[index]
+                    return a_list_data, b_list_data
+
+            def RunScript(self, Geometry, Index, Loop, Sort, Axis):
+                self.axis = Axis.upper() if Axis is not None else 'X'
+                if Geometry:
+                    g_bool, g_type = self.is_sametype(Geometry)
+                    objs, vals = None, None
+                    if g_bool is True:
+                        objs, vals = self.get_value_sort(Geometry, g_type, Sort)
+                    A_Objects, B_Objects = self.switch_handing(objs, Index, Loop)
+                    A_Values, B_Values = self.switch_handing(vals, Index, Loop)
+                    return A_Objects, A_Values, B_Objects, B_Values
+                else:
+                    pass
+
+        """
+            切割 -- secondary
+        """
         # 分解几何物体
         class DestructionGeometry(component):
             def __new__(cls):
@@ -26,6 +264,10 @@ try:
 
             def get_ComponentGuid(self):
                 return System.Guid("ed705333-be7c-459f-a18f-25152869e1c1")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.secondary
 
             def SetUpParam(self, p, name, nickname, description):
                 p.Name = name
@@ -172,156 +414,9 @@ try:
                 finally:
                     self.Message = '几何分解'
 
-
-        # 几何排序
-        class Value_And_Sort(component):
-            def __new__(cls):
-                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-几何排序", "RPP_Value_And_Sort",
-                                                                   """几何物体的排序，排序完成进行才会进行取值，支持面积和长度的排序，但是同一组数据必须是一样的；增加点序的排序，在点序排序时输入要作为参考的坐标轴（默认为X轴对比）""", "Scavenger",
-                                                                   "Geometry")
-                return instance
-
-            def get_ComponentGuid(self):
-                return System.Guid("a2cd7d1d-1260-43f9-8164-1f356db3927d")
-
-            def SetUpParam(self, p, name, nickname, description):
-                p.Name = name
-                p.NickName = nickname
-                p.Description = description
-                p.Optional = True
-
-            def RegisterInputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Geometry", "G", "几何物体")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
-                self.Params.Input.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_Integer()
-                self.SetUpParam(p, "Index", "I", "提取下标，不输入默认全部输出")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
-                self.Params.Input.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Loop", "L", "遍历取值，默认开启，会取0到index的值，关闭输入f，此时只会取第index+1个的值")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
-                self.Params.Input.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Sort", "S", "选择排序方式，默认降序，升序输入a")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
-                self.Params.Input.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Axis", "A", "在点序排序时输入，其他几何物体的排序不用输入")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
-                self.Params.Input.Add(p)
-
-            def RegisterOutputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "A_Objects", "AO", "若输入下标则取出0到index的几何物体，不输入默认全部输出")
-                self.Params.Output.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "A_Values", "A", "若输入下标则取出0到index的值，不输入默认全部输出")
-                self.Params.Output.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "B_Objects", "BO", "若输入下标则取出index到末端的几何物体，不输入默认全部输出")
-                self.Params.Output.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "B_Values", "B", "若输入下标则取出index到末端的值，不输入默认全部输出")
-                self.Params.Output.Add(p)
-
-            def SolveInstance(self, DA):
-                p0 = self.marshal.GetInput(DA, 0)
-                p1 = self.marshal.GetInput(DA, 1)
-                p2 = self.marshal.GetInput(DA, 2)
-                p3 = self.marshal.GetInput(DA, 3)
-                p4 = self.marshal.GetInput(DA, 4)
-                result = self.RunScript(p0, p1, p2, p3, p4)
-
-                if result is not None:
-                    if not hasattr(result, '__getitem__'):
-                        self.marshal.SetOutput(result, DA, 0, True)
-                    else:
-                        self.marshal.SetOutput(result[0], DA, 0, True)
-                        self.marshal.SetOutput(result[1], DA, 1, True)
-                        self.marshal.SetOutput(result[2], DA, 2, True)
-                        self.marshal.SetOutput(result[3], DA, 3, True)
-
-            def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAADBSURBVEhLzdOxCgJBDATQxU8QBL9GS+0sLCy0VEtbSy0trP1dnRwMeGfW3WSDOPCKg70J2ePSv2UHD9h0T8G5wfPNFcIyLA8dkiunC7hTKifXJrXlZBpiLaeq6/KWU3aTEbSWkzpkCdphrzn0MgH5Uw+wbyDvb2EMv80UjnAKIFvIjfSyAO0uvWbwEfn62mGrM2TTOuRrOSN/pPZySVU5Y93EVM7UDnGVM6XraipncpuElDPDTULLmTXcYdU9FZPSC6yo6H2TptWGAAAAAElFTkSuQmCC"
-                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
-
-            def __init__(self):
-                self.axis = None
-
-            def get_value_sort(self, object_list, data_type, sorting):
-                origin_data = None
-                if data_type == rg.Brep:
-                    origin_data = [o.GetArea() for o in object_list]
-                elif data_type == rg.Curve:
-                    origin_data = [o.GetLength() for o in object_list]
-                elif data_type == rg.Point3d:
-                    origin_data = eval('[o.{} for o in object_list]'.format(self.axis))
-                values = sorted(origin_data)
-                temp_list = sorted(enumerate(origin_data), key=lambda x: x[1])
-                index_list = [t[0] for t in temp_list]
-                objects = [object_list[index] for index in index_list]
-                if sorting is None:
-                    return objects, values
-                else:
-                    if sorting.upper() == "D":
-                        return objects, values
-                    elif sorting.upper() == "A":
-                        values = values[::-1]
-                        objects = objects[::-1]
-                        return objects, values
-
-            def is_sametype(self, list_data):
-                Curve = [rg.PolyCurve, rg.LineCurve, rg.Curve, rg.ArcCurve, rg.PolylineCurve, rg.Polyline, rg.Line, rg.NurbsCurve]
-                temp1 = [type(t) for t in list_data]
-                temp1 = set(temp1)
-                for x in temp1:
-                    if x in Curve:
-                        return True, rg.Curve
-                    else:
-                        copy_list = copy.copy(list_data)
-                        for i in range(len(list_data)):
-                            copy_list[i] = type(list_data[i])
-                        temp2 = set(copy_list)
-                        if len(temp2) == 1:
-                            return True, type(list_data[0])
-                        else:
-                            return False, '数据类型不一致！！'
-
-            def switch_handing(self, array_data, index, loop):
-                if index is None:
-                    return array_data, array_data
-                else:
-                    a_list_data = b_list_data = None
-                    if loop is None or loop == 'T' or loop == 't':
-                        a_list_data, b_list_data = array_data[0:index], array_data[index:len(array_data)]
-                    elif loop == 'F' or loop == 'f':
-                        a_list_data, b_list_data = array_data[index], array_data[index]
-                    return a_list_data, b_list_data
-
-            def RunScript(self, Geometry, Index, Loop, Sort, Axis):
-                self.axis = Axis.upper() if Axis is not None else 'X'
-                if Geometry:
-                    g_bool, g_type = self.is_sametype(Geometry)
-                    objs, vals = None, None
-                    if g_bool is True:
-                        objs, vals = self.get_value_sort(Geometry, g_type, Sort)
-                    A_Objects, B_Objects = self.switch_handing(objs, Index, Loop)
-                    A_Values, B_Values = self.switch_handing(vals, Index, Loop)
-                    return A_Objects, A_Values, B_Objects, B_Values
-                else:
-                    pass
-
-
+        """
+            切割 -- tertiary
+        """
         # 数据类型分类
         class TypeClassification(component):
             def __new__(cls):
@@ -331,6 +426,10 @@ try:
 
             def get_ComponentGuid(self):
                 return System.Guid("871bc32c-c64a-454c-b2af-b20ed09c766f")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.tertiary
 
             def SetUpParam(self, p, name, nickname, description):
                 p.Name = name
@@ -439,82 +538,6 @@ try:
                 finally:
                     self.Message = "GH数据类型分类"
 
-
-        # 几何体中心点
-        class GeoCenter(component):
-            def __new__(cls):
-                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-中心点",
-                                                                   "RPP_GeoCenter",
-                                                                   """求几何物体的中心点""",
-                                                                   "Scavenger",
-                                                                   "Geometry")
-                return instance
-
-            def get_ComponentGuid(self):
-                return System.Guid("5a71f66c-d43d-4631-9a69-7c04cafb71a1")
-
-            def SetUpParam(self, p, name, nickname, description):
-                p.Name = name
-                p.NickName = nickname
-                p.Description = description
-                p.Optional = True
-
-            def RegisterInputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_Geometry()
-                self.SetUpParam(p, "Geometry", "G", "几何物体")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
-                self.Params.Input.Add(p)
-
-            def RegisterOutputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_Point()
-                self.SetUpParam(p, "Center", "C", "中心点")
-                self.Params.Output.Add(p)
-
-            def SolveInstance(self, DA):
-                p0 = self.marshal.GetInput(DA, 0)
-                result = self.RunScript(p0)
-
-                if result is not None:
-                    self.marshal.SetOutput(result, DA, 0, True)
-
-            def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAALdSURBVEhLtZbrS6JBFMb79/ZfCLp8q7b7/Uq2S6VCgqTsVhARtETQBwvBTHclotuHtutuuUooZJFblEWQlj77nvMe653MChZ/MDjPmdd53pk5Z7Qok8l8AGApVCMDh9YpGEVaI6eC8S6D29tb7O3tYWlpCSsrKzg6OpKRt3nV4PT0FENDQ2hsbERvby8sFgvMZjM6OjpQX1+P6elpeTI/eQ18Ph/KysowMTGB4+NjPDw8yAi4HwwG0d/fj8rKSn6RfLxo4PV6efJQKCSR/CwuLqK0tBRnZ2cSUckxiEajKCkp4U8j5+fn2NjYwPb2NtLptER1aLUNDQ2iVHIM+vr64HK5ROmMjIygpqYGg4Nm7SxMvC3Ly8syqjMwMACPxyPqCcXg5OQEdXV1SKVSEgHsdjt6enp4BVlo/8vLy7G2tiYRIBKJoL29XdQTioHb7cbw8LAo4PDwENXVH5FMJlnf/fJrzcd9mpBe5v7+njXR1dWFWCwmSkcxGB0dxdzcnChwBk1NfeP+Xew3rj02btQnKIt2dna4T9hsNqyurorSUQycTif8fr8owOFw4PuPAJBJIeG24Mb1Cdeuz7hyW7XRNJxfvirPP/8+oRiMj49jfn5eFLiQsitIXseR8NpxpbXUzV+OdXd3KyuwWq2vr4DcjWdAh04Zk93nu8hPJKNb3N/c3ERtba2SEM3NzVyURhSDy8tLzmdj1c7OznKKBoN/WKcyVFx6lW9t6WYE3VWtra2inlAMCErLmZkZUToLCwucMTQBvSXdRcatIWiMqvo5OQaJRIJznHLdCKVqOBzm9DSmJjE5OYnOzk5RKjkGxP7+PoqLi7G+vi6R/IyNjaGqqgoXFxcSUXnRgKCLrqKigq+A3d3dx2Ij6Kyy9w9d48Yqf05eA4K2gs6jra0NLS0tnJZUrU1NTTCZTAgEAkpCvMSrBlm0322+AmjrDg4OEI/HZeRt3mXwPxT4XwXwD/Z9PBDIsPB/AAAAAElFTkSuQmCC"
-                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
-
-            def __init__(self):
-                pass
-
-            def message1(self, msg1):  # 报错红
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):  # 警告黄
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):  # 提示白
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
-
-            def mes_box(self, info, button, title):
-                return rs.MessageBox(info, button, title)
-
-            # 求边界框的中心点
-            def center_box(self, Box):
-                return Box.Center
-
-            def GeoCenter(self, Geo):
-                box = [g.GetBoundingBox(True) for g in Geo]  # 获取几何边界
-                center = map(self.center_box, box)
-                return center
-
-            def RunScript(self, Geometry):
-                try:
-                    if len(Geometry) > 0:
-                        Cenpt = self.GeoCenter(Geometry)
-                        return Cenpt
-                    else:
-                        self.message2("无几何体输入")
-                finally:
-                    self.Message = 'HAE 中心点'
 
     else:
         pass

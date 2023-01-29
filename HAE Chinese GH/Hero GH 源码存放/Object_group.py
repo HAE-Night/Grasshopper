@@ -23,6 +23,9 @@ import Curve_group
 Result = Curve_group.decryption()
 try:
     if Result is True:
+        """
+            切割 -- primary
+        """
         # 获取数据详细信息
         class Data_message(component):
             def __new__(cls):
@@ -33,6 +36,10 @@ try:
 
             def get_ComponentGuid(self):
                 return System.Guid("a946c7ad-a18f-471c-a9e7-038677fce6a4")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.primary
 
             def SetUpParam(self, p, name, nickname, description):
                 p.Name = name
@@ -67,6 +74,92 @@ try:
                     Group = Objects.TopologyDescription
                     return Group
 
+        # 键值对赋值
+        class DATAKEY(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP-赋值键值对", "RPP_DATAKEY", """对物件的键值对进行f赋值，当多个物件赋值时，注意键值对顺序和数据结构；""", "Scavenger", "Object")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("4b68c580-a4e4-4ca8-9e49-082b8f014c0b")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.primary
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Guid()
+                self.SetUpParam(p, "Objects", "O", "物件集合列表")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Keys", "K", "Key-键,")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Values", "V", "Value-值")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                pass
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                p1 = self.marshal.GetInput(DA, 1)
+                p2 = self.marshal.GetInput(DA, 2)
+                result = self.RunScript(p0, p1, p2)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAQUSURBVEhLrZVdTJNnFMdbFOMWswxxi0MWl2WJyzYudrVkN9vFFiIZy5Il+8CbuQsNuMQFgbYU+gmlfQvFUtqC0NZ+sFSkiDh12uIHMj4ECS0MRFCgRXCgwFg7Wdz23/O8nZWuVUzk4p8+fc/p88v5n/Oeclytpt0Wm44x1DLrLnovx3RUp9Ub9FAxqnUXvZdTb6lWMAwDsVi87qL3RgFEYtG6KS6gWFSEomLhY0XjEqkobmy1aI5YsgpA/aKBc1e0GJqywnvTBu84+Vwt8mxg3IwWjwTXRuvhuxUnh2gk0ABPjxoiSQEYtQqcOlMYIBQK4Rt3YSZ0DJNLNkwtOaI0E3LC3S2H3cXH/MpZTCxaY3L8yw2YWLChxr4fRaJD0YBCoQC+sRaS2IDxewZM/2HGzQVj5Dz3lxUWVw5MP/AwF3Lj1mINAiETxu4aWAVCdbh934z+CTXkmq8hlvJiAd7RFtwOOjE6p8fFfgVuzNdi9k8bOZeia1gN55lcmJ083F1pQ+ewCp1DDPy/m1h1jzDovVGB4VkdFNo9jwfMP2jChWsyJCVvwfVZI35sF4HD4eBo00GcvMRjAUF0QsJ8hR2pyZgOWUh1dux6KwVFii/ZqtYEtPXJkPzSC7g6Wo5XUrbi86z3sQAXHK0HWcDyP5fh7pEiYUMCfh5SYihQjeee34TzXTLW1jUBF/vlePW1bfjw43ewPSWJ9MCCXx/YIwBqkT9Yh5TUJFRb9sF5uiCcR6r5ZeYpLLriU2Bj4gbWGlrJoF9HbHBEALTJ9+DAZ1+8h6y9H+C7vE+QnvkuqbIRvoA2DkAVDWj3loKbwEWJZg/xNhV7sz/CIprhOPkIMP+3HTrTPux8/WW8+fYOMPpvCMAZCzhiqooB0B68uHULAkEzyo3fgsPlkMky4vi58BRRgD9oQu9YBRI3bQSXyyVTxrA2PhXA0yvB5s2J6BurxNSyibUrJ3c3TncIIgDaTHrhG7u2I3XnNnacA0HL2oA7K41k/vVodgvIS1ZLLnGw03GmQxT1Hkz+dgSzKza09crhuSpjATP3rWyTSw/HAdBVMTjeCu+kEV0jCgxOH0b3dSV5oRTwTlVi5E4V6o/th61JiOmlU+gYkrOxgSkNiWvYc8+oEpcGZCiryloFqA8D6Ir1dFXiVDsfzR4eTrT9X3w0/vQ9jp/l4UJfGVzu/Jgc+rvWywJYT2RDJM17BGDXNVmvJUo+GI0QqgoqQYxoTFnOQ5maT77Hz6HPGU0hWdnF4XX9ECCRSNg9XiwqJNUICbDoCXpS/L/Ywz8ci7VGQf3PyMiATCZDeno6cnNz2TNNehZFAPkF+cj8NBN5eXlIS0tDzoFsyEvWCVBn1mp1Oh2kMimUKiWxScI2XF2uZpv0LDIY9fgXDacNWwRC6S4AAAAASUVORK5CYII="
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def RunScript(self, Objects, Keys, Values):
+                if len(Keys) > 1:  # key>1
+                    if len(Keys) < len(Values):  # Keys的长度小于Values
+                        for i in range(len(Objects)):
+                            if type(Objects[i]) is System.Guid:
+                                for k in range(len(Keys)):
+                                    sc.doc = Rhino.RhinoDoc.ActiveDoc
+                                    rs.SetUserText(Objects[i], Keys[k], Values[k])
+                                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                                    sc.doc = ghdoc
+                        return
+                    else:  # Keys的长度大于Values
+                        for i in range(len(Objects)):
+                            if type(Objects[i]) is System.Guid:
+                                for k in range(len(Values)):
+                                    sc.doc = Rhino.RhinoDoc.ActiveDoc
+                                    rs.SetUserText(Objects[i], Keys[k], Values[k])
+                                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                                    sc.doc = ghdoc
+                        return
+                    # key的长度=1
+                if len(Keys) == 1:
+                    num = 0
+                    for i in range(len(Objects)):
+                        if type(Objects[i]) is System.Guid:
+                            print(num, Keys[0], Values[num])
+                            sc.doc = Rhino.RhinoDoc.ActiveDoc
+                            rs.SetUserText(Objects[i], Keys[0], Values[num])
+                            ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                            sc.doc = ghdoc
+                            if num < len(Values) - 1:
+                                num += 1
+                            else:
+                                num = 0
+                    return
+                else:
+                    return
 
         # 物件键值对提取
         class Data_KV(component):
@@ -79,6 +172,10 @@ try:
 
             def get_ComponentGuid(self):
                 return System.Guid("af5ef186-5ae8-4eab-a2e8-42b171fa942a")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.primary
 
             def SetUpParam(self, p, name, nickname, description):
                 p.Name = name
@@ -154,91 +251,9 @@ try:
                     Keys, Value = self.NoneKey(Object)
                 return Keys, Value
 
-
-        # 键值对赋值
-        class DATAKEY(component):
-            def __new__(cls):
-                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-赋值键值对", "RPP_DATAKEY", """对物件的键值对进行f赋值，当多个物件赋值时，注意键值对顺序和数据结构；""", "Scavenger", "Object")
-                return instance
-
-            def get_ComponentGuid(self):
-                return System.Guid("4b68c580-a4e4-4ca8-9e49-082b8f014c0b")
-
-            def SetUpParam(self, p, name, nickname, description):
-                p.Name = name
-                p.NickName = nickname
-                p.Description = description
-                p.Optional = True
-
-            def RegisterInputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_Guid()
-                self.SetUpParam(p, "Objects", "O", "物件集合列表")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
-                self.Params.Input.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Keys", "K", "Key-键,")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
-                self.Params.Input.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Values", "V", "Value-值")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
-                self.Params.Input.Add(p)
-
-            def RegisterOutputParams(self, pManager):
-                pass
-
-            def SolveInstance(self, DA):
-                p0 = self.marshal.GetInput(DA, 0)
-                p1 = self.marshal.GetInput(DA, 1)
-                p2 = self.marshal.GetInput(DA, 2)
-                result = self.RunScript(p0, p1, p2)
-
-            def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAQUSURBVEhLrZVdTJNnFMdbFOMWswxxi0MWl2WJyzYudrVkN9vFFiIZy5Il+8CbuQsNuMQFgbYU+gmlfQvFUtqC0NZ+sFSkiDh12uIHMj4ECS0MRFCgRXCgwFg7Wdz23/O8nZWuVUzk4p8+fc/p88v5n/Oeclytpt0Wm44x1DLrLnovx3RUp9Ub9FAxqnUXvZdTb6lWMAwDsVi87qL3RgFEYtG6KS6gWFSEomLhY0XjEqkobmy1aI5YsgpA/aKBc1e0GJqywnvTBu84+Vwt8mxg3IwWjwTXRuvhuxUnh2gk0ABPjxoiSQEYtQqcOlMYIBQK4Rt3YSZ0DJNLNkwtOaI0E3LC3S2H3cXH/MpZTCxaY3L8yw2YWLChxr4fRaJD0YBCoQC+sRaS2IDxewZM/2HGzQVj5Dz3lxUWVw5MP/AwF3Lj1mINAiETxu4aWAVCdbh934z+CTXkmq8hlvJiAd7RFtwOOjE6p8fFfgVuzNdi9k8bOZeia1gN55lcmJ083F1pQ+ewCp1DDPy/m1h1jzDovVGB4VkdFNo9jwfMP2jChWsyJCVvwfVZI35sF4HD4eBo00GcvMRjAUF0QsJ8hR2pyZgOWUh1dux6KwVFii/ZqtYEtPXJkPzSC7g6Wo5XUrbi86z3sQAXHK0HWcDyP5fh7pEiYUMCfh5SYihQjeee34TzXTLW1jUBF/vlePW1bfjw43ewPSWJ9MCCXx/YIwBqkT9Yh5TUJFRb9sF5uiCcR6r5ZeYpLLriU2Bj4gbWGlrJoF9HbHBEALTJ9+DAZ1+8h6y9H+C7vE+QnvkuqbIRvoA2DkAVDWj3loKbwEWJZg/xNhV7sz/CIprhOPkIMP+3HTrTPux8/WW8+fYOMPpvCMAZCzhiqooB0B68uHULAkEzyo3fgsPlkMky4vi58BRRgD9oQu9YBRI3bQSXyyVTxrA2PhXA0yvB5s2J6BurxNSyibUrJ3c3TncIIgDaTHrhG7u2I3XnNnacA0HL2oA7K41k/vVodgvIS1ZLLnGw03GmQxT1Hkz+dgSzKza09crhuSpjATP3rWyTSw/HAdBVMTjeCu+kEV0jCgxOH0b3dSV5oRTwTlVi5E4V6o/th61JiOmlU+gYkrOxgSkNiWvYc8+oEpcGZCiryloFqA8D6Ir1dFXiVDsfzR4eTrT9X3w0/vQ9jp/l4UJfGVzu/Jgc+rvWywJYT2RDJM17BGDXNVmvJUo+GI0QqgoqQYxoTFnOQ5maT77Hz6HPGU0hWdnF4XX9ECCRSNg9XiwqJNUICbDoCXpS/L/Ywz8ci7VGQf3PyMiATCZDeno6cnNz2TNNehZFAPkF+cj8NBN5eXlIS0tDzoFsyEvWCVBn1mp1Oh2kMimUKiWxScI2XF2uZpv0LDIY9fgXDacNWwRC6S4AAAAASUVORK5CYII="
-                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
-
-            def RunScript(self, Objects, Keys, Values):
-                if len(Keys) > 1:  # key>1
-                    if len(Keys) < len(Values):  # Keys的长度小于Values
-                        for i in range(len(Objects)):
-                            if type(Objects[i]) is System.Guid:
-                                for k in range(len(Keys)):
-                                    sc.doc = Rhino.RhinoDoc.ActiveDoc
-                                    rs.SetUserText(Objects[i], Keys[k], Values[k])
-                                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
-                                    sc.doc = ghdoc
-                        return
-                    else:  # Keys的长度大于Values
-                        for i in range(len(Objects)):
-                            if type(Objects[i]) is System.Guid:
-                                for k in range(len(Values)):
-                                    sc.doc = Rhino.RhinoDoc.ActiveDoc
-                                    rs.SetUserText(Objects[i], Keys[k], Values[k])
-                                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
-                                    sc.doc = ghdoc
-                        return
-                    # key的长度=1
-                if len(Keys) == 1:
-                    num = 0
-                    for i in range(len(Objects)):
-                        if type(Objects[i]) is System.Guid:
-                            print num, Keys[0], Values[num]
-                            sc.doc = Rhino.RhinoDoc.ActiveDoc
-                            rs.SetUserText(Objects[i], Keys[0], Values[num])
-                            ghdoc = GhPython.DocReplacement.GrasshopperDocument()
-                            sc.doc = ghdoc
-                            if num < len(Values) - 1:
-                                num += 1
-                            else:
-                                num = 0
-                    return
-                else:
-                    return
-
-
+        """
+            切割 -- secondary
+        """
         # 拾取图层物体
         class PickItems(component):
             def __new__(cls):
@@ -248,6 +263,10 @@ try:
 
             def get_ComponentGuid(self):
                 return System.Guid("1947d440-6dc8-4eb7-8338-c936a5f54a4b")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.secondary
 
             def SetUpParam(self, p, name, nickname, description):
                 p.Name = name
@@ -355,7 +374,6 @@ try:
                 else:
                     pass
 
-
         # 提取指定图层的物体
         class ExtractObject(component):
             def __new__(cls):
@@ -365,6 +383,10 @@ try:
 
             def get_ComponentGuid(self):
                 return System.Guid("6bb12637-cbd6-4ae1-8cd2-4904a15d7b41")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.secondary
 
             def SetUpParam(self, p, name, nickname, description):
                 p.Name = name
@@ -439,7 +461,6 @@ try:
                 else:
                     pass
 
-
         # Rhino文本物体提取
         class PickText(component):
             def __new__(cls):
@@ -449,6 +470,10 @@ try:
 
             def get_ComponentGuid(self):
                 return System.Guid("7965623e-a903-49b1-b217-165075d74605")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.secondary
 
             def SetUpParam(self, p, name, nickname, description):
                 p.Name = name
@@ -528,7 +553,9 @@ try:
                 finally:
                     self.Message = 'Rhino物件提取'
 
-
+        """
+            切割 -- tertiary
+        """
         # 创建图层
         class Add_Layer(component):
             def __new__(cls):
@@ -538,6 +565,10 @@ try:
 
             def get_ComponentGuid(self):
                 return System.Guid("d9bff954-6290-459b-bbe8-bdbaa8088074")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.tertiary
 
             def SetUpParam(self, p, name, nickname, description):
                 p.Name = name
@@ -612,6 +643,7 @@ try:
         pass
 except:
     pass
+
 import GhPython
 import System
 
