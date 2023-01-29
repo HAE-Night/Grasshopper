@@ -29,6 +29,9 @@ sys.setdefaultencoding('utf-8')
 Result = Curve_group.decryption()
 try:
     if Result is True:
+        """
+            切割 -- primary
+        """
         # 新建视图
         class CreateView(component):
             def __new__(cls):
@@ -38,6 +41,10 @@ try:
 
             def get_ComponentGuid(self):
                 return System.Guid("060ef351-db97-42cf-afbd-e1a71f122236")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.primary
 
             def SetUpParam(self, p, name, nickname, description):
                 p.Name = name
@@ -112,7 +119,6 @@ try:
                     pass
                 return
 
-
         # 字符串处理
         class StrHandle(component):
             def __new__(cls):
@@ -122,6 +128,10 @@ try:
 
             def get_ComponentGuid(self):
                 return System.Guid("33a6d2b6-35df-4a34-b578-256678fd2b3c")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.primary
 
             def SetUpParam(self, p, name, nickname, description):
                 p.Name = name
@@ -205,7 +215,6 @@ try:
                 else:
                     pass
 
-
         # 字符处理2
         class StrHandle_02(component):
             def __new__(cls):
@@ -215,6 +224,10 @@ try:
 
             def get_ComponentGuid(self):
                 return System.Guid("20565a9c-625a-446e-9ada-ef20f21c68e6")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.primary
 
             def SetUpParam(self, p, name, nickname, description):
                 p.Name = name
@@ -260,16 +273,24 @@ try:
                 else:
                     pass
 
-
+        """
+            切割 -- secondary
+        """
         # 百度翻译
         class TranslateByBAIDU(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-百度翻译", "RPP_TranslateByBAIDU", """通过百度API接口进行翻译，需要ID和密钥""", "Scavenger", "Others")
+                                                                   "RPP-百度翻译", "RPP_TranslateByBAIDU",
+                                                                   """通过百度API接口进行翻译，需要ID和密钥""",
+                                                                   "Scavenger", "Others")
                 return instance
 
             def get_ComponentGuid(self):
                 return System.Guid("9258fbd5-2438-4bd4-936d-1f43ada88db0")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.secondary
 
             def SetUpParam(self, p, name, nickname, description):
                 p.Name = name
@@ -349,7 +370,8 @@ try:
                         sign = make_md5(Appid + Text + str(salt) + Appkey)
 
                         headers = {'Content-Type': 'application/x-www-form-urlencoded'}
-                        payload = {'appid': Appid, 'q': Text.encode("utf-8"), 'from': from_lang, 'to': to_lang, 'salt': salt, 'sign': sign}
+                        payload = {'appid': Appid, 'q': Text.encode("utf-8"), 'from': from_lang, 'to': to_lang,
+                                   'salt': salt, 'sign': sign}
 
                         form_data = urllib.urlencode(payload)
                         result = urllib.urlopen(url, form_data).read()
@@ -359,16 +381,21 @@ try:
                 finally:
                     self.Message = '百度翻译'
 
-
         # 图层重命名
         class LayerRename(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-图层重命名", "RPP_LayerRename", """重命名图层，需要csv文件数据导入，会自动重命名图层""", "Scavenger", "Others")
+                                                                   "RPP-图层重命名", "RPP_LayerRename",
+                                                                   """重命名图层，需要csv文件数据导入，会自动重命名图层""",
+                                                                   "Scavenger", "Others")
                 return instance
 
             def get_ComponentGuid(self):
                 return System.Guid("03fd28ac-1bcf-4977-8d8b-5a818646613c")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.secondary
 
             def SetUpParam(self, p, name, nickname, description):
                 p.Name = name
@@ -478,16 +505,21 @@ try:
                 finally:
                     self.Message = '图层名称替换'
 
-
         # 获取文件路径
         class ActiveFile(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-获取某些数据", "RPP_ActiveFile", """获取犀牛，Gh文件路径以及当前时间""", "Scavenger", "Others")
+                                                                   "RPP-获取某些数据", "RPP_ActiveFile",
+                                                                   """获取犀牛，Gh文件路径以及当前时间""", "Scavenger",
+                                                                   "Others")
                 return instance
 
             def get_ComponentGuid(self):
                 return System.Guid("a7f1dc8c-0093-4c72-8c53-bfde0f8d0365")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.secondary
 
             def SetUpParam(self, p, name, nickname, description):
                 p.Name = name
@@ -554,7 +586,9 @@ try:
                     Time = self.format_time()
                     self.factor = False
                     return RP, GP, Time
-
+        """
+            切割 -- tertiary
+        """
 
     else:
         pass

@@ -14,6 +14,9 @@ import Curve_group
 Result = Curve_group.decryption()
 try:
     if Result is True:
+        """
+            切割 -- primary
+        """
         # 区间取值
         class GetSectionValue(component):
             def __new__(cls):
@@ -23,6 +26,10 @@ try:
 
             def get_ComponentGuid(self):
                 return System.Guid("95d1de9e-2dd7-4ab8-bdd4-627c8493dcbb")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.primary
 
             def SetUpParam(self, p, name, nickname, description):
                 p.Name = name
@@ -72,7 +79,6 @@ try:
                 else:
                     self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, '列表数据为空！')
 
-
         # 长度转树形数据
         class LenTree(component):
             def __new__(cls):
@@ -82,6 +88,10 @@ try:
 
             def get_ComponentGuid(self):
                 return System.Guid("4285e0b0-1f30-4827-9483-7e0b074b16f8")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.primary
 
             def SetUpParam(self, p, name, nickname, description):
                 p.Name = name
@@ -129,7 +139,6 @@ try:
                 else:
                     self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, '列表数据为空！')
 
-
         # 根据长度得树形数据
         class GetTreeLen(component):
             def __new__(cls):
@@ -139,6 +148,10 @@ try:
 
             def get_ComponentGuid(self):
                 return System.Guid("4866e292-44bc-48c2-9100-c206087be3d7")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.primary
 
             def SetUpParam(self, p, name, nickname, description):
                 p.Name = name
@@ -192,7 +205,6 @@ try:
                 else:
                     self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, '空树无法取值！')
 
-
         # 通过下标取树形数据
         class GetTreeDataByIndex(component):
             def __new__(cls):
@@ -202,6 +214,10 @@ try:
 
             def get_ComponentGuid(self):
                 return System.Guid("e9722fda-2f6c-4564-baaf-e8f5f94729a9")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.primary
 
             def SetUpParam(self, p, name, nickname, description):
                 p.Name = name
@@ -268,9 +284,18 @@ try:
                         return ght.list_to_tree(Result)
                 finally:
                     self.Message = '树形数据取值'
+        """
+            切割 -- secondary
+        """
+
+        """
+            切割 -- tertiary
+        """
+
 
 except:
     pass
+
 
 import GhPython
 import System

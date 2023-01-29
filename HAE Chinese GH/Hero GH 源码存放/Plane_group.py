@@ -14,6 +14,9 @@ import Curve_group
 Result = Curve_group.decryption()
 try:
     if Result is True:
+        """
+            切割 -- primary
+        """
         # 平面旋转
         class RotatePlane(component):
             def __new__(cls):
@@ -23,6 +26,10 @@ try:
 
             def get_ComponentGuid(self):
                 return System.Guid("63f44167-e9c5-40e5-9040-9bb9cccbc6fe")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.primary
 
             def SetUpParam(self, p, name, nickname, description):
                 p.Name = name
@@ -146,6 +153,10 @@ try:
 
             def get_ComponentGuid(self):
                 return System.Guid("25b06c92-fe12-466e-9ea9-615ee01fc527")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.primary
 
             def SetUpParam(self, p, name, nickname, description):
                 p.Name = name
@@ -278,6 +289,14 @@ try:
                     return Symmetry_Plane, Origin_Point, Origin_XAxis, Origin_YAxis, Origin_ZAxis, New_XAxis, New_YAxis, New_ZAxis
                 else:
                     pass
+
+        """
+            切割 -- secondary
+        """
+
+        """
+            切割 -- tertiary
+        """
 
     else:
         pass
