@@ -1134,8 +1134,13 @@ try:
             def message3(self, msg3):
                 return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
 
+            def mes_box(self, info, button, title):
+                return rs.MessageBox(info, button, title)
+
             def RunScript(self, Breps, Tolerance):
                 try:
+                    sc.doc = Rhino.RhinoDoc.ActiveDoc
+                    Brep_Result, Index = (gd[object]() for _ in range(2))
                     if Breps:
                         Tolerance = 0.001 if Tolerance is None else Tolerance
                         total, count, no_need_index = 0, 0, []
@@ -1146,18 +1151,19 @@ try:
                                 for _ in range(len(Breps)):
                                     if Breps[count].IsDuplicate(Breps[_], Tolerance) is True:
                                         sub_index.append(_)
-                                    # if sub_index not in no_need_index:
-                                    no_need_index.append(sub_index)
-                                    total += len(sub_index)
+                                no_need_index.append(sub_index)
+                                total += len(sub_index)
                             count += 1
 
                         need_index = [_[0] for _ in no_need_index]
                         Brep_Result = [Breps[_] for _ in need_index]
-
-                        # index_list = [_ for _ in list(chain(*no_need_index)) if _ not in need_index]
-                        return Brep_Result, ght.list_to_tree(no_need_index)
+                        Index = ght.list_to_tree(no_need_index)
                     else:
                         self.message2("Brep列表不能为空！")
+                    sc.doc.Views.Redraw()
+                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                    sc.doc = ghdoc
+                    return Brep_Result, Index
                 finally:
                     self.Message = '删除重合Brep'
 
