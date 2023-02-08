@@ -29,6 +29,236 @@ Result = Curve_group.decryption()
 
 try:
     if Result is True:
+        """
+            切割 -- primary
+        """
+        # Bre切割
+        class BrepCut(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP-Brep切割（优化实用性）", "RPP_BrepCut", """Brep切割优化数据（时间效率最高）""", "Scavenger", "Brep")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("66f1cb77-2cff-45f4-80a5-f1170e324852")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.primary
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Brep()
+                self.SetUpParam(p, "A_Brep", "A", "待切割的Brep（被切割体）")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Brep()
+                self.SetUpParam(p, "B_Brep", "B", "切割的Brep（切割体）")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Number()
+                self.SetUpParam(p, "Tolerance", "T", "容差，默认0.01")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Brep()
+                self.SetUpParam(p, "Res_Breps", "B", "切割出来的Brep集合")
+                self.Params.Output.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Brep()
+                self.SetUpParam(p, "Disjoint", "D", "不相交的切割体")
+                self.Params.Output.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Brep()
+                self.SetUpParam(p, "False_Breps", "F", "切割失败的切割体")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                p1 = self.marshal.GetInput(DA, 1)
+                p2 = self.marshal.GetInput(DA, 2)
+                result = self.RunScript(p0, p1, p2)
+
+                if result is not None:
+                    if not hasattr(result, '__getitem__'):
+                        self.marshal.SetOutput(result, DA, 0, True)
+                    else:
+                        self.marshal.SetOutput(result[0], DA, 0, True)
+                        self.marshal.SetOutput(result[1], DA, 1, True)
+                        self.marshal.SetOutput(result[2], DA, 2, True)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAG+SURBVEhLxdVLK0VRGMbxTSJSbt/C/X6/E7kbSJhJikx8AQMyYqIw8RlEQrmU20QxMBIDt7HPoPg/i3XOOkcHm12e+nV6d533rL3X2u/x/iOl6EexqX6eBGQgHclIRESysI9Xxw70he9SiQscYAO32EIo8TiCmi6iD0sf9S6+Sh0e0Ggqz+vCE/SjoZRBzRZMFc4KdD3PVJ+j5o8oN5Xn1eMORaZyMgg1ajBVOB3Q9R5TRSa6eRO08hJTRUUbqkZ6LG7WoOs5pgrHV3MlDntQs2UMwTbXRrvx3dxGp2Ubamppg09RCEXP+FfN3eSjHdmmem9yjnFc40/NY2UaLygwVcDNa6GXyB69GtwgkOZ6Ae8xaar3x6O9GTFVQNGpOcYYTjAF3VEgd2AzCq1cx1dphk6TBqPvaGxomtoVVkArnsAlbFPNHl8/ommqaei+B5quZ6iColFyBXuatOFuHTNfTdNDuJnDM3qh/4D5j1p3rZe1Dfq+PpNgYqepmrtZha7badoC1dZsVD0TVVfD5KfTNAXdGEAnMmFX3IqYd+B3mvqOO031WIZhm28ikKRB/6Nqaq0jFYEmF+40/UM87w2FQn0odJBCcwAAAABJRU5ErkJggg=="
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def __init__(self):
+                self.tol = None
+
+            def message1(self, msg1):
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
+
+            def message2(self, msg2):
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
+
+            def message3(self, msg3):
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
+
+            def _is_not_intersect(self, tuple_data):
+                a_breps, b_breps = tuple_data
+                _disjoint = []
+                for single_brep in a_breps:
+                    count = 0
+                    if single_brep:
+                        while len(b_breps) > count:
+                            if b_breps[count]:
+                                interse_sets = rg.Intersect.Intersection.BrepBrep(single_brep, b_breps[count], sc.doc.ModelAbsoluteTolerance)
+                                if len(interse_sets[1]) == 0 and len(interse_sets[2]) == 0:
+                                    _disjoint.append(count)
+                            count += 1
+                _intersect_indexs = [_ for _ in range(len(b_breps)) if _ not in _disjoint]
+                return _disjoint, _intersect_indexs
+
+            def _first_handle(self, w_cut_breps):
+                passive_body, cut_body = w_cut_breps
+                if cut_body:
+                    mb_res_brep = rg.Brep.CreateBooleanDifference(passive_body, cut_body, self.tol)
+                    if mb_res_brep is not None:
+                        res_breps = tuple(mb_res_brep)
+                    else:
+                        res_breps = cut_body
+                    return res_breps
+                else:
+                    return False
+
+            def RunScript(self, A_Brep, B_Brep, Tolerance):
+                try:
+                    sc.doc = Rhino.RhinoDoc.ActiveDoc
+                    self.tol = 0.01 if Tolerance is None else Tolerance
+
+                    Res_Breps, Disjoint, False_Breps = (gd[object]() for _ in range(3))
+                    _a_trunk, _b_trunk = [list(_) for _ in A_Brep.Branches], [list(_) for _ in B_Brep.Branches]
+                    if len(_a_trunk) == 0 and len(_b_trunk) == 0:
+                        self.message2("A、B端不能为空！")
+                    elif len(_a_trunk) == 0:
+                        self.message2("A端不能为空！")
+                    elif len(_b_trunk) == 0:
+                        self.message2("B端不能为空！")
+                    else:
+                        _w_handle_tree = list(zip(_a_trunk, _b_trunk))
+                        _after_handle_indexs = map(self._is_not_intersect, _w_handle_tree)
+
+                        _no_inter_indexs, _inter_indexs = zip(*_after_handle_indexs)
+
+                        _no_inter_breps, _inter_breps = [], []
+                        for _n_index in range(len(_no_inter_indexs)):
+                            _no_inter_breps.append([_b_trunk[_n_index][_] for _ in _no_inter_indexs[_n_index]])
+                            if len(_no_inter_indexs[_n_index]) != 0:
+                                [self.message2("A端第{}个Brep集合与B端第{}个Brep不相交".format(_n_index + 1, _ + 1)) for _ in _no_inter_indexs[_n_index]]
+                        for _t_index in range(len(_inter_indexs)):
+                            _inter_breps.append([_b_trunk[_t_index][_] for _ in _inter_indexs[_t_index]])
+
+                        _true_result, _temp_fail_result = [], []
+                        _true_handle_tree = ghp.run(self._first_handle, zip(_a_trunk, _inter_breps))
+                        for _ in range(len(_true_handle_tree)):
+                            if isinstance(_true_handle_tree[_], (bool)) is True:
+                                _temp_fail_result.append([])
+                            elif isinstance(_true_handle_tree[_], (list)) is True:
+                                self.message1("A端第{}Brep集合与B端第{}Brep集合切割失败，已初始化数据".format(_ + 1, _ + 1))
+                                _temp_fail_result.append(_true_handle_tree[_])
+                            elif isinstance(_true_handle_tree[_], (tuple)) is True:
+                                _true_result.append(_true_handle_tree[_])
+
+                        Res_Breps = ght.list_to_tree(_true_result) if len(list(chain(*_true_result))) != 0 else Res_Breps
+                        Disjoint = ght.list_to_tree(_no_inter_breps) if len(list(chain(*_no_inter_breps))) != 0 else Disjoint
+                        False_Breps = ght.list_to_tree(_temp_fail_result) if len(list(chain(*_temp_fail_result))) != 0 else False_Breps
+                        return Res_Breps, Disjoint, False_Breps
+
+                    sc.doc.Views.Redraw()
+                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                    sc.doc = ghdoc
+                    return Res_Breps, Disjoint, False_Breps
+                finally:
+                    self.Message = 'Brep切割'
+
+
+        # Brep结合
+        class Brep_Union(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP-结合", "RPP_Brep_Union", """将多个Brep结合成一个.并消除参考线""",
+                                                                   "Scavenger",
+                                                                   "Brep")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("57cfa2b7-7b3d-43ee-b190-3af9cfa5c6f9")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.primary
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Brep()
+                self.SetUpParam(p, "Breps", "B", "Brep物件，list类型数据")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Number()
+                self.SetUpParam(p, "PRE", "P", "合并精度[0.00-1.00].成功情况下不改动")
+                PRE = 0.002
+                p.SetPersistentData(gk.Types.GH_Number(PRE))  # 为参数设置缺省值
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Brep", "B", "结构之后的Brep")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                p1 = self.marshal.GetInput(DA, 1)
+                result = self.RunScript(p0, p1)
+
+                if result is not None:
+                    self.marshal.SetOutput(result, DA, 0, True)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAANoSURBVEhL3ZRZSFRhFMcNeulBZ0adcsYmxmV2pITqIYiQdlo0AtGWMc1A6aGGJFqnMk2nDYtpWglNarTJzKXGTMpl1NGszFEKbaOINmghLZv0/jvfJWyha01v9cEfzuXe7/y++z/nfH7/x3pccTj0U0O+4ZnTKij2/qXziIzzVCm4rjLDp5YzguJuOQz9LXY1gBE8oDVNXdBj0qAtTSWo7rVquNNUh7yNhSWozcPHSxZBoWY/ep37HhFgJA9wJYhOdSUFoCnBX1CdRn/UxfvbvK78EtRQovKdgkJVDnorcr4BGpcE5XcmB6JxieQHNS+VoOlr7FkhQX2ixOp1FThwxYLesp34UJ6FPhKLv9egkwCVuQ9+C6hLDOQhvwL00UlZsrfndwzFPgFuLhcjb24ICmOluEHxzwBUW1BkTobneAa8F3f5DugwimCeLkfcRCVuU/wD4NpePCvaiqmTonH35Po/B7gosZssaVsmxp0VAbDNG4NgpRYFsaNxf6X4G6D5IDJT4xARGYk3JTuAK7v5pKwmwwKY35fjA3F2kRSli4NxJk4Kg1aFOdFh6EkRw0UA7obd8dKxDQplOFJiY3Dv1EZ0kk3Mqtcl23mIIIDZsjEmFPJwLTRqNfQaFXQk9nxsgYz+SmIdbC9ybEmaD6l8HKIMOmi1Gqjo24hImhebCVxVrjDAQwDTtLEYpdBjTJgWIZSYbWZxzuxQdKeIrANtpx0r6eQyhRLK8AgEyRSQhCggGh0Kt3UNcHkYQCt5bydbMmfIkTtLBgtpvE6FyYZItCfxc2HlOoocnmMZfGLj/Gk4l5mKws1JKNxkxFP7FvRXZgsDWJGvE4RZ1ZMcwMOkYTrsmS3Do1QRaqkGA01U5MYDSFkYg0kTojBIU8u6CjW78bEiC+8v+NCm26lNp0RF8NCu79u0fj9fVL1Oi+78Dfj8N3PQbhQje6acHzYW/2rQLOmLcfvour8bNNayzvggNFDM7qOfAczrF2fNeF5sxgeyxmcAExs6ocvuPSXqr8geGq5hAa5EcfHDVRLcojtHSA+oyPUJASfoui7FVQu8lVmCQjUBync9GQK0rtabu00Gd2u6RlB3TXq3O12X4W2xF3Cuo+/6qvMENVBre9dXY+sYAviyuFev/Glj8O/EcW8Dv275p5ef3xdPJW9bFlB5AgAAAABJRU5ErkJggg=="
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def brepbp(self, Breps):
+                Result = rg.Brep.CreateBooleanUnion(Breps[0], Breps[1])
+                Result[0].MergeCoplanarFaces(Breps[1])
+                return Result[0]
+
+            def RunScript(self, Breps, PRE):
+                PRE = PRE if PRE else 0.02
+                if Breps.BranchCount > 0:  # 判断执行
+                    breplist = []
+                    for i in range(Breps.BranchCount):
+                        breplist.append([Breps.Branch(i), PRE])  # 参数添加
+                    res = ghp.run(self.brepbp, breplist)
+                    Brep = gd[rg.Brep]()
+                    for i in range(len(res)):
+                        Brep.AddRange([res[i]], ghpath(i))
+                    return Brep
+
+
         # 合并以及封面
         class Seam_Merge(component):
             def __new__(cls):
@@ -38,6 +268,10 @@ try:
 
             def get_ComponentGuid(self):
                 return System.Guid("8bae4c8b-b1a4-4b0f-a4a0-5471683daf3c")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.primary
 
             def SetUpParam(self, p, name, nickname, description):
                 p.Name = name
@@ -87,602 +321,6 @@ try:
                     pass
 
 
-        # 映射以及挤出
-        class MappingExtrusion(component):
-            def __new__(cls):
-                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-映射及挤出", "RPP_Mapping&Extrusion", """映射一个物体到指定平面，之后通过线段或者向量来挤出实体""", "Scavenger", "Brep")
-                return instance
-
-            def get_ComponentGuid(self):
-                return System.Guid("c8ea9cd3-3a21-4abe-ad66-f4d7061b95d1")
-
-            def SetUpParam(self, p, name, nickname, description):
-                p.Name = name
-                p.NickName = nickname
-                p.Description = description
-                p.Optional = True
-
-            def RegisterInputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_Geometry()
-                self.SetUpParam(p, "Geometry", "G", "原始的几何物体")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
-                self.Params.Input.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_Plane()
-                self.SetUpParam(p, "Origin_Plane", "A", "原始的平面")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
-                self.Params.Input.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_Plane()
-                self.SetUpParam(p, "Plane", "B", "转换到的平面")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
-                self.Params.Input.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Mode", "M", "作为挤出的模板的线段或者向量")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
-                self.Params.Input.Add(p)
-
-            def RegisterOutputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_Geometry()
-                self.SetUpParam(p, "New_Geometry", "G", "新的几何物体")
-                self.Params.Output.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Transformed_Objects", "T", "平面转换后的物体")
-                self.Params.Output.Add(p)
-
-            def SolveInstance(self, DA):
-                p0 = self.marshal.GetInput(DA, 0)
-                p1 = self.marshal.GetInput(DA, 1)
-                p2 = self.marshal.GetInput(DA, 2)
-                p3 = self.marshal.GetInput(DA, 3)
-                result = self.RunScript(p0, p1, p2, p3)
-
-                if result is not None:
-                    if not hasattr(result, '__getitem__'):
-                        self.marshal.SetOutput(result, DA, 0, True)
-                    else:
-                        self.marshal.SetOutput(result[0], DA, 0, True)
-                        self.marshal.SetOutput(result[1], DA, 1, True)
-
-            def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAFESURBVEhL7dQ9SgNBGMbxhaBRglEEe8EmeAFLvYaFnaewlKRIkAgqoifwDmKrlgkWduJHDBhjYUAECUH/z5qFl3HXnVULizzwg53MzDub3ZkNRvnXyWHm8/LbTA1lyjIu8YQ9aDE3kzhABw/YxThSk8c13o1VuDmEHSPbSM003mAnbsCmiB7sGOliAqnR37WTFmBTwD1scXmE1wLKETRpMWx9zRncBarwTgWaFPfi9qG+E9zgFjXEbYbEbEFF9LxtouK6AUWbQjInWkDbMYpb/FfZhIrNha0/Lq6dcAwVbOF0eF2GGz2eFZTClmd0QlXQ0gt1M4sG1N/HOlKTdIhe0MSF0YYd43UO9OF6hp0oA5w7rmDH6JvktaN2YCdK3CHSzWgh9b9iDV4ZQx130CFS8aRDpN+XMB+2MkbP80eHaBTPBMEHp5Vw073hBscAAAAASUVORK5CYII="
-                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
-
-            def get_new_brep(self, geometry, p1, p2):
-                primordial_plane = p1 if p1 is not None else rg.Plane(rg.Point3d(0, 0, 0), rg.Vector3d(0, 0, 1))
-                if p2 is not None:
-                    transform = rg.Transform.PlaneToPlane(primordial_plane, p2)
-                    geometry.Transform(transform)
-                    new_geometry = geometry
-                    return new_geometry
-                else:
-                    return None
-
-            def exturde_brep(self, object, curve):
-                if curve:
-                    mode_brep_list = [_.CreateExtrusion(curve, True) for _ in object.Faces]
-                    mode_brep = rg.Brep.JoinBreps(mode_brep_list, 0.001)[0]
-                    return mode_brep
-                else:
-                    return None
-
-            def RunScript(self, Geometry, Origin_Plane, Plane, Mode):
-                if Geometry:
-                    Transformed_Objects = self.get_new_brep(Geometry, Origin_Plane, Plane)
-                    if Mode:
-                        line = rg.Line(rg.Point3d(Mode), Mode) if type(Mode) == rg.Vector3d else Mode
-                        mode_line = line.ToNurbsCurve()
-                        New_Geometry = self.exturde_brep(Geometry, mode_line)
-                        return New_Geometry, Transformed_Objects
-                    else:
-                        return None, Transformed_Objects
-
-
-        # Brep结合
-        class Brep_Union(component):
-            def __new__(cls):
-                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-结合", "RPP_Brep_Union", """将多个Brep结合成一个.并消除参考线""",
-                                                                   "Scavenger",
-                                                                   "Brep")
-                return instance
-
-            def get_ComponentGuid(self):
-                return System.Guid("57cfa2b7-7b3d-43ee-b190-3af9cfa5c6f9")
-
-            def SetUpParam(self, p, name, nickname, description):
-                p.Name = name
-                p.NickName = nickname
-                p.Description = description
-                p.Optional = True
-
-            def RegisterInputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_Brep()
-                self.SetUpParam(p, "Breps", "B", "Brep物件，list类型数据")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
-                self.Params.Input.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "PRE", "P", "合并精度[0.00-1.00].成功情况下不改动")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
-                self.Params.Input.Add(p)
-
-            def RegisterOutputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Brep", "B", "结构之后的Brep")
-                self.Params.Output.Add(p)
-
-            def SolveInstance(self, DA):
-                p0 = self.marshal.GetInput(DA, 0)
-                p1 = self.marshal.GetInput(DA, 1)
-                result = self.RunScript(p0, p1)
-
-                if result is not None:
-                    self.marshal.SetOutput(result, DA, 0, True)
-
-            def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAANoSURBVEhL3ZRZSFRhFMcNeulBZ0adcsYmxmV2pITqIYiQdlo0AtGWMc1A6aGGJFqnMk2nDYtpWglNarTJzKXGTMpl1NGszFEKbaOINmghLZv0/jvfJWyha01v9cEfzuXe7/y++z/nfH7/x3pccTj0U0O+4ZnTKij2/qXziIzzVCm4rjLDp5YzguJuOQz9LXY1gBE8oDVNXdBj0qAtTSWo7rVquNNUh7yNhSWozcPHSxZBoWY/ep37HhFgJA9wJYhOdSUFoCnBX1CdRn/UxfvbvK78EtRQovKdgkJVDnorcr4BGpcE5XcmB6JxieQHNS+VoOlr7FkhQX2ixOp1FThwxYLesp34UJ6FPhKLv9egkwCVuQ9+C6hLDOQhvwL00UlZsrfndwzFPgFuLhcjb24ICmOluEHxzwBUW1BkTobneAa8F3f5DugwimCeLkfcRCVuU/wD4NpePCvaiqmTonH35Po/B7gosZssaVsmxp0VAbDNG4NgpRYFsaNxf6X4G6D5IDJT4xARGYk3JTuAK7v5pKwmwwKY35fjA3F2kRSli4NxJk4Kg1aFOdFh6EkRw0UA7obd8dKxDQplOFJiY3Dv1EZ0kk3Mqtcl23mIIIDZsjEmFPJwLTRqNfQaFXQk9nxsgYz+SmIdbC9ybEmaD6l8HKIMOmi1Gqjo24hImhebCVxVrjDAQwDTtLEYpdBjTJgWIZSYbWZxzuxQdKeIrANtpx0r6eQyhRLK8AgEyRSQhCggGh0Kt3UNcHkYQCt5bydbMmfIkTtLBgtpvE6FyYZItCfxc2HlOoocnmMZfGLj/Gk4l5mKws1JKNxkxFP7FvRXZgsDWJGvE4RZ1ZMcwMOkYTrsmS3Do1QRaqkGA01U5MYDSFkYg0kTojBIU8u6CjW78bEiC+8v+NCm26lNp0RF8NCu79u0fj9fVL1Oi+78Dfj8N3PQbhQje6acHzYW/2rQLOmLcfvour8bNNayzvggNFDM7qOfAczrF2fNeF5sxgeyxmcAExs6ocvuPSXqr8geGq5hAa5EcfHDVRLcojtHSA+oyPUJASfoui7FVQu8lVmCQjUBync9GQK0rtabu00Gd2u6RlB3TXq3O12X4W2xF3Cuo+/6qvMENVBre9dXY+sYAviyuFev/Glj8O/EcW8Dv275p5ef3xdPJW9bFlB5AgAAAABJRU5ErkJggg=="
-                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
-
-            def brepbp(self, Breps):
-                Result = rg.Brep.CreateBooleanUnion(Breps[0], Breps[1])
-                Result[0].MergeCoplanarFaces(Breps[1])
-                return Result[0]
-
-            def RunScript(self, Breps, PRE):
-                PRE = PRE if PRE else 0.02
-                if Breps.BranchCount > 0:  # 判断执行
-                    breplist = []
-                    for i in range(Breps.BranchCount):
-                        breplist.append([Breps.Branch(i), PRE])  # 参数添加
-                    res = ghp.run(self.brepbp, breplist)
-                    Brep = gd[rg.Brep]()
-                    for i in range(len(res)):
-                        Brep.AddRange([res[i]], ghpath(i))
-                    return Brep
-
-
-        # 圆柱切割体
-        class CirBrep(component):
-            def __new__(cls):
-                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-开孔圆柱",
-                                                                   "CirBrep",
-                                                                   """根据点、Plane生成圆柱切割体""",
-                                                                   "Scavenger",
-                                                                   "Brep")
-                return instance
-
-            def get_ComponentGuid(self):
-                return System.Guid("d8360a85-40c8-4877-8590-048bcd679cc5")
-
-            def SetUpParam(self, p, name, nickname, description):
-                p.Name = name
-                p.NickName = nickname
-                p.Description = description
-                p.Optional = True
-
-            def RegisterInputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_Plane()
-                self.SetUpParam(p, "Plane", "P", "参考平面")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
-                self.Params.Input.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Radius", "R", "圆柱半径")
-                Radius = 0
-                p.SetPersistentData(gk.Types.GH_Number(Radius))  # 为参数设置缺省值
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
-                self.Params.Input.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_Vector()
-                self.SetUpParam(p, "CriVec", "V", "延伸方向大小")
-                cVAS_value = rg.Vector3d(0, 0, 20)
-                p.SetPersistentData(gk.Types.GH_Vector(cVAS_value))  # 为参数设置缺省值
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
-                self.Params.Input.Add(p)
-
-            def RegisterOutputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_Brep()
-                self.SetUpParam(p, "Geometry", "G", "圆柱体")
-                self.Params.Output.Add(p)
-
-            def SolveInstance(self, DA):
-                p0 = self.marshal.GetInput(DA, 0)
-                p1 = self.marshal.GetInput(DA, 1)
-                p2 = self.marshal.GetInput(DA, 2)
-                result = self.RunScript(p0, p1, p2)
-
-                if result is not None:
-                    self.marshal.SetOutput(result, DA, 0, True)
-
-            def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAKwSURBVEhL7ZNdSFNhGMeloCLqpotuuogoqjspujCi7iJI/JjiR2kpWkqF0URRpCIrDExpmm7uw5pLcWPHphlmfk4r3dx2tjPd5ubO2ebYXNbEUYqinqfXeC+6yVx6I/iDh/fwPM//fx6ec96IbbYWALCTZdkjAao/Cp37cXrzQKYHWvt1Yzm8DrhZ8KgKpzcOMj7MLv8srFAOa6MyyyCW74A7TyUfcHljIPNI96S74Il8ZDGtcQrO3ZNBmaA56PO6StXtyvOovhu3hs+q2Gij1cVyC0SjqZNqDGybzj3ipu0kVzQIqUW1i13KhjO4PTyQ+XFFn6krTWBYjqlzQm49CdQ4rdHZp8hLd18uny0gILuqe+WHz3wRS9bPwjfmxAuVfjTjjQsSJS4obNDOTH/1dSsGbO5kkRViay2Qwn0+7WQYQiBVVsrl8lT0h+3B8rWhaUd6qUIfSJF6IK52DCpUemo2ODXwWKF3xfFtEM+3QhlhNM3Pz/UU85rcyWIH5D6s+c6yc4ewxdoQREtrIk8DmdIJaB+yjkzQ9OtbYm0oXsTAlTozvP1stXi9nsb8Rmom8no5XH6gApXaOItWehRbrI3dQl0oKRd1qTUU/5PZqc8UGyFWyECWULdE2uieYbOjN1tMQrzEA3kyM/AEEiEyT0Ar2ost/g0SnJZ2aAeThDaIEzqBK9VMBwLeTsXAmINTTQIHfZe8es281sLcR73HsGz9LIb81/J5xO9917ynfKGgv/sZYZjk1I3DalS2mRYCfk8Obg8fNNVBuaKlUkZ0KplJ7+Dtem2QI3ZBusQKzf2js+xSKDqslfwN09DHmIxq9UqC1A83JAZo6SNl6OXpKP7/9v5Jc4P4amLJKyhqMrAmq52Hpt6BS5sDMtxXlJd1avzLu5PoeRdOb7OliIj4BUsSrwSajTfFAAAAAElFTkSuQmCC"
-                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
-
-            def __init__(self):
-                pass
-
-            def message1(self, msg1):  # 报错红气泡
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):  # 警告黄
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):  # 白气泡
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
-
-            def mes_box(self, info, button, title):
-                return rs.MessageBox(info, button, title)
-
-            def circle(self, Data):  # 根据面生成圆柱Brep
-                circle = rg.Arc(Data[0], Data[1], math.radians(360)).ToNurbsCurve()  # 圆弧转曲线
-                Surface = rg.Surface.CreateExtrusion(circle, Data[2]).ToBrep()
-                CirBrep = Surface.CapPlanarHoles(0.001)
-                if CirBrep.SolidOrientation == rg.BrepSolidOrientation.Inward:
-                    CirBrep.Flip()
-                return CirBrep
-
-            def RunScript(self, Plane, Radi, CriVec):
-                try:
-                    Geometry = ghp.run(self.circle,
-                                       zip(Plane, [Radi for i in range(len(Plane))], [CriVec for i in range(len(Plane))]))
-                    return Geometry
-                #        except Exception as e:
-                #            self.message1("运行报错：\n{}".format(str(e)))
-                finally:
-                    # 预知代码Bug之前（抛异常）可用
-                    #            self.mes_box("开发组测试", 1 | 32, "标题")
-                    self.Message = 'HAE 切割圆柱'
-
-
-        # 多边曲面偏移
-        class BrepOffset(component):
-            def __new__(cls):
-                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-多边曲面偏移", "RPP_BrepOffset", """根据折线生成偏移曲面。""", "Scavenger", "Brep")
-                return instance
-
-            def get_ComponentGuid(self):
-                return System.Guid("96643d8a-600a-424c-a69e-2d06e29b111b")
-
-            def SetUpParam(self, p, name, nickname, description):
-                p.Name = name
-                p.NickName = nickname
-                p.Description = description
-                p.Optional = True
-
-            def RegisterInputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_Brep()
-                self.SetUpParam(p, "Brep", "B", "多边曲面")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
-                self.Params.Input.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Distance", "D", "偏移距离")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
-                self.Params.Input.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_Vector()
-                self.SetUpParam(p, "Vector", "V", "各分线段各自的偏移方向")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
-                self.Params.Input.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Tolerance", "T", "精度")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
-                self.Params.Input.Add(p)
-
-            def RegisterOutputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_Geometry()
-                self.SetUpParam(p, "New_Brep", "B", "偏移后的Brep")
-                self.Params.Output.Add(p)
-
-            def SolveInstance(self, DA):
-                p0 = self.marshal.GetInput(DA, 0)
-                p1 = self.marshal.GetInput(DA, 1)
-                p2 = self.marshal.GetInput(DA, 2)
-                p3 = self.marshal.GetInput(DA, 3)
-                result = self.RunScript(p0, p1, p2, p3)
-
-                if result is not None:
-                    self.marshal.SetOutput(result, DA, 0, True)
-
-            def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAKLSURBVEhLrdVZqE1RHMfx/WBOZlESXhTJi0RmkRQPSoYUEqJbHjxIKaVEFMqcucwPPBgyRRkyZp7nzHOeCMnw/a51trbtdu7JPb/63Lv26XbWXmv91/8m1cgAtI3D8mcLTuEB+vlBOdMXz+MwmYsDcVi91MZw7MI5OMEGPMNElJz6aBOHId2xApdxFH5ZH9zGuwJXUVK64DxuYD0O4gzmoRNMLdzDOOxFD3xDZ1SZfRiNeviKgcimJpx8CprgIswCXI/D4lmE3fCN32AneiPNYSyNw2Qo3DJTA27V5PBUJHVwAY9xEh7qcfiGy7AOaaZjaxyGDMEXNAxPRWLJeYH8skl+QHzTX5gZnmKWw5VmcwTb47DyWEFeHPe3I05jJDzUwXBy99qx5ToK2bTCD1h5lcYbeS0OQ9yCn+gZnmKc8ArcjjF+kMssPIrDfzMHO+IwaQxXo3wawSJ4gm3I96OnmBGHf8cqmRCH4bZOhf3Gms+mHe7DLVkI39jzqAvjii3zFuEpk6toBg/K22v88vwqesGbnKY1NsMKTM9lP+6gW3giFfiMTQXZ3MWwOAxxbAF4Id1KS9PfrvgDXPVZ2A3cymQEvKGegZOMxzTMxnw8xFvsgffD7bFa/LKPBe/hVt3CK/i35pg/VsFbbJzRSaygjVgDJ/6E1bDZ2Z/Woj+6wpJ2m2wl7rs78B2eo5MlHeDMcmk2PL/Y+5BmMVbGYXg7W0U+Y+G+W1lObEn/6cxN4eGZBrA1vCj8diL/H/g2LXEIvnUaO6pncgmD/KDUtIfNz7q2kbkCe5MT2b6d2OrxPtib/jv+gzmBl3iNJXA7PXwrxdIuS1xBetNvwtIua5rDXuVeWyG29yqSJL8B+BWf/dyaRkoAAAAASUVORK5CYII="
-                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
-
-            def polyhedral(self, obj, set_line, vector, distance, acc):
-                surface = []
-                if len(vector) == 1:
-                    surface = [rg.Surface.CreateExtrusion(set_line[i], vector[0]) for i in range(len(set_line))]
-                elif len(vector) > 1 and len(set_line) == len(vector):
-                    surface = [rg.Surface.CreateExtrusion(set_line[i], vector[i]) for i in range(len(set_line))]
-                for i in surface:
-                    obj.Join(i.ToBrep(), acc, True)
-                return obj
-
-            def offset(self, obj, distance, acc):
-                distance = 10 if distance is None else distance
-                new_obj = rg.Brep.CreateOffsetBrep(obj, distance, True, True, acc)[0][0]
-                return new_obj
-
-            def RunScript(self, Brep, Distance, Vector, Tolerance):
-                Tolerance = 0.02 if Tolerance is None else Tolerance
-                if Brep:
-                    Line_list = [_.EdgeCurve for _ in Brep.Edges]
-                    origin_data = self.polyhedral(Brep, Line_list, Vector, Distance, Tolerance) if Vector else self.offset(Brep, Distance, Tolerance)
-                    New_Brep = origin_data
-                    New_Brep.MergeCoplanarFaces(0.02, True)
-                    return New_Brep
-
-
-        # 截面实体
-        class SectionBody(component):
-            def __new__(cls):
-                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-截面体", "RPP_SectionBody", """原截面成实体（已删除），Loft（EX版，可放样面或者线），时间效率达到最高""", "Scavenger", "Brep")
-                return instance
-
-            def get_ComponentGuid(self):
-                return System.Guid("3f99dcdb-d937-4272-b283-88d68a08c8bc")
-
-            def SetUpParam(self, p, name, nickname, description):
-                p.Name = name
-                p.NickName = nickname
-                p.Description = description
-                p.Optional = True
-
-            def RegisterInputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Breps", "B", "N N一组的数据，可为线或面")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
-                self.Params.Input.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_Integer()
-                self.SetUpParam(p, "Options", "O", "放样的类型")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
-                self.Params.Input.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Cap", "C", "是否封盖")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
-                self.Params.Input.Add(p)
-
-            def RegisterOutputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Result_Breps", "B", "获得的Brep")
-                self.Params.Output.Add(p)
-
-            def SolveInstance(self, DA):
-                p0 = self.marshal.GetInput(DA, 0)
-                p1 = self.marshal.GetInput(DA, 1)
-                p2 = self.marshal.GetInput(DA, 2)
-                result = self.RunScript(p0, p1, p2)
-
-                if result is not None:
-                    self.marshal.SetOutput(result, DA, 0, True)
-
-            def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAGRSURBVEhLrda/K0ZRHMfx60d+RkoMDCSFUFKUUTblH2CwKCkjJYvssjAohZIJGZTBaJDFyiJKBspvheTX+3Pv863bk9Q9537qVc/5PnW+9zndc84TJEg5BjGHWfQhtWiyS/zgDt+Zz7sog1ea8AZNOKQCacEHVFtRwSeL0ERH4ShKO1STRxTAOfvQRBfIU4HU4wGq7yEXzlmCPe0GbLIGDKA0HHmkA7becoA2pJppWAN5xThSSTdO8I54E1mF1/o34ilDy9IL2w9mGzlwyg40yUg4ilINq5tJJI4msmXRk2dnHtbgCkVIFO1gm2BdhT+iPaDvdXTUqZAkJbiGNZlBdvqh77TpdBgmzhSsgeiXVMAyBtXXwpFD9HZsId7kDD3ohPbDDWrgHDVZRrzJF7S7j9GKVDKKF8QbTSDV6B44hDX4hM4qr1RiGM3hKDr74xttAc7Jhz2xrsoqKIU4h+o6KpxTjGfY0+qisdhFpD8AXrEL5xY6PvRW6W5W7R618Ip29CY0oV5NLZU+n6IL/yQIfgGnWH75rtlR4QAAAABJRU5ErkJggg=="
-                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
-
-            def __init__(self):
-                self.op = None
-                self.c_factor = None
-
-            def message1(self, msg1):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
-
-            def _do_main(self, group_curve):
-                if all([isinstance(_, (rg.Brep)) for _ in group_curve]) is True:
-                    w_set_breps = [group_curve[0], group_curve[-1]]
-
-                    temp_curves = map(lambda x: [_ for _ in x.Edges], group_curve)
-                    join_curves = ghp.run(lambda y: rg.Curve.JoinCurves(y), temp_curves)
-                    eval_list = ['join_curves[{}]'.format(_) for _ in range(len(join_curves))]
-                    eval_str = ','.join(eval_list)
-                    zip_curves = eval("zip({})".format(eval_str))
-
-                    loft_cr_to_brep = list(ghp.run(self._loft_curve, zip_curves))
-                    set_breps = w_set_breps + loft_cr_to_brep
-                    join_breps = rg.Brep.JoinBreps(set_breps, sc.doc.ModelAbsoluteTolerance)
-                    return join_breps
-                elif all([isinstance(_, (rg.Curve, rg.PolyCurve, rg.Polyline, rg.PolylineCurve, rg.NurbsCurve, rg.Line)) for _ in group_curve]) is True:
-                    res_loft_brep = self._loft_curve(group_curve)
-                    return [res_loft_brep] if res_loft_brep is not list else res_loft_brep
-                else:
-                    return False
-
-            def _loft_curve(self, curves):
-                create_brep = ghc.Loft(curves, ghc.LoftOptions(False, False, 0, 0, self.op))
-                return create_brep
-
-            def RunScript(self, Breps, Options, Cap):
-                try:
-                    self.op = 0 if Options is None else Options
-                    self.c_factor = 'T' if Cap is None else Cap.upper()
-                    if self.op == 4:
-                        self.message2("Developable放样类型已过时！插件自动转换为Normal放样类型！")
-                        self.op = 0
-
-                    if self.c_factor not in ['T', 'F']:
-                        self.message2("封盖请输入T或者F！")
-
-                    origin_tree = [list(_) for _ in Breps.Branches]
-                    if len(origin_tree) == 0:
-                        self.message2("B端Brep组不能为空！")
-                    else:
-                        w_filter_list = ghp.run(self._do_main, origin_tree)
-                        w_cap_breps = [_ for _ in w_filter_list if _ is not False]
-                        [self.message1("第{}组数据类型有错误！".format(_ + 1)) for _ in range(len(w_filter_list)) if w_filter_list[_] not in w_cap_breps]
-
-                        Result_Breps = w_cap_breps if self.c_factor == 'F' else ghp.run(lambda b: [ghc.CapHoles(_) for _ in b], w_cap_breps)
-                        return ght.list_to_tree(Result_Breps)
-                finally:
-                    self.Message = 'Loft（面或线）-> 原截面实体（已删除）'
-
-
-        # Bre切割
-        class BrepCut(component):
-            def __new__(cls):
-                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-Brep切割（优化实用性）", "RPP_BrepCut", """Brep切割优化数据（时间效率最高）""", "Scavenger", "Brep")
-                return instance
-
-            def get_ComponentGuid(self):
-                return System.Guid("66f1cb77-2cff-45f4-80a5-f1170e324852")
-
-            def SetUpParam(self, p, name, nickname, description):
-                p.Name = name
-                p.NickName = nickname
-                p.Description = description
-                p.Optional = True
-
-            def RegisterInputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_Brep()
-                self.SetUpParam(p, "A_Brep", "A", "待切割的Brep（被切割体）")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
-                self.Params.Input.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_Brep()
-                self.SetUpParam(p, "B_Brep", "B", "切割的Brep（切割体）")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
-                self.Params.Input.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Tolerance", "T", "容差，默认犀牛公差0.001")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
-                self.Params.Input.Add(p)
-
-            def RegisterOutputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_Brep()
-                self.SetUpParam(p, "Res_Breps", "B", "切割出来的Brep集合")
-                self.Params.Output.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_Brep()
-                self.SetUpParam(p, "Disjoint", "D", "不相交的切割体")
-                self.Params.Output.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_Brep()
-                self.SetUpParam(p, "False_Breps", "F", "切割失败的切割体")
-                self.Params.Output.Add(p)
-
-            def SolveInstance(self, DA):
-                p0 = self.marshal.GetInput(DA, 0)
-                p1 = self.marshal.GetInput(DA, 1)
-                p2 = self.marshal.GetInput(DA, 2)
-                result = self.RunScript(p0, p1, p2)
-
-                if result is not None:
-                    if not hasattr(result, '__getitem__'):
-                        self.marshal.SetOutput(result, DA, 0, True)
-                    else:
-                        self.marshal.SetOutput(result[0], DA, 0, True)
-                        self.marshal.SetOutput(result[1], DA, 1, True)
-                        self.marshal.SetOutput(result[2], DA, 2, True)
-
-            def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAG+SURBVEhLxdVLK0VRGMbxTSJSbt/C/X6/E7kbSJhJikx8AQMyYqIw8RlEQrmU20QxMBIDt7HPoPg/i3XOOkcHm12e+nV6d533rL3X2u/x/iOl6EexqX6eBGQgHclIRESysI9Xxw70he9SiQscYAO32EIo8TiCmi6iD0sf9S6+Sh0e0Ggqz+vCE/SjoZRBzRZMFc4KdD3PVJ+j5o8oN5Xn1eMORaZyMgg1ajBVOB3Q9R5TRSa6eRO08hJTRUUbqkZ6LG7WoOs5pgrHV3MlDntQs2UMwTbXRrvx3dxGp2Ubamppg09RCEXP+FfN3eSjHdmmem9yjnFc40/NY2UaLygwVcDNa6GXyB69GtwgkOZ6Ae8xaar3x6O9GTFVQNGpOcYYTjAF3VEgd2AzCq1cx1dphk6TBqPvaGxomtoVVkArnsAlbFPNHl8/ommqaei+B5quZ6iColFyBXuatOFuHTNfTdNDuJnDM3qh/4D5j1p3rZe1Dfq+PpNgYqepmrtZha7badoC1dZsVD0TVVfD5KfTNAXdGEAnMmFX3IqYd+B3mvqOO031WIZhm28ikKRB/6Nqaq0jFYEmF+40/UM87w2FQn0odJBCcwAAAABJRU5ErkJggg=="
-                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
-
-            def __init__(self):
-                self.tol = None
-
-            def message1(self, msg1):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
-
-            def _second_handle(self, w_cut_breps):
-                passive_body, cut_body = w_cut_breps
-                if cut_body:
-                    res_body = []
-                    false_set_body = []
-                    no_intersect_set_body = []
-                    false_set_tip = []
-                    no_intersect_set_tip = []
-                    for sub_index, sub_body in enumerate(passive_body):
-                        count = 0
-                        false_count, false_brep = [], []
-                        no_intersect_count, no_intersect_brep = [], []
-                        while len(cut_body) > count:
-                            temp_brep = rg.Brep.CreateBooleanDifference(sub_body, cut_body[count], self.tol)
-                            if temp_brep is not None and len(temp_brep) == 1:
-                                sub_body = temp_brep[0]
-                            else:
-                                interse_sets = rg.Intersect.Intersection.BrepBrep(sub_body, cut_body[count], self.tol)
-                                if len(interse_sets[1]) != 0 or len(interse_sets[2]) != 0:
-                                    false_count.append(str(count + 1))
-                                    false_brep.append(cut_body[count])
-                                else:
-                                    no_intersect_count.append(str(count + 1))
-                                    no_intersect_brep.append(cut_body[count])
-                                sub_body = sub_body
-                            count += 1
-                        res_body.append(sub_body)
-                        false_set_body.append(false_brep)
-                        no_intersect_set_body.append(no_intersect_brep)
-                        false_set_tip.append(false_count)
-                        no_intersect_set_tip.append(no_intersect_count)
-
-                    return res_body, false_set_body, no_intersect_set_body, false_set_tip, no_intersect_set_tip
-                else:
-                    return False
-
-            def RunScript(self, A_Brep, B_Brep, Tolerance):
-                try:
-                    sc.doc = Rhino.RhinoDoc.ActiveDoc
-                    self.tol = sc.doc.ModelAbsoluteTolerance if Tolerance is None else Tolerance
-
-                    Res_Breps, Disjoint, False_Breps = (gd[object]() for _ in range(3))
-                    _a_trunk, _b_trunk = [list(_) for _ in A_Brep.Branches], [list(_) for _ in B_Brep.Branches]
-                    if len(_a_trunk) == 0 and len(_b_trunk) == 0:
-                        self.message2("A、B端不能为空！")
-                    elif len(_a_trunk) == 0:
-                        self.message2("A端不能为空！")
-                    elif len(_b_trunk) == 0:
-                        self.message2("B端不能为空！")
-                    else:
-                        _w_handle_tree = list(zip(_a_trunk, _b_trunk))
-                        _res_breps, _fail_breps, _no_intersect_breps, _fail_tips, _no_intersect_tips = zip(*ghp.run(self._second_handle, _w_handle_tree))
-                        Res_Breps = ght.list_to_tree(_res_breps)
-
-                        if bool(list(chain(*_fail_tips))):
-                            False_Breps = ght.list_to_tree(_fail_breps)
-                            for t_index, tip in enumerate(_fail_tips):
-                                full_list = list(chain(*tip))
-                                if bool(full_list):
-                                    self.message1("第{}组数据 切割体{}切割失败！".format(t_index + 1, "，".join(full_list)))
-
-                        elif bool(list(chain(*_no_intersect_tips))):
-                            Disjoint = ght.list_to_tree(_no_intersect_breps)
-                            for t_index, tip in enumerate(_fail_tips):
-                                full_list = list(chain(*tip))
-                                if bool(full_list):
-                                    self.message2("第{}组数据 切割体{}为相交！".format(t_index + 1, "，".join(full_list)))
-
-                    sc.doc.Views.Redraw()
-                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
-                    sc.doc = ghdoc
-                    return Res_Breps, Disjoint, False_Breps
-                finally:
-                    self.Message = 'Brep切割'
-
-
         # 分割Brep（面）
         class SplitBrepFace(component):
             def __new__(cls):
@@ -692,6 +330,10 @@ try:
 
             def get_ComponentGuid(self):
                 return System.Guid("3c6041a2-9374-4045-98cb-6d3c8fb9e166")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.primary
 
             def SetUpParam(self, p, name, nickname, description):
                 p.Name = name
@@ -818,6 +460,613 @@ try:
                     self.Message = '平切Brep（面）'
 
 
+        """
+            切割 -- secondary
+        """
+        # 圆柱切割体
+        class CirBrep(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP-开孔圆柱",
+                                                                   "CirBrep",
+                                                                   """根据点、Plane生成圆柱切割体""",
+                                                                   "Scavenger",
+                                                                   "Brep")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("d8360a85-40c8-4877-8590-048bcd679cc5")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.secondary
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Plane()
+                self.SetUpParam(p, "Plane", "P", "参考平面")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Number()
+                self.SetUpParam(p, "Radius", "R", "圆柱半径")
+                Radius = 0
+                p.SetPersistentData(gk.Types.GH_Number(Radius))  # 为参数设置缺省值
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Vector()
+                self.SetUpParam(p, "CriVec", "V", "延伸方向大小")
+                cVAS_value = rg.Vector3d(0, 0, 20)
+                p.SetPersistentData(gk.Types.GH_Vector(cVAS_value))  # 为参数设置缺省值
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Brep()
+                self.SetUpParam(p, "Geometry", "G", "圆柱体")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                p1 = self.marshal.GetInput(DA, 1)
+                p2 = self.marshal.GetInput(DA, 2)
+                result = self.RunScript(p0, p1, p2)
+
+                if result is not None:
+                    self.marshal.SetOutput(result, DA, 0, True)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAKwSURBVEhL7ZNdSFNhGMeloCLqpotuuogoqjspujCi7iJI/JjiR2kpWkqF0URRpCIrDExpmm7uw5pLcWPHphlmfk4r3dx2tjPd5ubO2ebYXNbEUYqinqfXeC+6yVx6I/iDh/fwPM//fx6ec96IbbYWALCTZdkjAao/Cp37cXrzQKYHWvt1Yzm8DrhZ8KgKpzcOMj7MLv8srFAOa6MyyyCW74A7TyUfcHljIPNI96S74Il8ZDGtcQrO3ZNBmaA56PO6StXtyvOovhu3hs+q2Gij1cVyC0SjqZNqDGybzj3ipu0kVzQIqUW1i13KhjO4PTyQ+XFFn6krTWBYjqlzQm49CdQ4rdHZp8hLd18uny0gILuqe+WHz3wRS9bPwjfmxAuVfjTjjQsSJS4obNDOTH/1dSsGbO5kkRViay2Qwn0+7WQYQiBVVsrl8lT0h+3B8rWhaUd6qUIfSJF6IK52DCpUemo2ODXwWKF3xfFtEM+3QhlhNM3Pz/UU85rcyWIH5D6s+c6yc4ewxdoQREtrIk8DmdIJaB+yjkzQ9OtbYm0oXsTAlTozvP1stXi9nsb8Rmom8no5XH6gApXaOItWehRbrI3dQl0oKRd1qTUU/5PZqc8UGyFWyECWULdE2uieYbOjN1tMQrzEA3kyM/AEEiEyT0Ar2ost/g0SnJZ2aAeThDaIEzqBK9VMBwLeTsXAmINTTQIHfZe8es281sLcR73HsGz9LIb81/J5xO9917ynfKGgv/sZYZjk1I3DalS2mRYCfk8Obg8fNNVBuaKlUkZ0KplJ7+Dtem2QI3ZBusQKzf2js+xSKDqslfwN09DHmIxq9UqC1A83JAZo6SNl6OXpKP7/9v5Jc4P4amLJKyhqMrAmq52Hpt6BS5sDMtxXlJd1avzLu5PoeRdOb7OliIj4BUsSrwSajTfFAAAAAElFTkSuQmCC"
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def __init__(self):
+                pass
+
+            def message1(self, msg1):  # 报错红气泡
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
+
+            def message2(self, msg2):  # 警告黄
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
+
+            def message3(self, msg3):  # 白气泡
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
+
+            def mes_box(self, info, button, title):
+                return rs.MessageBox(info, button, title)
+
+            def circle(self, Data):  # 根据面生成圆柱Brep
+                circle = rg.Arc(Data[0], Data[1], math.radians(360)).ToNurbsCurve()  # 圆弧转曲线
+                Surface = rg.Surface.CreateExtrusion(circle, Data[2]).ToBrep()
+                CirBrep = Surface.CapPlanarHoles(0.001)
+                if CirBrep.SolidOrientation == rg.BrepSolidOrientation.Inward:
+                    CirBrep.Flip()
+                return CirBrep
+
+            def RunScript(self, Plane, Radi, CriVec):
+                try:
+                    Geometry = ghp.run(self.circle,
+                                       zip(Plane, [Radi for i in range(len(Plane))],
+                                           [CriVec for i in range(len(Plane))]))
+                    return Geometry
+                #        except Exception as e:
+                #            self.message1("运行报错：\n{}".format(str(e)))
+                finally:
+                    # 预知代码Bug之前（抛异常）可用
+                    #            self.mes_box("开发组测试", 1 | 32, "标题")
+                    self.Message = 'HAE 切割圆柱'
+
+
+        # 不规则几何物体最小外包围盒(3D)
+        class GenerateMinBox3d(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP-最小外包围盒（不规则3d）", "RPP_GenerateMinBox3d", """通过点阵列生成不规则几何物体的最小外包围盒（3d）""", "Scavenger", "Brep")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("1930f7b3-b706-456f-9303-c909f907ebd9")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.secondary
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Point()
+                self.SetUpParam(p, "Pts", "P", "点阵列、点集（建议去重）")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Integer()
+                self.SetUpParam(p, "Count", "C", "迭代次数，默认为18（建议15~18之间）")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Box()
+                self.SetUpParam(p, "BBox", "B", "最后生成的包围盒")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                p1 = self.marshal.GetInput(DA, 1)
+                result = self.RunScript(p0, p1)
+
+                if result is not None:
+                    self.marshal.SetOutput(result, DA, 0, True)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAHrSURBVEhL3dXLSxVhGMfxSdt0MVeZaGGQWrgJ8oK6N6JoERRiRLUJ2qRFQRCiRtBGpdTaBBpdFkUXlQi6YpSYtWyRf0Q791Lf74wDx8MZ54y28gcfmHk8nmfOzDvPG2TIUdzErvDsP6YZr/EOQ/iOAWzHurIHo/iGcxaWUwXr87iETcgUb8EgFjFrISEH8BhfcdpCWraiDz/hLWjDQ7xFB5LSiil8wBEL+dmMLnzGfexGbo7Dv71Eo4WEuAh8ThNosBDnGv7iQniWnPPwlvkF+ywkxGezBJ9VmLvwob3AU6zonhd/7VX8wDB2Is4ZfMFt+IsPIcw9nIgOg4uYg7VqCwkpxw28xy28gbewCeYZWqLDIBiDPz/OFvTCq/Sfd6BQ6uHF+Ln8RfAKvj9hbJC7zuNU4A68p5dRCpO7PE9aKJCiGsSpwyN8hA296m6UICmZGsTxZVpAMSNiTQ0O4nl0mJo1NXBVOPSKyQZr8ACnosNVk6WBn3MIhrkO17rTc7UU08Cl6zvzG3stxOmEg+wJ9lsokLQGLmO/w3lWayE/du+Br/4IKpGbpAaH4UyaRruFtJTBzd1G/dgG4yCbjA7DeO7D/IRjFrLGee4Kc5N3r3CzcWTUYBzu1Wex7jjc3GR+4Q9mcAXuDSkJgn+6omYHjfac9gAAAABJRU5ErkJggg=="
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def __init__(self):
+                self.count, self._global_tol, self.tot_ang = None, None, None
+
+            def message1(self, msg1):
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
+
+            def message2(self, msg2):
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
+
+            def message3(self, msg3):
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
+
+            def mes_box(self, info, button, title):
+                return rs.MessageBox(info, button, title)
+
+            def rotateplanes(self, count, init_planes, dir_vec):
+                init_planes = [init_planes] if isinstance(init_planes, rg.Plane) else init_planes
+                inc = self.tot_ang / (count - 1)
+                origin_pt = rg.Point3d(0, 0, 0)
+
+                planes = []
+                for i in range(count):
+                    for init_plane in init_planes:
+                        new_plane = Rhino.Geometry.Plane(init_plane)
+                        new_plane.Rotate(inc * i, dir_vec, origin_pt)
+                        planes.append(new_plane)
+                return planes
+
+            def get_octant_plane(self, _count):
+                yz_plane = rg.Plane.WorldYZ
+
+                dir_vec_x = rg.Vector3d(1, 0, 0)
+                x_planes = self.rotateplanes(_count, yz_plane, dir_vec_x)
+
+                dir_vec_y = rg.Vector3d(0, -1, 0)
+                xy_planes = self.rotateplanes(_count, x_planes, dir_vec_y)
+
+                dir_vec_z = Rhino.Geometry.Vector3d(0, 0, 1)
+                xyz_planes = self.rotateplanes(_count, xy_planes, dir_vec_z)
+                return xyz_planes
+
+            def rotate_plane_array(self, data_handle):
+                plane, tot_ang, divs, axis = data_handle
+                out_planes = []
+                plane.Rotate(-tot_ang * 0.5, axis)
+                out_planes.append(Rhino.Geometry.Plane(plane))
+                inc = tot_ang / (divs - 1)
+                for i in range(divs - 1):
+                    plane.Rotate(inc, axis)
+                    out_planes.append(Rhino.Geometry.Plane(plane))
+                return out_planes
+
+            def rotate_plane_array3d(self, view_plane, tot_ang, divs):
+                view_planes = [view_plane] if isinstance(view_plane, (rg.Plane)) else view_plane
+                one_tot_ang = [tot_ang] * len(view_planes)
+                one_divs = [divs] * len(view_planes)
+                z_axis = map(lambda z: z.ZAxis, view_planes)
+                one_zip_res = list(chain(*ghp.run(self.rotate_plane_array, zip(view_planes, one_tot_ang, one_divs, z_axis))))
+
+                two_tot_ang = [tot_ang] * len(one_zip_res)
+                two_divs = [divs] * len(one_zip_res)
+                y_axis = map(lambda y: y.YAxis, one_zip_res)
+                two_zip_res = list(chain(*ghp.run(self.rotate_plane_array, zip(one_zip_res, two_tot_ang, two_divs, y_axis))))
+
+                three_tot_ang = [tot_ang] * len(two_zip_res)
+                three_divs = [divs] * len(two_zip_res)
+                x_axis = map(lambda x: x.YAxis, two_zip_res)
+                three_zip_res = list(chain(*ghp.run(self.rotate_plane_array, zip(two_zip_res, three_tot_ang, three_divs, x_axis))))
+
+                return three_zip_res
+
+            def min3dbox(self, obj):
+                init_plane = rg.Plane.WorldXY
+                curr_bb = self.get_bbox_by_plane(obj, init_plane)
+                curr_vol = curr_bb.Volume
+
+                tot_ang = math.pi * 0.5
+                factor = 0.1
+                max_passes = 20
+
+                """-------时间进度消耗最多（并行迭代）-------"""
+                xyz_planes = self.get_octant_plane(self.count)
+                b_box_list = ghp.run(lambda xyz: self.get_bbox_by_plane(obj, xyz), xyz_planes)
+                min_index = 0
+                for box_index in range(len(b_box_list)):
+                    if b_box_list[box_index].Volume < curr_vol:
+                        curr_vol = b_box_list[box_index].Volume
+                        min_index = box_index
+                best_plane = xyz_planes[min_index]
+                curr_bb = b_box_list[min_index]
+
+                for f_index in range(max_passes):
+                    prev_vol = curr_vol
+                    tot_ang *= factor
+                    ref_planes = self.rotate_plane_array3d(best_plane, tot_ang, self.count)
+                    sub_bbox_list = ghp.run(lambda x_pl: self.get_bbox_by_plane(obj, x_pl), ref_planes)
+                    sub_min_index = 0
+                    for sub_index in range(len(sub_bbox_list)):
+                        if sub_bbox_list[sub_index].Volume < curr_vol:
+                            curr_vol = sub_bbox_list[sub_index].Volume
+                            sub_min_index = sub_index
+                    best_plane = ref_planes[sub_min_index]
+                    curr_bb = sub_bbox_list[sub_min_index]
+                    vol_diff = prev_vol - curr_vol
+                    if vol_diff < sc.doc.ModelAbsoluteTolerance:
+                        break
+                """-------分割线-------"""
+                return curr_bb
+
+            def get_bbox_by_plane(self, object, plane):
+                world_xy = rg.Plane.WorldXY
+
+                def __objectbbox(geom, xform):
+                    if isinstance(geom, rg.Point):
+                        pass
+                    return geom.GetBoundingBox(xform) if xform else geom.GetBoundingBox(True)
+
+                xform = rg.Transform.ChangeBasis(world_xy, plane)
+                bbox = rg.BoundingBox.Empty
+                if isinstance(object, (list, tuple)):
+                    pass
+                else:
+                    object_bbox = __objectbbox(object, xform)
+                    bbox = rg.BoundingBox.Union(bbox, object_bbox)
+
+                if bbox.IsValid is False:
+                    pass
+                else:
+                    plane_to_world = rg.Transform.ChangeBasis(plane, world_xy)
+                    box = rg.Box(bbox)
+                    box.Transform(plane_to_world)
+                    return box
+
+            def RunScript(self, Pts, Count):
+                try:
+                    sc.doc = Rhino.RhinoDoc.ActiveDoc
+                    self.count = 15 if Count is None else Count
+                    self._global_tol = sc.doc.ModelAbsoluteTolerance
+                    self.tot_ang = math.pi * 0.5
+
+                    BBox = gd[object]()
+                    trunk_list = [list(_) for _ in Pts.Branches]
+                    if trunk_list:
+                        pts_cloud = ghp.run(lambda pts: rg.PointCloud(pts), trunk_list)
+                        BBox = map(self.min3dbox, pts_cloud)
+                    else:
+                        self.message2("点列表不能为空！")
+                    sc.doc.Views.Redraw()
+                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                    sc.doc = ghdoc
+                    return BBox
+                finally:
+                    self.Message = '最小外包围盒（不规则3d）'
+
+
+        # 映射以及挤出
+        class MappingExtrusion(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP-映射及挤出", "RPP_Mapping&Extrusion", """映射一个物体到指定平面，之后通过线段或者向量来挤出实体""", "Scavenger", "Brep")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("c8ea9cd3-3a21-4abe-ad66-f4d7061b95d1")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.secondary
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Geometry()
+                self.SetUpParam(p, "Geometry", "G", "原始的几何物体")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Plane()
+                self.SetUpParam(p, "Origin_Plane", "A", "原始的平面")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Plane()
+                self.SetUpParam(p, "Plane", "B", "转换到的平面")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Mode", "M", "作为挤出的模板的线段或者向量")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Geometry()
+                self.SetUpParam(p, "New_Geometry", "G", "新的几何物体")
+                self.Params.Output.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Transformed_Objects", "T", "平面转换后的物体")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                p1 = self.marshal.GetInput(DA, 1)
+                p2 = self.marshal.GetInput(DA, 2)
+                p3 = self.marshal.GetInput(DA, 3)
+                result = self.RunScript(p0, p1, p2, p3)
+
+                if result is not None:
+                    if not hasattr(result, '__getitem__'):
+                        self.marshal.SetOutput(result, DA, 0, True)
+                    else:
+                        self.marshal.SetOutput(result[0], DA, 0, True)
+                        self.marshal.SetOutput(result[1], DA, 1, True)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAFESURBVEhL7dQ9SgNBGMbxhaBRglEEe8EmeAFLvYaFnaewlKRIkAgqoifwDmKrlgkWduJHDBhjYUAECUH/z5qFl3HXnVULizzwg53MzDub3ZkNRvnXyWHm8/LbTA1lyjIu8YQ9aDE3kzhABw/YxThSk8c13o1VuDmEHSPbSM003mAnbsCmiB7sGOliAqnR37WTFmBTwD1scXmE1wLKETRpMWx9zRncBarwTgWaFPfi9qG+E9zgFjXEbYbEbEFF9LxtouK6AUWbQjInWkDbMYpb/FfZhIrNha0/Lq6dcAwVbOF0eF2GGz2eFZTClmd0QlXQ0gt1M4sG1N/HOlKTdIhe0MSF0YYd43UO9OF6hp0oA5w7rmDH6JvktaN2YCdK3CHSzWgh9b9iDV4ZQx130CFS8aRDpN+XMB+2MkbP80eHaBTPBMEHp5Vw073hBscAAAAASUVORK5CYII="
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def get_new_brep(self, geometry, p1, p2):
+                primordial_plane = p1 if p1 is not None else rg.Plane(rg.Point3d(0, 0, 0), rg.Vector3d(0, 0, 1))
+                if p2 is not None:
+                    transform = rg.Transform.PlaneToPlane(primordial_plane, p2)
+                    geometry.Transform(transform)
+                    new_geometry = geometry
+                    return new_geometry
+                else:
+                    return None
+
+            def exturde_brep(self, object, curve):
+                if curve:
+                    mode_brep_list = [_.CreateExtrusion(curve, True) for _ in object.Faces]
+                    mode_brep = rg.Brep.JoinBreps(mode_brep_list, 0.001)[0]
+                    return mode_brep
+                else:
+                    return None
+
+            def RunScript(self, Geometry, Origin_Plane, Plane, Mode):
+                if Geometry:
+                    Transformed_Objects = self.get_new_brep(Geometry, Origin_Plane, Plane)
+                    if Mode:
+                        line = rg.Line(rg.Point3d(Mode), Mode) if type(Mode) == rg.Vector3d else Mode
+                        mode_line = line.ToNurbsCurve()
+                        New_Geometry = self.exturde_brep(Geometry, mode_line)
+                        return New_Geometry, Transformed_Objects
+                    else:
+                        return None, Transformed_Objects
+
+
+        # 多边曲面偏移
+        class BrepOffset(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP-多边曲面偏移", "RPP_BrepOffset", """根据折线生成偏移曲面。""", "Scavenger", "Brep")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("96643d8a-600a-424c-a69e-2d06e29b111b")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.secondary
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Brep()
+                self.SetUpParam(p, "Brep", "B", "多边曲面")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Number()
+                self.SetUpParam(p, "Distance", "D", "偏移距离")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Vector()
+                self.SetUpParam(p, "Vector", "V", "各分线段各自的偏移方向")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Number()
+                self.SetUpParam(p, "Tolerance", "T", "精度")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Geometry()
+                self.SetUpParam(p, "New_Brep", "B", "偏移后的Brep")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                p1 = self.marshal.GetInput(DA, 1)
+                p2 = self.marshal.GetInput(DA, 2)
+                p3 = self.marshal.GetInput(DA, 3)
+                result = self.RunScript(p0, p1, p2, p3)
+
+                if result is not None:
+                    self.marshal.SetOutput(result, DA, 0, True)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAKLSURBVEhLrdVZqE1RHMfx/WBOZlESXhTJi0RmkRQPSoYUEqJbHjxIKaVEFMqcucwPPBgyRRkyZp7nzHOeCMnw/a51trbtdu7JPb/63Lv26XbWXmv91/8m1cgAtI3D8mcLTuEB+vlBOdMXz+MwmYsDcVi91MZw7MI5OMEGPMNElJz6aBOHId2xApdxFH5ZH9zGuwJXUVK64DxuYD0O4gzmoRNMLdzDOOxFD3xDZ1SZfRiNeviKgcimJpx8CprgIswCXI/D4lmE3fCN32AneiPNYSyNw2Qo3DJTA27V5PBUJHVwAY9xEh7qcfiGy7AOaaZjaxyGDMEXNAxPRWLJeYH8skl+QHzTX5gZnmKWw5VmcwTb47DyWEFeHPe3I05jJDzUwXBy99qx5ToK2bTCD1h5lcYbeS0OQ9yCn+gZnmKc8ArcjjF+kMssPIrDfzMHO+IwaQxXo3wawSJ4gm3I96OnmBGHf8cqmRCH4bZOhf3Gms+mHe7DLVkI39jzqAvjii3zFuEpk6toBg/K22v88vwqesGbnKY1NsMKTM9lP+6gW3giFfiMTQXZ3MWwOAxxbAF4Id1KS9PfrvgDXPVZ2A3cymQEvKGegZOMxzTMxnw8xFvsgffD7bFa/LKPBe/hVt3CK/i35pg/VsFbbJzRSaygjVgDJ/6E1bDZ2Z/Woj+6wpJ2m2wl7rs78B2eo5MlHeDMcmk2PL/Y+5BmMVbGYXg7W0U+Y+G+W1lObEn/6cxN4eGZBrA1vCj8diL/H/g2LXEIvnUaO6pncgmD/KDUtIfNz7q2kbkCe5MT2b6d2OrxPtib/jv+gzmBl3iNJXA7PXwrxdIuS1xBetNvwtIua5rDXuVeWyG29yqSJL8B+BWf/dyaRkoAAAAASUVORK5CYII="
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def polyhedral(self, obj, set_line, vector, distance, acc):
+                surface = []
+                if len(vector) == 1:
+                    surface = [rg.Surface.CreateExtrusion(set_line[i], vector[0]) for i in range(len(set_line))]
+                elif len(vector) > 1 and len(set_line) == len(vector):
+                    surface = [rg.Surface.CreateExtrusion(set_line[i], vector[i]) for i in range(len(set_line))]
+                for i in surface:
+                    obj.Join(i.ToBrep(), acc, True)
+                return obj
+
+            def offset(self, obj, distance, acc):
+                distance = 10 if distance is None else distance
+                new_obj = rg.Brep.CreateOffsetBrep(obj, distance, True, True, acc)[0][0]
+                return new_obj
+
+            def RunScript(self, Brep, Distance, Vector, Tolerance):
+                Tolerance = 0.02 if Tolerance is None else Tolerance
+                if Brep:
+                    Line_list = [_.EdgeCurve for _ in Brep.Edges]
+                    origin_data = self.polyhedral(Brep, Line_list, Vector, Distance, Tolerance) if Vector else self.offset(Brep, Distance, Tolerance)
+                    New_Brep = origin_data
+                    New_Brep.MergeCoplanarFaces(0.02, True)
+                    return New_Brep
+
+
+        # 截面实体
+        class SectionBody(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP-截面体", "RPP_SectionBody", """原截面成实体（已删除），Loft（EX版，可放样面或者线），时间效率达到最高""", "Scavenger", "Brep")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("3f99dcdb-d937-4272-b283-88d68a08c8bc")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.secondary
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Breps", "B", "N N一组的数据，可为线或面")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Integer()
+                self.SetUpParam(p, "Options", "O", "放样的类型")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_String()
+                self.SetUpParam(p, "Cap", "C", "是否封盖")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Result_Breps", "B", "获得的Brep")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                p1 = self.marshal.GetInput(DA, 1)
+                p2 = self.marshal.GetInput(DA, 2)
+                result = self.RunScript(p0, p1, p2)
+
+                if result is not None:
+                    self.marshal.SetOutput(result, DA, 0, True)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAGRSURBVEhLrda/K0ZRHMfx60d+RkoMDCSFUFKUUTblH2CwKCkjJYvssjAohZIJGZTBaJDFyiJKBspvheTX+3Pv863bk9Q9537qVc/5PnW+9zndc84TJEg5BjGHWfQhtWiyS/zgDt+Zz7sog1ea8AZNOKQCacEHVFtRwSeL0ERH4ShKO1STRxTAOfvQRBfIU4HU4wGq7yEXzlmCPe0GbLIGDKA0HHmkA7becoA2pJppWAN5xThSSTdO8I54E1mF1/o34ilDy9IL2w9mGzlwyg40yUg4ilINq5tJJI4msmXRk2dnHtbgCkVIFO1gm2BdhT+iPaDvdXTUqZAkJbiGNZlBdvqh77TpdBgmzhSsgeiXVMAyBtXXwpFD9HZsId7kDD3ohPbDDWrgHDVZRrzJF7S7j9GKVDKKF8QbTSDV6B44hDX4hM4qr1RiGM3hKDr74xttAc7Jhz2xrsoqKIU4h+o6KpxTjGfY0+qisdhFpD8AXrEL5xY6PvRW6W5W7R618Ip29CY0oV5NLZU+n6IL/yQIfgGnWH75rtlR4QAAAABJRU5ErkJggg=="
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def __init__(self):
+                self.op = None
+                self.c_factor = None
+
+            def message1(self, msg1):
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
+
+            def message2(self, msg2):
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
+
+            def message3(self, msg3):
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
+
+            def _do_main(self, group_curve):
+                if all([isinstance(_, (rg.Brep)) for _ in group_curve]) is True:
+                    w_set_breps = [group_curve[0], group_curve[-1]]
+
+                    temp_curves = map(lambda x: [_ for _ in x.Edges], group_curve)
+                    join_curves = ghp.run(lambda y: rg.Curve.JoinCurves(y), temp_curves)
+                    eval_list = ['join_curves[{}]'.format(_) for _ in range(len(join_curves))]
+                    eval_str = ','.join(eval_list)
+                    zip_curves = eval("zip({})".format(eval_str))
+
+                    loft_cr_to_brep = list(ghp.run(self._loft_curve, zip_curves))
+                    set_breps = w_set_breps + loft_cr_to_brep
+                    join_breps = rg.Brep.JoinBreps(set_breps, sc.doc.ModelAbsoluteTolerance)
+                    return join_breps
+                elif all([isinstance(_, (rg.Curve, rg.PolyCurve, rg.Polyline, rg.PolylineCurve, rg.NurbsCurve, rg.Line)) for _ in group_curve]) is True:
+                    res_loft_brep = self._loft_curve(group_curve)
+                    return [res_loft_brep] if res_loft_brep is not list else res_loft_brep
+                else:
+                    return False
+
+            def _loft_curve(self, curves):
+                create_brep = ghc.Loft(curves, ghc.LoftOptions(False, False, 0, 0, self.op))
+                return create_brep
+
+            def RunScript(self, Breps, Options, Cap):
+                try:
+                    self.op = 0 if Options is None else Options
+                    self.c_factor = 'T' if Cap is None else Cap.upper()
+                    if self.op == 4:
+                        self.message2("Developable放样类型已过时！插件自动转换为Normal放样类型！")
+                        self.op = 0
+
+                    if self.c_factor not in ['T', 'F']:
+                        self.message2("封盖请输入T或者F！")
+
+                    origin_tree = [list(_) for _ in Breps.Branches]
+                    if len(origin_tree) == 0:
+                        self.message2("B端Brep组不能为空！")
+                    else:
+                        w_filter_list = ghp.run(self._do_main, origin_tree)
+                        w_cap_breps = [_ for _ in w_filter_list if _ is not False]
+                        [self.message1("第{}组数据类型有错误！".format(_ + 1)) for _ in range(len(w_filter_list)) if w_filter_list[_] not in w_cap_breps]
+
+                        Result_Breps = w_cap_breps if self.c_factor == 'F' else ghp.run(lambda b: [ghc.CapHoles(_) for _ in b], w_cap_breps)
+                        return ght.list_to_tree(Result_Breps)
+                finally:
+                    self.Message = 'Loft（面或线）-> 原截面实体（已删除）'
+
+
+        """
+            切割 -- tertiary
+        """
         # 删除重复的Brep
         class CullBrep(component):
             def __new__(cls):
@@ -828,6 +1077,10 @@ try:
 
             def get_ComponentGuid(self):
                 return System.Guid("59be0dc6-d5e7-408b-b267-dcd2757ca933")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.tertiary
 
             def SetUpParam(self, p, name, nickname, description):
                 p.Name = name
@@ -889,7 +1142,7 @@ try:
                     sc.doc = Rhino.RhinoDoc.ActiveDoc
                     Brep_Result, Index = (gd[object]() for _ in range(2))
                     if Breps:
-                        Tolerance = sc.doc.ModelAbsoluteTolerance if Tolerance is None else Tolerance
+                        Tolerance = 0.001 if Tolerance is None else Tolerance
                         total, count, no_need_index = 0, 0, []
                         while len(Breps) > total:
                             flatten_list = list(chain(*no_need_index))
@@ -924,6 +1177,10 @@ try:
 
             def get_ComponentGuid(self):
                 return System.Guid("2cfd67f4-3e79-4d44-ae86-db7635385f16")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.tertiary
 
             def SetUpParam(self, p, name, nickname, description):
                 p.Name = name
@@ -1062,6 +1319,10 @@ try:
 
             def get_ComponentGuid(self):
                 return System.Guid("df42aa2d-1097-49b7-8560-9af741b3ddbc")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.tertiary
 
             def SetUpParam(self, p, name, nickname, description):
                 p.Name = name
@@ -1209,208 +1470,11 @@ try:
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
                     sc.doc = ghdoc
                     self.Message = 'HAE开发组'
-
-
-        # 不规则几何物体最小外包围盒(3D)
-        class GenerateMinBox3d(component):
-            def __new__(cls):
-                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-最小外包围盒（不规则3d）", "RPP_GenerateMinBox3d", """通过点阵列生成不规则几何物体的最小外包围盒（3d）""", "Scavenger", "Brep")
-                return instance
-
-            def get_ComponentGuid(self):
-                return System.Guid("1930f7b3-b706-456f-9303-c909f907ebd9")
-
-            def SetUpParam(self, p, name, nickname, description):
-                p.Name = name
-                p.NickName = nickname
-                p.Description = description
-                p.Optional = True
-
-            def RegisterInputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_Point()
-                self.SetUpParam(p, "Pts", "P", "点阵列、点集（建议去重）")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
-                self.Params.Input.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_Integer()
-                self.SetUpParam(p, "Count", "C", "迭代次数，默认为18（建议15~18之间）")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
-                self.Params.Input.Add(p)
-
-            def RegisterOutputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_Box()
-                self.SetUpParam(p, "BBox", "B", "最后生成的包围盒")
-                self.Params.Output.Add(p)
-
-            def SolveInstance(self, DA):
-                p0 = self.marshal.GetInput(DA, 0)
-                p1 = self.marshal.GetInput(DA, 1)
-                result = self.RunScript(p0, p1)
-
-                if result is not None:
-                    self.marshal.SetOutput(result, DA, 0, True)
-
-            def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAHrSURBVEhL3dXLSxVhGMfxSdt0MVeZaGGQWrgJ8oK6N6JoERRiRLUJ2qRFQRCiRtBGpdTaBBpdFkUXlQi6YpSYtWyRf0Q791Lf74wDx8MZ54y28gcfmHk8nmfOzDvPG2TIUdzErvDsP6YZr/EOQ/iOAWzHurIHo/iGcxaWUwXr87iETcgUb8EgFjFrISEH8BhfcdpCWraiDz/hLWjDQ7xFB5LSiil8wBEL+dmMLnzGfexGbo7Dv71Eo4WEuAh8ThNosBDnGv7iQniWnPPwlvkF+ywkxGezBJ9VmLvwob3AU6zonhd/7VX8wDB2Is4ZfMFt+IsPIcw9nIgOg4uYg7VqCwkpxw28xy28gbewCeYZWqLDIBiDPz/OFvTCq/Sfd6BQ6uHF+Ln8RfAKvj9hbJC7zuNU4A68p5dRCpO7PE9aKJCiGsSpwyN8hA296m6UICmZGsTxZVpAMSNiTQ0O4nl0mJo1NXBVOPSKyQZr8ACnosNVk6WBn3MIhrkO17rTc7UU08Cl6zvzG3stxOmEg+wJ9lsokLQGLmO/w3lWayE/du+Br/4IKpGbpAaH4UyaRruFtJTBzd1G/dgG4yCbjA7DeO7D/IRjFrLGee4Kc5N3r3CzcWTUYBzu1Wex7jjc3GR+4Q9mcAXuDSkJgn+6omYHjfac9gAAAABJRU5ErkJggg=="
-                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
-
-            def __init__(self):
-                self.count, self._gl_tol, self.tot_ang = None, None, math.pi * 0.5
-
-            def message1(self, msg1):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
-
-            def mes_box(self, info, button, title):
-                return rs.MessageBox(info, button, title)
-
-            def coplanarity(self, pt_list):
-                coplanarity_bool = rg.Point3d.ArePointsCoplanar(pt_list, self._gl_tol)
-                if coplanarity_bool:
-                    res_set = rg.Plane.FitPlaneToPoints(pt_list)
-                    ini_plane = res_set[1] if res_set[0] == rg.PlaneFitResult.Success else rg.Plane.WorldXY
-                else:
-                    ini_plane = rg.Plane.WorldXY
-
-                pt_set = rg.PointCloud(pt_list)
-                return pt_set, ini_plane
-
-            def get_octant_plane(self, _count):
-                yz_plane = rg.Plane.WorldYZ
-
-                dir_vec_x = rg.Vector3d(1, 0, 0)
-                x_planes = self.rotateplanes(_count, yz_plane, dir_vec_x)
-
-                dir_vec_y = rg.Vector3d(0, -1, 0)
-                xy_planes = self.rotateplanes(_count, x_planes, dir_vec_y)
-
-                dir_vec_z = Rhino.Geometry.Vector3d(0, 0, 1)
-                xyz_planes = self.rotateplanes(_count, xy_planes, dir_vec_z)
-                return xyz_planes
-
-            def rotateplanes(self, count, init_planes, dir_vec):
-                init_planes = [init_planes] if isinstance(init_planes, rg.Plane) else init_planes
-                inc = self.tot_ang / (count - 1)
-                origin_pt = rg.Point3d(0, 0, 0)
-
-                planes = []
-                for i in range(count):
-                    for init_plane in init_planes:
-                        new_plane = Rhino.Geometry.Plane(init_plane)
-                        new_plane.Rotate(inc * i, dir_vec, origin_pt)
-                        planes.append(new_plane)
-                return planes
-
-            def min3dbox(self, tuple_data):
-                obj, pl = tuple_data
-                sub_ini_plane = pl
-                curr_bb = self.get_bbox_by_plane(obj, sub_ini_plane)
-                curr_vol = curr_bb.Volume
-
-                tot_ang = math.pi * 0.5
-                factor = 0.1
-                max_passes = 20
-
-                xyz_planes = self.get_octant_plane(self.count)
-                b_box_list = ghp.run(lambda xyz: self.get_bbox_by_plane(obj, xyz), xyz_planes)
-                min_index = 0
-                for box_index in range(len(b_box_list)):
-                    if b_box_list[box_index].Volume < curr_vol:
-                        curr_vol = b_box_list[box_index].Volume
-                        min_index = box_index
-                best_plane = xyz_planes[min_index]
-                curr_bb = b_box_list[min_index]
-
-                for f_index in range(max_passes):
-                    tot_ang *= factor
-                    ref_planes = self.RotatePlaneArray3D(best_plane, tot_ang, self.count)
-                    best_plane, curr_bb, curr_vol = self.MinBBPlane(obj, best_plane, ref_planes, curr_bb, curr_vol)
-                return curr_bb
-
-            def MinBBPlane(self, objs, best_plane, planes, curr_box, curr_vol):
-                for plane in planes:
-                    bb = self.get_bbox_by_plane(objs, plane)
-                    if bb.Volume < curr_vol:
-                        curr_vol = bb.Volume
-                        best_plane = plane
-                        curr_box = bb
-                return best_plane, curr_box, curr_vol
-
-            def RotatePlaneArray3D(self, view_plane, tot_ang, divs):
-                out_planes = []
-                yaw_planes = self.RotatedPlaneArray(view_plane, tot_ang, divs, view_plane.ZAxis)
-                for y_plane in yaw_planes:
-                    roll_planes = self.RotatedPlaneArray(y_plane, tot_ang, divs, y_plane.YAxis)
-                    for r_plane in roll_planes:
-                        pitch_planes = self.RotatedPlaneArray(r_plane, tot_ang, divs, r_plane.XAxis)
-                        for p_plane in pitch_planes:
-                            out_planes.append(p_plane)
-                return out_planes
-
-            def RotatedPlaneArray(self, plane, tot_ang, divs, axis):
-                out_planes = []
-                plane.Rotate(-tot_ang * 0.5, axis)
-                out_planes.append(Rhino.Geometry.Plane(plane))
-                inc = tot_ang / (divs - 1)
-                for i in range(divs - 1):
-                    plane.Rotate(inc, axis)
-                    out_planes.append(Rhino.Geometry.Plane(plane))
-                return out_planes
-
-            def get_bbox_by_plane(self, object, plane):
-                world_xy = rg.Plane.WorldXY
-
-                def __objectbbox(geom, xform):
-                    if isinstance(geom, rg.Point):
-                        pass
-                    return geom.GetBoundingBox(xform) if xform else geom.GetBoundingBox(True)
-
-                xform = rg.Transform.ChangeBasis(world_xy, plane)
-                bbox = rg.BoundingBox.Empty
-                if isinstance(object, (list, tuple)):
-                    pass
-                else:
-                    object_bbox = __objectbbox(object, xform)
-                    bbox = rg.BoundingBox.Union(bbox, object_bbox)
-
-                if bbox.IsValid is False:
-                    pass
-                else:
-                    plane_to_world = rg.Transform.ChangeBasis(plane, world_xy)
-                    box = rg.Box(bbox)
-                    box.Transform(plane_to_world)
-                    return box
-
-            def RunScript(self, Pts, Count):
-                try:
-                    sc.doc = Rhino.RhinoDoc.ActiveDoc
-                    self._gl_tol = sc.doc.ModelAbsoluteTolerance
-                    self.count = Count if Count else 17
-                    BBox = gd[object]()
-
-                    trunk_list = [list(_) for _ in Pts.Branches]
-                    if trunk_list:
-                        zip_list_data = map(self.coplanarity, trunk_list)
-                        BBox = map(self.min3dbox, zip_list_data)
-                    else:
-                        self.message2("点列表不能为空！")
-                    sc.doc.Views.Redraw()
-                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
-                    sc.doc = ghdoc
-                    return BBox
-                finally:
-                    self.Message = '最小外包围盒（不规则3d）'
-
     else:
         pass
 except:
     pass
+
 
 import GhPython
 import System
