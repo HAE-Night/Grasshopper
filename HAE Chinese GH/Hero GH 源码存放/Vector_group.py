@@ -11,6 +11,7 @@ import scriptcontext as sc
 import rhinoscriptsyntax as rs
 import Rhino.Geometry as rg
 import ghpythonlib.components as ghc
+import Grasshopper.DataTree as gd
 import ghpythonlib.treehelpers as ght
 import Curve_group
 from itertools import chain
@@ -659,6 +660,117 @@ try:
                     sc.doc = ghdoc
                 finally:
                     self.Message = '点依次排序'
+
+
+        # XYZ轴顺序排序
+        class SortPtGroup(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP-点排序（输出下标）", "RPP-SortPtGroup", """将输入的点按照坐标系排序并输出下标""", "Scavenger", "Vector")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("40c698a6-1657-4619-a587-a75b8ed2614d")
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Point()
+                self.SetUpParam(p, "Pts", "Pl", "输入的点列表")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Plane()
+                self.SetUpParam(p, "CP", "P", "参照平面")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_String()
+                self.SetUpParam(p, "XYZ", "XYZ", "按照轴顺序排序")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Sort_P", "Pr", "排序后的点")
+                self.Params.Output.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Index", "i", "点在原列表中的序号")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                p1 = self.marshal.GetInput(DA, 1)
+                p2 = self.marshal.GetInput(DA, 2)
+                result = self.RunScript(p0, p1, p2)
+
+                if result is not None:
+                    if not hasattr(result, '__getitem__'):
+                        self.marshal.SetOutput(result, DA, 0, True)
+                    else:
+                        self.marshal.SetOutput(result[0], DA, 0, True)
+                        self.marshal.SetOutput(result[1], DA, 1, True)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAE7SURBVEhLYxgFgwf8Z6hnWsUQygzlUh98lAoQ/irrJwXlUh/8kwnh/C8aygPlUh/8l4/neC4eww3lUh+ALPgv6cMF5VIf0MWCp7S2ABTRUC5JQLdii6B65y78KZBcC+z3/xfRm3LWQ7v7gC9UCDsg1QKgwSxm2/7xGW/6L8Lw/z8jVBg3eAQ0HIShXKzAYuU/Tv0JJwP1Jp0ND73yn834zH9WqBRhAE5FQAzlogCVbf/YTXf/E7bZ8l9Jq/eYkG77YUGoFPEA3QfafSfc9KZdEAMGhQDQYEGtVf/ZoFLkAXBRgeQDnQmnYoxnXpEL/f+fOgUgKA/8l0zj+s/AwAjCUGEwgIkhyRGOVHTw3ziNFegDgTdC0Xz4sQec/Q8LficYyv9OKZT/i1yg5Fspf1mo8dQHSL4dBfgAAwMApZyFnnf6Mg4AAAAASUVORK5CYII="
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def __init__(self):
+                self.h_sort = None
+
+            def message1(self, msg1):
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
+
+            def message2(self, msg2):
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
+
+            def message3(self, msg3):
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
+
+            def mes_box(self, info, button, title):
+                return rs.MessageBox(info, button, title)
+
+            def RunScript(self, Pts, CP, XYZ):
+                try:
+                    sc.doc = Rhino.RhinoDoc.ActiveDoc
+                    Sort_P, Index = (gd[object]() for _ in range(2))
+                    CP = rg.Plane.WorldXY if CP is None else CP
+                    XYZ = 'x,y,z' if XYZ is None else XYZ
+
+                    self.h_sort = [_.upper() for _ in XYZ.split(',')]
+                    dict_pt_data = dict()
+                    if Pts:
+                        from_plane = rg.Plane.WorldXY
+                        to_plane = CP
+                        xform = rg.Transform.PlaneToPlane(to_plane, from_plane)
+                        copy_pt = [rg.Point3d(_) for _ in Pts]
+                        [_.Transform(xform) for _ in copy_pt]
+                        dict_pt_data['X'] = [_.X for _ in copy_pt]
+                        dict_pt_data['Y'] = [_.Y for _ in copy_pt]
+                        dict_pt_data['Z'] = [_.Z for _ in copy_pt]
+
+                        total_list = []
+                        for _ in self.h_sort:
+                            total_list.append(dict_pt_data[_])
+                        zip_list = list(zip(total_list[0], total_list[1], total_list[2]))
+                        w_sort_pts = []
+                        for index in range(len(zip_list)):
+                            w_sort_pts.append(list(zip_list[index]) + [index])
+                        Index = [_[-1] for _ in sorted(w_sort_pts)]
+                        Sort_P = [Pts[_] for _ in Index]
+                    else:
+                        self.message2("点列表为空！")
+                    sc.doc.Views.Redraw()
+                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                    sc.doc = ghdoc
+                    return Sort_P, Index
+                finally:
+                    self.Message = '-'.join(self.h_sort)
 
     else:
         pass
