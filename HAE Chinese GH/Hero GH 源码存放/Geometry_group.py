@@ -5,9 +5,13 @@
 
 from ghpythonlib.componentbase import dotnetcompiledcomponent as component
 import Grasshopper, GhPython
+import Rhino
+import scriptcontext as sc
 import rhinoscriptsyntax as rs
 import Rhino.Geometry as rg
 import ghpythonlib.components as ghc
+import Grasshopper.DataTree as gd
+import ghpythonlib.parallel as ghp
 import copy
 import math
 import Curve_group
@@ -18,6 +22,8 @@ try:
         """
             切割 -- primary
         """
+
+
         # 几何体中心点
         class GeoCenter(component):
             def __new__(cls):
@@ -43,7 +49,7 @@ try:
                 p.Optional = True
 
             def RegisterInputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_Geometry()
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
                 self.SetUpParam(p, "Geometry", "G", "几何物体")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
@@ -80,23 +86,34 @@ try:
                 return rs.MessageBox(info, button, title)
 
             # 求边界框的中心点
-            def center_box(self, Box):
-                return Box.Center
+            def _get_center(self, obj):
+                if 'List[object]' in str(type(obj)):
+                    bbox = rg.BoundingBox.Empty
+                    for brep in obj:
+                        bbox.Union(brep.GetBoundingBox(rg.Plane.WorldXY))  # 获取几何边界
+                    center = bbox.Center
+                else:
+                    center = obj.GetBoundingBox(True).Center
+                return center
 
             def GeoCenter(self, Geo):
-                box = [g.GetBoundingBox(True) for g in Geo]  # 获取几何边界
-                center = map(self.center_box, box)
-                return center
+                return ghp.run(self._get_center, Geo)
 
             def RunScript(self, Geometry):
                 try:
+                    sc.doc = Rhino.RhinoDoc.ActiveDoc
+                    Cenpt = gd[object]()
                     if len(Geometry) > 0:
                         Cenpt = self.GeoCenter(Geometry)
-                        return Cenpt
                     else:
                         self.message2("无几何体输入")
+                    sc.doc.Views.Redraw()
+                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                    sc.doc = ghdoc
+                    return Cenpt
                 finally:
                     self.Message = 'HAE 中心点'
+
 
         # 几何排序
         class Value_And_Sort(component):
@@ -250,9 +267,12 @@ try:
                 else:
                     pass
 
+
         """
             切割 -- secondary
         """
+
+
         # 分解几何物体
         class DestructionGeometry(component):
             def __new__(cls):
@@ -414,9 +434,12 @@ try:
                 finally:
                     self.Message = '几何分解'
 
+
         """
             切割 -- tertiary
         """
+
+
         # 数据类型分类
         class TypeClassification(component):
             def __new__(cls):
