@@ -29,9 +29,6 @@ Result = Curve_group.decryption()
 
 try:
     if Result is True:
-        """
-            切割 -- primary
-        """
         # Bre切割
         class BrepCut(component):
             def __new__(cls):
@@ -111,37 +108,46 @@ try:
             def message3(self, msg3):
                 return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
 
-            def _is_not_intersect(self, tuple_data):
-                a_breps, b_breps = tuple_data
-                _disjoint = []
-                for single_brep in a_breps:
-                    count = 0
-                    if single_brep:
-                        while len(b_breps) > count:
-                            if b_breps[count]:
-                                interse_sets = rg.Intersect.Intersection.BrepBrep(single_brep, b_breps[count], sc.doc.ModelAbsoluteTolerance)
-                                if len(interse_sets[1]) == 0 and len(interse_sets[2]) == 0:
-                                    _disjoint.append(count)
-                            count += 1
-                _intersect_indexs = [_ for _ in range(len(b_breps)) if _ not in _disjoint]
-                return _disjoint, _intersect_indexs
-
-            def _first_handle(self, w_cut_breps):
+            def _second_handle(self, w_cut_breps):
                 passive_body, cut_body = w_cut_breps
                 if cut_body:
-                    mb_res_brep = rg.Brep.CreateBooleanDifference(passive_body, cut_body, self.tol)
-                    if mb_res_brep is not None:
-                        res_breps = tuple(mb_res_brep)
-                    else:
-                        res_breps = cut_body
-                    return res_breps
+                    res_body = []
+                    false_set_body = []
+                    no_intersect_set_body = []
+                    false_set_tip = []
+                    no_intersect_set_tip = []
+                    for sub_index, sub_body in enumerate(passive_body):
+                        count = 0
+                        false_count, false_brep = [], []
+                        no_intersect_count, no_intersect_brep = [], []
+                        while len(cut_body) > count:
+                            temp_brep = rg.Brep.CreateBooleanDifference(sub_body, cut_body[count], self.tol)
+                            if temp_brep is not None and len(temp_brep) == 1:
+                                sub_body = temp_brep[0]
+                            else:
+                                interse_sets = rg.Intersect.Intersection.BrepBrep(sub_body, cut_body[count], self.tol)
+                                if len(interse_sets[1]) != 0 or len(interse_sets[2]) != 0:
+                                    false_count.append(str(count))
+                                    false_brep.append(cut_body[count])
+                                else:
+                                    no_intersect_count.append(str(count))
+                                    no_intersect_brep.append(cut_body[count])
+                                sub_body = sub_body
+                            count += 1
+                        res_body.append(sub_body)
+                        false_set_body.append(false_brep)
+                        no_intersect_set_body.append(no_intersect_brep)
+                        false_set_tip.append(false_count)
+                        no_intersect_set_tip.append(no_intersect_count)
+
+                    return res_body, false_set_body, no_intersect_set_body, false_set_tip, no_intersect_set_tip
                 else:
                     return False
 
             def RunScript(self, A_Brep, B_Brep, Tolerance):
                 try:
                     sc.doc = Rhino.RhinoDoc.ActiveDoc
-                    self.tol = 0.01 if Tolerance is None else Tolerance
+                    self.tol = sc.doc.ModelAbsoluteTolerance if Tolerance is None else Tolerance
 
                     Res_Breps, Disjoint, False_Breps = (gd[object]() for _ in range(3))
                     _a_trunk, _b_trunk = [list(_) for _ in A_Brep.Branches], [list(_) for _ in B_Brep.Branches]
@@ -153,33 +159,21 @@ try:
                         self.message2("B端不能为空！")
                     else:
                         _w_handle_tree = list(zip(_a_trunk, _b_trunk))
-                        _after_handle_indexs = map(self._is_not_intersect, _w_handle_tree)
+                        _res_breps, _fail_breps, _no_intersect_breps, _fail_tips, _no_intersect_tips = zip(*ghp.run(self._second_handle, _w_handle_tree))
 
-                        _no_inter_indexs, _inter_indexs = zip(*_after_handle_indexs)
-
-                        _no_inter_breps, _inter_breps = [], []
-                        for _n_index in range(len(_no_inter_indexs)):
-                            _no_inter_breps.append([_b_trunk[_n_index][_] for _ in _no_inter_indexs[_n_index]])
-                            if len(_no_inter_indexs[_n_index]) != 0:
-                                [self.message2("A端第{}个Brep集合与B端第{}个Brep不相交".format(_n_index + 1, _ + 1)) for _ in _no_inter_indexs[_n_index]]
-                        for _t_index in range(len(_inter_indexs)):
-                            _inter_breps.append([_b_trunk[_t_index][_] for _ in _inter_indexs[_t_index]])
-
-                        _true_result, _temp_fail_result = [], []
-                        _true_handle_tree = ghp.run(self._first_handle, zip(_a_trunk, _inter_breps))
-                        for _ in range(len(_true_handle_tree)):
-                            if isinstance(_true_handle_tree[_], (bool)) is True:
-                                _temp_fail_result.append([])
-                            elif isinstance(_true_handle_tree[_], (list)) is True:
-                                self.message1("A端第{}Brep集合与B端第{}Brep集合切割失败，已初始化数据".format(_ + 1, _ + 1))
-                                _temp_fail_result.append(_true_handle_tree[_])
-                            elif isinstance(_true_handle_tree[_], (tuple)) is True:
-                                _true_result.append(_true_handle_tree[_])
-
-                        Res_Breps = ght.list_to_tree(_true_result) if len(list(chain(*_true_result))) != 0 else Res_Breps
-                        Disjoint = ght.list_to_tree(_no_inter_breps) if len(list(chain(*_no_inter_breps))) != 0 else Disjoint
-                        False_Breps = ght.list_to_tree(_temp_fail_result) if len(list(chain(*_temp_fail_result))) != 0 else False_Breps
-                        return Res_Breps, Disjoint, False_Breps
+                        Res_Breps = ght.list_to_tree(_res_breps)
+                        if bool(list(chain(*_fail_tips))):
+                            False_Breps = ght.list_to_tree(_fail_breps)
+                            for t_index, tip in enumerate(_fail_tips):
+                                full_list = list(chain(*tip))
+                                if bool(full_list):
+                                    self.message1("第{}组数据 切割体{}切割失败！".format(t_index + 1, "，".join([_ + 1 for _ in full_list])))
+                        elif bool(list(chain(*_no_intersect_tips))):
+                            Disjoint = ght.list_to_tree(_no_intersect_breps)
+                            for t_index, tip in enumerate(_fail_tips):
+                                full_list = list(chain(*tip))
+                                if bool(full_list):
+                                    self.message2("第{}组数据 切割体{}为相交！".format(t_index + 1, "，".join([_ + 1 for _ in full_list])))
 
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
@@ -460,9 +454,6 @@ try:
                     self.Message = '平切Brep（面）'
 
 
-        """
-            切割 -- secondary
-        """
         # 圆柱切割体
         class CirBrep(component):
             def __new__(cls):
@@ -1064,9 +1055,6 @@ try:
                     self.Message = 'Loft（面或线）-> 原截面实体（已删除）'
 
 
-        """
-            切割 -- tertiary
-        """
         # 删除重复的Brep
         class CullBrep(component):
             def __new__(cls):
@@ -1470,11 +1458,166 @@ try:
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
                     sc.doc = ghdoc
                     self.Message = 'HAE开发组'
+
+
+        # 模型展开
+        class BrepUnfolder(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP-型材模型展开", "RPP-BrepUnfolder", """型材加工图模型展开插件""", "Scavenger", "Brep")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("132a0a95-c9cd-4a12-a80f-05d7d0aeec8a")
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Brep()
+                self.SetUpParam(p, "Brep", "B", "加工图模型")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Result_Surfs", "RS", "目标面")
+                self.Params.Output.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Result_Axis", "RA", "目标轴")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                result = self.RunScript(p0)
+
+                if result is not None:
+                    if not hasattr(result, '__getitem__'):
+                        self.marshal.SetOutput(result, DA, 0, True)
+                    else:
+                        self.marshal.SetOutput(result[0], DA, 0, True)
+                        self.marshal.SetOutput(result[1], DA, 1, True)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAKFSURBVEhLtVa/axRBFN5WRNRE/HFedZCd92Z294pDuNJE0WhhZaOtrY0k2omaoFYnWGqSy6EQTATRSgV/ouYEOQsLLYRLKeI/4ff23uJOWCXrJR+8m31vZvabed+b2Qscc8taWraW59Au/LHUv2+ZHzFzG8/zuX55htkVtNlcr58ddyzRshC8w8CpODaxc66emfgYcN4xfUf/RBSFSb4/iqLEWvM8snRv/dx0LNExLO6LEDzFCyaDAjhjxiPLHxqNxk4NeXAuXHBsrqnr4RDRKAheZQSnNO4BBMed5S5Wu09DHpwzHezguroe6mNjB0HwOiVAjk9q3AOH4REQrGIBIxry4By1Y8cz6npIarW9gx1Y+wYk52oIGGMqmcmqocEZEPQG+bb7sz4iOiDmIDDsdtHcmKgBgl6AH1QAP8PLHjDTw8xAuoTJb0HwC89P8v2Dykmtb5m+ylg8r6zrf4xFvQiq1eq2er2+S9KQtziOd6M9jSr6ZKRMBr43BhosQeRWUZ/EkiTZrhkrBrQRDboyQUMeRAOIPKtueaCmUUX08X+qaEPAyieliiDcDg15wEGbR4puqFseMfNRiPgNRGflTCBlJ/KGFL2EwIVluiEgRYdRDT+lHNHi1HJHbVEscraPFF3W4eUhGqCEVytUGdWQB+xgcSgNlKAbhuEeDXnYNAI5qRrysClVBIL3chg15AFVNDdUFYFgAgRruHdmmc00hL2kdlEMIn/GDq7o8PIQApyDNbxsBlV0Aa2QTEf4QEXWTDlne9jBVR1eHpIi+eA0m83CFEGDu0OlaMuviowAt+LWVZEQ/P2bTG2k6Ka65ZGKzPQD984diNuC3coZ/u5w/98iB8Fv/W7sJrAWTTQAAAAASUVORK5CYII="
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def __init__(self):
+                self.tol = sc.doc.ModelAbsoluteTolerance
+
+            def message1(self, msg1):
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
+
+            def message2(self, msg2):
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
+
+            def message3(self, msg3):
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
+
+            def mes_box(self, info, button, title):
+                return rs.MessageBox(info, button, title)
+
+            def along_cur(self, line, base):
+                st_pt, ed_pt = line.PointAtStart, line.PointAtEnd
+                set_pt = [st_pt, ed_pt]
+                pt_coordinate = []
+                for _ in set_pt:
+                    rc, t = base.ClosestPoint(_)
+                    pt_coordinate.append(t)
+                pt_index = [0, 1] if pt_coordinate[0] - pt_coordinate[1] < 0 else [1, 0]
+                new_set_pt = [set_pt[_] for _ in pt_index]
+                new_line = rg.Line(new_set_pt[0], new_set_pt[1])
+                return new_line
+
+            def _get_grid_lines(self, base_surf, sub_surfs):
+                base_line = [_ for _ in base_surf.ToBrep().Edges]
+
+                count = 0
+                total_list = []
+                while len(sub_surfs) > count:
+                    sub_dist = []
+                    for index, line in enumerate(base_line):
+                        new_curve = line.ToNurbsCurve()
+                        mid_pt = new_curve.PointAt(new_curve.Domain.Mid)
+                        test_pt = sub_surfs[count].ToBrep().ClosestPoint(mid_pt)
+                        sub_dist.append(abs(mid_pt.DistanceTo(test_pt)))
+                    min_index = sub_dist.index(min(sub_dist))
+                    total_list.append((base_line[min_index], sub_surfs[count]))
+                    count += 1
+
+                return total_list
+
+            def temp_fun(self, data):
+                curve_data, face = data
+                curve_data = curve_data.ToNurbsCurve()
+                curve_mid = curve_data.PointAt(curve_data.Domain.Mid)
+                edge_list = [_ for _ in face.ToBrep().Edges]
+                dis = []
+                ran_list = []
+                flip_curve_list = [ghc.FlipCurve(_.ToNurbsCurve(), curve_data)['curve'] for _ in edge_list]
+                for edge_index, edge in enumerate(flip_curve_list):
+                    ran_list.append((ghc.Angle(rg.Line(curve_data.PointAtStart, curve_data.PointAtEnd), rg.Line(edge.PointAtStart, edge.PointAtEnd))['angle'], edge_index))
+
+                new_edge_list = [edge_list[_[-1]] for _ in sorted(ran_list)[:2]]
+                for edge_index, edge in enumerate(new_edge_list):
+                    rc, t = edge.ClosestPoint(curve_mid)
+                    if rc:
+                        test_cl_pt = edge.PointAt(t)
+                        dis.append(abs(curve_mid.DistanceTo(test_cl_pt)))
+
+                min_index = dis.index(min(dis))
+                return self.find_curvature(new_edge_list[min_index])
+
+            def find_curvature(self, o_curve):
+                start_pt, end_pt, mid_pt = o_curve.PointAtStart, o_curve.PointAtEnd, rs.CurveMidPoint(o_curve)
+                ref_line = rg.Line(start_pt, end_pt)
+                ref_mid = ghc.CurveMiddle(ref_line)
+                curvature = abs(mid_pt.DistanceTo(ref_mid))
+                return o_curve if curvature >= 0.1 else rg.Line(start_pt, end_pt)
+
+            def flip_curve(self, tuple_curves):
+                l_curve, r_curve = [_.ToNurbsCurve() for _ in tuple_curves]
+                r_curve = ghc.FlipCurve(r_curve, l_curve)['curve']
+                return r_curve
+
+            def RunScript(self, Brep):
+                try:
+                    sc.doc = Rhino.RhinoDoc.ActiveDoc
+                    Result_Surfs, Result_Axis = (gd[object]() for _ in range(2))
+                    if not Brep:
+                        self.message2("Brep为空！")
+                    else:
+                        face_list = [face for face in Brep.Faces]
+                        map(lambda shrin: shrin.ShrinkFace(rg.BrepFace.ShrinkDisableSide.ShrinkAllSides), face_list)
+                        area_to_brep = map(lambda get_area: get_area[0] * get_area[1], [_.GetSurfaceSize()[1:] for _ in face_list])
+                        max_index = 0
+                        for _ in range(len(area_to_brep)):
+                            if area_to_brep[_] > area_to_brep[max_index]:
+                                max_index = _
+                        max_surf = face_list[max_index]
+                        sub_surf_list = [_ for _ in face_list if _ is not max_surf]
+
+                        set_data = self._get_grid_lines(max_surf, sub_surf_list)
+                        leader_line, Result_Surfs = zip(*set_data)
+
+                        rotation_curve = map(self.temp_fun, set_data)
+                        Result_Axis = [rg.Line(_.PointAtStart, _.PointAtEnd) for _ in map(self.flip_curve, list(zip(leader_line, rotation_curve)))]
+
+                    sc.doc.Views.Redraw()
+                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                    sc.doc = ghdoc
+                    return Result_Surfs, Result_Axis
+                finally:
+                    self.Message = '型材模型展开'
+
     else:
         pass
 except:
     pass
-
 
 import GhPython
 import System
