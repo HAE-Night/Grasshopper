@@ -183,7 +183,7 @@ try:
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Curve()
                 self.SetUpParam(p, "Curve", "C", "显示方向的曲线")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
@@ -201,11 +201,13 @@ try:
                 self.pts = []
 
             def RunScript(self, C):
-                self.c = C
+                C.Flatten()
+                self.c = C.Branches[0]
+
                 if not self.c: return
                 self.bb = rg.BoundingBox()
-                self.plist = []
-                self.tlist = []
+                Plist = []
+                Tlist = []
 
                 for i in range(len(self.c)):
                     if not self.c[i]: return
@@ -215,28 +217,24 @@ try:
                     else:
                         n = 3
 
-                    for j in range(1):
-                        self.pt = rs.DivideCurve(self.c[i], n, True)  # 平切成N曲线 - 返回点
-
-                        for k in range(len(self.pt)):
-                            self.bb.Union(self.pt[k])  # 更新box边框
-                            self.pts = rs.CurveClosestPoint(self.c[i], self.pt[k])  # 获取最近点
-                            self.tg = rs.CurveTangent(self.c[i], self.pts)  # 切线
-                            self.plist.append(self.pt[k])
-                            self.tlist.append(self.tg)
-
+                    pt = map(self.c[i].PointAt, self.c[i].DivideByCount(n, True))  # 平切成N曲线 - 返回点
+                    for k in range(len(pt)):
+                        self.bb.Union(pt[k])  # 更新box边框
+                        self.pts = rs.CurveClosestPoint(self.c[i], pt[k])  # 获取最近点
+                        self.tg = rs.CurveTangent(self.c[i], self.pts)  # 切线
+                        Plist.append(pt[k])
+                        Tlist.append(self.tg)
                 parts = len(self.c)
-                self.p = [self.plist[(i * len(self.plist)) // parts:((i + 1) * len(self.plist)) // parts] for i in
-                          range(parts)]
-                self.t = [self.tlist[(i * len(self.plist)) // parts:((i + 1) * len(self.plist)) // parts] for i in
-                          range(parts)]
+                self.p = [Plist[(i * len(Plist)) // parts:((i + 1) * len(Plist)) // parts] for i in range(parts)]
+                self.t = [Tlist[(i * len(Plist)) // parts:((i + 1) * len(Plist)) // parts] for i in range(parts)]
+                return
 
             def DrawViewportWires(self, arg):
                 if not self.c: return
                 for i in range(len(self.c)):
                     if not self.c[i]: return
                     for j in range(4):
-                        arg.Display.DrawDirectionArrow(self.p[i][j], self.t[i][j], System.Drawing.Color.White)
+                        arg.Display.DrawDirectionArrow(self.p[i][j], self.t[i][j], System.Drawing.Color.Red)
 
             def get_ClippingBox(self):
                 return self.bb
