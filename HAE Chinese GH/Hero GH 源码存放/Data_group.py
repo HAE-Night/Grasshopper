@@ -491,7 +491,7 @@ try:
                 return Datas
 
 
-        # ZiYe数据对比
+        # 数据对比
         class DataComparison(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
