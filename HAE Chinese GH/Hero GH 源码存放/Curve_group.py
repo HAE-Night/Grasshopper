@@ -902,7 +902,8 @@ try:
         class LineLength(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-求线长度", "RPP_求线长度", """求线长度，并保留规定的小数位。""", "Scavenger",
+                                                                   "RPP-求线长度", "RPP_求线长度",
+                                                                   """求线长度，并保留规定的小数位。""", "Scavenger",
                                                                    "Curve")
                 return instance
 
@@ -944,7 +945,7 @@ try:
                     self.marshal.SetOutput(result, DA, 0, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAANNSURBVEhLrVTLLmRRFK3v8AXeRAwxQCQ1ljAy8AOGBgbMDNpIIkIiEYTqSKs2oNXjFtV1CYkwEIJU6Q7VjY563Fe9H6vP3uWWQqFb7GQN9lnnrHXO3vtei81ms66vr39aWlr6cJCu5bPNNu7z+bBi/4ovKx8L0rUsLCyMfnO4cOq/RODnL/h/BP8LdObi8vd9fnW/FsT5RRAOlweWubm5Uae0iWw2j/cHnX1+3rMlXsAGbg9i8aQwySKdTr+JTCaDXC6HoaEhtLW1wWq1IpFI8BrxWcEnU2lIm98fDIxYgg+mUql/AoUYEFgsFvT393Nuchlhkkim3m9Asbe3h87OTnR0dMDpdPKayb9ikH4kVIpkMsmg8Hq9qKysxP7+PlZXVxEKhXjdjLTY/8xAN+Kifg9C5UCxsbGBqqoqHBwccE5BBvPz85ienobD4eBexhNJYeB924CaZ4rb7XZUV1fj+PiYc+JI7Pr6mktF/ZiammLumYGmx0QpCoJPQbG4uIja2lr4/X7O4/E4g+L8/BxdXV2or69ns3w+J6Yy8bIBHczn81x7ipmZGTQ2NuLq6orzUnEqVUNDAyYnJzEyMsJr9OKiwQIZiC9O1QxBFMRpms7OznjzxMQEmpubcXNzw3ksFmNQ7OzscLOp6RS3t7fFshqxOCRPGQMi6eYDAwMYHBxEa2srwuEwC5SKS5LE4ru7u5zTxegjI76sgaLqgojz13h0dISKigr09PRA13Uul2EYRfG1tTWepMPDQ85NzgSZ6UbssUFU0QRREBgeHuaJaG9vRzAY5EkhEYrl5WXU1NTg5OSEc1p/CjLRdANu04D+epGoWnSXZRkul4trqyhKsdliIFBXV4dAIMA5va4cyETV9HIGOjRN4xubcXp6itnZWf6QSieJ9pUTJ5QxkBCOKIIoGJigIPGmpiZ0d3fzJFE/VFV9tO8pyERRNWGw9WAQCkcFofFhU4Aa3tLSwv2gPycFlczc8xLobFRRHxvchSKCUFmAQM+kue7t7UVfXx/GxsZ4/EjA3PMSaE8kqrxuQIhGo6IfGb45lYbyUv4lFA2kEoM/dxFRtwLxAMpNlK6/DipPSPTURQaituOyvA33pg/SlvxhcG/KkLd38Bc5RMF1fyEJ8AAAAABJRU5ErkJggg=="
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAANNSURBVEhL3ZVrSFNhGMe1peC84cp9E0RFkkCdmxeKMMGEJIn64CeNvGUhigvbDDTXCAKR6VrDVoqj0DRNJdNQ0ayJ5WXzwtQd3VxhmiCKt12aep6e404fpAy8QNAP/rznvM//fZ7nvOflHId/QlxcHCs/Pz9erVYH0FNHC5fLFXl5eYFCoRikp46WiIiIhziAVCrV2meOGCzwAAeQyWQj9pkj5v8pUF5errHP7A0AOBIEESSXy6/y+fzclJSUwrS0tMLa2tpckiRdadtufhUoKSmZqK6u9lOpVH6YyMketaNUKrkJCQkSf3//CU9PT5LJZIKrqyuwWKwdicViXAJc2r4bDodTjANQcnJygqCgIBgeHuZTMTxZUeHh4W9dXFzAw8MDYmJiQCwqgraWZhjTDNj0hHbOoBs36KeJDnwCd2rNb0gkkqzs7OytpKSk7eTkZBAIBD/MZnMej8e7i52S3mw23CssAOO0DqxmE3yZX4Iu9TTUdGq2q1r7TfXdwyvG+SVic9N6iU65G3w0Blb3RwWgfFBncdv6qVBaaiosLnyDtXUTVLzpgysFzyH8hgyibsrgwu1nEC+sAl6mHF60q4EkbUX2jH+hrq7Oxdvbe9DZ2RlqaqqpfYX6riGIzlEAL0MKwseN8E6lAfWoFghiakFvMBjwenV27rsFGztHp/kzmIvp6+vbT73Ajx968JYEgbwZTl2TgOBRPeim9LBpXvmEiW6hglHuaDqOIxvlQ6fZm8jISCWDwYC21rebJLlNZhbXQUhqKTR19oFtY9mISRJp6/7JycmJxwFEIpENEy0WKFrI4JRS6Pmswb3dasVOT9qdBwAXO7LZbC0nLAyTkbPN3YO209fLoLGjD8htawfGj9HWg5Genn6ZOv8N9a8WNkxW40WhEoSyBrCuLc1gQQ/adnACAwPbQ0NDqe4HK5p7rdQR1BFT2Dicpy0HZ2RkhO3m5ma5k5dnwgITifdfgriyFSzry2205XAIhcIE6m/2vqvDMDo9O3cm6wn0Do1R3cfSlsMRHR2987tcWVwYl79WWWL5T2HGoJ/FAgzacjjKysqk+C2ivjGVA6OTq0OTX2F1ZbmJDh8e3PcT1HagmHgdgspABdLhfeLg8BOC7AQKjrtfNQAAAABJRU5ErkJggg=="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def RunScript(self, Curve, Number):
@@ -952,6 +953,7 @@ try:
                 Length = [format(float(crv.GetLength()), digit) for crv in Curve]
                 # return outputs if you have them; here I try it for you:
                 return Length
+
 
         # 根据线长排序
         class LenghtSort(component):
@@ -1002,7 +1004,7 @@ try:
                         self.marshal.SetOutput(result[1], DA, 1, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAKkSURBVEhL7ZJNaNJxGMcHRXQoGAtqLFaXXg5rh2qjU8EIOgSD2KlAPETQYQfR2ph0LaZz5NZARcP5koqGr0RtzuE7orNtOZ1va25MLYpNNt1UZtrX+J1Kt8tu+YGH3/P//Z/359fUoMGBFArlq+Vy+Tz5PHpKpdJQrlDkZbPZs+TqcNRq9SUKhdLb3d19p5709fX1PqFSO8rl/Z6pWL7i/7p1m7gfTjgcbtNoNDfHxsYuj46OXqmef8v4+HjP9c7OuxhPly5UqPiWN68R9yPjeHt7axcStLw2r/+yxjIf9orFR+RffeBwxul09hsMhiE+n08Vi8VP5XI5DRU/VigUL0QiEZfJZOqCwaCZyRx8CPv7rvjWhjuxtwP9VaVSOUZC1QYGrV+A1Wr9MTs7m3E4HPs2m20H+gb079PT02mpVPrNbrdXMD6byWRi61QS2jvhRL9Op6MhSQcJVRsYXPT7/Vo4qo1G40ecVq1WO4PTjtOuVCqn9Hq9i8fj5el0etZsNuctFosWrqchzSjwxJ9A9YDBhVgs5p2bm1tBohiaSczPz3twukOhkBv/fIlEwhYIBBTRaNQSiUQ2M5mMBH4nSYiDqe7A5XIFUO2aSqWK4zWtoOoQ9CB24ZfJZD6hUPgJu6mKi8FgrPl8vujS0pKn2j0JczC7u7sPtre3GalUipZMJp+trq4OxOPx53i+Awg0iAW/RCcy6EqPxzOD7jbR0ToS3IOcI2Fqg1ab8VpYbDb7LYvFmhwZGZFwOJzJ4eFhAe4EXC5XjBclgT4hEAhUWPh7dBjHPlY+AyRN5XK5GyTcvyDBqXQ6zULV+oWFBT7m/wbVaeCoQeWWxcVFI+600N24d0DsXq93Bot2w+Yn9lbEBG6RcEcLxtMCaSOfDf4fmpp+A8zZ1v7/j2shAAAAAElFTkSuQmCC"
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAJGSURBVEhLYxgeIDQ0lD8oKKhp4cKF8VAhhn/XnIX/3TPK/3czXBMqRD4IDw93ZmVl/V9QUPDh////bCCxfwdZzP6/Yv//74xeCVgRJSAxMdGFkZHxf05OzpN///6xg8T+HWQw+n+D+f+/0zq5YEWUgPj4eGeoBY9HLcAK6GZBYWHhQ6gQw789DHr/bzH//39KPw0qRD4AWcDExPQfSL+ZMGFC8Iw5i73/XbZz/HeJ6e+/U4qd/69IGfw/o6MBVU46iIuLcwNS/0EYZJGcos7/B6e75/8/xvD//xUgvgPER9iAeaSeBayBVLBhwwYTYPj/T0hI+A+07H9ZRe3/h9d3dvw7r7Lw3znVTf8uqW3+d1Zn1v//DIwREXF6np6eM4Dq7KDaiQPAHOwAjOAYKA4D8nmgUijA3d3dVl9f/7+Ojs5/c3PzS15eXjVlZWWUFycwMHv2bCFnZ+e1BgYGH9TU1P5raWn9B1r4x8bGZm9AQEDqjBkzJKFKEcDKysrNwsLiqKmpKUFsbGx80NLSchfQwOeampr/VVVVwRhkGchXQPkPQLk1vr6+McXFxWJgCzQ0NOJBikGKCGGQYYqKij+A7K/q6uoo4iAM8pGhoeF/Dw+P7VVVVUZgC4CCPLq6ukpABQQx0PU6wHioAfr6GtBhcEOBwfTP2tr6YGBgYFZvb6802GByQEhIiK6ent5/kOuBjgJF9BWghY15eXk6UCWUAWBE2gBd/woY0XOio6MdgKmNCSpFHdDZ2cl77NgxISh3FFAKGBgARSNMAzVxb5MAAAAASUVORK5CYII="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             # 排序
@@ -1020,87 +1022,6 @@ try:
                     self.message1("运行报错：\n{}".format(str(e)))
                 finally:
                     self.Message = 'HAE 长度排序'
-
-        # 指定线段 取顶线底线
-        class ZLine(component):
-            def __new__(cls):
-                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-指定线段", "RPP_Line", """在线段列表中，根据线段Z坐标取出指定的线段（顶线 or 底线）
-        并统一该直线的方向。""", "Scavenger", "Curve")
-                return instance
-
-            def get_ComponentGuid(self):
-                return System.Guid("4904712b-7881-400e-a4d6-0b53069c48bc")
-
-            @property
-            def Exposure(self):
-                return Grasshopper.Kernel.GH_Exposure.secondary
-
-            def SetUpParam(self, p, name, nickname, description):
-                p.Name = name
-                p.NickName = nickname
-                p.Description = description
-                p.Optional = True
-
-            def RegisterInputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_Line()
-                self.SetUpParam(p, "Lines", "L", "直线列表")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
-                self.Params.Input.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_Boolean()
-                self.SetUpParam(p, "Dir", "D", "True-将直线统一为正方向->->; False: 将直线统一为负方向<-<-。默认为False。")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
-                self.Params.Input.Add(p)
-
-            def RegisterOutputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Line1", "T", "最终得到的顶线")
-                self.Params.Output.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Line2", "Endline", "Script variable ZY_指定线段")
-                self.Params.Output.Add(p)
-
-            def SolveInstance(self, DA):
-                p0 = self.marshal.GetInput(DA, 0)
-                p1 = self.marshal.GetInput(DA, 1)
-                result = self.RunScript(p0, p1)
-
-                if result is not None:
-                    if not hasattr(result, '__getitem__'):
-                        self.marshal.SetOutput(result, DA, 0, True)
-                    else:
-                        self.marshal.SetOutput(result[0], DA, 0, True)
-                        self.marshal.SetOutput(result[1], DA, 1, True)
-
-            def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAANUSURBVEhLvZbLTxNRFMb9G+AfUBKFGDE+tizZGBITEpduSdwYdiaG4MqwMAGsLS8fsZ3SdgoW8BkBF4D4oFBpS9tpa6el4CO0RoFEHn193nPK9AHixoZJTs453733+93OTOb22PhbzyV3ePXOzJy34uEVvsfmPQFdNpdDMpmseOSErwAoHQnRhEJBBAKBigX5EYQByWQCgeBnqPFviFYgyIf8yDf/C9bWEI4sI5PNAdkscv8RtJ58yC+RWCsFxLCbSuPglUMqldqry6/DdPIhvzxgUQBEoQEWXG68ffcRM7MfOa9+/c5GK6tfseRXRAThExFf+cJ6bHlFzP2AGTGX5seWV4WeRuhztBwQUZeRymRx+cpVnDx9HnVnLuL4qXr03Jd4VzdvdaCm7hyPnRD6tes3WO99IO3Nv4Ca2rNov93N+gFAOBJFKp3Be6cXFquMkdFR3OsZwNOXb3iBaymMR0YLrDYZOkM/LMPPWQ9GVmCxPYHD4cDAw8ewDD1lPQ+gh7wPMP1+ASZJwtCQjG6dHmMvJnjBoi8sdAuG7DIMvf2wDT9j3R+KwWS2wC5b0ds/gEF5lPUDABLoGUy9W4DRJMEujLruFgGfvCE8Ng1Clm3Q9/TBurdTAhgFWLZZ0dM3APO/ADu7KQGYLwOMPh/nBS5vUOhFgHYrfMGoAFhLACOsHzUgwcL2zi6mZudhKgAMRYBnH8A+xvrSPoBkGxHfIAKoRw5QsbW9cwAw8uw1G7k8ijDSAP0Y1ACKCqM5D+hlgEN8LXIIhlUkSwEk/N7a5mcgSWbxmtrRpTPAMfaKjegZ8OsowAYBMAsjugggDdrEa2pjgNEyjHQm83dAdXV1RSKVThcBcwVAhAdbWlrgdrvR2dnJtaqqhaxFqa6F1pPHxsYm+5UBlFAe0NzczJNdLhf0ej3XmkZZi8N68vj58xf7FQCbm0SM8mBDQwNPbmpqwuTkJNeaptVaT9npdJb15LG+vp4H0IGz6I90TE9Pw+3182BtbS1PplxfX1+otayFz+dDW1sb65SpJ508AuEY/EoIP36II3N2brGjvf2W2O0ED1ZVVfEiyqU1ZS2ob2xs5N23trZypp508lAURZzJofyZPOv06Oh+x+NxHqxEFP9V5PAHN6zyZbcF+NAAAAAASUVORK5CYII="
-                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
-
-            def Flip(self, line, CX):
-                if CX == True:
-                    if (line.Direction)[0] < 0:
-                        line.Flip()
-                elif CX == False:
-                    if (line.Direction)[0] > 0:
-                        line.Flip()
-                return line
-
-            def Z_direction(self, Lines, Dir):
-                ptZ = [cur.PointAt(0.5).Z for cur in Lines]
-                max_z = ptZ.index(max(ptZ))
-                min_z = ptZ.index(min(ptZ))
-                Line1 = self.Flip(Lines[max_z], Dir)
-                Line2 = self.Flip(Lines[min_z], Dir)
-                return Line1, Line2
-
-            def RunScript(self, Lines, Direc):
-                if Lines:
-                    Topline, Endline = self.Z_direction(Lines, Direc)
-                    # return outputs if you have them; here I try it for you:
-                    return Topline, Endline
-
 
 
         """
