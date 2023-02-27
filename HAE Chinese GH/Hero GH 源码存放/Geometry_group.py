@@ -17,13 +17,13 @@ import math
 import Curve_group
 
 Result = Curve_group.decryption()
+
+
 try:
     if Result is True:
         """
             切割 -- primary
         """
-
-
         # 几何体中心点
         class GeoCenter(component):
             def __new__(cls):
@@ -51,7 +51,7 @@ try:
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
                 self.SetUpParam(p, "Geometry", "G", "几何物体")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
@@ -73,43 +73,28 @@ try:
             def __init__(self):
                 pass
 
-            def message1(self, msg1):  # 报错红
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):  # 警告黄
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):  # 提示白
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
-
-            def mes_box(self, info, button, title):
-                return rs.MessageBox(info, button, title)
-
             # 求边界框的中心点
-            def _get_center(self, obj):
-                if 'List[object]' in str(type(obj)):
+            def center_box(self, Box):
+                type_str = str(type(Box))
+                if 'List[object]' in type_str:
                     bbox = rg.BoundingBox.Empty
-                    for brep in obj:
+                    for brep in Box:
                         bbox.Union(brep.GetBoundingBox(rg.Plane.WorldXY))  # 获取几何边界
                     center = bbox.Center
                 else:
-                    center = obj.GetBoundingBox(True).Center
+                    center = Box.GetBoundingBox(True).Center if "Box" and "Plane" not in type_str \
+                        else Box.Origin if "Plane" in type_str else Box.Center
+
                 return center
 
             def GeoCenter(self, Geo):
-                return ghp.run(self._get_center, Geo)
+                center = ghp.run(self.center_box, Geo)  # 获取几何边界
+                return center
 
             def RunScript(self, Geometry):
                 try:
-                    sc.doc = Rhino.RhinoDoc.ActiveDoc
-                    Cenpt = gd[object]()
-                    if len(Geometry) > 0:
-                        Cenpt = self.GeoCenter(Geometry)
-                    else:
-                        self.message2("无几何体输入")
-                    sc.doc.Views.Redraw()
-                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
-                    sc.doc = ghdoc
+                    Geolist = [list(Branch) for Branch in Geometry.Branches]
+                    Cenpt = ght.list_to_tree(ghp.run(self.GeoCenter, Geolist))
                     return Cenpt
                 finally:
                     self.Message = 'HAE 中心点'
