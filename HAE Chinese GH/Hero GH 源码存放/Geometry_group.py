@@ -19,12 +19,13 @@ import Curve_group
 
 Result = Curve_group.decryption()
 
-
 try:
     if Result is True:
         """
             切割 -- primary
         """
+
+
         # 几何体中心点
         class GeoCenter(component):
             def __new__(cls):
