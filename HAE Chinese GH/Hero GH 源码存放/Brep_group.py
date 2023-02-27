@@ -24,6 +24,7 @@ from itertools import chain
 import math
 import Curve_group
 import time
+import copy
 
 Result = Curve_group.decryption()
 
@@ -98,6 +99,7 @@ try:
 
             def __init__(self):
                 self.tol = None
+                self.target_paths = None
 
             def message1(self, msg1):
                 return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
@@ -175,6 +177,8 @@ try:
                                 if bool(full_list):
                                     self.message2("第{}组数据 切割体{}为相交！".format(t_index + 1, "，".join([str(int(_) + 1) for _ in full_list])))
 
+                    self.target_paths = A_Brep.Paths if A_Brep.Paths[0].Length > B_Brep.Paths[0].Length else B_Brep.Paths
+                    map(lambda single_p: [single_p.Paths[_].FromString(str(self.target_paths[_])) for _ in range(len(self.target_paths))], [_ for _ in [Res_Breps, Disjoint, False_Breps] if _.BranchCount])
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
                     sc.doc = ghdoc
@@ -338,7 +342,7 @@ try:
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Brep()
                 self.SetUpParam(p, "Brep", "B", "待分割的Brep（面）")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Plane()
@@ -378,6 +382,7 @@ try:
 
             def __init__(self):
                 self.tol = None
+                self.cap_factor = None
 
             def message1(self, msg1):
                 return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
@@ -421,35 +426,52 @@ try:
                 just_need = [geo_list[_[0]] for _ in no_need_index]
                 return just_need
 
-            def _handle_brep(self, brep):
-                cap_brep = brep.CapPlanarHoles(sc.doc.ModelAbsoluteTolerance)
-                cap_brep = cap_brep if cap_brep is not None else brep
-                if cap_brep.SolidOrientation == rg.BrepSolidOrientation.Inward:
-                    cap_brep.Flip()
-                return cap_brep
+            def _handle_brep(self, breps):
+                new_breps = []
+                for _ in breps:
+                    if self.cap_factor == 'T':
+                        temp_brep = _.CapPlanarHoles(self.tol)
+                        cap_brep = temp_brep if temp_brep else _
+                    else:
+                        cap_brep = _
+                    new_breps.append(cap_brep)
+
+                for brep in new_breps:
+                    if brep.SolidOrientation == rg.BrepSolidOrientation.Inward:
+                        brep.Flip()
+                return new_breps
+
+            def temp(self, tuple_data):
+                breps, planes = tuple_data
+                return self._get_cutface(breps, planes)
 
             def RunScript(self, Brep, Plane, Tolerance, Cap):
                 try:
-                    self.tol = Tolerance if Tolerance is not None else 0.001
-                    self.cap_factor = 'T' if Cap is None else Cap
-                    self.cap_factor = self.cap_factor.upper()
-                    if self.cap_factor not in ['T', 'F']:
-                        self.message2('封盖请输入T或者F')
-                        self.cap_factor = 'T'
+                    sc.doc = Rhino.RhinoDoc.ActiveDoc
+                    Result_Brep = gd[object]()
 
-                    if Brep is None and len(Plane) == 0:
+                    trunk_list = [list(_) for _ in Brep.Branches]
+                    self.tol = Tolerance if Tolerance is not None else sc.doc.ModelAbsoluteTolerance
+                    self.cap_factor = 'F' if Cap else 'T'
+
+                    if not (trunk_list or Plane):
+                        self.message2("B端实体、P端平面未输入！")
+                    elif not trunk_list:
                         self.message2("B端实体未输入！")
-                        self.message2("P端平面未输入！")
-                    elif Brep is None:
-                        self.message2("B端实体未输入！")
-                    elif len(Plane) == 0:
+                    elif not Plane:
                         self.message2("P端平面未输入！")
                     else:
-                        origin_brep = self._get_cutface(Brep, Plane)
-                        cull_brep = self._cull_geo(origin_brep)
-                        Result_Brep = cull_brep if self.cap_factor != 'T' else map(self._handle_brep, cull_brep)
-                        self.message3("{}个实体被切出".format(len(Result_Brep)))
-                        return Result_Brep
+                        new_plane_list = ghp.run(lambda li: [copy.copy(_) for _ in li[:]], [Plane] * len(trunk_list))
+                        zip_list = list(zip(trunk_list, new_plane_list))
+                        origin_brep = ghp.run(self.temp, zip_list)
+                        cull_brep = map(self._cull_geo, origin_brep)
+                        Result_Brep = ght.list_to_tree(ghp.run(self._handle_brep, cull_brep))
+                        [Result_Brep.Paths[_].FromString(str(Brep.Paths[_])) for _ in range(len(Brep.Paths))]
+
+                    sc.doc.Views.Redraw()
+                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                    sc.doc = ghdoc
+                    return Result_Brep
                 finally:
                     self.Message = '平切Brep（面）'
 
