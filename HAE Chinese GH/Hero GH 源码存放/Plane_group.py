@@ -14,15 +14,22 @@ import Curve_group
 Result = Curve_group.decryption()
 try:
     if Result is True:
+        """
+            切割 -- primary
+        """
         # 平面旋转
         class RotatePlane(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@平面坐标旋转", "RPP_RotatePlane", """平面旋转以及跟随平面旋转的两个物体，Direction（旋转的轴方向）""", "Scavenger", "Plane")
+                                                                   "RPP-平面坐标旋转", "RPP_RotatePlane", """平面旋转以及跟随平面旋转的两个物体，Direction（旋转的轴方向）""", "Scavenger", "Plane")
                 return instance
 
             def get_ComponentGuid(self):
                 return System.Guid("63f44167-e9c5-40e5-9040-9bb9cccbc6fe")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.primary
 
             def SetUpParam(self, p, name, nickname, description):
                 p.Name = name
@@ -140,12 +147,16 @@ try:
         class Refactoring_Plane(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@重构Plane", "RPP_Refactoring_Plane",
+                                                                   "RPP-重构Plane", "RPP_Refactoring_Plane",
                                                                    """输入代替XY轴的轴向量来重构XY轴平面""", "Scavenger", "Plane")
                 return instance
 
             def get_ComponentGuid(self):
                 return System.Guid("25b06c92-fe12-466e-9ea9-615ee01fc527")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.primary
 
             def SetUpParam(self, p, name, nickname, description):
                 p.Name = name
@@ -278,6 +289,14 @@ try:
                     return Symmetry_Plane, Origin_Point, Origin_XAxis, Origin_YAxis, Origin_ZAxis, New_XAxis, New_YAxis, New_ZAxis
                 else:
                     pass
+
+        """
+            切割 -- secondary
+        """
+
+        """
+            切割 -- tertiary
+        """
 
     else:
         pass

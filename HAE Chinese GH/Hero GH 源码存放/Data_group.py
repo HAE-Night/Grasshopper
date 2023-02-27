@@ -13,6 +13,7 @@ import Rhino.Geometry as rg
 import scriptcontext as sc
 import ghpythonlib.treehelpers as th
 from Grasshopper import DataTree as gd
+import Grasshopper.Kernel as gk
 from Grasshopper.Kernel.Data import GH_Path
 from Grasshopper import DataTree
 import ghpythonlib.treehelpers as ght
@@ -31,7 +32,7 @@ try:
         class TreeData(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@树形数据处理", "RPP_TreeData",
+                                                                   "RPP-树形数据处理", "RPP_TreeData",
                                                                    """树形数据处理的问题，B有多长A就会有多长""",
                                                                    "Scavenger", "Data")
                 return instance
@@ -92,7 +93,7 @@ try:
         class NewRound(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@数据精度提取", "RPP_NewRound", """数据精度的重定义，优化数据（四舍五入）""", "Scavenger", "Data")
+                                                                   "RPP-数据精度提取", "RPP_NewRound", """数据精度的重定义，优化数据（四舍五入）""", "Scavenger", "Data")
                 return instance
 
             def get_ComponentGuid(self):
@@ -219,7 +220,7 @@ try:
         class list_values(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@list下标取值", "RPP_list_values",
+                                                                   "RPP-list下标取值", "RPP_list_values",
                                                                    """列表根据下标取值，取值下标空格间隔""",
                                                                    "Scavenger", "Data")
                 return instance
@@ -274,7 +275,7 @@ try:
         class Tree_Values(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@树形规划取值", "RPP_Tree_Values", """Explode-True 对树形数据拆分 统一路径.
+                                                                   "RPP-树形规划取值", "RPP_Tree_Values", """Explode-True 对树形数据拆分 统一路径.
         Explode-False 取出branch路径的值""", "Scavenger", "Data")
                 return instance
 
@@ -368,7 +369,7 @@ try:
         class List_Cut(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@列表切割", "RPP_List_Cut", """在列表指定下标处切割列表，树形结构输出；
+                                                                   "RPP-列表切割", "RPP_List_Cut", """在列表指定下标处切割列表，树形结构输出；
         （原电池最后一个下标不做参考，已改）""", "Scavenger", "Data")
                 return instance
 
@@ -444,7 +445,7 @@ try:
 
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@数据清洗", "RPP_Data_rinse", """去除空值和空格值""", "Scavenger",
+                                                                   "RPP-数据清洗", "RPP_Data_rinse", """去除空值和空格值""", "Scavenger",
                                                                    "Data")
                 return instance
 
@@ -490,11 +491,11 @@ try:
                 return Datas
 
 
-        # ZiYe数据对比
+        # 数据对比
         class DataComparison(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@数据对比", "RPP_Data Comparison", """Group根据条件分组.""",
+                                                                   "RPP-数据对比", "RPP_Data Comparison", """Group根据条件分组.""",
                                                                    "Scavenger",
                                                                    "Data")
                 return instance
@@ -624,7 +625,7 @@ try:
         class Subscript_Value(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@多下标取值", "RPP_Subscript_Value",
+                                                                   "RPP-多下标取值", "RPP_Subscript_Value",
                                                                    """多下标取值，最多取到六组数据""", "Scavenger", "Data")
                 return instance
 
@@ -718,7 +719,7 @@ try:
         class ListExtremum(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@列表极值", "RPP_ListExtremum", """求一组数据中的极值，{1:最大值，2:最小值，3:平均值，4:求和，5:累乘}""", "Scavenger", "Data")
+                                                                   "RPP-列表极值", "RPP_ListExtremum", """求一组数据中的极值，{1:最大值，2:最小值，3:平均值，4:求和，5:累乘}""", "Scavenger", "Data")
                 return instance
 
             def get_ComponentGuid(self):
@@ -796,7 +797,7 @@ try:
         class PickingFruit(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@树形取值", "RPP_PickingFruit", """取树形数据的分支，输入要取的分支标数""", "Scavenger", "Data")
+                                                                   "RPP-树形取值", "RPP_PickingFruit", """取树形数据的分支，输入要取的分支标数""", "Scavenger", "Data")
                 return instance
 
             def get_ComponentGuid(self):
@@ -923,7 +924,7 @@ try:
         class CompareSize(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@数据比较", "RPP_CompareSize", """数据比较，用于比较长度和面积的取值（几何物体），也可纯数据比较""", "Scavenger", "Data")
+                                                                   "RPP-数据比较", "RPP_CompareSize", """数据比较，用于比较长度和面积的取值（几何物体），也可纯数据比较""", "Scavenger", "Data")
                 return instance
 
             def get_ComponentGuid(self):
@@ -1015,7 +1016,7 @@ try:
         class RandomData(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@随机数据", "RPP_RandomData", """随机数据组""", "Scavenger", "Data")
+                                                                   "RPP-随机数据", "RPP_RandomData", """随机数据组""", "Scavenger", "Data")
                 return instance
 
             def get_ComponentGuid(self):
@@ -1095,7 +1096,7 @@ try:
         class Simplify_Data(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@简化树形数据", "RPP_Simplify_Data", """将所有传进来的树形结构简化至最简状态""", "Scavenger", "Data")
+                                                                   "RPP-简化树形数据", "RPP_Simplify_Data", """将所有传进来的树形结构简化至最简状态""", "Scavenger", "Data")
                 return instance
 
             def get_ComponentGuid(self):
@@ -1175,7 +1176,7 @@ try:
         class TrimTree(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@树形修剪", "RPP_TrimTree", """树形修剪插件，Depth为树形修剪深度""", "Scavenger", "Data")
+                                                                   "RPP-树形修剪", "RPP_TrimTree", """树形修剪插件，Depth为树形修剪深度""", "Scavenger", "Data")
                 return instance
 
             def get_ComponentGuid(self):
@@ -1230,6 +1231,14 @@ try:
             def mes_box(self, info, button, title):
                 return rs.MessageBox(info, button, title)
 
+            def flatten(self, origin_list, result_res):
+                for each in origin_list:
+                    if 'List[object]' in str(type(each)):
+                        self.flatten(each, result_res)
+                    else:
+                        result_res.append(each)
+                return result_res
+
             def _handle_path(self, data):
                 temp_res_list = []
                 count, total = 0, 0
@@ -1276,30 +1285,52 @@ try:
                     Depth = 1 if Depth is None else Depth
                     Result = gd[object]()
                     Data_Tree.SimplifyPaths()
+
+                    temp_data = [list(_) for _ in Data_Tree.Branches]
                     if Depth == 0:
-                        return Data_Tree
-                    self.origin_data = [list(_) for _ in Data_Tree.Branches]
-                    if self.origin_data and len(self.origin_data) > 1:
-                        result_boolean = self._deepest_length(Data_Tree, Depth)
-                        if result_boolean is False:
-                            self.message3("修剪已达最深！")
-
-                        new_depth = Data_Tree.Paths[0].Length - 1 if result_boolean is False or result_boolean == -1 else Depth
-                        depth_cull = ['.CullElement()' for _ in range(new_depth)]
-                        origin_path = self._trim_tree([_ for _ in Data_Tree.Paths], depth_cull)
-                        index_list, new_paths = zip(*self._handle_path(origin_path))
-
-                        trunk_list = map(lambda x: list(chain(*[self.origin_data[_] for _ in x])), index_list)
-                        Result = ght.list_to_tree(trunk_list)
-                        [Result.Paths[_].FromString(str(new_paths[_])) for _ in range(len(Result.Paths))]
-
-                        return Result
-                    elif len(self.origin_data) == 1:
-                        Result = Data_Tree
-                        return Result
+                        Result = [list(chain(*_)) for _ in temp_data]
+                        Result = ght.list_to_tree(Result)
+                        path_list = [_ for _ in Data_Tree.Paths]
+                        [Result.Paths[_].FromString(str(path_list[_])) for _ in range(len(Result.Paths))]
                     else:
-                        self.message2("树形数据为空！")
-                        return Result
+                        self.origin_data = []
+                        for _ in temp_data:
+                            if len(_) == 1 and 'List[object]' in str(type(_[0])):
+                                gh_Geos = [gk.GH_Convert.ToGeometricGoo(g) for g in list(chain(*_[0]))]
+                                ghGroup = gk.Types.GH_GeometryGroup()
+                                ghGroup.Objects.AddRange(gh_Geos)
+                                self.origin_data.append([ghGroup])
+                            else:
+                                self.origin_data.append(self.flatten(_, []))
+
+                        if self.origin_data and len(self.origin_data) > 1:
+                            result_boolean = self._deepest_length(Data_Tree, Depth)
+                            if result_boolean is False:
+                                self.message3("修剪已达最深！")
+
+                            new_depth = Data_Tree.Paths[0].Length - 1 if result_boolean is False or result_boolean == -1 else Depth
+                            depth_cull = ['.CullElement()' for _ in range(new_depth)]
+                            origin_path = self._trim_tree([_ for _ in Data_Tree.Paths], depth_cull)
+                            index_list, new_paths = zip(*self._handle_path(origin_path))
+
+                            trunk_list = map(lambda x: list(chain(*[self.origin_data[_] for _ in x])), index_list)
+                            result_list = []
+                            for _ in trunk_list:
+                                if len(_) == 1 and 'List[object]' in str(type(_[0])):
+                                    gh_Geos = [gk.GH_Convert.ToGeometricGoo(g) for g in list(chain(*_[0]))]
+                                    ghGroup = gk.Types.GH_GeometryGroup()
+                                    ghGroup.Objects.AddRange(gh_Geos)
+                                    result_list.append([ghGroup])
+                                else:
+                                    result_list.append(self.flatten(_, []))
+                            Result = ght.list_to_tree(result_list)
+                            [Result.Paths[_].FromString(str(new_paths[_])) for _ in range(len(Result.Paths))]
+
+                        elif len(self.origin_data) == 1:
+                            Result = Data_Tree
+                        else:
+                            self.message2("树形数据为空！")
+                    return Result
                 finally:
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()

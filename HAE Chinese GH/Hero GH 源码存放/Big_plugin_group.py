@@ -21,12 +21,19 @@ import math
 Result = Curve_group.decryption()
 try:
     if Result is True:
+        """
+            切割 -- primary
+        """
         # 表皮常用信息适应平板
         class NormalInfo(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@平面基础信息", "RPP_PanleInfo", """表皮常用信息适应平板""", "Scavenger", "Big_plug-in")
+                                                                   "RPP-平面基础信息", "RPP_PanleInfo", """表皮常用信息适应平板""", "Scavenger", "Big_plug-in")
                 return instance
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.primary
 
             def get_ComponentGuid(self):
                 return System.Guid("79bbf1e0-d772-44fd-9e8e-fa8b5d26248d")
@@ -181,11 +188,15 @@ try:
         class ChainInfo(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@关联表皮信息存储", "RPP_Chain-Info", """表皮关联信息存储, 关联表皮ID、关联表皮角度(测试阶段)""", "Scavenger", "Big_plug-in")
+                                                                   "RPP-关联表皮信息存储", "RPP_Chain-Info", """表皮关联信息存储, 关联表皮ID、关联表皮角度(测试阶段)""", "Scavenger", "Big_plug-in")
                 return instance
 
             def get_ComponentGuid(self):
                 return System.Guid("9482bc09-2ab9-47c6-8bad-515edc4b833d")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.primary
 
             def SetUpParam(self, p, name, nickname, description):
                 p.Name = name
@@ -374,126 +385,19 @@ try:
                     self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, 'Brep不能为空！')
 
 
-        # 角点强排序
-        class SortBuilt(component):
-            def __new__(cls):
-                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@角点重排序", "RPP_PointSorted", """角点重新排序，不规律的四边角点按一定规律排序""", "Scavenger", "Big_plug-in")
-                return instance
-
-            def get_ComponentGuid(self):
-                return System.Guid("00449ea9-31ef-4dbd-b15c-a37b9aa18d54")
-
-            def SetUpParam(self, p, name, nickname, description):
-                p.Name = name
-                p.NickName = nickname
-                p.Description = description
-                p.Optional = True
-
-            def RegisterInputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_Curve()
-                self.SetUpParam(p, "Curve", "C", "作为参考的折线")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
-                self.Params.Input.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_Brep()
-                self.SetUpParam(p, "Surface", "S", "原始曲面")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
-                self.Params.Input.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Tolerance", "T", "精度（指两点之间的距离）")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
-                self.Params.Input.Add(p)
-
-            def RegisterOutputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_Surface()
-                self.SetUpParam(p, "New_Surface", "S", "重排序的面")
-                self.Params.Output.Add(p)
-
-            def SolveInstance(self, DA):
-                p0 = self.marshal.GetInput(DA, 0)
-                p1 = self.marshal.GetInput(DA, 1)
-                p2 = self.marshal.GetInput(DA, 2)
-                result = self.RunScript(p0, p1, p2)
-
-                if result is not None:
-                    self.marshal.SetOutput(result, DA, 0, True)
-
-            def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAIcSURBVEhL7ZNNaxNRFIZfqB9JZ5yIUdQWLLpy509wVXfiB51OkgZSFNKPMJmGLIy0pSTQQhUVBHXlzxCE1o2GLiwo6KJFLVqoC8GFINWU6j2+d3IJxqF140bIA4c7897DOfeccy86dPiPEdftUpVKUmZm9hhpB3IxC1ePAu4+I+yOKpXiamJijuu6CoKf/N7gelPGx23jEpLAhYM2Mndpn2hC26DdAPot4xJF8vluVSzWpVoVrg3l+y+lWPwitZowybIa8h3t14OLSRvpVw5GxELqsw3vhY3UlvlfAvLdYcA/YdBqGDwIHvHEx7TGpAn+3wv1cvDsUm/2DDC4rIMx6K0jcMPK4hjoZdJFk6SmtTbCnvv+uiqXvzHoYSO34N5tmbwmz1OFH33WsMThzZmtFs0k2S1W9IEz6TJyEwZwaNuqUHhnpAhfx/w3Mjstj8+PvDZSBBvuR92uJK4cMFITU8F7VtBgq3gr2uHeA5mqyNLgWKMnPiwxeHfMVosYLvexgm0L3lqkAg17PWVmsMDhntCabhdv0sNw0KVg8dzx9GnAqzsY1b2+72DgkPZLIHvSQvqpmc11rUXgKffz9E/MLVL8X+H63dyiur5l2u8U3ASvJAc9qoNt8sSrHLA0g3sLu74JBtnLE0/zHaxy3aS9pVUll4sZF0O/ZSEza2NojcmYJLPCJJPA2b88zN9Q8/Ptg9qByEA7dPiHAL8A67X0N4KBVZIAAAAASUVORK5CYII="
-                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
-
-            Tol, F_Cur = None, None
-
-            def point_filter(self, v_point_data):
-                a_list = []
-                b_list = []
-                for _ in range(len(v_point_data)):
-                    if abs(v_point_data[0].Z - v_point_data[_].Z) < self.Tol:
-                        a_list.append(v_point_data[_])
-                    else:
-                        b_list.append(v_point_data[_])
-                return (a_list, b_list)
-
-            def sort_points(self, data):
-                sort_points = []
-                index_point = []
-                for _ in data:
-                    dict_data = ghc.SortAlongCurve(_, self.F_Cur)
-                    sort_points.append(dict_data['points'])
-                    index_point.append(dict_data['indices'])
-                return sort_points, index_point
-
-            def single_point_sort(self, data_of_array):
-                index_list_arary = [_ for _ in range(len(data_of_array))]
-                old_data = [_ for _ in data_of_array]
-                single_array = [_[0].Z for _ in data_of_array]
-                index_single_array = [_ for _ in range(len(single_array))]
-
-                if len(set(single_array)) != 1:
-                    dict_sort = dict(zip(single_array, index_single_array))
-                    single_array.sort()
-                    new_index = [dict_sort[_] for _ in single_array]
-
-                    new_data = [old_data[_] for _ in new_index]
-                    new_data[1].reverse()
-                    new_data_list = list(chain.from_iterable(new_data))
-                    return new_data_list
-
-            def RunScript(self, Curve, Surface, Tolerance):
-                self.Tol = 50 if Tolerance is None else Tolerance
-                if Curve and Surface:
-                    self.F_Cur = Curve
-
-                    point_v_array = map((lambda x: [_.Location for _ in x.Vertices]), Surface)
-                    np_point_list = map(self.point_filter, point_v_array)
-                    new_point_index_list = map(self.sort_points, np_point_list)
-                    new_point_list = []
-                    new_index_list = []
-                    for _ in new_point_index_list:
-                        length = len(_)
-                        new_point_list.append(list(_[:length // 2])[0])
-                        new_index_list.append(list(_[length // 2:])[0])
-
-                    sort_points_list = map(self.single_point_sort, new_point_list)
-
-                    polyline_list = map(lambda x: rg.Polyline(x + [x[0]]), sort_points_list)
-                    New_Surface = map(lambda x: ghc.BoundarySurfaces(x), polyline_list)
-                    return New_Surface
-                else:
-                    pass
-
-
         # 标准矩形单元板
         class StandRectangularElementPlate(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP@RectEle", "RPP@测试矩形单元体数据处理", """标准矩形单元体原数据处理""", "Scavenger", "Big_plug-in")
+                                                                   "RPP-RectEle", "RPP-测试矩形单元体数据处理", """标准矩形单元体原数据处理""", "Scavenger", "Big_plug-in")
                 return instance
 
             def get_ComponentGuid(self):
                 return System.Guid("5ded5190-54e7-4ec2-87c0-e84a81fd8837")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.primary
 
             def SetUpParam(self, p, name, nickname, description):
                 p.Name = name
@@ -895,9 +799,128 @@ try:
                 finally:
                     self.Message = "标准矩形单元体电池模块"
 
+
+        """
+            切割 -- secondary
+        """
+        # 角点强排序
+        class SortBuilt(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP-角点重排序", "RPP_PointSorted",
+                                                                   """角点重新排序，不规律的四边角点按一定规律排序""",
+                                                                   "Scavenger", "Big_plug-in")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("00449ea9-31ef-4dbd-b15c-a37b9aa18d54")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.secondary
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Curve()
+                self.SetUpParam(p, "Curve", "C", "作为参考的折线")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Brep()
+                self.SetUpParam(p, "Surface", "S", "原始曲面")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Number()
+                self.SetUpParam(p, "Tolerance", "T", "精度（指两点之间的距离）")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Surface()
+                self.SetUpParam(p, "New_Surface", "S", "重排序的面")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                p1 = self.marshal.GetInput(DA, 1)
+                p2 = self.marshal.GetInput(DA, 2)
+                result = self.RunScript(p0, p1, p2)
+
+                if result is not None:
+                    self.marshal.SetOutput(result, DA, 0, True)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAIcSURBVEhL7ZNNaxNRFIZfqB9JZ5yIUdQWLLpy509wVXfiB51OkgZSFNKPMJmGLIy0pSTQQhUVBHXlzxCE1o2GLiwo6KJFLVqoC8GFINWU6j2+d3IJxqF140bIA4c7897DOfeccy86dPiPEdftUpVKUmZm9hhpB3IxC1ePAu4+I+yOKpXiamJijuu6CoKf/N7gelPGx23jEpLAhYM2Mndpn2hC26DdAPot4xJF8vluVSzWpVoVrg3l+y+lWPwitZowybIa8h3t14OLSRvpVw5GxELqsw3vhY3UlvlfAvLdYcA/YdBqGDwIHvHEx7TGpAn+3wv1cvDsUm/2DDC4rIMx6K0jcMPK4hjoZdJFk6SmtTbCnvv+uiqXvzHoYSO34N5tmbwmz1OFH33WsMThzZmtFs0k2S1W9IEz6TJyEwZwaNuqUHhnpAhfx/w3Mjstj8+PvDZSBBvuR92uJK4cMFITU8F7VtBgq3gr2uHeA5mqyNLgWKMnPiwxeHfMVosYLvexgm0L3lqkAg17PWVmsMDhntCabhdv0sNw0KVg8dzx9GnAqzsY1b2+72DgkPZLIHvSQvqpmc11rUXgKffz9E/MLVL8X+H63dyiur5l2u8U3ASvJAc9qoNt8sSrHLA0g3sLu74JBtnLE0/zHaxy3aS9pVUll4sZF0O/ZSEza2NojcmYJLPCJJPA2b88zN9Q8/Ptg9qByEA7dPiHAL8A67X0N4KBVZIAAAAASUVORK5CYII="
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            Tol, F_Cur = None, None
+
+            def point_filter(self, v_point_data):
+                a_list = []
+                b_list = []
+                for _ in range(len(v_point_data)):
+                    if abs(v_point_data[0].Z - v_point_data[_].Z) < self.Tol:
+                        a_list.append(v_point_data[_])
+                    else:
+                        b_list.append(v_point_data[_])
+                return (a_list, b_list)
+
+            def sort_points(self, data):
+                sort_points = []
+                index_point = []
+                for _ in data:
+                    dict_data = ghc.SortAlongCurve(_, self.F_Cur)
+                    sort_points.append(dict_data['points'])
+                    index_point.append(dict_data['indices'])
+                return sort_points, index_point
+
+            def single_point_sort(self, data_of_array):
+                index_list_arary = [_ for _ in range(len(data_of_array))]
+                old_data = [_ for _ in data_of_array]
+                single_array = [_[0].Z for _ in data_of_array]
+                index_single_array = [_ for _ in range(len(single_array))]
+
+                if len(set(single_array)) != 1:
+                    dict_sort = dict(zip(single_array, index_single_array))
+                    single_array.sort()
+                    new_index = [dict_sort[_] for _ in single_array]
+
+                    new_data = [old_data[_] for _ in new_index]
+                    new_data[1].reverse()
+                    new_data_list = list(chain.from_iterable(new_data))
+                    return new_data_list
+
+            def RunScript(self, Curve, Surface, Tolerance):
+                self.Tol = 50 if Tolerance is None else Tolerance
+                if Curve and Surface:
+                    self.F_Cur = Curve
+
+                    point_v_array = map((lambda x: [_.Location for _ in x.Vertices]), Surface)
+                    np_point_list = map(self.point_filter, point_v_array)
+                    new_point_index_list = map(self.sort_points, np_point_list)
+                    new_point_list = []
+                    new_index_list = []
+                    for _ in new_point_index_list:
+                        length = len(_)
+                        new_point_list.append(list(_[:length // 2])[0])
+                        new_index_list.append(list(_[length // 2:])[0])
+
+                    sort_points_list = map(self.single_point_sort, new_point_list)
+
+                    polyline_list = map(lambda x: rg.Polyline(x + [x[0]]), sort_points_list)
+                    New_Surface = map(lambda x: ghc.BoundarySurfaces(x), polyline_list)
+                    return New_Surface
+                else:
+                    pass
+
 except:
     pass
-
 import GhPython
 import System
 
