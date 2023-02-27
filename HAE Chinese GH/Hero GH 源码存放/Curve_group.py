@@ -63,11 +63,13 @@ try:
         """
             切割 -- primary
         """
+
+
         # 点向式绘制直线
         class VectorLineTaking(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                   "RPP-PDWL", "RPP_VectorLineTaking", """点向式绘制直线.""", "Scavenger", "Curve")
+                                                                   "RPP-PDWL", "RPP_VectorLineTaking", """点向式绘制直线.""", "Scavenger", "Curve")
                 return instance
 
             def get_ComponentGuid(self):
@@ -136,6 +138,7 @@ try:
                     return Line
                 else:
                     pass
+
 
         # 曲线修剪（简化控制点）
         class CurveTrim_S(component):
@@ -239,6 +242,7 @@ try:
                         self.message2("C端不能为空！")
                 finally:
                     self.Message = '曲线修剪（S）'
+
 
         # 多折线按线段序号偏移
         class OffsetBySerial(component):
@@ -387,6 +391,7 @@ try:
                 except:
                     pass
 
+
         # 偏移多边曲线
         class PlineOffset(component):
             def __new__(cls):
@@ -520,6 +525,7 @@ try:
                 finally:
                     self.Message = '折线段偏移'
 
+
         # 圆弧拾取
         class ArcPick(component):
             def __new__(cls):
@@ -647,6 +653,7 @@ try:
                 finally:
                     self.Message = '圆弧拾取'
 
+
         # 线段点线转换
         class Dotted_Line_Conversion(component):
             def __new__(cls):
@@ -732,6 +739,7 @@ try:
                 else:
                     pass
 
+
         # 合并曲线
         class CurveJoin(component):
             def __new__(cls):
@@ -797,6 +805,7 @@ try:
                     return New_Curve
                 else:
                     return None
+
 
         # 最近点连线
         class PCLINE(component):
@@ -895,9 +904,12 @@ try:
                 finally:
                     self.Message = '最近点连线'
 
+
         """
             切割 -- secondary
         """
+
+
         # 求线长度
         class LineLength(component):
             def __new__(cls):
@@ -952,6 +964,7 @@ try:
                 Length = [format(float(crv.GetLength()), digit) for crv in Curve]
                 # return outputs if you have them; here I try it for you:
                 return Length
+
 
         # 根据线长排序
         class LenghtSort(component):
@@ -1020,6 +1033,7 @@ try:
                     self.message1("运行报错：\n{}".format(str(e)))
                 finally:
                     self.Message = 'HAE 长度排序'
+
 
         # 指定线段 取顶线底线
         class ZLine(component):
@@ -1102,10 +1116,11 @@ try:
                     return Topline, Endline
 
 
-
         """
             切割 -- tertiary
         """
+
+
         # 曲线取值
         class DTS_Get_Vale(component):
             def __new__(cls):
@@ -1235,6 +1250,7 @@ try:
                 else:
                     pass
 
+
         # 曲线筛选
         class FilterCurve(component):
             def __new__(cls):
@@ -1328,6 +1344,7 @@ try:
                         self.message2("曲线列表为空！")
                 finally:
                     self.Message = '筛选曲线（曲率）'
+
 
         # 曲线按照参照平面排序
         class LineSortByXYZ(component):
