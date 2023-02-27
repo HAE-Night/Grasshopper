@@ -17,6 +17,7 @@ import time
 import getpass
 import base64
 
+
 def decryption():
     designer_names = init__.designer_database
     origin_data_list = []
