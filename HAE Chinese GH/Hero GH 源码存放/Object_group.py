@@ -26,6 +26,8 @@ try:
         """
             切割 -- primary
         """
+
+
         # 获取数据详细信息
         class Data_message(component):
             def __new__(cls):
@@ -73,6 +75,7 @@ try:
                 if Objects:
                     Group = Objects.TopologyDescription
                     return Group
+
 
         # 键值对赋值
         class DATAKEY(component):
@@ -160,6 +163,7 @@ try:
                     return
                 else:
                     return
+
 
         # 物件键值对提取
         class Data_KV(component):
@@ -251,9 +255,12 @@ try:
                     Keys, Value = self.NoneKey(Object)
                 return Keys, Value
 
+
         """
             切割 -- secondary
         """
+
+
         # 拾取图层物体
         class PickItems(component):
             def __new__(cls):
@@ -374,6 +381,7 @@ try:
                 else:
                     pass
 
+
         # 提取指定图层的物体
         class ExtractObject(component):
             def __new__(cls):
@@ -460,6 +468,7 @@ try:
                     return Geo
                 else:
                     pass
+
 
         # Rhino文本物体提取
         class PickText(component):
@@ -553,9 +562,12 @@ try:
                 finally:
                     self.Message = 'Rhino物件提取'
 
+
         """
             切割 -- tertiary
         """
+
+
         # 创建图层
         class Add_Layer(component):
             def __new__(cls):
