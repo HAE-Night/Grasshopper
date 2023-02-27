@@ -17,6 +17,8 @@ try:
         """
             切割 -- primary
         """
+
+
         # 区间取值
         class GetSectionValue(component):
             def __new__(cls):
@@ -79,6 +81,7 @@ try:
                 else:
                     self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, '列表数据为空！')
 
+
         # 长度转树形数据
         class LenTree(component):
             def __new__(cls):
@@ -138,6 +141,7 @@ try:
                     return Tree
                 else:
                     self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, '列表数据为空！')
+
 
         # 根据长度得树形数据
         class GetTreeLen(component):
@@ -204,6 +208,7 @@ try:
                     return Result
                 else:
                     self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, '空树无法取值！')
+
 
         # 通过下标取树形数据
         class GetTreeDataByIndex(component):
@@ -284,18 +289,19 @@ try:
                         return ght.list_to_tree(Result)
                 finally:
                     self.Message = '树形数据取值'
+
+
         """
             切割 -- secondary
         """
 
-        """
+        """ 
             切割 -- tertiary
         """
 
 
 except:
     pass
-
 
 import GhPython
 import System
