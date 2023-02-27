@@ -167,13 +167,13 @@ try:
                             for t_index, tip in enumerate(_fail_tips):
                                 full_list = list(chain(*tip))
                                 if bool(full_list):
-                                    self.message1("第{}组数据 切割体{}切割失败！".format(t_index + 1, "，".join([_ + 1 for _ in full_list])))
+                                    self.message1("第{}组数据 切割体{}切割失败！".format(t_index + 1, "，".join([str(int(_) + 1) for _ in full_list])))
                         elif bool(list(chain(*_no_intersect_tips))):
                             Disjoint = ght.list_to_tree(_no_intersect_breps)
                             for t_index, tip in enumerate(_fail_tips):
                                 full_list = list(chain(*tip))
                                 if bool(full_list):
-                                    self.message2("第{}组数据 切割体{}为相交！".format(t_index + 1, "，".join([_ + 1 for _ in full_list])))
+                                    self.message2("第{}组数据 切割体{}为相交！".format(t_index + 1, "，".join([str(int(_) + 1) for _ in full_list])))
 
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
