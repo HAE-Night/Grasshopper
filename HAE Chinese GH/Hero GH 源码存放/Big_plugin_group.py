@@ -24,6 +24,8 @@ try:
         """
             切割 -- primary
         """
+
+
         # 表皮常用信息适应平板
         class NormalInfo(component):
             def __new__(cls):
@@ -803,6 +805,8 @@ try:
         """
             切割 -- secondary
         """
+
+
         # 角点强排序
         class SortBuilt(component):
             def __new__(cls):
