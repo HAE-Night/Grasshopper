@@ -12,6 +12,7 @@ import Rhino.Geometry as rg
 import ghpythonlib.components as ghc
 import Grasshopper.DataTree as gd
 import ghpythonlib.parallel as ghp
+import ghpythonlib.treehelpers as ght
 import copy
 import math
 import Curve_group
