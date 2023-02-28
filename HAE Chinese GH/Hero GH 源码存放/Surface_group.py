@@ -20,6 +20,8 @@ try:
         """
             切割 -- primary
         """
+
+
         # 曲面收边
         class ShrinkSurface(component):
             def __new__(cls):
@@ -95,15 +97,16 @@ try:
                 finally:
                     self.Message = "修剪曲面收边"
 
+
         # Surface面积排序
         class GeometryArea(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                               "Area sort",
-                               "RPP-面积排序",
-                               """根据face的面积进行排序""",
-                               "Scavenger",
-                               "Surface")
+                                                                   "Area sort",
+                                                                   "RPP-面积排序",
+                                                                   """根据face的面积进行排序""",
+                                                                   "Scavenger",
+                                                                   "Surface")
                 return instance
 
             def get_ComponentGuid(self):
@@ -189,6 +192,7 @@ try:
                 finally:
                     self.Message = 'HAE 面积排序'
 
+
         # 计算Surface面积
         class Surface_Area2(component):
             def __new__(cls):
@@ -253,6 +257,7 @@ try:
                 # 计算
                 Area = [format(rs.SurfaceArea(i)[0] / divisor, digit) for i in Breps]
                 return Area
+
 
         # Surface中心面
         class Surface_PLA(component):
@@ -350,6 +355,7 @@ try:
                 finally:
                     self.Message = 'HAE 中心平面'
 
+
         # 曲面或者Brep反转
         class BrepFilp(component):
             def __new__(cls):
@@ -445,9 +451,12 @@ try:
                 finally:
                     self.Message = "Brep反转"
 
+
         """
             切割 -- secondary
         """
+
+
         # 扫出曲面
         class SweepOutFitting(component):
             def __new__(cls):
@@ -506,6 +515,7 @@ try:
                     return '轨道线不能为空！'
                 elif Shape_Curve is None:
                     return '曲线不能为空！'
+
 
         # 曲面挤出（曲线修剪）
         class Curve_Trim_Offset(component):
@@ -635,6 +645,7 @@ try:
                     Objects = Extrusion_Surface if Move is None else self.init_movement(Extrusion_Surface, Move)
                     return Objects
 
+
         # 两曲面间夹角
         class SurfaceAngle(component):
             def __new__(cls):
@@ -722,6 +733,7 @@ try:
                     angle = math.degrees(self.Angle(cpax, cpay))
                     angle2 = 180 - angle
                     return (angle, angle2)
+
 
         # 曲面按照参照平面排序
         class SurfaceSortByXYZ(component):
@@ -831,6 +843,7 @@ try:
                             return Sort_Geo
                 finally:
                     self.Message = '曲面排序'
+
 
         """
             切割 -- tertiary

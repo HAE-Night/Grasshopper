@@ -12,18 +12,20 @@ import Rhino.Geometry as rg
 import ghpythonlib.components as ghc
 import Grasshopper.DataTree as gd
 import ghpythonlib.parallel as ghp
+import ghpythonlib.treehelpers as ght
 import copy
 import math
 import Curve_group
 
 Result = Curve_group.decryption()
 
-
 try:
     if Result is True:
         """
             切割 -- primary
         """
+
+
         # 几何体中心点
         class GeoCenter(component):
             def __new__(cls):

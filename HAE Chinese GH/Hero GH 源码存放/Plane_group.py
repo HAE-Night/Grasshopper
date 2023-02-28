@@ -17,6 +17,8 @@ try:
         """
             切割 -- primary
         """
+
+
         # 平面旋转
         class RotatePlane(component):
             def __new__(cls):
@@ -289,6 +291,7 @@ try:
                     return Symmetry_Plane, Origin_Point, Origin_XAxis, Origin_YAxis, Origin_ZAxis, New_XAxis, New_YAxis, New_ZAxis
                 else:
                     pass
+
 
         """
             切割 -- secondary

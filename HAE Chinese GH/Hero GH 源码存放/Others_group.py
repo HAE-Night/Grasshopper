@@ -32,6 +32,8 @@ try:
         """
             切割 -- primary
         """
+
+
         # 新建视图
         class CreateView(component):
             def __new__(cls):
@@ -118,6 +120,7 @@ try:
                 else:
                     pass
                 return
+
 
         # 字符串处理
         class StrHandle(component):
@@ -215,6 +218,7 @@ try:
                 else:
                     pass
 
+
         # 字符处理2
         class StrHandle_02(component):
             def __new__(cls):
@@ -273,9 +277,12 @@ try:
                 else:
                     pass
 
+
         """
             切割 -- secondary
         """
+
+
         # 百度翻译
         class TranslateByBAIDU(component):
             def __new__(cls):
@@ -380,6 +387,7 @@ try:
                         self.message2("字符不能为空！！！")
                 finally:
                     self.Message = '百度翻译'
+
 
         # 图层重命名
         class LayerRename(component):
@@ -505,6 +513,7 @@ try:
                 finally:
                     self.Message = '图层名称替换'
 
+
         # 获取文件路径
         class ActiveFile(component):
             def __new__(cls):
@@ -586,6 +595,8 @@ try:
                     Time = self.format_time()
                     self.factor = False
                     return RP, GP, Time
+
+
         """
             切割 -- tertiary
         """
