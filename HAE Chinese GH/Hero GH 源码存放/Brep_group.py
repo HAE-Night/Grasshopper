@@ -191,7 +191,8 @@ try:
         class Brep_Union(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-结合", "RPP_Brep_Union", """将多个Brep结合成一个.并消除参考线""",
+                                                                   "RPP-结合", "RPP_Brep_Union",
+                                                                   """将多个Brep结合成一个.并消除参考线""",
                                                                    "Scavenger",
                                                                    "Brep")
                 return instance
@@ -239,22 +240,25 @@ try:
                 o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAANoSURBVEhL3ZRZSFRhFMcNeulBZ0adcsYmxmV2pITqIYiQdlo0AtGWMc1A6aGGJFqnMk2nDYtpWglNarTJzKXGTMpl1NGszFEKbaOINmghLZv0/jvfJWyha01v9cEfzuXe7/y++z/nfH7/x3pccTj0U0O+4ZnTKij2/qXziIzzVCm4rjLDp5YzguJuOQz9LXY1gBE8oDVNXdBj0qAtTSWo7rVquNNUh7yNhSWozcPHSxZBoWY/ep37HhFgJA9wJYhOdSUFoCnBX1CdRn/UxfvbvK78EtRQovKdgkJVDnorcr4BGpcE5XcmB6JxieQHNS+VoOlr7FkhQX2ixOp1FThwxYLesp34UJ6FPhKLv9egkwCVuQ9+C6hLDOQhvwL00UlZsrfndwzFPgFuLhcjb24ICmOluEHxzwBUW1BkTobneAa8F3f5DugwimCeLkfcRCVuU/wD4NpePCvaiqmTonH35Po/B7gosZssaVsmxp0VAbDNG4NgpRYFsaNxf6X4G6D5IDJT4xARGYk3JTuAK7v5pKwmwwKY35fjA3F2kRSli4NxJk4Kg1aFOdFh6EkRw0UA7obd8dKxDQplOFJiY3Dv1EZ0kk3Mqtcl23mIIIDZsjEmFPJwLTRqNfQaFXQk9nxsgYz+SmIdbC9ybEmaD6l8HKIMOmi1Gqjo24hImhebCVxVrjDAQwDTtLEYpdBjTJgWIZSYbWZxzuxQdKeIrANtpx0r6eQyhRLK8AgEyRSQhCggGh0Kt3UNcHkYQCt5bydbMmfIkTtLBgtpvE6FyYZItCfxc2HlOoocnmMZfGLj/Gk4l5mKws1JKNxkxFP7FvRXZgsDWJGvE4RZ1ZMcwMOkYTrsmS3Do1QRaqkGA01U5MYDSFkYg0kTojBIU8u6CjW78bEiC+8v+NCm26lNp0RF8NCu79u0fj9fVL1Oi+78Dfj8N3PQbhQje6acHzYW/2rQLOmLcfvour8bNNayzvggNFDM7qOfAczrF2fNeF5sxgeyxmcAExs6ocvuPSXqr8geGq5hAa5EcfHDVRLcojtHSA+oyPUJASfoui7FVQu8lVmCQjUBync9GQK0rtabu00Gd2u6RlB3TXq3O12X4W2xF3Cuo+/6qvMENVBre9dXY+sYAviyuFev/Glj8O/EcW8Dv275p5ef3xdPJW9bFlB5AgAAAABJRU5ErkJggg=="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
+            # brep结合
             def brepbp(self, Breps):
                 Result = rg.Brep.CreateBooleanUnion(Breps[0], Breps[1])
-                Result[0].MergeCoplanarFaces(Breps[1])
-                return Result[0]
+                Merge_Result = []
+                for Re_ in Result:
+                    Re_.MergeCoplanarFaces(0.02)
+                    Merge_Result.append(Re_)
+                print(Merge_Result)
+                return Merge_Result
 
             def RunScript(self, Breps, PRE):
                 PRE = PRE if PRE else 0.02
-                if Breps.BranchCount > 0:  # 判断执行
-                    breplist = []
-                    for i in range(Breps.BranchCount):
-                        breplist.append([Breps.Branch(i), PRE])  # 参数添加
-                    res = ghp.run(self.brepbp, breplist)
-                    Brep = gd[rg.Brep]()
-                    for i in range(len(res)):
-                        Brep.AddRange([res[i]], ghpath(i))
-                    return Brep
+                if Breps.BranchCount == 0: return
+                if Breps.BranchCount > 0:
+                    breplist = zip([tb for tb in Breps.Branches], [PRE] * Breps.BranchCount)
+                res = ghp.run(self.brepbp, breplist)
+                Brep = ght.list_to_tree(res)
+                # return outputs if you have them; here I try it for you:
+                return Brep
 
 
         # 合并以及封面
@@ -535,7 +539,7 @@ try:
                     self.marshal.SetOutput(result, DA, 0, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAKwSURBVEhL7ZNdSFNhGMeloCLqpotuuogoqjspujCi7iJI/JjiR2kpWkqF0URRpCIrDExpmm7uw5pLcWPHphlmfk4r3dx2tjPd5ubO2ebYXNbEUYqinqfXeC+6yVx6I/iDh/fwPM//fx6ec96IbbYWALCTZdkjAao/Cp37cXrzQKYHWvt1Yzm8DrhZ8KgKpzcOMj7MLv8srFAOa6MyyyCW74A7TyUfcHljIPNI96S74Il8ZDGtcQrO3ZNBmaA56PO6StXtyvOovhu3hs+q2Gij1cVyC0SjqZNqDGybzj3ipu0kVzQIqUW1i13KhjO4PTyQ+XFFn6krTWBYjqlzQm49CdQ4rdHZp8hLd18uny0gILuqe+WHz3wRS9bPwjfmxAuVfjTjjQsSJS4obNDOTH/1dSsGbO5kkRViay2Qwn0+7WQYQiBVVsrl8lT0h+3B8rWhaUd6qUIfSJF6IK52DCpUemo2ODXwWKF3xfFtEM+3QhlhNM3Pz/UU85rcyWIH5D6s+c6yc4ewxdoQREtrIk8DmdIJaB+yjkzQ9OtbYm0oXsTAlTozvP1stXi9nsb8Rmom8no5XH6gApXaOItWehRbrI3dQl0oKRd1qTUU/5PZqc8UGyFWyECWULdE2uieYbOjN1tMQrzEA3kyM/AEEiEyT0Ar2ost/g0SnJZ2aAeThDaIEzqBK9VMBwLeTsXAmINTTQIHfZe8es281sLcR73HsGz9LIb81/J5xO9917ynfKGgv/sZYZjk1I3DalS2mRYCfk8Obg8fNNVBuaKlUkZ0KplJ7+Dtem2QI3ZBusQKzf2js+xSKDqslfwN09DHmIxq9UqC1A83JAZo6SNl6OXpKP7/9v5Jc4P4amLJKyhqMrAmq52Hpt6BS5sDMtxXlJd1avzLu5PoeRdOb7OliIj4BUsSrwSajTfFAAAAAElFTkSuQmCC"
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAICSURBVEhLYxj+4N/HJ8IvLm0Uv3tpGVb8+cUe8f///7NClRMPgJrYTq90mHd6nsT7w9MFPx9Cw4enC3w+NJX/67GZwp/PL1G7dW1foT1UK3Hgyo40j2tLef8fnsjw/9Akhv+HkfAhoNjJ6Qz/j8zg/H9iGsP/C7MZ/p9YpHcGqpU4cGqVa8S5uWz/909gwMAnpzP9Xz9Rfe20aQm2GyfIHwVZcGSO3DWoVuLAmdUeoWfnsmO14Owc1v/zpwQlgNQtm2jden0hw/+jcxQugTUSC/BZcGQyw//t/YLP10zSXrJzAt/n06DgoqYF+/qBLp7C8P/cLEicHJtKAwtAhp6Zzfz/KNA3x4CWUdUCkIFbJ8leXtpvVrp9osjDszOpbMHZucBInh4TDVK3fLJjw41FVI7k49MY/2+cIHNs0QTb5K0TJW6fo7YPQHFwHBgHp2axgiOb6nEAT0XADEaTVATKB9v6BZ6unqC1iCb5AJSTF04OiAepW0KLnAwqi9ZN1lg/c2ai/SZgWXQRXBaRaAG+wm4/KKMBU9KhaTzIkUxaYXdxZ6rntSW84KIZFz4CjOCDQPriHGCqWqB9GqqVOHDr3z/20yvsFp2ZL/X58AyRH4emC2PFR2eK/ji/ROXu9d3ZDlCtpIEvL69IPLm8Xvb2qeVY8dvbO2T/AR0DVT7sAAMDAMIBR1n7It7KAAAAAElFTkSuQmCC"
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
