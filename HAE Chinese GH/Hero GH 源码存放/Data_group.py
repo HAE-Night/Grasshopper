@@ -24,6 +24,7 @@ from decimal import Decimal as dd
 import re
 import random
 import Curve_group
+from operator import *
 
 Result = Curve_group.decryption()
 try:
