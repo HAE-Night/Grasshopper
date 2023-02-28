@@ -905,6 +905,102 @@ try:
         """
             切割 -- tertiary
         """
+        # RPP_数据结构对比
+        class MyComponent(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP_数据结构对比", "RPP_Data structure",
+                                                                   """对两组数据进行对比，一样则输出True，反之False。\n注：此插件仅对数据结构进行比较，与数据内容无关""",
+                                                                   "Scavenger", "Data")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("344e81f6-d3bc-4a07-a4a6-e9faccaa9e48")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.tertiary
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = GhPython.Assemblies.Param_GenericObject()
+                self.SetUpParam(p, "DataA", "A", "第一组对比数据")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+                self.Params.Input.Add(p)
+
+                p = GhPython.Assemblies.Param_GenericObject()
+                self.SetUpParam(p, "DataB", "B", "第二组对比数据")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Boolean()
+                self.SetUpParam(p, "verdict", "V", "对比结果")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                p1 = self.marshal.GetInput(DA, 1)
+                result = self.RunScript(p0, p1)
+
+                if result is not None:
+                    self.marshal.SetOutput(result, DA, 0, True)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAO2SURBVEhL7ZRrTFJhGICPOu1i2rSiskWFt+wqlpQKpYKoEKLWIqYdJPBS5CXCLlLaxVbNwpVgqCV0k1HL5nJmtbJpNQubmyvtZssf/UtXrbVam2/fJ2dpqdhW/+rZHs45471857sc4j9/Dfr8+TMPFBWdft7znlFf3+OFbWnp8erv759AhfwZa9dKwldx2MBhh38KWxHai126dElvwc7tzwDAiwobFTekuyMjBVuFsqQAeHnJCV5ZnKH7ijPUFBKgSs8A9BZBKMYhU5CejvTx8Q0LWcKAjeK5QCYwQJbIgNiImVC4Yxtu4ItiHOJBXR0RtD4xAR62tLY137zb1HzjTtP923ebet90mdEUjadiRgVPg0NoNNpiVigLovjrOllsoY3FFthWoOtCZlQrM5T7NITF7VoVFdtlMVXqqJRBeDweXSwW37JarTH4mcuNOadSqQz+AQEPBAJBY3d393RPz2l+CVE+8MjkArYqV7BV2m1D921VbvC4xg12kZPh0P6jLweKDuWgVjsnmseHAq32vFqtnrocjZSzOhLiBcKvJEl+a29vT0RhM8KXzQatYhLskXsMN8MDRBwv0B0+8sJe9RfiBMKbG8m0NxKJRJ2UnAxyRTpIU8jXHR0dmWiO3RBBQj4fTFUXX1eUVXdWlJ0ZVF/dWXpE/9SoN7x9Zms6Q5X8GZlcnpGUvA6P+p1SmW6rq6tTCEViECUmf6m1WsNQCJ0bGQ1b8oofkOm7G0nFEDdtb7xWe7kC7SZve7XhuKCC88Ii2N8CgxaAXq8/qdFogtvbHqbFxAmgpOR4BdoHtOiVs6B673gwa90H3TcRdqS4QnZWJt6us6l6w5iEf3j8uCfxQhHYWlulwUzmZ4av/wd+bDw0NDRkowbT+exZUHOQgJoiJ3TI7FqKnWB3CgGZcjlu4D9QbQTwYSIMBoPCbDbX431tNBrz9hYW2qwWixGvAfo7kBMeAeq8go85qvy+HJXG7hZN39as3L5bVy68QHHOuM5IjHnQ3N1dFyWJRHDadLX2mO6sseSY6Ye6ExeM+QUnjoawpZuXc1JVLM4Glf5kqRQ1dKHSCbw4+DRixw25xyMfeJ442YfJCqZDboo35EqnQN4Q8bM6lQZaJR32ZNJBljAD8nOz8ZT5odwB8Cf3x3dnJLnxyjXSNf7QcoqAe3pk2ShWElCWg9ckDTcIQbm/R5pSycFroJAp7JKjmypNhXPlOtxgDpU+NqXl5YHN16++QklZSMlYovmPpFJ/H2o3/VMQxHcjpQfzJyKagQAAAABJRU5ErkJggg=="
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def __init__(self):
+                pass
+
+            def message1(self, msg1):  # 报错红
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
+
+            def message2(self, msg2):  # 警告黄
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
+
+            def message3(self, msg3):  # 提示白
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
+
+            def mes_box(self, info, button, title):
+                return rs.MessageBox(info, button, title)
+
+            # 树形数据取信息
+            def Lindex(self, Tree_):
+                a = [Tree_.Paths]
+                b = [len(Tree_.Branches[i]) for i in range(Tree_.BranchCount)]
+                c = [Tree_.BranchCount]
+                return ght.list_to_tree([a, b, c])
+
+            # 结构数据对比
+            def Compare(self, x_tree, y_tree):
+                XData = x_tree.Branches
+                YData = y_tree.Branches
+                BOOLLIST = []
+                if x_tree.BranchCount == y_tree.BranchCount:
+                    for i_ in range(x_tree.BranchCount):
+                        xl = [x_ for x_ in XData[i_]]
+                        yl = [y_ for y_ in YData[i_]]
+                        TLB = eq(xl, yl)
+                        BOOLLIST.append(TLB)
+                else:
+                    BOOLLIST.append(False)
+                return all(BOOLLIST)
+
+            def RunScript(self, DataTree_A, DataTree_B):
+                try:
+                    Data_ = map(self.Lindex, [DataTree_A, DataTree_B])
+                    Boolean_tree = self.Compare(Data_[0], Data_[1])
+                    return Boolean_tree
+                finally:
+                    self.Message = 'HAE 结构对比'
+
+
         # 数据清洗
         class Data_rinse(component):
 
@@ -951,13 +1047,20 @@ try:
 
             def Data_cut(self, datalist):
                 one = [da for da in datalist if da and " " not in da]
-                if one:
-                    return one
+                return one
 
             def RunScript(self, Data):
-                Data_tree = [data_ for data_ in Data.Branches if data_]
-                Datas = ghp.run(self.Data_cut, Data_tree)
-                return ght.list_to_tree(Datas)
+                tree_Data = [data_ for data_ in Data.Branches]
+                tree_path = [path_ for path_ in Data.Paths]
+
+                Datas = ghp.run(self.Data_cut, tree_Data)
+                New_Tree = gd[object]()
+                for tr_ in range(Data.BranchCount):
+                    if Datas[tr_]:
+                        New_Tree.AddRange(Datas[tr_], tree_path[tr_])
+                    else:
+                        continue
+                return New_Tree
 
 
         # 数据对比
