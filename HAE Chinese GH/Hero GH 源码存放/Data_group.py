@@ -929,12 +929,12 @@ try:
                 p.Optional = True
 
             def RegisterInputParams(self, pManager):
-                p = GhPython.Assemblies.Param_GenericObject()
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
                 self.SetUpParam(p, "DataA", "A", "第一组对比数据")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
-                p = GhPython.Assemblies.Param_GenericObject()
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
                 self.SetUpParam(p, "DataB", "B", "第二组对比数据")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
