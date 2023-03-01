@@ -26,6 +26,7 @@ import random
 import Curve_group
 from operator import *
 
+
 Result = Curve_group.decryption()
 try:
     if Result is True:
