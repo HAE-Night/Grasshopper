@@ -258,7 +258,7 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Brep()
-                self.SetUpParam(p, "Brep", "Brep", "要显示方向的面或者多重曲面")
+                self.SetUpParam(p, "Brep", "B", "要显示方向的面或者多重曲面")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
