@@ -24,8 +24,6 @@ try:
         """
             切割 -- primary
         """
-
-
         # 几何体中心点
         class GeoCenter(component):
             def __new__(cls):
@@ -77,16 +75,17 @@ try:
 
             # 求边界框的中心点
             def center_box(self, Box):
+                if not Box: return
                 type_str = str(type(Box))
+                # 群组物体判断
                 if 'List[object]' in type_str:
-                    bbox = rg.BoundingBox.Empty
+                    bbox = rg.BoundingBox.Empty  # 获取边界框
                     for brep in Box:
                         bbox.Union(brep.GetBoundingBox(rg.Plane.WorldXY))  # 获取几何边界
                     center = bbox.Center
                 else:
-                    center = Box.GetBoundingBox(True).Center if "Box" and "Plane" not in type_str \
-                        else Box.Origin if "Plane" in type_str else Box.Center
-
+                    center = Box.GetBoundingBox(
+                        True).Center if "Box" and "Plane" not in type_str else Box.Origin if "Plane" in type_str else Box.Center
                 return center
 
             def GeoCenter(self, Geo):
@@ -95,12 +94,21 @@ try:
 
             def RunScript(self, Geometry):
                 try:
+                    # 树形取值、路径
                     Geolist = [list(Branch) for Branch in Geometry.Branches]
-                    Cenpt = ght.list_to_tree(ghp.run(self.GeoCenter, Geolist))
-                    return Cenpt
+                    tree_path = [path_ for path_ in Geometry.Paths]
+                    # 主方法运行
+                    Cenpt = ghp.run(self.GeoCenter, Geolist)
+                    # 数据回填
+                    New_Tree = gd[object]()
+                    for tr_ in range(Geometry.BranchCount):
+                        if Cenpt[tr_]:
+                            New_Tree.AddRange(Cenpt[tr_], tree_path[tr_])
+                        else:
+                            continue
+                    return New_Tree
                 finally:
                     self.Message = 'HAE 中心点'
-
 
         # 几何排序
         class Value_And_Sort(component):
@@ -258,8 +266,6 @@ try:
         """
             切割 -- secondary
         """
-
-
         # 分解几何物体
         class DestructionGeometry(component):
             def __new__(cls):
