@@ -1047,12 +1047,20 @@ try:
                 o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAGpSURBVEhL7dIxSAJhFAdwHYSSC3ELbfOGSAfdDAfFQUKhJbEbWhLEwaDFJg2kQRwc6xzEa3VqklYlEKHpBEXEEAXDDEflhtNe3/U9ELfsbqp+cNzd/717H3z36f79Hkaj8SiXyz2FQqFrjDRjiEQit51OB4bDIbjd7ivMNbGXyWTqQPT7ffD7/VWSbdGSevuCIIyU4ZVKRXa5XHck26Yl9ezlcvm11WpBNBrlyfsBjbXhSSaT79PpFMxmM4eZNkwm0wnZDkn5mYFAoI+xNhwOx0WtVlO2/Eu9XpdYlj3HsjrkdGTb7TaOXmk0GkAWPiMtetq5OT3Hcffj8RhHrpMkCeLxuET6zLR9M0wikXicz+c4bp2yaLFYBK/XG8b+jeym0+lnnLVmuVzCaDSCUqn0YbfbT7H/+ywWi5Pn+Rect0aWZRgMBlAoFCSbzXaMn2zGarWGRVHEkSvKfvd6Pcjn828Mw3iw/WecTudlt9vF0QCz2QyazSakUimRlFnapZLP58tOJhNYLBZQrVYhFos9kHiHVjUSDAYF5aSQ+w1GmjOQ65A+/k063SdJvTL9DOGD2gAAAABJRU5ErkJggg=="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
+            def fit_main(self, data):
+                if 'str' in str(type(data)):
+                    if " " != data:
+                        return data
+                elif data:
+                    return data
+
             def Data_cut(self, datalist):
-                one = [da for da in datalist if da and " " not in da]
-                return one
+                # filter 过滤空值
+                dalist = list(filter(self.fit_main, datalist))
+                return dalist
 
             def RunScript(self, Data):
-                tree_Data = [data_ for data_ in Data.Branches]
+                tree_Data = [list(data_) for data_ in Data.Branches]
                 tree_path = [path_ for path_ in Data.Paths]
 
                 Datas = ghp.run(self.Data_cut, tree_Data)
