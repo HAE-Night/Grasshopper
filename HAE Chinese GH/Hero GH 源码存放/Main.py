@@ -6,6 +6,6 @@
 import clr
 
 clr.CompileModules(
-    "Tradition v4.0.ghpy", "init__.py", "Eto_tip.py", "Curve_group.py", "Surface_group.py", "Plane_group.py", "Vector_group.py", "Data_group.py",
+    "Tradition(test v3.19).ghpy", "init__.py", "Eto_tip.py", "Curve_group.py", "Surface_group.py", "Plane_group.py", "Vector_group.py", "Data_group.py",
     "Brep_group.py", "Geometry_group.py", "Object_group.py", "Others_group.py", "Math_group.py", "Big_plugin_group.py", "Display_group.py"
 )
