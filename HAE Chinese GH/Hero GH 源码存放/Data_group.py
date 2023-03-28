@@ -214,7 +214,7 @@ try:
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
                 self.SetUpParam(p, "List", "L", "需要切割的列表")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
@@ -239,34 +239,39 @@ try:
                 o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAATRSURBVEhLlZQNUFRVGIaFBKUgwdT4S3SbiRUFTBQMCIap0WCMMZB1VsHAAB3QQYhaoJkoGAVWfkQUkpV1RcFNVEBWkVRIWDZ+lASWAM0JJQJjJARRcZb79t3dW9M4TCzvzDP33Hu/93v3nD3nzplOAPhjAz2iP+qLkx8osveyDDWcSv9LfeOQRqPZxpXpL4ZhTAjbw4cPf5iQkLCBxu/frzl2sy/uHXTv5eEXlkhLDEvCMMVMHeNs+qutrW2dQCBoNDc3h6+vLyjA8W5RtLjzs0VQCs10BL4C9bcb2Xezn0F6enp1UFAQ7Ozs4OXlxTbx7i6KSu8MX4LG7QsIcyi3GKMzRRvgxNn0V19fn4iMVd7e3lNubm5sE48eKc3gpQB16kfsu/c42+xERisPDw84OzuzTTIHao93NG2dD9U2My3KwLno3u/LaBjmC84yO1FTW09PTzg6OrIBkt+vFjb/xK79dgstDQITmsFGDe2wIM6ivwYHB18bHh7e5u7uDj5/BfNkfLz8dtvP7Yey8pGTdVRLduYRlBSfeabRTEZwNv2VkZFxnM/nw9jYGIaGhli8eBFzorSCOSCrwzeF1Vq+yq+C/GoHOzs/zqa/aJuKy8rKhktKSvpLS0v7S04X99cqb42kFlxEakGFlq+PnMeZyy1swLucbXYi4+vEPFpjI2JBU/u9S2JpDRdQieSj5ThRfuMp1cQSAkJIrCc+YJgJa67N9KKGFgSPu2XDbPqGHv96UHYNYtlVLWlFVyC71Do5xjDXRhlGwV4fM0wz7apy8m7mrNOLCiwrKir20598lnbSueDg4NY9++I0foGf4uOgUPgLQrGJroEhu7EzPhWhcSladiVm4MsD+dgXG98VEBDwvVAovBAREfFDeHh4CvU059prA0wlEkksew5cXFzg5uYKhxUOWMEnHAga29vzsWw5D7bW1rC1YbGisRWsLS3x1tKlcKC6lStXgsfjwc/PDxMTE2u59jqNj4+/2dTUtCctLc1FoagMuHipJq7murJKfr66kEVxpbZS8WNzV57iNjLPtyDzXAvEZ1twsrYH1+uVsry8vDVyuXxHTEzMVpVKlUXL7EXM49rPLCq2pnUXX/gNkLZrIGPpAMp62cPN5OwM3ZFrZGR0x8DAYGT16tXDFFZEz5dw9plFxckPhwZaK0/JUFZUiDKpBGePf4cq+WnmxbMnFyIiI5GUlIRIulI56Lv2gpbeU+fWQxQgHKqX53WELoQqwACqLXPR+MkctEe/jUf3e1JpGklU4zoyMiIxMTGBj48Pe2b8OfvMomLHB5cL4ruil6NRaKr9yiq3muBu0noM9dwK5mrmhYWFVdMQOTk5fXRvxz7XS1S8duC6NFEXYKb7hAteRW+iK0bvd+ym92/k5ubKqBRRUVHsrw/TOfXUPwHqaN6/AQ00g444JzCTY+JC6cl8U1NThISETFFtIWHDWfUTGdYMXpOKXg5oj3XC89FB2YKFi8eoDKtWrZqysLDotbe3v1dXVxeqc88g2g2GFLCpv6YgUR2xhP5gI6gE81G/eQ5ady3DxKOB2wezD00mJycjPj4eIpEI2dnZUKvVn3Mt/l9cQNrzP+887En3R6vIHTcTvdCdsgGDRZF4OjJwjN6vI9z/Ax00ZuHfi+JXnno5lNAAAAAASUVORK5CYII="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
-            def ListToTree(self, List, index):
-                DataTree = gd[object]()
-                for i in range(List.BranchCount):
-                    list = List.Branch(i)
-                    if len(index) == 1:
-                        data = list[0:index[0]]
-                        data2 = list[index[0]:]
-                        DataTree.AddRange(data, GH_Path(i, 0))
-                        DataTree.AddRange(data2, GH_Path(i, 1))
-                    else:
-                        for j in range(len(index)):
-                            if j == 0:
-                                data = list[0:index[j]]
-                                DataTree.AddRange(data, GH_Path(i, j))
-                            elif j == len(index) - 1:
-                                data = list[index[j - 1]:index[j]]
-                                data2 = list[index[j]:]
-                                DataTree.AddRange(data, GH_Path(i, j))
-                                DataTree.AddRange(data2, GH_Path(i, j + 1))
-                            else:
-                                data = list[index[j - 1]:index[j]]
-                                DataTree.AddRange(data, GH_Path(i, j))
-                return DataTree
+            def message1(self, msg1):  # 报错红
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
 
-            def RunScript(self, List, Index):
-                if List:
-                    DataTree = self.ListToTree(List, Index)
-                    return DataTree
+            def message2(self, msg2):  # 警告黄
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
+
+            def message3(self, msg3):  # 提示白
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
+
+            def RunScript(self, List_, Index):
+                try:
+                    # 排除参数错误的情况
+                    if not List_: return gd[object]()
+                    if len(Index) == 0:
+                        self.message2("切割下标未赋值")
+                        return gd[object]()
+                    if max(Index) > len(List_):
+                        self.message2("下标值超出列表长度")
+                        return gd[object]()
+
+                    # 增添首尾下标
+                    if Index[0] != 0: Index.insert(0, 0)
+                    if Index[-1] != len(List_): Index.append(len(List_))
+
+                    Cut_List_ = []
+                    # 下标分组
+                    result_index_ = list(zip(Index[:-1], Index[1:]))
+                    # 切割
+                    for start, end in result_index_:
+                        Cut_List_.extend([List_[start:end]])
+                    return Cut_List_
+                finally:
+                    self.Message = 'HAE List切割'
 
 
         # 求列表极值
@@ -1516,6 +1521,70 @@ try:
                                 return Result
                 finally:
                     self.Message = "随机数据"
+
+
+        # Python列表数据转
+        class Data_py_listdata(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP_PY列表输出", "RPP pydata",
+                                                                   """将Python的list类型转为正常数据""", "Scavenger",
+                                                                   "Data")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("d04813b1-38e1-4c2c-99b7-ce12f95477a2")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.tertiary
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "PyData", "P", "Python列表格式数据")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "GhData", "D", "GH数据格式.")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                result = self.RunScript(p0)
+
+                if result is not None:
+                    self.marshal.SetOutput(result, DA, 0, True)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAJmSURBVEhL7dRNTxNBHAbwrRAb1LS7tWVLFQzUk1XTgzER2K0t3aYkxoPSaEzT3SqiFKz2YgjGNCrFNzBq9GBI5OTF7+DVL2DUlgZMFJWW12h96aXrMzJaIt0N5Uh8kl925r+TmZ3N7DL/U1VUhjHMc9zevNXaQEu6ORN4b+mWcm7Zk3FHvFmXIr7dJ3veuSPt6f1Jj1pLh5WDBWrzLPsjx7IjtKQbRcjI53wzRUXMFKPihCqL6dJpcaqI63y0/ZONDiuHLvAN7tCSbsLS5609/o9Npw693qUI6YIipsd72iabFOFVYyj0vIYOK4cu8BVu09Kag10sYBH9na9/AdWAyRdlIX2fFipnwyxQyHFcipbWmCoXmGPZsZzJ5FyCGbO5hdTpEI2oBhzNL4rw5iEtVA4mqpnl2GyB437Osuz3Bchz3NKcpW4HHaIZGadIFrP3aFc7pe11jpLZ2FwyGZ2Eaja20Fu6CUuLzV2BkoV2K6fX5g3E7cHsWb5jYqVYve9DP++d1nPB1prps4lTF3lpOsZ7X4aY0OoPDTdcA/ZgasDRefWS3T+caJCG+nnf3YRdSsXtHbf6eO8IaZN7GDtaSZz3j8bqDw8mmeQmOu2qbIE22AwcKSDb6JWEh5X9qnMNYkC+hSE4AUlQ4DxFxuwGkj3gWm4yTjiw3NTOFUgA+a/shBdwBELwFKLwBB7AMRiGmxCBMXgMR0EzN2AQrL97DPMIyEkSgEzSBT7ohmfQCUEYB7I7D1wGzZAn/LN9kl5oBAeQ33gYyGsgOyKTkdd4HVrhJByE47CukJNhWG7+zb/9DRWG+QXBbOVgbgxyZQAAAABJRU5ErkJggg=="
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def __init__(self):
+                pass
+
+            def message1(self, msg1):  # 报错红
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
+
+            def message2(self, msg2):  # 警告黄
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
+
+            def message3(self, msg3):  # 提示白
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
+
+            def RunScript(self, Data):
+                try:
+                    tree_Data = [list(data_) for data_ in Data.Branches]
+                    return ght.list_to_tree(tree_Data)
+                finally:
+                    self.Message = 'PyList转Tree'
 
 
     else:
