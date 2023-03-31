@@ -26,13 +26,14 @@ import random
 import Curve_group
 from operator import *
 
-
 Result = Curve_group.decryption()
 try:
     if Result is True:
         """
             切割 -- primary
         """
+
+
         # 列表取值
         class list_values(component):
             def __new__(cls):
@@ -278,7 +279,9 @@ try:
         class ListExtremum(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-列表极值", "RPP_ListExtremum", """求一组数据中的极值，{1:最大值，2:最小值，3:平均值，4:求和，5:累乘}""", "Scavenger", "Data")
+                                                                   "RPP-列表极值", "RPP_ListExtremum",
+                                                                   """求一组数据中的极值，{1:最大值，2:最小值，3:平均值，4:求和，5:累乘}""",
+                                                                   "Scavenger", "Data")
                 return instance
 
             def get_ComponentGuid(self):
@@ -356,14 +359,114 @@ try:
                     return command
 
 
+        # 列表数据删除
+        class Data_Delete(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP-删除列表首尾值", "RPP-删除列表首尾值", """删除列表第一个值
+        删除列表最后值
+        删除列表第一个和最后的值
+        列表的第一个值
+        列表的最后值
+        """, "Scavenger", "Data")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("dc9ce766-2175-4eda-9b3a-20ef2ccb870d")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.primary
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "List", "L", "需要操作的列表")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Cull_First", "CF", "删除列表第一个值之后")
+                self.Params.Output.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Cull_Last", "CL", "删除列表最后一个值之后")
+                self.Params.Output.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Cull_First_Last", "FL", "删除列表第一个和最后一个值")
+                self.Params.Output.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Frist", "F", "删除的第一个值")
+                self.Params.Output.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Last", "L", "删除的最后一个值")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                result = self.RunScript(p0)
+
+                if result is not None:
+                    if not hasattr(result, '__getitem__'):
+                        self.marshal.SetOutput(result, DA, 0, True)
+                    else:
+                        self.marshal.SetOutput(result[0], DA, 0, True)
+                        self.marshal.SetOutput(result[1], DA, 1, True)
+                        self.marshal.SetOutput(result[2], DA, 2, True)
+                        self.marshal.SetOutput(result[3], DA, 3, True)
+                        self.marshal.SetOutput(result[4], DA, 4, True)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAKdSURBVEhL3ZTLTxNhFMXPtKUtBR+VhxCsPGM0Pha6cGVM/B+MBFyLMQZFwK17lFjb8C+oK4MrWeoCE2KMcUdMCBKRIAYBY+xQTa7nlA4ZaEcQogtv8ktmvpl7zp17v/nwX0bFFuwqbAv2kR2bKHGDoD+Ka4fJjk22Y3CU1JC/ZnCS7M7AH7rfxD8xaCBxsjnCJFLE0cLmCDSoJ1fDsFtAvtfBaPOaSYzgDhAdcPCwD1gddDDdDZzjciUpMSkY+PFiqKPNJlpgX0/BRqrh9oUwfgho4uckB4DnmUrk5tthL+ph/Q5mmKsCSkwCDW7HorZyApanwffjNKmiCfCSjGcpvtQGWyYfU7CbwA/mthBtZ7VrPQINHl/usgfVsG/HaEBWjtAkgdwIxRf5ZUtkgeLpGNweB2PMbSVJUmrgD90LTs86HVg2AXe5gwZsx3Ir7EszbJHC802w+1G414HXLPsMczgm7CEa/HoEGgiZXKNANo6cJ/yZwguNsAzF9YyKZ/luO6kjhU3gj20ZZGLISfgThecPwuY42HQFcqz+Fas/zXdTpIqUROAMfq6u2iW2SG2YaygK13GotbAPB2DT+2HDYbi9wAS3dBtz/8zgUXeXDcdgs6xWwjM1rDoCNx1GbmovDbgB3iVgd53CHJ4yN7hFfrwYjEZtiqKz5H1yrVq1S225F4I7GadBFPY2AuPWzTM3eMjluML2PKuCTbJaCWq3aKDqudoyBLhvQrAnfI9/+yxzArepfg6d+TqWde4UuABc7GeiqusBxopbUbslpZ7TcPQGfzCJnwc6uV72R1N4JjoxPWpJI5GxKhNqgfqsYQpda03PJF72qPBCJuVIEJnr09Vf/xB1rTU90zuB4r8LJeiTxYbhFUNr3vOiOPALgJK/DiPWeX8AAAAASUVORK5CYII="
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def __init__(self):
+                pass
+
+            def message1(self, msg1):  # 报错红
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
+
+            def message2(self, msg2):  # 警告黄
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
+
+            def message3(self, msg3):  # 提示白
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
+
+            def mes_box(self, info, button, title):
+                return rs.MessageBox(info, button, title)
+
+            def RunScript(self, List):
+                try:
+                    if not List:
+                        self.message2('请输入List参数')
+                        return gd[list](), gd[list](), gd[list](), gd[list](), gd[list]()
+                    return List[1:], List[:-1], List[1:-1], List[0], List[-1]
+                finally:
+                    # 预知代码Bug之前（抛异常）可用
+                    # self.mes_box("开发组测试", 1 | 32, "标题")
+                    self.Message = 'HAE开发组'
+
+
         """
             切割 -- secondary
         """
+
+
         # 树形取值
         class PickingFruit(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-树形取值", "RPP_PickingFruit", """取树形数据的分支，输入要取的分支标数""", "Scavenger", "Data")
+                                                                   "RPP-树形取值", "RPP_PickingFruit",
+                                                                   """取树形数据的分支，输入要取的分支标数""", "Scavenger", "Data")
                 return instance
 
             def get_ComponentGuid(self):
@@ -484,7 +587,8 @@ try:
                 available_trees = [_ for _ in origin_data if _.BranchCount != 0]
 
                 single_data = self.Picking_Fruit(available_trees, Index)
-                result_list = single_data if len(single_data) == len(origin_data) else single_data + [None] * abs(len(single_data) - len(origin_data))
+                result_list = single_data if len(single_data) == len(origin_data) else single_data + [None] * abs(
+                    len(single_data) - len(origin_data))
 
                 R1, R2, R3, R4, R5, R6 = result_list
                 return R1, R2, R3, R4, R5, R6
@@ -587,6 +691,7 @@ try:
 
                     return Objects
 
+
         # 树形数据处理
         class TreeData(component):
             def __new__(cls):
@@ -656,7 +761,8 @@ try:
         class Simplify_Data(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-简化树形数据", "RPP_Simplify_Data", """将所有传进来的树形结构简化至最简状态""", "Scavenger", "Data")
+                                                                   "RPP-简化树形数据", "RPP_Simplify_Data",
+                                                                   """将所有传进来的树形结构简化至最简状态""", "Scavenger", "Data")
                 return instance
 
             def get_ComponentGuid(self):
@@ -740,7 +846,8 @@ try:
         class TrimTree(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-树形修剪", "RPP_TrimTree", """树形修剪插件，Depth为树形修剪深度""", "Scavenger", "Data")
+                                                                   "RPP-树形修剪", "RPP_TrimTree",
+                                                                   """树形修剪插件，Depth为树形修剪深度""", "Scavenger", "Data")
                 return instance
 
             def get_ComponentGuid(self):
@@ -876,7 +983,8 @@ try:
                             if result_boolean is False:
                                 self.message3("修剪已达最深！")
 
-                            new_depth = Data_Tree.Paths[0].Length - 1 if result_boolean is False or result_boolean == -1 else Depth
+                            new_depth = Data_Tree.Paths[
+                                            0].Length - 1 if result_boolean is False or result_boolean == -1 else Depth
                             depth_cull = ['.CullElement()' for _ in range(new_depth)]
                             origin_path = self._trim_tree([_ for _ in Data_Tree.Paths], depth_cull)
                             index_list, new_paths = zip(*self._handle_path(origin_path))
@@ -912,8 +1020,10 @@ try:
         """
             切割 -- tertiary
         """
+
+
         # RPP_数据结构对比
-        class MyComponent(component):
+        class Data_Structure_Comparison(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
                                                                    "RPP_数据结构对比", "RPP_Data structure",
@@ -1013,7 +1123,8 @@ try:
 
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-数据清洗", "RPP_Data_rinse", """去除空值和空格值""", "Scavenger",
+                                                                   "RPP-数据清洗", "RPP_Data_rinse", """去除空值和空格值""",
+                                                                   "Scavenger",
                                                                    "Data")
                 return instance
 
@@ -1082,7 +1193,8 @@ try:
         class DataComparison(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-数据对比", "RPP_Data Comparison", """Group根据条件分组.""",
+                                                                   "RPP-数据对比", "RPP_Data Comparison",
+                                                                   """Group根据条件分组.""",
                                                                    "Scavenger",
                                                                    "Data")
                 return instance
@@ -1216,7 +1328,8 @@ try:
         class NewRound(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-数据精度提取", "RPP_NewRound", """数据精度的重定义，优化数据（四舍五入）""", "Scavenger", "Data")
+                                                                   "RPP-数据精度提取", "RPP_NewRound",
+                                                                   """数据精度的重定义，优化数据（四舍五入）""", "Scavenger", "Data")
                 return instance
 
             def get_ComponentGuid(self):
@@ -1335,9 +1448,15 @@ try:
                     if Decimal:
                         per = Decimal * 100
                         per_th = Decimal * 1000
-                        Result = str(dd(Decimal).quantize(dd("1e-{}".format(Precision)), rounding="ROUND_HALF_UP")) if "e" in str(Decimal) else self.handle_str(Decimal, Precision)
-                        Percentage = str(dd(per).quantize(dd("1e-{}".format(Precision)), rounding="ROUND_HALF_UP")) + '%' if "e" in str(per) else self.handle_str(per, Precision) + "%"
-                        Per_thousand = str(dd(per_th).quantize(dd("1e-{}".format(Precision)), rounding="ROUND_HALF_UP")) + '‰' if "e" in str(per) else self.handle_str(per_th, Precision) + '‰'
+                        Result = str(dd(Decimal).quantize(dd("1e-{}".format(Precision)),
+                                                          rounding="ROUND_HALF_UP")) if "e" in str(
+                            Decimal) else self.handle_str(Decimal, Precision)
+                        Percentage = str(dd(per).quantize(dd("1e-{}".format(Precision)),
+                                                          rounding="ROUND_HALF_UP")) + '%' if "e" in str(
+                            per) else self.handle_str(per, Precision) + "%"
+                        Per_thousand = str(dd(per_th).quantize(dd("1e-{}".format(Precision)),
+                                                               rounding="ROUND_HALF_UP")) + '‰' if "e" in str(
+                            per) else self.handle_str(per_th, Precision) + '‰'
                         return Result, Percentage, Per_thousand
                 finally:
                     self.Message = "科学计数（精度提取）"
@@ -1347,7 +1466,9 @@ try:
         class CompareSize(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-数据比较", "RPP_CompareSize", """数据比较，用于比较长度和面积的取值（几何物体），也可纯数据比较""", "Scavenger", "Data")
+                                                                   "RPP-数据比较", "RPP_CompareSize",
+                                                                   """数据比较，用于比较长度和面积的取值（几何物体），也可纯数据比较""", "Scavenger",
+                                                                   "Data")
                 return instance
 
             def get_ComponentGuid(self):
@@ -1426,13 +1547,18 @@ try:
 
             def RunScript(self, Geometry, Specifylen, Close, Compare):
                 Close = True if Close is None else False
-                Compare = {True: ['>=', '<'], False: ['>', '<=']} if Compare is None else {True: ['<=', '>'], False: ['<', '>=']}
+                Compare = {True: ['>=', '<'], False: ['>', '<=']} if Compare is None else {True: ['<=', '>'],
+                                                                                           False: ['<', '>=']}
                 compare_symbols = Compare[Close]
                 if Geometry:
-                    data_stream = Geometry if all([isinstance(_, (int, float)) for _ in Geometry]) is True else self.choice(Geometry)
+                    data_stream = Geometry if all(
+                        [isinstance(_, (int, float)) for _ in Geometry]) is True else self.choice(Geometry)
                     try:
-                        Result = eval('[r for r in data_stream[0] if r.{}() {} Specifylen]'.format(data_stream[1], compare_symbols[0]))
-                        Excluded_Data = eval('[e for e in data_stream[0] if e.{}() {} Specifylen]'.format(data_stream[1], compare_symbols[1]))
+                        Result = eval('[r for r in data_stream[0] if r.{}() {} Specifylen]'.format(data_stream[1],
+                                                                                                   compare_symbols[0]))
+                        Excluded_Data = eval(
+                            '[e for e in data_stream[0] if e.{}() {} Specifylen]'.format(data_stream[1],
+                                                                                         compare_symbols[1]))
                     except:
                         Result = eval('[r for r in Geometry if r {} Specifylen]'.format(compare_symbols[0]))
                         Excluded_Data = eval('[e for e in Geometry if e {} Specifylen]'.format(compare_symbols[1]))
@@ -1443,7 +1569,8 @@ try:
         class RandomData(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-随机数据", "RPP_RandomData", """随机数据组""", "Scavenger", "Data")
+                                                                   "RPP-随机数据", "RPP_RandomData", """随机数据组""",
+                                                                   "Scavenger", "Data")
                 return instance
 
             def get_ComponentGuid(self):
