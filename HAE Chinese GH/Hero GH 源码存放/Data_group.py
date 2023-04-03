@@ -32,6 +32,8 @@ try:
         """
             切割 -- primary
         """
+
+
         # 列表取值
         class list_values(component):
             def __new__(cls):

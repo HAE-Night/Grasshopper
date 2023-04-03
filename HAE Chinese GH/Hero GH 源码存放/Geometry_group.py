@@ -13,6 +13,7 @@ import ghpythonlib.components as ghc
 import Grasshopper.DataTree as gd
 import ghpythonlib.parallel as ghp
 import ghpythonlib.treehelpers as ght
+from Grasshopper.Kernel.Data import GH_Path
 import copy
 import math
 import Curve_group
@@ -587,8 +588,7 @@ try:
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
                                                                    "RPP-Geo|Plane分组", "Geo_PLane_Group",
-                                                                   """根据Plane对几何体进行分组，所有Z轴方向需要跟第一个Plane
-                                                                   一样，并且第一个plane必须Z轴朝外""",
+                                                                   """根据Plane对几何体进行分组，所有Z轴方向需要跟第一个Plane一样，并且第一个plane必须Z轴朝外""",
                                                                    "Scavenger", "Geometry")
                 return instance
 
