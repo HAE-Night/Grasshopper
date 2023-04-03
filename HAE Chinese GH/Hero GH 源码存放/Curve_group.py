@@ -7,6 +7,7 @@
 import init__
 
 from ghpythonlib.componentbase import dotnetcompiledcomponent as component
+import Rhino
 import Grasshopper, GhPython
 import rhinoscriptsyntax as rs
 import scriptcontext as sc
@@ -69,7 +70,8 @@ try:
         class VectorLineTaking(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-PDWL", "RPP_VectorLineTaking", """点向式绘制直线.""", "Scavenger", "Curve")
+                                                                   "RPP-PDWL", "RPP_VectorLineTaking", """点向式绘制直线.""",
+                                                                   "Scavenger", "Curve")
                 return instance
 
             def get_ComponentGuid(self):
@@ -144,7 +146,9 @@ try:
         class CurveTrim_S(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-Ext_Simplify", "RPP_CurveExtendTrim", """修剪曲线，输入负数时修剪曲线，输入正数时延长曲线.""", "Scavenger", "Curve")
+                                                                   "RPP-Ext_Simplify", "RPP_CurveExtendTrim",
+                                                                   """修剪曲线，输入负数时修剪曲线，输入正数时延长曲线.""", "Scavenger",
+                                                                   "Curve")
                 return instance
 
             def get_ComponentGuid(self):
@@ -248,7 +252,8 @@ try:
         class OffsetBySerial(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-多折线偏移（按线段序号）", "RPP_OffsetBySerial", """多折线指定序号进行偏移""", "Scavenger", "Curve")
+                                                                   "RPP-多折线偏移（按线段序号）", "RPP_OffsetBySerial",
+                                                                   """多折线指定序号进行偏移""", "Scavenger", "Curve")
                 return instance
 
             def get_ComponentGuid(self):
@@ -366,7 +371,8 @@ try:
                         self.dis = Distance if Distance else [-10.0]
 
                         temp_curves = [list(_.DuplicateSegments()) for _ in Curve]
-                        explode_curves = ghp.run(lambda cur: cur if isinstance(cur, (list)) is True else [cur], temp_curves)
+                        explode_curves = ghp.run(lambda cur: cur if isinstance(cur, (list)) is True else [cur],
+                                                 temp_curves)
 
                         if len(Items) != len(Distance):
                             self.message2("序号和距离列表不一致！")
@@ -387,7 +393,9 @@ try:
                         args.Display.DrawCurve(_c, System.Drawing.Color.Pink, 2)
                     for f_items in self.pts:
                         for sub_index in range(len(f_items)):
-                            args.Display.DrawDot(f_items[sub_index], str(sub_index), System.Drawing.Color.FromArgb(248, 141, 30), System.Drawing.Color.FromArgb(255, 255, 255))
+                            args.Display.DrawDot(f_items[sub_index], str(sub_index),
+                                                 System.Drawing.Color.FromArgb(248, 141, 30),
+                                                 System.Drawing.Color.FromArgb(255, 255, 255))
                 except:
                     pass
 
@@ -396,7 +404,8 @@ try:
         class PlineOffset(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-折线偏移", "RPP_PlineOffset", """折线段分段偏移，三种不同的偏移模式""", "Scavenger", "Curve")
+                                                                   "RPP-折线偏移", "RPP_PlineOffset",
+                                                                   """折线段分段偏移，三种不同的偏移模式""", "Scavenger", "Curve")
                 return instance
 
             def get_ComponentGuid(self):
@@ -504,7 +513,8 @@ try:
 
                         if Simply == 'F':
                             explode_curves = ghc.Explode(Curve, True)["segments"]
-                            explode_curves = explode_curves if isinstance(explode_curves, (list)) is True else [explode_curves]
+                            explode_curves = explode_curves if isinstance(explode_curves, (list)) is True else [
+                                explode_curves]
                             if len(Distance) == len(explode_curves):
                                 zip_offset_curve = zip(explode_curves, Distance)
                                 offset_list = ghp.run(self.offset_curve, zip_offset_curve)
@@ -530,7 +540,8 @@ try:
         class ArcPick(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-圆弧拾取", "RPP_ArcPick", """简单圆弧拾取插件，通过参数修改，重建一个新的圆弧""", "Scavenger", "Curve")
+                                                                   "RPP-圆弧拾取", "RPP_ArcPick",
+                                                                   """简单圆弧拾取插件，通过参数修改，重建一个新的圆弧""", "Scavenger", "Curve")
                 return instance
 
             def get_ComponentGuid(self):
@@ -594,7 +605,8 @@ try:
 
             def _judge_curve(self, index_curve, curves):
                 for _ in curves:
-                    if isinstance(_, (rg.Curve, rg.PolyCurve, rg.Polyline, rg.PolylineCurve, rg.Line, rg.LineCurve, rg.ArcCurve)) is False:
+                    if isinstance(_, (rg.Curve, rg.PolyCurve, rg.Polyline, rg.PolylineCurve, rg.Line, rg.LineCurve,
+                                      rg.ArcCurve)) is False:
                         return index_curve
 
             def filter_by_line(self, wait_curves):
@@ -602,7 +614,8 @@ try:
                 count = 0
                 fit_curve_list = []
                 while len(wait_curves) > count:
-                    start_pt, end_pt, mid_pt = wait_curves[count].PointAtStart, wait_curves[count].PointAtEnd, ghc.CurveMiddle(wait_curves[count])
+                    start_pt, end_pt, mid_pt = wait_curves[count].PointAtStart, wait_curves[
+                        count].PointAtEnd, ghc.CurveMiddle(wait_curves[count])
                     new_line = rg.Line(start_pt, end_pt)
                     ref_mid_pt = ghc.CurveMiddle(new_line)
                     curvature = abs(mid_pt.DistanceTo(ref_mid_pt))
@@ -744,7 +757,8 @@ try:
         class CurveJoin(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-合并曲线", "RPP_Curve_Join", """曲线合并操作（多进程）""", "Scavenger", "Curve")
+                                                                   "RPP-合并曲线", "RPP_Curve_Join", """曲线合并操作（多进程）""",
+                                                                   "Scavenger", "Curve")
                 return instance
 
             def get_ComponentGuid(self):
@@ -811,7 +825,8 @@ try:
         class PCLINE(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-最近点连线", "RPP_PCLINE", """几何图形到指定线段的最近线段""", "Scavenger", "Curve")
+                                                                   "RPP-最近点连线", "RPP_PCLINE", """几何图形到指定线段的最近线段""",
+                                                                   "Scavenger", "Curve")
                 return instance
 
             def get_ComponentGuid(self):
@@ -890,13 +905,16 @@ try:
                 try:
                     if Geo and RefCurve:
                         new_point = None
-                        if isinstance(Geo, (rg.Line, rg.Curve, rg.PolyCurve, rg.Polyline, rg.PolylineCurve, rg.NurbsCurve)) is True:
+                        if isinstance(Geo, (
+                                rg.Line, rg.Curve, rg.PolyCurve, rg.Polyline, rg.PolylineCurve, rg.NurbsCurve)) is True:
                             new_point = self.__get_line_curve(Geo, RefCurve)
                         elif isinstance(Geo, (rg.Point3d)) is True:
                             new_point = self.__get_line_point(RefCurve, rg.Point(Geo).Location)
                         else:
                             self.message1('电池不支持此几何类型！')
-                        Line = rg.Line(new_point[0], new_point[1]) if self._switch is True else rg.Line(new_point, rg.Point(Geo).Location)
+                        Line = rg.Line(new_point[0], new_point[1]) if self._switch is True else rg.Line(new_point,
+                                                                                                        rg.Point(
+                                                                                                            Geo).Location)
                         Point = new_point
                         return Line, Point
                     else:
@@ -1175,7 +1193,8 @@ try:
         class FilterCurve(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-曲线筛选", "RPP_FilterCurve", """通过曲率选择曲线""", "Scavenger", "Curve")
+                                                                   "RPP-曲线筛选", "RPP_FilterCurve", """通过曲率选择曲线""",
+                                                                   "Scavenger", "Curve")
                 return instance
 
             def get_ComponentGuid(self):
@@ -1270,7 +1289,9 @@ try:
         class LineSortByXYZ(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-曲线排序", "RPP_LineSortByXYZ", """曲线列表排序，当轴输入端为空时，按线长排序，输入x，y，z将按照x，y，z的轴坐标进行排序，CP可指定平面""", "Scavenger", "Curve")
+                                                                   "RPP-曲线排序", "RPP_LineSortByXYZ",
+                                                                   """曲线列表排序，当轴输入端为空时，按线长排序，输入x，y，z将按照x，y，z的轴坐标进行排序，CP可指定平面""",
+                                                                   "Scavenger", "Curve")
                 return instance
 
             def get_ComponentGuid(self):
@@ -1373,6 +1394,371 @@ try:
                 finally:
                     self.Message = "曲线排序"
 
+
+        # 均分曲线
+        class Equipartition_Curve(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP-Equipartition Curve", "RPP-均分曲线", """均分曲线""",
+                                                                   "Scavenger", "Curve")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("49378bcc-dac0-4845-a0dc-f934d8eeb669")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.tertiary
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Curve()
+                self.SetUpParam(p, "Curve", "C", "请输入一根曲线")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Number()
+                self.SetUpParam(p, "Espacement", "E", "间距（默认300）")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Number()
+                self.SetUpParam(p, "HT_Length", "HT", "最后距离曲线的点至少大于（默认20）")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Number()
+                self.SetUpParam(p, "Offset", "O", "偏移起始点在曲线上的位置（默认偏移0）")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Integer()
+                self.SetUpParam(p, "Style", "S", "均分样式 默认为：2（0：从起始点开始，1：从结束点开始，2：从中心点开始）")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "PointAtCurve", "P", "在曲线上的点")
+                self.Params.Output.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Parameter", "t", "在曲线上的长度")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                p1 = self.marshal.GetInput(DA, 1)
+                p2 = self.marshal.GetInput(DA, 2)
+                p3 = self.marshal.GetInput(DA, 3)
+                p4 = self.marshal.GetInput(DA, 4)
+                result = self.RunScript(p0, p1, p2, p3, p4)
+
+                if result is not None:
+                    if not hasattr(result, '__getitem__'):
+                        self.marshal.SetOutput(result, DA, 0, True)
+                    else:
+                        self.marshal.SetOutput(result[0], DA, 0, True)
+                        self.marshal.SetOutput(result[1], DA, 1, True)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAIaSURBVEhLxZbJiiJBEIbn9eYRfAYPnoQGwQXmorTMwf0oiAsuF0FwwQ3cBRVRXBE9uICiuIJbTEcSo11TZZd9kPmgIP9A+LIywtQf1+v158fz/qoHBb/hhaDgF61fwv8VlMtlMJvNlL7HaDSCXq/3WNBqtUAqlYJarQa/30/V5zidTmC1WiGZTAoL1us1aDQamE6nLFssFtjv92z9DCgoFouw2+34guPxCHq9nrPraDQK1WqVkjibzQaUSiVMJhO+AK2lUglmsxlVAPr9PoRCIUrixGIxSKfTbM0TzOdzeHt7g8FgQBWAw+EAXq+Xkjg2mw222y1b8wSRSASy2SylO4FAgL26GJ1OB9xuNyUBgd1uF2wo9qHdblN6jNPphG63S+kfATbF4/FQ4pLL5cBkMsH5fKYKH5w+HM/PcASpVAry+TwlLsPhkDUfh+AR4XCYzf5nOAI8u8ViQYlLvV4HnU738A0ulwsYDAbe8d4E2HU8v0d8fI5tYLVaUYULvp3P56N05ybAHeIEfUU8HodGo0HpDvZHLpfDcrmkyp2bIBgMcrovRLPZFNxEpVKBTCZDiQsTjMdjUKlU7Jr4Cmyww+GgdEer1UIikaDEhQnwm1ooFJ660FCAG/qLy+VizcUbQAgmwHPFGcdbUIxarQZGo5Gt8X5SKBRs/QgmwLPFOX8WFEgkEpDJZKLXx63J3wV/kJ4BBS/8VwHwB70ojacjDi/mAAAAAElFTkSuQmCC"
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def __init__(self):
+                pass
+
+            def message1(self, msg1):  # 报错红
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
+
+            def message2(self, msg2):  # 警告黄
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
+
+            def message3(self, msg3):  # 提示白
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
+
+            def mes_box(self, info, button, title):
+                return rs.MessageBox(info, button, title)
+
+            # 根据树分支和路径还原树形
+            def Restore_Tree(self, Before_Tree, Tree):
+                Tree_Path = [i for i in Tree.Paths]
+                After_Tree = gd[object]()
+                for i in range(Tree.BranchCount):
+                    After_Tree.AddRange(Before_Tree[i], Tree_Path[i])
+                return After_Tree
+
+            # 处理操作
+            def Curve_Offset(self, Curve_Data):
+                Curve = Curve_Data[0]
+                Espacement, HT_Length, Offset, Style = Curve_Data[1]
+                # 可以添加一个选择方式，从中间、头尾开始位置
+                C_Length = Curve.GetLength()  # 曲线总长
+                if Style == 0:  # 从曲线 开始点(Left) + 间隔 + 起始点偏移 开始
+                    Left = HT_Length + Offset
+                    Right = -1
+                elif Style == 1:  # 从曲线 结束点(Right) - 间隔 - 结束点偏移 开始
+                    Left = C_Length + 1
+                    Right = C_Length - HT_Length - Offset
+                else:  # 从曲线中心点(C_Center) 开始
+                    C_Center = C_Length / 2 - Offset
+                    Left = C_Center
+                    Right = C_Center - Espacement
+
+                # 定位点长度位置
+                Parameter = []
+                # 定位点在曲线的位置
+                PointAtCurve = []
+
+                # 根据长度去判断每次偏移 Espacement
+                while Left <= C_Length - HT_Length or Right >= 0 + HT_Length:
+                    # ± HT_Length 确保数据不在指定边缘范围内
+                    if 0 + HT_Length <= Left <= C_Length - HT_Length:
+                        Parameter.append(Left / C_Length)
+                    if 0 + HT_Length <= Right <= C_Length - HT_Length:
+                        Parameter.append(Right / C_Length)
+                    Left += Espacement
+                    Right -= Espacement
+
+                if Style != 0 and Style != 1:
+                    Parameter.sort()
+
+                # 得到在线上的这个长度
+                for i in Parameter:
+                    PointAtCurve.append(Curve.PointAtLength(i * C_Length))
+
+                return PointAtCurve, Parameter
+
+            # 数据匹配
+            def Data_Matching(self, Data, Matching_Data):
+                return Matching_Data * len(Data)
+
+            # Curve 多进程
+            def Curve_Multiprocess(self, Combined_Data):
+                Curve_list = list(Combined_Data[0])
+                # 确保有数据
+                if Curve_list == []:
+                    return [None], [None]
+
+                Data = [Combined_Data[1]]
+                Data = self.Data_Matching(Curve_list, Data)
+
+                PointAtCurve, Parameter = list(zip(*ghp.run(self.Curve_Offset, zip(Curve_list, Data))))
+                # （值，None）
+                PointAtCurve = PointAtCurve[0]
+                Parameter = Parameter[0]
+                return PointAtCurve, Parameter
+
+            # 处理操作
+            def Processing_Operations(self, Curve, Espacement, HT_Length, Offset, Style):
+                # 数据匹配
+                Curve_Tree = [list(i) for i in Curve.Branches]
+                Data = [(Espacement, HT_Length, Offset, Style)]
+                Data = self.Data_Matching(Curve_Tree, Data)
+
+                # 进入多进程
+                PointAtCurve, Parameter = zip(*ghp.run(self.Curve_Multiprocess, zip(Curve_Tree, Data)))
+                # 还原树形结构
+                PointAtCurve = self.Restore_Tree(PointAtCurve, Curve)
+                Parameter = self.Restore_Tree(Parameter, Curve)
+                return PointAtCurve, Parameter
+
+            # 间距、长度、偏移距离
+            def RunScript(self, Curve, Espacement, HT_Length, Offset, Style):
+                try:
+                    sc.doc = Rhino.RhinoDoc.ActiveDoc
+                    sc.doc.Views.Redraw()
+                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                    sc.doc = ghdoc
+
+                    # 参数定义
+                    if Espacement == None:
+                        Espacement = 300
+                    if HT_Length == None:
+                        HT_Length = 100
+                    if Offset == None:
+                        Offset = 0
+                    if Style == None:
+                        Style = 2
+                    if 'empty tree' in str(Curve):
+                        self.message2('请输入曲线')
+                        return gd[object](), gd[object]()
+                    else:
+                        return self.Processing_Operations(Curve, Espacement, HT_Length, Offset, Style)
+                finally:
+                    # 预知代码Bug之前（抛异常）可用
+                    # self.mes_box("开发组测试", 1 | 32, "标题")
+                    self.Message = 'HAE开发组'
+
+
+        # 统一曲线方向
+        class Filp_Curve(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP-Filp Curve", "RPP-统一曲线方向", """统一该曲线的方向。
+        传入曲线则所有曲线跟曲线方向保持一致
+        传入真值则为一组数据中曲线中心点最高的曲线为统一方向
+        反之中心点最低的曲线""", "Scavenger", "Curve")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("3159660c-6476-4c5f-9c05-e5cd4924ace1")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.tertiary
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Curve()
+                self.SetUpParam(p, "Curves", "C", "需要反转的曲线列表")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Direction", "G", "真值则为曲线中中心点最高的曲线、假值则相反（默认真值）\
+                如果为曲线则使用该曲线统一方向\
+                ")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Curves", "C", "反转后的曲线")
+                self.Params.Output.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Flag", "F", "是否翻转")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                p1 = self.marshal.GetInput(DA, 1)
+                result = self.RunScript(p0, p1)
+
+                if result is not None:
+                    if not hasattr(result, '__getitem__'):
+                        self.marshal.SetOutput(result, DA, 0, True)
+                    else:
+                        self.marshal.SetOutput(result[0], DA, 0, True)
+                        self.marshal.SetOutput(result[1], DA, 1, True)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAANsSURBVEhL7ZR9aBNnHMczRVuEbSh1Uzb/6KRqYtKXWG0trtKX2Grr6hYFad3wHY1zE60rnbIi6D8FKVYsvUQoqLW9tJfkLi+1pjRssE1ZGFrqC6XYvFwuucvraCbVmvz2XHkoSGcoWvxHP3Dc8/t9v/c8v/s9z53kPW8VAPgAD+eWweCudTauWvsoePVDnEqNWIlarS7SaDSV7e3t+7Ra7c5kMrkEy9Pc5ZuXWYTiy4ZwVqLbLYuj5xZiKTU2m22pSqVKtLa2vmhsbEwQBDHR0tJC1NbW6pqbL34H4Eg3+op+6g1Ig+anmWAc/xy6PWvGZr0ASZKfVVRUQEdHx9/19fX/NjQ0hOrq6kZramoSRw4dH3mWJBUUp/RTbH6yi80EOlD04IbrCxaAWICnkPTxVY1GT5kChy+j0+mWoKsftWX1lcvt17o7qU7NkWP3Dxw4GO/Qkb+InltCVfPAZC7QXOkpG7vj6E3PyoQTmhaJGuPa9u2fkAtWrlotxilBrz0f4HGGzfTH1+MslPuTpzLNYWV//6QMLIGSs6LHwqn20IHCECoore/hieVMRPaC8q43Tk3wKuihHz5lhMK2Hr80inoN+sCqYb0/63c6JgU6rPBZvF9VYavE6SQW3Ald+sjhGEungzkPmUiO3xkhPsbyTKzeajUdkU8YBNlT0qM83+PeuKvbI2+jeNl1W3DznpGRZBq2TjOsh4XmcP4dJipPWEf3/n/vRdDGaRwgB2ukkHL6iAycTomd3Z+HChqxxLIn7e7Dm3B6JkZX2XEHyIDmC87h1Es4fU0ZdLDgMFqcMHgLDpncm8spLk97a0IBaF8e3x77UYqtM2GeqLcMospp7stLYixu2JSAsfAlpw1B6fPegAx62Bwv6V0L5pgCDLxcsAilZwC1CFtnMhRrW2wKK+ImPt8hxoxvyw69R+kSxzAG6UxIaRpIoiqDG1t/FX5eLub/QvchOLlGPGVinBLKu8FsisjgN+7CUjG2+rd+T/qyYHT82ifGgHKQia6N2/ndlVPm18HIltTT7u17cYjeoKyW4rITJrb4njG6EkyBDdEeT54ey29Ol2tVWW84Ewz/rAAmjhYIZT8yc6U7sfzmkJ71lXbIAvSBCX1CxUkYnuVPbLb0sd+U22Mq3V2+aRlOzS3oZMzDw3ceieQ/v1LI1zwofCoAAAAASUVORK5CYII="
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def __init__(self):
+                pass
+
+            def message1(self, msg1):  # 报错红
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
+
+            def message2(self, msg2):  # 警告黄
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
+
+            def message3(self, msg3):  # 提示白
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
+
+            def mes_box(self, info, button, title):
+                return rs.MessageBox(info, button, title)
+
+            # 根据树分支和路径还原树形
+            def Restore_Tree(self, Before_Tree, Tree):
+                Tree_Path = [i for i in Tree.Paths]
+                After_Tree = gd[object]()
+                for i in range(Tree.BranchCount):
+                    After_Tree.AddRange(Before_Tree[i], Tree_Path[i])
+                return After_Tree
+
+            # 曲线高度排序
+            def Curve_Height(self, Curve_Bool):
+                Curve_list = Curve_Bool[0]
+                Curve_Height = [Curve.PointAtLength(Curve.GetLength()) for Curve in Curve_list]  # 曲线方法
+                Max_Value = 0  # 第一个最大值下标
+                Min_Value = 0  # 第一个最大值下标
+                for Value in range(1, len(Curve_Height)):
+                    if Curve_Height[Max_Value].Z < Curve_Height[Value].Z:
+                        Max_Value = Value
+                    if Curve_Height[Min_Value].Z > Curve_Height[Value].Z:
+                        Min_Value = Value
+                Curve_Bool[1], type(Curve_Bool[1])
+                return Curve_list[Max_Value] if Curve_Bool[1] else Curve_list[Min_Value]
+
+            # 曲线反转
+            def Curve_Flip(self, Curve_FlipCurve):
+                Curve_list = Curve_FlipCurve[0]  # 曲线数据
+                Tangent = Curve_FlipCurve[1].TangentAt(0.5)  # 指导曲线切向量
+                Flag = []  # 是否反转
+                # 循环判断向量是否一致，不一致互换
+                for i in range(len(Curve_list)):
+                    # 99.0001度之内的都算平行
+                    Parallel = Tangent.IsParallelTo(Curve_list[i].TangentAt(0.5), 99.0001)
+                    # Parallel 1向量是平行的，0向量不平行或至少有一个向量为零，-1向量是反并行的。
+                    if Parallel != 1:
+                        Flag.append(True)
+                        Curve_list[i].Reverse()
+                    else:
+                        Flag.append(False)
+                return Curve_list, Flag
+
+            # 操作多进程
+            def Curve_Multiprocess(self, Curve, Guide):
+                Curve_Tree = [list(i) for i in Curve.Branches]
+                Guide_Curve = [Guide]
+                # 判断是否为曲线，不为曲线就拿本身的曲线
+                # 为曲线可以直接进入方向统一方法
+                if 'Curve' not in str(Guide):
+                    # 得到曲线中心点 最高或最低 的曲线（根据 Guide 真假值判断高低曲线）
+                    Guide_Curve = list(ghp.run(self.Curve_Height, zip(Curve_Tree, [Guide] * len(Curve_Tree))))
+                # 数据匹配
+                if len(Curve_Tree) != len(Guide_Curve):
+                    Guide_Curve = [Guide] * len(Curve_Tree)
+
+                Curve_list, Flag = zip(*ghp.run(self.Curve_Flip, zip(Curve_Tree, Guide_Curve)))
+
+                # 转树形
+                Curve_list = self.Restore_Tree(Curve_list, Curve)
+                Flag = self.Restore_Tree(Flag, Curve)
+
+                return Curve, Flag
+
+            def RunScript(self, Curve, Guide):
+                try:
+                    sc.doc = Rhino.RhinoDoc.ActiveDoc
+                    sc.doc.Views.Redraw()
+                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                    sc.doc = ghdoc
+
+                    Curve_Tree, Flag_Tree = gd[object](), gd[object]()
+                    if 'empty tree' in str(Curve):
+                        self.message2('请输入曲线')
+                    else:
+                        # 默认有值都为真
+                        Value = True
+                        # 传入 假值
+                        if Guide == 'False' or Guide == 'false' or Guide == False:
+                            Value = False
+                        # 传入曲线
+                        elif 'Curve' in str(type(Guide)):
+                            Value = Guide
+                        Guide = Value
+
+                        Curve_Tree, Flag_Tree = self.Curve_Multiprocess(Curve, Guide)
+                    return Curve_Tree, Flag_Tree
+                finally:
+                    # 预知代码Bug之前（抛异常）可用
+                    # self.mes_box("开发组测试", 1 | 32, "标题")
+                    self.Message = 'HAE开发组'
     else:
         pass
 except:
