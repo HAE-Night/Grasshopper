@@ -32,8 +32,6 @@ try:
         """
             切割 -- primary
         """
-
-
         # 列表取值
         class list_values(component):
             def __new__(cls):
@@ -98,7 +96,8 @@ try:
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
                                                                    "RPP-多下标取值", "RPP_Subscript_Value",
-                                                                   """多下标取值，最多取到六组数据""", "Scavenger", "Data")
+                                                                   """多下标取值，最多取到六组数据""", "Scavenger",
+                                                                   "Data")
                 return instance
 
             def get_ComponentGuid(self):
@@ -466,7 +465,8 @@ try:
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
                                                                    "RPP-树形取值", "RPP_PickingFruit",
-                                                                   """取树形数据的分支，输入要取的分支标数""", "Scavenger", "Data")
+                                                                   """取树形数据的分支，输入要取的分支标数""",
+                                                                   "Scavenger", "Data")
                 return instance
 
             def get_ComponentGuid(self):
@@ -762,7 +762,8 @@ try:
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
                                                                    "RPP-简化树形数据", "RPP_Simplify_Data",
-                                                                   """将所有传进来的树形结构简化至最简状态""", "Scavenger", "Data")
+                                                                   """将所有传进来的树形结构简化至最简状态""",
+                                                                   "Scavenger", "Data")
                 return instance
 
             def get_ComponentGuid(self):
@@ -847,7 +848,8 @@ try:
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
                                                                    "RPP-树形修剪", "RPP_TrimTree",
-                                                                   """树形修剪插件，Depth为树形修剪深度""", "Scavenger", "Data")
+                                                                   """树形修剪插件，Depth为树形修剪深度""", "Scavenger",
+                                                                   "Data")
                 return instance
 
             def get_ComponentGuid(self):
@@ -1123,7 +1125,8 @@ try:
 
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-数据清洗", "RPP_Data_rinse", """去除空值和空格值""",
+                                                                   "RPP-数据清洗", "RPP_Data_rinse",
+                                                                   """去除空值和空格值""",
                                                                    "Scavenger",
                                                                    "Data")
                 return instance
@@ -1329,7 +1332,8 @@ try:
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
                                                                    "RPP-数据精度提取", "RPP_NewRound",
-                                                                   """数据精度的重定义，优化数据（四舍五入）""", "Scavenger", "Data")
+                                                                   """数据精度的重定义，优化数据（四舍五入）""",
+                                                                   "Scavenger", "Data")
                 return instance
 
             def get_ComponentGuid(self):
@@ -1467,7 +1471,8 @@ try:
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
                                                                    "RPP-数据比较", "RPP_CompareSize",
-                                                                   """数据比较，用于比较长度和面积的取值（几何物体），也可纯数据比较""", "Scavenger",
+                                                                   """数据比较，用于比较长度和面积的取值（几何物体），也可纯数据比较""",
+                                                                   "Scavenger",
                                                                    "Data")
                 return instance
 
