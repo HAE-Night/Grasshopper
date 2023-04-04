@@ -691,23 +691,30 @@ try:
 
                 brep_positive, brep_positive_index = [], []  # 返回值保存
                 end_brep = []  # 保存剩余数据
+
                 """
                 可替换成for循环，针对不同的情况替换调用参数和接收返回值
                 """
-                for _pln in range(len(_plane_list)):
-                    if _pln == 0:  # 参数全部brep 第一个pln
-                        brep_p, brep_nega = self.split(_brep_dict, _plane_list[_pln])
-                        brep_positive.append(brep_p)
-                    elif _pln + 1 == len(_plane_list):  # 参数：最后剩余的brep
-                        brep_p, brep_nega = self.split(end_brep[-1], _plane_list[_pln])
-                        brep_positive.append(brep_p)
-                        brep_positive.append(brep_nega)
-                    elif _pln < len(_plane_list):
-                        brep_p, brep_nega = self.split(end_brep[-1], _plane_list[_pln])
-                        brep_positive.append(brep_p)
-                    else:
-                        continue
-                    end_brep.append(brep_nega)
+                if len(_plane_list) == 1:
+                    brep_p, brep_nega = self.split(_brep_dict, _plane_list[0])
+                    brep_positive.append(brep_p)
+                    brep_positive.append(brep_nega)
+                else:
+                    for _pln in range(len(_plane_list)):
+                        if _pln == 0:  # 参数全部brep 第一个pln
+                            brep_p, brep_nega = self.split(_brep_dict, _plane_list[_pln])
+                            brep_positive.append(brep_p)
+                            end_brep.append(brep_nega)
+                        elif _pln + 1 == len(_plane_list):  # 参数：最后剩余的brep
+                            brep_p, brep_nega = self.split(end_brep[-1], _plane_list[_pln])
+                            brep_positive.append(brep_p)
+                            brep_positive.append(brep_nega)
+                        elif _pln < len(_plane_list):
+                            brep_p, brep_nega = self.split(end_brep[-1], _plane_list[_pln])
+                            brep_positive.append(brep_p)
+                            end_brep.append(brep_nega)
+                        else:
+                            continue
                 return brep_positive
 
             # 数据整合
