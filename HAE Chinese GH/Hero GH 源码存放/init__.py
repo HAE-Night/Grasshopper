@@ -7,4 +7,4 @@
 # @Time : 2022/11/17 10:31
 
 designer_database = ['Niko', 'Night', 'Nancy', 'Landon', 'Levi', 'Jiang', 'Claire', 'Bella', 'Lauren', 'Night', 'Mary', 'Bobo', 'John', 'Link', 'Mikey', 'windy', 'kiki', 'Radish', 'Juhair', 'Mohamed Shoman', 'Ivan', 'Hasir', 'Hari', 'Nikki',
-                     'Zubair', 'Riyas', 'Najeeb', 'Roberto', 'Mohamed Gomaa', 'Leo', 'James']
+                     'Zubair', 'Riyas', 'Najeeb', 'Roberto', 'Mohamed Gomaa', 'Leo', 'James', 'Bynn']
