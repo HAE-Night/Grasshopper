@@ -13,6 +13,7 @@ import ghpythonlib.components as ghc
 import Grasshopper.DataTree as gd
 import ghpythonlib.parallel as ghp
 import ghpythonlib.treehelpers as ght
+from Grasshopper.Kernel.Data import GH_Path
 import copy
 import math
 import Curve_group
@@ -587,8 +588,7 @@ try:
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
                                                                    "RPP-Geo|Plane分组", "Geo_PLane_Group",
-                                                                   """根据Plane对几何体进行分组，所有Z轴方向需要跟第一个Plane
-                                                                   一样，并且第一个plane必须Z轴朝外""",
+                                                                   """根据Plane对几何体进行分组，所有Z轴方向需要跟第一个Plane一样，并且第一个plane必须Z轴朝外""",
                                                                    "Scavenger", "Geometry")
                 return instance
 
@@ -691,23 +691,30 @@ try:
 
                 brep_positive, brep_positive_index = [], []  # 返回值保存
                 end_brep = []  # 保存剩余数据
+
                 """
                 可替换成for循环，针对不同的情况替换调用参数和接收返回值
                 """
-                for _pln in range(len(_plane_list)):
-                    if _pln == 0:  # 参数全部brep 第一个pln
-                        brep_p, brep_nega = self.split(_brep_dict, _plane_list[_pln])
-                        brep_positive.append(brep_p)
-                    elif _pln + 1 == len(_plane_list):  # 参数：最后剩余的brep
-                        brep_p, brep_nega = self.split(end_brep[-1], _plane_list[_pln])
-                        brep_positive.append(brep_p)
-                        brep_positive.append(brep_nega)
-                    elif _pln < len(_plane_list):
-                        brep_p, brep_nega = self.split(end_brep[-1], _plane_list[_pln])
-                        brep_positive.append(brep_p)
-                    else:
-                        continue
-                    end_brep.append(brep_nega)
+                if len(_plane_list) == 1:
+                    brep_p, brep_nega = self.split(_brep_dict, _plane_list[0])
+                    brep_positive.append(brep_p)
+                    brep_positive.append(brep_nega)
+                else:
+                    for _pln in range(len(_plane_list)):
+                        if _pln == 0:  # 参数全部brep 第一个pln
+                            brep_p, brep_nega = self.split(_brep_dict, _plane_list[_pln])
+                            brep_positive.append(brep_p)
+                            end_brep.append(brep_nega)
+                        elif _pln + 1 == len(_plane_list):  # 参数：最后剩余的brep
+                            brep_p, brep_nega = self.split(end_brep[-1], _plane_list[_pln])
+                            brep_positive.append(brep_p)
+                            brep_positive.append(brep_nega)
+                        elif _pln < len(_plane_list):
+                            brep_p, brep_nega = self.split(end_brep[-1], _plane_list[_pln])
+                            brep_positive.append(brep_p)
+                            end_brep.append(brep_nega)
+                        else:
+                            continue
                 return brep_positive
 
             # 数据整合
