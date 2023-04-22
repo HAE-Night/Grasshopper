@@ -123,27 +123,26 @@ try:
                 p.Optional = True
 
             def RegisterInputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_Geometry()
-                self.SetUpParam(p, "Geometry", "G", "面、Brep等几何体")
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Geometry", "Geometry", "面、Brep等几何体")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_Geometry()
-                self.SetUpParam(p, "Geometry", "G", "排序后的几何")
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Geometry", "Geometry", "排序后的几何体")
                 self.Params.Output.Add(p)
 
-                p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Area_Arc", "A", "排序后的面积")
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Area_Arc", "Area_Arc", "排序后的面积")
                 self.Params.Output.Add(p)
 
-                p = Grasshopper.Kernel.Parameters.Param_Point()
-                self.SetUpParam(p, "Centroid", "C", "质心")
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Centroid", "Centroid", "面的质心")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
                 p0 = self.marshal.GetInput(DA, 0)
-                if isinstance(p0, Rhino.Geometry.Brep) and p0.Faces.Count == 1: p0 = p0.Faces[0].DuplicateSurface()
                 result = self.RunScript(p0)
 
                 if result is not None:
@@ -167,30 +166,41 @@ try:
             def message3(self, msg3):  # 白泡
                 return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
 
-            def bubbling(self, Face):
-                # 面积质量属性
-                FaceAMP = [rg.AreaMassProperties.Compute(i) for i in Face]
+            # 数据转换成树和原树路径
+            def Restore_Tree(self, Before_Tree, Tree):
+                Tree_Path = [_ for _ in Tree.Paths]
+                After_Tree = gd[object]()
+                for i in range(Tree.BranchCount):
+                    After_Tree.AddRange(Before_Tree[i], Tree_Path[i])
+                return After_Tree
 
-                Area_Arc = [ap.Area for ap in FaceAMP]  # 面积
-                Centroid = [ap.Centroid for ap in FaceAMP]  # 质心
-                nice = zip(Face, Area_Arc, Centroid)
+            def bubbling(self, brep):
+                Area = rg.AreaMassProperties.Compute(brep).Area  # 面积
+                Centroid = rg.AreaMassProperties.Compute(brep).Centroid  # 质心
+                return Area, Centroid
 
-                # 字典遍历元组排序
-                AREAS = sorted(nice, key=lambda x: x[1], reverse=False)
-                # 取值
-                Faces = [_i[0] for _i in AREAS]
-                Area_Arcs = [_i[1] for _i in AREAS]
-                Centroids = [_i[2] for _i in AREAS]
-                return Faces, Area_Arcs, Centroids
+            def soft_brep(self, brep):
+                breps = [b for b in brep]
+                Area_C = ghp.run(self.bubbling, breps)
+
+                sorted_index = sorted(range(len(Area_C)), key=lambda i: Area_C[i])  # 得到排序后的下标
+
+                Brep_out = [breps[i] for i in sorted_index]  # brep根据下标排序
+                Area_out = [Area_C[i][0] for i in sorted_index]
+                centroid_out = [Area_C[i][1] for i in sorted_index]
+
+                return Brep_out, Area_out, centroid_out
 
             def RunScript(self, Geometry):
                 try:
-                    Face, Area_Arc, Centroid = self.bubbling(Geometry)
-                    return Face, Area_Arc, Centroid
+                    if Geometry:
+                        Face, Area_Arc, Centroid = self.soft_brep(Geometry)
+                        return Face, Area_Arc, Centroid
                 except Exception as e:
                     self.message1("运行报错：\n{}".format(str(e)))
                 finally:
-                    self.Message = 'HAE 面积排序'
+                    self.Message = 'HAE面积排序'
+
 
 
         # 计算Surface面积
