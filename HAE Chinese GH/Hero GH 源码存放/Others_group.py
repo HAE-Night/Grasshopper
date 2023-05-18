@@ -609,19 +609,3 @@ except:
 import GhPython
 import System
 
-
-class AssemblyInfo(GhPython.Assemblies.PythonAssemblyInfo):
-    def get_AssemblyName(self):
-        return "Others_group"
-
-    def get_AssemblyDescription(self):
-        return """"""
-
-    def get_AssemblyVersion(self):
-        return "1.5"
-
-    def get_AuthorName(self):
-        return ""
-
-    def get_Id(self):
-        return System.Guid("a252e0f7-b694-48e1-9f4a-e146b5a80251")
