@@ -295,6 +295,337 @@ try:
                 else:
                     pass
 
+                # Geo|Plane分隔
+
+
+        # 几何体的中心平面
+        class GeoCenterPlane(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP-GeometryPlane", "RPP-几何物体中心平面",
+                                                                   """求几何物体的中心平面""",
+                                                                   "Scavenger", "Geometry")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("718640f5-8562-4c71-9690-9d6d8f72ebca")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.primary
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Geometry", "G", "几何物体")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Plane", "P", "几何物体平面（曲线在起始点、面在中心、几何体在最大面的中心点）")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                result = self.RunScript(p0)
+
+                if result is not None:
+                    self.marshal.SetOutput(result, DA, 0, True)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAM6SURBVEhL7ZNrSFNhGMfnZTqmVEODmFpTtMT60BevOHTMSxrmBZW0KZIT04lOsSwT85a2TN3CzbykZ5t5yXmBFPM257XCDCk1L6SEVBpiKmkfRufpPboPUoSmBH3oDw/n5bzv8/+d53nOS/qvvy4A0COeOI6bLqzh9svLy4e2Ng4iZKqNDI3EQ7it4sVaQ6Z8+MndKmxJ8KgVRmaW3TXH9i7CcAnAcHAWTy3r/izOkav6ciseLopKEtRtdX4w2WoD6yoyCMUx3zky3FKTtrtwfMOheXiuMkfa9TJLXLBQXpkAysbzMNNmDhs9ZIAhxB5GMYjiGQlEEp7aswQYmvTdhdrgKFbIYLWPDjCqDfAcGRGmhGEfCtWOQO9Fkji1Txlurkn/VagVR+Lj41N9fX3z/P39BWFRCfIIri9en04CRYY2fO3Q2QbsNN4rAJlTkHGTm5vbvKenp5zFYmEBwWGd/sFeIIjRhWuh+hDCpsCmSgug/yfzPQKo1tbWE0KhsKizszNZJpPZYy3KhNzC6zBXS4G5RgPwsjeASUx3u+/7AOiYmpp2x8XFRUgkEm4Y55IyT1jZmn4nUT0lJ8N0AwWCWVQYJwBooPsB6JqZmSnDw8M5aWlpl5lODp94iRmvMvL43yalZBiv0YNAFypMHARAp9N7eDxeMp/P92G5MJtEpXW9aXlX1RMYGWYa9CHIVQPYZ4vIJiYmHWjQTikpKcfPubMbo6Jj318IDsGvBFnCtMIQIr314U3VwWag5HA4yUlJSRGRkZHcLEFhE5cfAzW3DGC0UgsuuurBu2p0lLgPfwpAl8qAwWAMoK/3KS0ttc3Pzz+jUg0EVLd2j+UUFy1mFN5YdbCzgnYJA9b7qdu/KlEJMt5a76ECGpPJfO3s7HzT2NjYCs3jJINBP1UsvMfOLZB6h8YXJp61c91MFbf0CrDajw+kmfBY6gcjChtY6Tq8Nfjikmi1+/3fAAhhGObBZrOVFhYWCtSuejSTOhqNJjMyomGnbaybY6O5UUQrUbUn2mdxR9HT9ZSKjum32eW1UxJpNtyuqoausRVnjd3BhWAUBDtKVD/yAfdoGfkSOD8/f0yz/V//hEikH9g9dLOaG7vaAAAAAElFTkSuQmCC"
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def __init__(self):
+                pass
+
+            def message1(self, msg1):  # 报错红
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
+
+            def message2(self, msg2):  # 警告黄
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
+
+            def message3(self, msg3):  # 提示白
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
+
+            def mes_box(self, info, button, title):
+                return rs.MessageBox(info, button, title)
+
+            # 根据树分支和路径还原树形
+            def Restore_Tree(self, Before_Tree, Tree):
+                Tree_Path = [i for i in Tree.Paths]
+                After_Tree = gd[object]()
+                for i in range(Tree.BranchCount):
+                    After_Tree.AddRange(Before_Tree[i], Tree_Path[i])
+                return After_Tree
+
+            # 曲线类的平面
+            def Curve_Plane(self, Curve):
+                NurbsCurve = Curve.ToNurbsCurve()
+                if len(NurbsCurve.Points) - 1 >= 2:
+                    # NurbCurve 不是直线使用三点确定平面
+                    NurbP = NurbsCurve.Points[1]
+                    U = rg.Point3d(NurbP.X, NurbP.Y, NurbP.Z)
+                    V = Curve.PointAtEnd
+                else:
+                    # Curve 是直线使用 UV 方向去得到平面
+                    U = rg.Vector3d(Curve.PointAtEnd - Curve.PointAtStart)
+                    V = rg.Vector3d.CrossProduct(U, rg.Vector3d(0, 0, 1))
+                    if V.Length < 0.01:
+                        V = rg.Vector3d.CrossProduct(U, rg.Vector3d(0, 1, 0))
+                Plane = rg.Plane(Curve.PointAtStart, U, -V)
+
+                return Plane
+
+            # Brep最大面下标
+            def BrepFaces_Max(self, Brep):
+                # rg.AreaMassProperties.Compute(face).Area 方法是得到 Brep 各个面的面积
+                BrepFaces = [rg.AreaMassProperties.Compute(face).Area for face in Brep.Faces]
+                return BrepFaces.index(max(BrepFaces))  # 第一个最大值下标
+
+            # 根据中心点求面 -- U,V与原生不符，却与SEG相符
+            def Brep_Plane(self, Brep):
+                # Surface
+                if Brep.Faces.Count <= 1:
+                    Box = Brep.GetBoundingBox(False)
+                    Center = Box.Center
+                    Normal = Brep.Faces[0].NormalAt(0.5, 0.5)
+                else:  # Brep
+                    # self.BrepFaces_Max()  求 Brep 立体的最大面的下标
+                    BrepFaces = Brep.Faces[self.BrepFaces_Max(Brep)]
+                    Box = BrepFaces.GetBoundingBox(False)
+                    Center = Box.Center
+                    Normal = BrepFaces.NormalAt(0.5, 0.5)
+                # 计算法向量并给面的 Z 轴
+                Plane = rg.Plane(Center, Normal)
+                return Plane
+
+            # 类型对应
+            def Type_Correspondence(self, Geometry):
+                if 'Point' in str(Geometry):
+                    # Geometry 是 Point 类型不属于 Point3d 也转换不了 Point3d
+                    #            return rg.Plane(Geometry, rg.Vector3d.XAxis, rg.Vector3d.YAxis)
+                    return None
+                elif 'Curve' in str(Geometry):
+                    return self.Curve_Plane(Geometry)
+                elif 'Brep' in str(Geometry):
+                    return self.Brep_Plane(Geometry)
+
+            # 对象多进程
+            def Object_Multiprocess(self, Geometry_List):
+                return ghp.run(self.Type_Correspondence, Geometry_List)
+
+            # 物体操作：
+            def Object_Operations(self, Geometry):
+                Geometry_Tree = [list(i) for i in Geometry.Branches]
+                return ghp.run(self.Object_Multiprocess, Geometry_Tree)
+
+            def RunScript(self, Geometry):
+                try:
+                    sc.doc = Rhino.RhinoDoc.ActiveDoc
+                    sc.doc.Views.Redraw()
+                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                    sc.doc = ghdoc
+                    if 'empty tree' in str(Geometry):
+                        self.message2('请输入几何物体')
+                        return gd[object]()
+                    else:
+                        Plane = self.Object_Operations(Geometry)
+                        Plane = self.Restore_Tree(Plane, Geometry)
+                        return Plane
+                finally:
+                    self.Message = '几何中心平面'
+
+
+        # Geo|Plane分隔
+        class Brep_PLane_Group(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP-Geo|Plane分组", "Geo_PLane_Group",
+                                                                   """根据Plane对几何体进行分组，所有Z轴方向需要跟第一个Plane一样，并且第一个plane必须Z轴朝外""",
+                                                                   "Scavenger", "Geometry")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("3bab47c8-1132-4f8a-bf91-5373b81fc90b")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.secondary
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Brep", "G", "几何物体")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Plane()
+                self.SetUpParam(p, "PLane", "P", "分隔平面-第一个分隔平面的Z轴朝外")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Geometry()
+                self.SetUpParam(p, "Brep", "G", "分隔后的几何物体")
+                self.Params.Output.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Integer()
+                self.SetUpParam(p, "a", "I", "几何体原下标")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                p1 = self.marshal.GetInput(DA, 1)
+                result = self.RunScript(p0, p1)
+
+                if result is not None:
+                    if not hasattr(result, '__getitem__'):
+                        self.marshal.SetOutput(result, DA, 0, True)
+                    else:
+                        self.marshal.SetOutput(result[0], DA, 0, True)
+                        self.marshal.SetOutput(result[1], DA, 1, True)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAMASURBVEhLYxgFBEH9/v0szjWnDBm0/vNAhagDQv6JhnQcM2NISzvD2tJf8HTFkvCn1RPqVgc3rs7gzvqnDVVGAvjPplj82jSubUlJ8+TKbWuWB71rnlh+GyTBvHa+173/Vxj+/z/J9f/ZPvX/25Y6/586M/VKYU//dI/6/TIQA7ADz4qtahUTuxfPmRN/78Bq+/9vDyoCzWH7//8yw//FcyMvApX8Z142J+Du/1NACw4C8WEgPg7E5xj+39pj9d84b48rxCjswKZgccjLQ3r//58F6jkG1Q8yB2jevNlxF4BKkCw4gISPMvy/uVXrv3H+bgeIUdiBXdECv2e7ga4+gqafGAuub9H5b5S7wxFkUFpaGquZmRkfiI0MbAvm+T/ZpUy+BcYlx6yVBAX5dXV1qzQ0NOK1tLRSdXR0EvX09IIMVFREHarWuFNkgUXLUyNpMSELoKGWCbGx4SGBgU5Ay5T09fUdVRUU0uxzp4dQZIFl+ytDKTExZ3c/P3Vvd/eL/r6+taCgAQFZMTF/68SO5Mc7KbGg8a6pnIREsLy8PIevt/fU5IgIcYjxDAzyUlIR9vnzAyjygVnhHkcFKfEwUCR7e3oeDvbzy4sMCcny8vIykJUS83Oq3ehKvgWbdf6bZiz3UZCSiAe5ODc1VTkqPDwqwMfnBDCouuQkJa1dGvfZU+QD6/qLFqry8l7AFFSgqakZoKqlZebq6qpjZGQUrSwpaexUu8ORIgtMCvfZg1wPtEAYmDR1gCnIBYgjTUxMwoHCTPZFC30osoCYnExzC56SZAGooAIpBhZej/bpEVHYLQh5f0T1//8zUH0g/egWrJrvc/f/RYjg3+NC/2/t0P+/ZqHPl6ZJlYfdKvdrQIzCDuxL1hu0Tq08DFJ/c4cBWD/YsUDzFs+JusBgb/+fpW9yyvt96xz+T56Rcrmgp2uqY83eIGCNJA01gzgAVA/SB9I/ZUbq5b3rnP53TS54yDDzzBnWoLo14eIZn3WgSqkCxPN+6oQ1rQ+AcmkFGBgAn3YUpEfP2DsAAAAASUVORK5CYII="
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def __init__(self):
+                pass
+
+            def message1(self, msg1):  # 报错红
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
+
+            def message2(self, msg2):  # 警告黄
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
+
+            def message3(self, msg3):  # 提示白
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
+
+            def mes_box(self, info, button, title):
+                return rs.MessageBox(info, button, title)
+
+            # 数据转换成树和原树路径
+            def Restore_Tree(self, Before_Tree, Tree):
+                Tree_Path = [_ for _ in Tree.Paths]
+                After_Tree = gd[object]()
+                for i in range(Tree.BranchCount):
+                    After_Tree.AddRange(Before_Tree[i], Tree_Path[i])
+                return After_Tree
+
+            # Geo 分隔
+            def split(self, _brep_dict, _pln_s):
+                _A_brep = []
+                brep_negative = []
+                for brep in range(len(_brep_dict)):
+                    if type(_brep_dict[brep][0]) == rg.Point3d:
+                        brep_centroid = _brep_dict[brep][0]
+                    else:
+                        brep_centroid = _brep_dict[brep][0].GetBoundingBox(True).Center  # 获取Brep物体的中心点
+                    projection = _pln_s.ClosestPoint(brep_centroid)  # 生成中心点在PLN的投影点，并生成两点向量
+                    normal = brep_centroid - projection
+
+                    # 判断法线向量是否与Plane法线向量同向
+                    if normal * _pln_s.Normal > 0:
+                        _A_brep.append(_brep_dict[brep])
+                    else:
+                        brep_negative.append(_brep_dict[brep])
+                return _A_brep, brep_negative
+
+            # 主函数
+            def Brep_Plane_split(self, BPSdatas):
+                _brep_list = BPSdatas[0]
+                _brep_dict = zip(_brep_list, range(0, len(_brep_list)))
+                _plane_list = BPSdatas[1]
+
+                brep_positive, brep_positive_index = [], []  # 返回值保存
+                end_brep = []  # 保存剩余数据
+
+                """
+                可替换成for循环，针对不同的情况替换调用参数和接收返回值
+                """
+                if len(_plane_list) == 1:
+                    brep_p, brep_nega = self.split(_brep_dict, _plane_list[0])
+                    brep_positive.append(brep_p)
+                    brep_positive.append(brep_nega)
+                else:
+                    for _pln in range(len(_plane_list)):
+                        if _pln == 0:  # 参数全部brep 第一个pln
+                            brep_p, brep_nega = self.split(_brep_dict, _plane_list[_pln])
+                            brep_positive.append(brep_p)
+                            end_brep.append(brep_nega)
+                        elif _pln + 1 == len(_plane_list):  # 参数：最后剩余的brep
+                            brep_p, brep_nega = self.split(end_brep[-1], _plane_list[_pln])
+                            brep_positive.append(brep_p)
+                            brep_positive.append(brep_nega)
+                        elif _pln < len(_plane_list):
+                            brep_p, brep_nega = self.split(end_brep[-1], _plane_list[_pln])
+                            brep_positive.append(brep_p)
+                            end_brep.append(brep_nega)
+                        else:
+                            continue
+                return brep_positive
+
+            # 数据整合
+            def data_settle(self, __data1, __data2):
+                if len(__data1) == len(__data2):
+                    return zip(__data1, __data2)
+                elif len(__data1) > len(__data2):
+                    for i in range(len(__data1) - len(__data2)):
+                        __data2.append(__data2[-1])
+                    return zip(__data1, __data2)
+                elif len(__data1) < len(__data2):
+                    for i in range(len(__data1) - len(__data2)):
+                        __data1.append(__data1[-1])
+                    return zip(__data1, __data2)
+
+            def RunScript(self, Breps, Planes):
+                try:
+                    if 'empty tree' in str(Breps) or 'empty tree' in str(Planes):
+                        self.message3("缺少必要参数")
+                        return gd[object](), gd[object]()
+                    sc.doc = Rhino.RhinoDoc.ActiveDoc
+                    # 属性取值
+                    breps_list = [list(_i) for _i in Breps.Branches]
+                    paths_list = [_i for _i in Breps.Paths]
+                    Planes_list = [list(_i) for _i in Planes.Branches]
+                    # 数据处理
+                    new_data = self.data_settle(breps_list, Planes_list)
+                    BPSdatas = ghp.run(self.Brep_Plane_split, new_data)
+
+                    Geo_Dtree = gd[object]()
+                    index_Dtree = gd[object]()
+
+                    # 树形数据结果匹配
+                    for _1 in range(len(BPSdatas)):
+                        for _2 in range(len(BPSdatas[_1])):
+                            GH_PATH = paths_list[_1].AppendElement(_2)
+                            BPSdatas_list = list(zip(*BPSdatas[_1][_2]))
+                            if BPSdatas_list:
+                                Geo_Dtree.AddRange(BPSdatas_list[0], GH_Path(GH_PATH))
+                                index_Dtree.AddRange(BPSdatas_list[1], GH_Path(GH_PATH))
+                            else:
+                                Geo_Dtree.AddRange("", GH_Path(GH_PATH))
+                                index_Dtree.AddRange("", GH_Path(GH_PATH))
+                    sc.doc.Views.Redraw()
+                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                    sc.doc = ghdoc
+                    Rhino.RhinoApp.Wait()
+                    return Geo_Dtree, index_Dtree
+                finally:
+                    self.Message = 'Geo|Plane分组'
+
 
         # 几何体的中心平面
         class GeoCenterPlane(component):
@@ -1081,19 +1412,3 @@ except:
 import GhPython
 import System
 
-
-class AssemblyInfo(GhPython.Assemblies.PythonAssemblyInfo):
-    def get_AssemblyName(self):
-        return "Geometry_group"
-
-    def get_AssemblyDescription(self):
-        return """"""
-
-    def get_AssemblyVersion(self):
-        return "1.5"
-
-    def get_AuthorName(self):
-        return "Niko_ZiYe"
-
-    def get_Id(self):
-        return System.Guid("694c7cf1-cae1-4ff6-9dbd-4cb38d949a4e")
