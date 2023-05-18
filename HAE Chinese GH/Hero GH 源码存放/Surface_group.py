@@ -770,19 +770,3 @@ except:
 import GhPython
 import System
 
-
-class AssemblyInfo(GhPython.Assemblies.PythonAssemblyInfo):
-    def get_AssemblyName(self):
-        return "Surface_Group"
-
-    def get_AssemblyDescription(self):
-        return """"""
-
-    def get_AssemblyVersion(self):
-        return "1.5"
-
-    def get_AuthorName(self):
-        return "ZiYe_Niko"
-
-    def get_Id(self):
-        return System.Guid("cfdcf3f4-f42f-4d64-beef-3bfa11511a00")
