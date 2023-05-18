@@ -18,7 +18,7 @@ import getpass
 import base64
 
 
-def decryption():
+def eto_decryption():
     designer_names = init__.designer_database
     origin_data_list = []
     now_time = int(time.time())
@@ -54,7 +54,7 @@ def decryption():
         return text
 
 
-result_text = decryption()
+result_text = eto_decryption()
 
 if result_text is not None:
     class Tip(forms.Dialog[bool]):
