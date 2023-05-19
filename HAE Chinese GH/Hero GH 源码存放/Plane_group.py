@@ -11,6 +11,7 @@ import re
 import copy
 import Curve_group
 
+
 Result = Curve_group.decryption()
 try:
     if Result is True:

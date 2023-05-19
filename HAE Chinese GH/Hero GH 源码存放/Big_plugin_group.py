@@ -18,6 +18,7 @@ import Rhino.DocObjects.ObjRef as obj
 from itertools import chain
 import math
 
+
 Result = Curve_group.decryption()
 try:
     if Result is True:

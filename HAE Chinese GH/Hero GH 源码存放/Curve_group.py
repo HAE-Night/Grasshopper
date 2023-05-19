@@ -64,53 +64,6 @@ def decryption():
          return False
 
 
-#def _get_macaddress(data):
-#    ipconfig_list = {}
-#    for _ in data:
-#        ipconfig_list[_.Name] = _.Value
-#    if ipconfig_list['IPAddress']:
-#        return ipconfig_list['MACAddress']
-#
-#
-#def decryption():
-#    select = "SELECT * FROM WIN32_NetworkAdapterConfiguration"
-#    arrInfo = System.Management.ManagementObjectSearcher(select)
-#    prop_list = [strInfo.Properties for strInfo in arrInfo.Get()]
-#    Mac_List = map(_get_macaddress, prop_list)
-#    Mac_Address = filter(None, Mac_List)
-#    Mac_Address = Mac_Address[0] if Mac_Address else None
-#
-#    designer_names = init__.designer_database
-#    origin_data_list = []
-#    now_time = int(time.time())
-#    for name in designer_names:
-#        try:
-#            with open(r'C:\Users\%s\AppData\Roaming\Grasshopper\Libraries\{0}-KEY.licence'.format(
-#                    name) % getpass.getuser(), 'r') as f:
-#                data = f.read()
-#                origin_data_list.append(data)
-#        except:
-#            pass
-#    if len(origin_data_list) == 1:
-#        data_list = [i for i in origin_data_list[0]]
-#        re_reversed_list1 = data_list[0:10]
-#        re_reversed_list1.reverse()
-#        re_reversed_list2 = data_list[10:]
-#        re_reversed_list2.reverse()
-#        result_list = re_reversed_list1 + re_reversed_list2
-#        result = ''.join(result_list)
-#        try:
-#            origin_data = str(base64.b64decode(result))
-#            origin_list = origin_data.split('-')
-#        except TypeError:
-#            return False
-#        if origin_list[1] == Mac_Address and int(origin_list[2]) > now_time:
-#            return True
-#        else:
-#            return False
-#    elif len(origin_data_list) > 1 or len(origin_data_list) == 0:
-#        return False
-
 
 Result = decryption()
 try:

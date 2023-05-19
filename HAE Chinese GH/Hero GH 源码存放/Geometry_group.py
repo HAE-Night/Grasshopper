@@ -18,6 +18,7 @@ import copy
 import math
 import Curve_group
 
+
 Result = Curve_group.decryption()
 
 try:

@@ -13,6 +13,7 @@ import ghpythonlib.components as ghc
 import Curve_group
 import math
 
+
 Result = Curve_group.decryption()
 
 try:

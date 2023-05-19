@@ -18,6 +18,7 @@ import ghpythonlib.parallel as ghp
 import Curve_group
 from itertools import chain
 
+
 Result = Curve_group.decryption()
 try:
     if Result is True:

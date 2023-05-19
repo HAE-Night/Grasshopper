@@ -7,6 +7,8 @@
 # @Time : 2022/9/17 17:06
 
 from ghpythonlib.componentbase import dotnetcompiledcomponent as component
+from Grasshopper.Kernel.Types import GH_GeometryGroup
+from Grasshopper.Kernel import GH_Convert
 import Grasshopper, GhPython
 import Rhino
 import Rhino.Geometry as rg
@@ -23,7 +25,6 @@ from itertools import chain
 from decimal import Decimal as dd
 import re
 import random
-import Curve_group
 from operator import *
 
 Result = Curve_group.decryption()
@@ -1002,6 +1003,108 @@ try:
                     else:
                         self.Message = '修剪深度：{}'.format(Depth)
 
+        # 树形数据插入
+        class Tree_AddRange(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP_树形插入", "RPP_TreeAdd",
+                                                                   """将Data_b的数据根据path的属性路径添加到Data_a中返回""",
+                                                                   "Scavenger", "Data")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("6b33efa2-6ce1-4926-80c7-805b58d2d750")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.secondary
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Data_a", "DA", "原始树形数据")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Data_b", "DB", "插入的树形数据")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Path", "P", "树形路径\n如果数据短为字符串，请先连接Path插件")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "return", "RE", "返回值")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                p1 = self.marshal.GetInput(DA, 1)
+                p2 = self.marshal.GetInput(DA, 2)
+                result = self.RunScript(p0, p1, p2)
+
+                if result is not None:
+                    self.marshal.SetOutput(result, DA, 0, True)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAMRSURBVEhL7ZVfSNNRFMc1JUuDIiqhoD8P88/m5uacuinKdFM3nTbYaCxhFmIESb35uKcefIhYRBBEUFFQTxVED/ZSbwk9RFT4UmgGBk4isrRNf33Ob3c6xQcjfYm+cLj33N+933Pu95y75f3HliMejxe2tbXZlLu5aGlpKbRarferqqq+OxyOfrW8eairqzttNBq18vJyTYJ0dnYa1afV6O7uLvZ4PC/a29sfBIPBA7KG/7Kjo+MW3/bpm3IwODhYjCwOSCeEXKyyslKz2WwX+/r6StiSn9mpEA6HCyAc8Hq9M9g01k+wIcav2CfmJ0WOUCi0kyz3RyKRUqfT+bCioiJVVlYmAZYIkCJgkiD3oFwdIAsOHiRQsqenR4PU3dXVdQj/ZyAQ0Hw+3wkS2W6xWMaQZQrCJOSLEkCMtZTJZPpVU1MzoOhWQCdsI9MQZB8ka8gvYKfwJ/FnmJ9jLCH7IjK/C5FOmpP9gsyrq6vf1tfX+9i/V1RR9BlNIXvFh2dke0zW8N/gP6YGh/VNQNO0fAhGKO575ElDvnwD8WXkhprL5UrEYrEd6tjGIdqbzeZvinAxNwDr0+g/Cvltv99vXXWDjYJCH0WG19I1QmowGKR7UgTTJcLmsR9I+MXtdh9Rx3TkI8l12vJmti1pwzv413p7e/foO0Bzc7MBiS5DMKsI9Rpk52I8vFluMaSOrAC9z1LIOUzaNIIvbbqATWAh2VNbWzsiBZbMc0lzDammyN6lk64Fuu2CbJysNcYzyp+StqVNz9MApbThU2SZW0ssN6FV08g1T6Hf0QjHFW0GyGEi60cQLjLeoCUDjE+QLs38EvqHIRiHSF6v3jHrBSHAEsUek3op6kz7QTQK4WfI/LKG/xz/I4E94jc1NVnQd5rs15VIuio7pxEmqKFTzi1D3kJua4k8Eli5+mMcHh7e3djYeIVAM2it//4IodQFUumetMz5ZR0VOdXRPwNBC6LRqLWhoSFG0ePyLux2+1VuaKfLHK2tre5EIlGktv890DtBUbfmD0cg/2gin3L/OeTl/Qa/hmABUAXaOwAAAABJRU5ErkJggg=="
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def __init__(self):
+                pass
+
+            def message1(self, msg1):  # 报错红
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
+
+            def message2(self, msg2):  # 警告黄
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
+
+            def message3(self, msg3):  # 提示白
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
+
+            def mes_box(self, info, button, title):
+                return rs.MessageBox(info, button, title)
+
+            def RunScript(self, Data_a, Data_b, in_path):
+                try:
+                    if not in_path: return gd[object]()
+
+                    if len(in_path) == Data_b.BranchCount:
+                        if len(in_path) == 1:
+                            Data_a.AddRange(list(Data_b.Branch(0)), in_path[0])
+                        else:
+                            for path_ in range(len(in_path)):
+                                Data_a.AddRange(Data_b.Branch(path_), in_path[path_])
+
+                        paths = Data_a.Paths
+                        Branch = [list(_br) for _br in Data_a.Branches]
+
+                        DataTree = gd[object]()
+                        for _i in range(len(paths)):
+                            for _j in Branch[_i]:
+                                if 'List[object]' in str(type(_j)):
+                                    gh_Geos = [GH_Convert.ToGeometricGoo(_n) for _n in _j]
+                                    ghGroup = GH_GeometryGroup()
+                                    ghGroup.Objects.AddRange(gh_Geos)
+                                    DataTree.Add(ghGroup, paths[_i])
+                                else:
+                                    DataTree.Add(_j, paths[_i])
+                    else:
+                        self.message2("添加的数据和路径数据不匹配，请检查")
+                    return DataTree
+                finally:
+                    # 预知代码Bug之前（抛异常）可用
+                    # self.mes_box("开发组测试", 1 | 32, "标题")
+                    self.Message = 'HAE开发组'
 
         # RPP_数据结构对比
         class Data_Structure_Comparison(component):
