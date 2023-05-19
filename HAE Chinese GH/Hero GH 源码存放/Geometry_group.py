@@ -71,42 +71,72 @@ try:
             def __init__(self):
                 pass
 
+            # 数据转换成树和原树路径
+            def Restore_Tree(self, Before_Tree, Tree):
+                Tree_Path = [_ for _ in Tree.Paths]
+                After_Tree = gd[object]()
+                for i in range(Tree.BranchCount):
+                    After_Tree.AddRange(Before_Tree[i], Tree_Path[i])
+                return After_Tree
+
+            def Get_different_Center(self, brep, type_str):  # 不同的物体求中心点
+                if "Plane" in type_str:
+                    center = brep.Origin
+                elif "Circle" in type_str or "Box" in type_str or 'Rectangle' in type_str:
+                    center = brep.Center
+                elif "Point" in type_str:
+                    center = brep
+                elif "Line" in type_str:
+                    center = brep.BoundingBox.Center
+                elif "Arc" in type_str:
+                    brep = brep.ToNurbsCurve()
+                    center = brep.GetBoundingBox(True).Center
+                else:
+                    center = brep.GetBoundingBox(True).Center
+                return center
+
             # 求边界框的中心点
             def center_box(self, Box):
                 if not Box: return
                 type_str = str(type(Box))
+
                 # 群组物体判断
                 if 'List[object]' in type_str:
                     bbox = rg.BoundingBox.Empty  # 获取边界框
+                    Pt = []
                     for brep in Box:
-                        bbox.Union(brep.GetBoundingBox(rg.Plane.WorldXY))  # 获取几何边界
+                        type_str = str(type(brep))
+                        if "Circle" in type_str or 'Rectangle' in type_str or "Box" in type_str:
+                            bbox.Union(brep.BoundingBox)  # 获取几何边界
+                        elif "Plane" in type_str or 'Point' in type_str or 'Arc' in type_str:
+                            Pt.append(self.Get_different_Center(brep, type_str))
+                            bbox = rg.BoundingBox(Pt)
+                        else:
+                            bbox.Union(brep.GetBoundingBox(rg.Plane.WorldXY))
+
                     center = bbox.Center
-                else:
-                    center = Box.GetBoundingBox(
-                        True).Center if "Box" and "Plane" not in type_str else Box.Origin if "Plane" in type_str else Box.Center
+                else:  # 不是群组
+                    center = self.Get_different_Center(Box, type_str)
                 return center
 
             def GeoCenter(self, Geo):
-                center = ghp.run(self.center_box, Geo)  # 获取几何边界
+                center = ghp.run(self.center_box, Geo)
                 return center
 
             def RunScript(self, Geometry):
                 try:
-                    # 树形取值、路径
-                    Geolist = [list(Branch) for Branch in Geometry.Branches]
-                    tree_path = [path_ for path_ in Geometry.Paths]
-                    # 主方法运行
-                    Cenpt = ghp.run(self.GeoCenter, Geolist)
-                    # 数据回填
-                    New_Tree = gd[object]()
-                    for tr_ in range(Geometry.BranchCount):
-                        if Cenpt[tr_]:
-                            New_Tree.AddRange(Cenpt[tr_], tree_path[tr_])
-                        else:
-                            continue
-                    return New_Tree
+                    sc.doc = Rhino.RhinoDoc.ActiveDoc
+                    sc.doc.Views.Redraw()
+                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                    sc.doc = ghdoc
+                    Geolist = [list(Branch) for Branch in Geometry.Branches]  # 将树转化为列表
+                    Cenpt = ghp.run(self.GeoCenter, Geolist)  # 主方法运行
+                    Cenp = self.Restore_Tree(Cenpt, Geometry)  # 还原树分支
+                    return Cenp
                 finally:
-                    self.Message = 'HAE 中心点'
+                    # 预知代码Bug之前（抛异常）可用
+                    # self.mes_box("开发组测试", 1 | 32, "标题")
+                    self.Message = 'HAE中心点'
 
 
         # 几何体的中心平面
