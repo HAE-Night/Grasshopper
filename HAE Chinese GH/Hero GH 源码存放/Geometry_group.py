@@ -198,57 +198,81 @@ try:
             def mes_box(self, info, button, title):
                 return rs.MessageBox(info, button, title)
 
-            # 数据转换成树和原树路径
-            def Restore_Tree(self, Before_Tree, Tree):
+            # 可以作为树分支和路径取出还原模板
+            # 取出树分支和路径
+            def Branch_Route(self, Tree):
+                Tree_list = [_ for _ in Tree.Branches]
                 Tree_Path = [_ for _ in Tree.Paths]
+                return Tree_list, Tree_Path
+
+            # 根据树分支和路径还原树形
+            def Restore_Tree(self, Before_Tree, Tree):
+                Tree_list, Tree_Path = self.Branch_Route(Tree)
                 After_Tree = gd[object]()
                 for i in range(Tree.BranchCount):
                     After_Tree.AddRange(Before_Tree[i], Tree_Path[i])
                 return After_Tree
 
-            def Get_different_Center(self, brep, type_str):  # 不同的物体求中心点
-                if "Plane" in type_str:
-                    center = brep.Origin
-                elif "Circle" in type_str or "Box" in type_str or 'Rectangle' in type_str:
-                    center = brep.Center
-                elif "Point" in type_str:
-                    center = brep
-                elif "Line" in type_str:
-                    center = brep.BoundingBox.Center
-                elif "Arc" in type_str:
-                    brep = brep.ToNurbsCurve()
-                    center = brep.GetBoundingBox(True).Center
+            # 曲线类的平面
+            def Curve_Plane(self, Curve):
+                NurbsCurve = Curve.ToNurbsCurve()
+                if len(NurbsCurve.Points) - 1 >= 2:
+                    # NurbCurve 不是直线使用三点确定平面
+                    NurbP = NurbsCurve.Points[1]
+                    U = rg.Point3d(NurbP.X, NurbP.Y, NurbP.Z)
+                    V = Curve.PointAtEnd
                 else:
-                    center = brep.GetBoundingBox(True).Center
-                return center
+                    # Curve 是直线使用 UV 方向去得到平面
+                    U = rg.Vector3d(Curve.PointAtEnd - Curve.PointAtStart)
+                    V = rg.Vector3d.CrossProduct(U, rg.Vector3d(0, 0, 1))
+                    if V.Length < 0.01:
+                        V = rg.Vector3d.CrossProduct(U, rg.Vector3d(0, 1, 0))
+                Plane = rg.Plane(Curve.PointAtStart, U, -V)
 
-            # 求边界框的中心点
-            def center_box(self, Box):
-                if not Box: return
-                type_str = str(type(Box))
+                return Plane
 
-                # 群组物体判断
-                if 'List[object]' in type_str:
-                    bbox = rg.BoundingBox.Empty  # 获取边界框
-                    Pt = []
-                    for brep in Box:
-                        type_str = str(type(brep))
-                        if "Circle" in type_str or 'Rectangle' in type_str or "Box" in type_str:
-                            bbox.Union(brep.BoundingBox)  # 获取几何边界
-                        elif "Plane" in type_str or 'Point' in type_str or 'Arc' in type_str:
-                            Pt.append(self.Get_different_Center(brep, type_str))
-                            bbox = rg.BoundingBox(Pt)
-                        else:
-                            bbox.Union(brep.GetBoundingBox(rg.Plane.WorldXY))
+            # Brep最大面下标
+            def BrepFaces_Max(self, Brep):
+                # rg.AreaMassProperties.Compute(face).Area 方法是得到 Brep 各个面的面积
+                BrepFaces = [rg.AreaMassProperties.Compute(face).Area for face in Brep.Faces]
+                return BrepFaces.index(max(BrepFaces))  # 第一个最大值下标
 
-                    center = bbox.Center
-                else:  # 不是群组
-                    center = self.Get_different_Center(Box, type_str)
-                return center
+            # 根据中心点求面 -- U,V与原生不符，却与SEG相符
+            def Brep_Plane(self, Brep):
+                # Surface
+                if Brep.Faces.Count <= 1:
+                    Box = Brep.GetBoundingBox(False)
+                    Center = Box.Center
+                    Normal = Brep.Faces[0].NormalAt(0.5, 0.5)
+                else:  # Brep
+                    # self.BrepFaces_Max()  求 Brep 立体的最大面的下标
+                    BrepFaces = Brep.Faces[self.BrepFaces_Max(Brep)]
+                    Box = BrepFaces.GetBoundingBox(False)
+                    Center = Box.Center
+                    Normal = BrepFaces.NormalAt(0.5, 0.5)
+                # 计算法向量并给面的 Z 轴
+                Plane = rg.Plane(Center, Normal)
+                return Plane
 
-            def GeoCenter(self, Geo):
-                center = ghp.run(self.center_box, Geo)
-                return center
+            # 类型对应
+            def Type_Correspondence(self, Geometry):
+                if 'Point' in str(Geometry):
+                    # Geometry 是 Point 类型不属于 Point3d 也转换不了 Point3d
+                    #            return rg.Plane(Geometry, rg.Vector3d.XAxis, rg.Vector3d.YAxis)
+                    return None
+                elif 'Curve' in str(Geometry):
+                    return self.Curve_Plane(Geometry)
+                elif 'Brep' in str(Geometry):
+                    return self.Brep_Plane(Geometry)
+
+            # 对象多进程
+            def Object_Multiprocess(self, Geometry_List):
+                return ghp.run(self.Type_Correspondence, Geometry_List)
+
+            # 物体操作：
+            def Object_Operations(self, Geometry):
+                Geometry_Tree, Geometry_Path = self.Branch_Route(Geometry)
+                return ghp.run(self.Object_Multiprocess, Geometry_Tree)
 
             def RunScript(self, Geometry):
                 try:
@@ -256,14 +280,17 @@ try:
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
                     sc.doc = ghdoc
-                    Geolist = [list(Branch) for Branch in Geometry.Branches]  # 将树转化为列表
-                    Cenpt = ghp.run(self.GeoCenter, Geolist)  # 主方法运行
-                    Cenp = self.Restore_Tree(Cenpt, Geometry)  # 还原树分支
-                    return Cenp
+                    if 'empty tree' in str(Geometry):
+                        self.message2('请输入几何物体')
+                        return gd[object]()
+                    else:
+                        Plane = self.Object_Operations(Geometry)
+                        Plane = self.Restore_Tree(Plane, Geometry)
+                        return Plane
                 finally:
                     # 预知代码Bug之前（抛异常）可用
                     # self.mes_box("开发组测试", 1 | 32, "标题")
-                    self.Message = 'HAE中心点'
+                    self.Message = 'HAE开发组'
 
 
         # 几何排序
