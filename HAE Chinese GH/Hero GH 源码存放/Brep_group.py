@@ -25,8 +25,10 @@ import math
 import Curve_group
 import time
 import copy
+from System.Collections.Generic import List
 
-Result = Curve_group.decryption()
+
+Result = Curve_group.Result
 
 try:
     if Result is True:
@@ -2024,6 +2026,253 @@ try:
                     return BrepHole, BrepNoHole
                 finally:
                     self.Message = '区分圆孔'
+
+
+        # 圆孔修复
+        class FixHole(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP-圆孔修复", "RPP_FixHole", """修复Brep或者Surface表面的圆孔""", "Scavenger", "Brep")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("8767239f-b1fc-432b-8fc0-7585f032402c")
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Brep()
+                self.SetUpParam(p, "Hole_Brep", "B", "待修复的Brep")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Number()
+                self.SetUpParam(p, "Tolerance", "T", "修复圆孔的精度")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Brep()
+                self.SetUpParam(p, "No_Hole_Brep", "B", "修复圆孔之后的Brep")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                p1 = self.marshal.GetInput(DA, 1)
+                result = self.RunScript(p0, p1)
+
+                if result is not None:
+                    self.marshal.SetOutput(result, DA, 0, True)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAARWSURBVEhLrZRrTJNnGIaZycj+7NeyxXiIWZTS89fzgba0pSDgYSMIy5iakRnZH0n2Z4kxMU0WY2LIgoRCwiwLy9iCZjgNIIIgwgTsHCDSoehUDlGGgIAcS1vvPd/HK7IBQ41X8vRr3r7vffd97idfxGo0NLjfYV/fLLOTrvhgMLEzFErtmw18kcmW3wwzEy5zOJQQBLZjofYgENh/0u3GOrbl9fH70yOD03E9QAIQdgLPqBBHlYL5+YzLIyNHNrKtr0dgKDET2AHMkWiQxBdN+NqFUOiTgcnJLx1s+6sT7nddRSAJmIgHZlzAPAmHmIlglEQmqeHZ2cxD7MjLM30taVP4lmMeD0l4iAzGqabpe4Buw5ss3obWkUot23fK7z8TyY6vzVSDdRdu2YFuqgckOkhCT6imyGRZy/hcPkYw+Gnr+Hj2Vibx/zys1GejzQL4qLpigb9IiL/NKJlMUs3+x0Qw2kktSxuemzuwg8msTnuJ6sjTOj34CrfGADdswB0HMEAmw2Qg5EImy3LhRzmV6vPD9PEWk1vOpTx5dk+ZCvd+UeFJjQ7BZjPQbgVuU8v6SPhfuSwxoXZ9741Dzolk7NvrbDeZbBfsTmcGk31BRQ7naClSoKVIhttlHB5XaxFoMgF/kMmfZHKfxAZJfGkuNL5ny51QymzglDEwGEzQ6/WwWCywWq3pTHqBM+70yAu5hq7rxRwaCyToKlXiUYUGM1eMq+RCT7jgPmyGRGyAWsVBLpdBq9WSkQFGk/lpcnKKiMkvcNGTtq2+0N7p86rR4BGjvUSB/nNqTNbr8YzPpfN5LvTvxxIQGHKg5BslCWvAcRwUCgXkMpnwNJktsNjsR5n0C7wnvn73UoHrrK9YJ5j87pULuYzV6hBamsvf8eiu0uH+eR0OpGvwwYZoSCRiKElcKpFArdZCbzT9zGSXU+NJPHb1O6PQruYiKXpOcxh+nkubFaGbsWgtVdEAODF104aDaQps+VAhGEjIQKnkoNEZfExuZao9uzMuF8RMNxfJ0VQogf8nJQYrNZj/zYiRaj06KrQ0VTSmwy6E79mxP0WJzVskEIujIaNWaTS6oCM+3s7kVuZc/h5dfaHtjs+rElrW8YNCMOn+kcPdawYKmgIfo5pIwINGK0RR2yASSQQDjlNBbzA/YlKrczov+/26AudFX7EWDfkL4TcXytDvp3bxrw1+ZKfJZDQOhz6LxvoNWyGVSoU2qTXaUSazNjWehNyWU0ahXdU50ei9wRvQuPKvD7rJUJsZ548pstZvjKqIFomgohuotbomdvzlqPLsPHil0BisPylFO00RkCyIBydiUZUn6+P36HTbN4uionrFYjFkEslx4eCrUJmbGltXEDPQ7FWit8OBx3dtuF7KoeyobDfbEuFyud6jWzSKRCILW3o1yvP2bqrN1zTyE1abKwuVH1d8xX5aJCsr6216rP4CXAu3272uvkj30a/fahRsaQUiIv4B6Q48zcsB1rkAAAAASUVORK5CYII="
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def __init__(self):
+                self.tol = None
+
+            def message1(self, msg1):
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
+
+            def message2(self, msg2):
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
+
+            def message3(self, msg3):
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
+
+            def mes_box(self, info, button, title):
+                return rs.MessageBox(info, button, title)
+
+            def Branch_Route(self, Tree):
+                Tree_list = [list(_) for _ in Tree.Branches]
+                Tree_Path = [list(_) for _ in Tree.Paths]
+                return Tree_list, Tree_Path
+
+            def Restore_Tree(self, Before_Tree, Tree):
+                Tree_Path = [_ for _ in Tree.Paths]
+                After_Tree = gd[object]()
+                for i in range(Tree.BranchCount):
+                    After_Tree.AddRange(Before_Tree[i], Tree_Path[i])
+                return After_Tree
+
+            def remove_hole(self, brep_list):
+                new_brep_list = []
+                list = List[rg.ComponentIndex]()
+                for sub_brep in brep_list:
+                    for loop in sub_brep.Loops:
+                        if loop.LoopType == rg.BrepLoopType.Inner:
+                            list.Add(loop.ComponentIndex())
+                    new_sub_brep = sub_brep.RemoveHoles(list, self.tol)
+                    new_sub_brep = new_sub_brep if new_sub_brep else sub_brep
+                    new_brep_list.append(new_sub_brep)
+                return new_brep_list
+
+            def RunScript(self, Hole_Brep, Tolerance):
+                try:
+                    sc.doc = Rhino.RhinoDoc.ActiveDoc
+
+                    No_Hole_Brep = gd[object]()
+                    self.tol = Tolerance if Tolerance else sc.doc.ModelAbsoluteTolerance
+                    ho_brep_trunk = [list(_) for _ in Hole_Brep.Branches]
+                    if ho_brep_trunk:
+                        temp_breps = ghp.run(self.remove_hole, ho_brep_trunk)
+                        No_Hole_Brep = self.Restore_Tree(temp_breps, Hole_Brep)
+                    else:
+                        self.message2("B端不能为空！")
+                    sc.doc.Views.Redraw()
+                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                    sc.doc = ghdoc
+                    return No_Hole_Brep
+                finally:
+                    self.Message = 'Brep孔删除'
+
+
+        # 物体跟随线排序
+        class GeoSortedByCurve(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP-物体随曲线排序", "RPP_ObjectSortedByCurve", """通过曲线的方向确定一组杂乱几何物体集合的排序""", "Scavenger", "Brep")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("54118195-e4ce-423a-b238-3c92d46e8759")
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Geo", "G", "需要排序的物体")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Curve()
+                self.SetUpParam(p, "Curve", "C", "指引的曲线")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Result", "R", "排序后的物体")
+                self.Params.Output.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Index", "i", "排序后物体在原列表中的下标")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                p1 = self.marshal.GetInput(DA, 1)
+                result = self.RunScript(p0, p1)
+
+                if result is not None:
+                    if not hasattr(result, '__getitem__'):
+                        self.marshal.SetOutput(result, DA, 0, True)
+                    else:
+                        self.marshal.SetOutput(result[0], DA, 0, True)
+                        self.marshal.SetOutput(result[1], DA, 1, True)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAJqSURBVEhLtZRtSFNRGMdvRJJQYPbiK2lpjs3VUGuNa6ZJgmE0o0b28iGi+iLUoPo4o4kxg5CK1hsVjYZeIxrSF7EPK8TRsOaHxJJSaJWglpl7sbGdp+fcewYh6Obd/MEP/s95LvdcDuc+3BKyAt0lxQTxTzRkh7wHdayMUo+apZgAf30nNOTPvlHirQmT6ZNb2DLlPpovRZmEA0cMJFg7A1+0EHCVwueeqmesVYFapCgDQg6nRvz1ZgjWgFsoAc8TJThai77amrdVs0duoVulKIPglD4fxqsg7NaA06qER00KZ2sjn83aZegNKSbAty5V25CghvZm1R2DoXM5W6bcROkmiVGZl7fysUldx8ooWpRusGQ8QNVSTD56tEWKi4C8zzpP+nJTWTkfq9BOdL1YLURouNoY8e22kunyU7PDJYdgJAeIJ8PG2vNxFW2Q4gLMvjmuIqO1BKACIFAJkfHyKTKw6QJ8ygLXw3Q79JfR+TKX/ehtKcYg5DKYYEYP8EsHru6dEPquCwJ8SPn4NE3vsa8DMpjZDf3iEIuiQB1omljFggwcbQp768A3sh3gNw9kkg/5vdpcsTeWswd+4HG9zWgTH+a4TLQLjf/W+N0HLIMdO0BoKYBX95Tw2lY8NjHEr2ZtjvRuOAOTG/dipJvSl9OZEz/Ou6XHHNeK3tmvFP58YVGA1VhwlrX+h86YlygvVnIQrqvSO8zFGgBuGVuK0og+RwvFKokoUXpV6QhOoQvJgt6Oyyid89FRnBTon3kOpcdBj2XuUclmLWpEBfQSGt/9joPNqAltR+mXr0GTykX0NBprqC0SjvsHd+zhvsW1w2kAAAAASUVORK5CYII="
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def __init__(self):
+                pass
+
+            def message1(self, msg1):  # 报错红
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
+
+            def message2(self, msg2):  # 警告黄
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
+
+            def message3(self, msg3):  # 提示白
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
+
+            def mes_box(self, info, button, title):
+                return rs.MessageBox(info, button, title)
+
+            def Branch_Route(self, Tree):
+                """分解Tree操作，树形以及多进程框架代码"""
+                Tree_list = [list(_) for _ in Tree.Branches]
+                Tree_Path = [list(_) for _ in Tree.Paths]
+                return Tree_list, Tree_Path
+
+            def split_tree(self, tree_data, tree_path):
+                """操作树单枝的代码"""
+                new_tree = ght.list_to_tree(tree_data, True, tree_path)  # 此处可替换复写的Tree_To_List（源码参照Vector组-点集根据与曲线距离分组）
+                result_data, result_path = self.Branch_Route(new_tree)
+                if result_data:
+                    return result_data, result_path
+                else:
+                    return [[]], [tree_path]
+
+            def format_tree(self, result_tree):
+                """匹配树路径的代码，利用空树创造与源树路径匹配的树形结构分支"""
+                stock_tree = gd[object]()
+                for sub_tree in result_tree:
+                    fruit, branch = sub_tree
+                    for index, item in enumerate(fruit):
+                        path = gk.Data.GH_Path(System.Array[int](branch[index]))
+                        if hasattr(item, '__iter__'):
+                            for sub_index in range(len(item)):
+                                stock_tree.Insert(item[sub_index], path, sub_index)
+                        else:
+                            stock_tree.Insert(item, path, index)
+                return stock_tree
+
+            def center_box(self, Box):
+                type_str = str(type(Box))
+                if 'List[object]' in type_str:
+                    bbox = rg.BoundingBox.Empty
+                    for brep in Box:
+                        bbox.Union(brep.GetBoundingBox(rg.Plane.WorldXY))  # 获取几何边界
+                    center = bbox.Center
+                else:
+                    center = Box.GetBoundingBox(True).Center if "Box" and "Plane" not in type_str else Box.Origin if "Plane" in type_str else Box.Center
+                return center
+
+            def sort_points_on_curve(self, points, curve):
+                param_list = []
+                for point in points:
+                    param_list.append(curve.ClosestPoint(point)[1])
+                sorted_params, sorted_indexes = zip(*sorted(zip(param_list, range(len(param_list)))))
+                return sorted_indexes
+
+            def RunScript(self, Geo, Curve):
+                try:
+                    sc.doc = Rhino.RhinoDoc.ActiveDoc
+                    Result, Index = (gd[object]() for _ in range(2))
+
+                    if Geo and Curve:
+                        center_pt_list = list(ghp.run(self.center_box, Geo))
+                        self.sort_points_on_curve(center_pt_list, Curve)
+                        sorted_indexes = self.sort_points_on_curve(center_pt_list, Curve)
+
+                        Result = [Geo[_] for _ in sorted_indexes]
+                        Index = sorted_indexes
+                    elif not (Geo or Curve):
+                        self.message2('G端不能围为空！')
+                        self.message2('C端不能为空！')
+                    elif not Geo:
+                        self.message2('G端不能围为空！')
+                    elif not Curve:
+                        self.message2('C端不能为空！')
+
+                    sc.doc.Views.Redraw()
+                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                    sc.doc = ghdoc
+
+                    return Result, Index
+                finally:
+                    self.Message = '物体跟随曲线排序'
+
 
     else:
         pass

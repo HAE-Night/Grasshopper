@@ -19,7 +19,7 @@ import Grasshopper.DataTree as gd
 from itertools import chain
 import Curve_group
 
-Result = Curve_group.decryption()
+Result = Curve_group.Result
 try:
     if Result is True:
         """

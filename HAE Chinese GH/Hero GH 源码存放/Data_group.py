@@ -19,6 +19,8 @@ from Grasshopper import DataTree
 import ghpythonlib.treehelpers as ght
 import ghpythonlib.parallel as ghp
 import rhinoscriptsyntax as rs
+from Grasshopper.Kernel.Types import GH_GeometryGroup
+from Grasshopper.Kernel import GH_Convert
 from itertools import chain
 from decimal import Decimal as dd
 import re
@@ -26,7 +28,7 @@ import random
 import Curve_group
 from operator import *
 
-Result = Curve_group.decryption()
+Result = Curve_group.Result
 try:
     if Result is True:
         """
@@ -356,7 +358,7 @@ try:
         class Data_Delete(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-删除列表首尾值", "RPP-删除列表首尾值", """删除列表第一个值
+                                                                   "RPP-删除列表首尾值", "RPP_删除列表首尾值", """删除列表第一个值
         删除列表最后值
         删除列表第一个和最后的值
         列表的第一个值
@@ -1680,6 +1682,7 @@ try:
                     self.Message = 'PyList转Tree'
 
 
+        # 通过真假值筛选元素
         class PickFactor(component):
 
             def __new__(cls):
@@ -1781,10 +1784,8 @@ try:
             def pick_data(self, tuple_data):
                 Rhino.RhinoApp.Wait()
                 bool_data, data_one, data_two = tuple_data
-                if bool_data[0] is None:
-                    return [None]
-                else:
-                    return data_one if bool_data[0] else data_two
+                bool_data_base = True if bool_data[0] else False
+                return data_one if bool_data_base else data_two
 
             def RunScript(self, Factor, T_Factor, F_Factor):
                 try:
@@ -1821,6 +1822,362 @@ try:
                     return Result
                 finally:
                     self.Message = '树形数据批量筛选'
+
+
+        # 树形数据同步
+        class TreeSynchronization(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP-树形数据同步", "RPP-TreeSynchronization", """树形数据同步，匹配两树形数据所缺失的部分（类似于空占位符）""", "Scavenger", "Data")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("d8f4e8f5-56ce-4464-96bc-7469c0374158")
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "A_Tree", "A", "A树形数据，可以是目标树也可以是同步树")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "B_Tree", "B", "B树形数据，可以是目标树也可以是同步树")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Result_Tree", "RT", "配对后对应的缺失部分的树，可能是A树也可能是B树")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                p1 = self.marshal.GetInput(DA, 1)
+                result = self.RunScript(p0, p1)
+
+                if result is not None:
+                    self.marshal.SetOutput(result, DA, 0, True)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAANaSURBVEhL3dTrT1N3GAfww6UUCguQBtKxWi5WylkvaNtDbyBwNLaBpPrCLMbESBeWjqm4aDLr4kTmPHRjU6fZSdwLM0hczYwmGjExC9SRoc7Fni4z7BaVLc32Ykv6ihXG+H33tP4HtL7Zy1+ePM/n+f7Ohevu7g44HA5Jp9NJHMdt7+vr410ul6TX6yWVSvVaIBDQZ88Gg0EqLy+P2Gy2erfbfdxoNEqVlZWSRqPRdXZ2HjCZTFJ1dXV2xnpRFHdZrVZJq9VKXE9Pz3lqQENDA6g42d/fv9Pn84EGoqSkRPH7/R4agJaWFhCQIcDi9XpBA1FVVQVawt7V1bVgsVhQW1ubneEnYMput6Ourg7ZBFFKAEqQLcoEBGljUAKUlpbGKYGQXaCxsRFqtTplNpt5j8eTpgSgBIwAGwEKz/OoqanJzhB7e3tjtAgoQeGAtjYedEXPB7A7fcq6JiOK1RU5YMuWAgEaDQGVnO3elZAyeyGEL8cGMXVyv9guuAsDVFQ8A9ivhxQkjwFfnQabmxRb2x0FBn4YVnD3CHBLArsti6aNwnMEpmVRZ7THDC1tKCrTgHN2dEVb+XZUvJB7h+VgME/g6jnxzTe2xY6GAwjv6AQ3PbE7OjMRwtT7IVyN7JVNTm+wo6NjjcApMHlcZI/DMfz4DvDNGXD4aSiKp/SAHoyDzXwia03O/IBPx8XF7wZjeBgBpsfAZZLhKB5RceYk2I1xuf7l/zuwYYOZ3+RwpV8yNIMrLmOcqgCAy/UMUJWpUy6XmX9lR296q28jLE161tpcY1udP7B2YPPmgGBtF6Ctz/3OU2eObeL/TexPs3gE/8SOs+XPRmyZRHhtQFFRUfzBrQHh7qW9iH88gJtH9qSeXtvDryT2pTF7FOyLUcbyAWjjOPtzSMDPh4H7J8CuR1Ps3lt85tuhNO5EsHJ5JL8EOeA3ApIHqf42Vj4/kVq6czA/IPuhORwCdC/m7rzwwDqrM+jzutHcZEBZaXFhgdUJSf7l613BP2aHkbpyGE/OHoovfj8gMGV47cBS8vXz+H0USJzG6sVTk+xxaCf+ovOjj8Aujyl/z7/qwQI1J94jYDSzPDdsWVH2Acl3aeAHWL44Yl9SwguYp565swR86F9MDk7hCdUfnsN/T1xZnRM/P24AAAAASUVORK5CYII="
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def __init__(self):
+                pass
+
+            def message1(self, msg1):
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
+
+            def message2(self, msg2):
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
+
+            def message3(self, msg3):
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
+
+            def mes_box(self, info, button, title):
+                return rs.MessageBox(info, button, title)
+
+            def synchronism(self, origin_data, synchro_data):
+                exported_data = [_ for _ in synchro_data]
+                for index, item in enumerate(origin_data):
+                    if item not in synchro_data:
+                        exported_data.insert(index, item)
+                return exported_data
+
+            def RunScript(self, A_Tree, B_Tree):
+                try:
+                    sc.doc = Rhino.RhinoDoc.ActiveDoc
+                    Result_Tree = gd[object]()
+                    A_Tree.SimplifyPaths()
+                    B_Tree.SimplifyPaths()
+
+                    a_trunk_list = [list(_) for _ in A_Tree.Branches]
+                    b_trunk_list = [list(_) for _ in B_Tree.Branches]
+                    a_list_len, b_list_len = len(a_trunk_list), len(b_trunk_list)
+
+                    if not (a_list_len or b_list_len):
+                        self.message2("A、B端口数据为空！")
+                    elif not a_list_len:
+                        self.message2("A端口数据为空！")
+                    elif not b_list_len:
+                        self.message2("B端口数据为空！")
+                    else:
+
+                        if A_Tree.BranchCount > B_Tree.BranchCount:
+                            target_paths = [_ for _ in A_Tree.Paths]
+                            synchro_paths = [_ for _ in B_Tree.Paths]
+                            target_tree = B_Tree
+                        else:
+                            target_paths = [_ for _ in B_Tree.Paths]
+                            synchro_paths = [_ for _ in A_Tree.Paths]
+                            target_tree = A_Tree
+                        _out_data = self.synchronism(target_paths, synchro_paths)
+
+                        for single_data in _out_data:
+                            if single_data not in synchro_paths:
+                                target_tree.AddRange([], single_data)
+                        Result_Tree = target_tree
+
+                    sc.doc.Views.Redraw()
+                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                    sc.doc = ghdoc
+                    return Result_Tree
+                finally:
+                    self.Message = '树形数据同步'
+
+
+        # 属性数据插入
+        class Tree_AddRange(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP_树形插入", "RPP_TreeAdd",
+                                                                   """将Data_b的数据根据path的属性路径添加到Data_a中返回""",
+                                                                   "Scavenger", "Data")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("6b33efa2-6ce1-4926-80c7-805b58d2d750")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.secondary
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Data_a", "DA", "原始树形数据")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Data_b", "DB", "插入的树形数据")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Path", "P", "树形路径\n如果数据短为字符串，请先连接Path插件")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "return", "RE", "返回值")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                p1 = self.marshal.GetInput(DA, 1)
+                p2 = self.marshal.GetInput(DA, 2)
+                result = self.RunScript(p0, p1, p2)
+
+                if result is not None:
+                    self.marshal.SetOutput(result, DA, 0, True)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAMRSURBVEhL7ZVfSNNRFMc1JUuDIiqhoD8P88/m5uacuinKdFM3nTbYaCxhFmIESb35uKcefIhYRBBEUFFQTxVED/ZSbwk9RFT4UmgGBk4isrRNf33Ob3c6xQcjfYm+cLj33N+933Pu95y75f3HliMejxe2tbXZlLu5aGlpKbRarferqqq+OxyOfrW8eairqzttNBq18vJyTYJ0dnYa1afV6O7uLvZ4PC/a29sfBIPBA7KG/7Kjo+MW3/bpm3IwODhYjCwOSCeEXKyyslKz2WwX+/r6StiSn9mpEA6HCyAc8Hq9M9g01k+wIcav2CfmJ0WOUCi0kyz3RyKRUqfT+bCioiJVVlYmAZYIkCJgkiD3oFwdIAsOHiRQsqenR4PU3dXVdQj/ZyAQ0Hw+3wkS2W6xWMaQZQrCJOSLEkCMtZTJZPpVU1MzoOhWQCdsI9MQZB8ka8gvYKfwJ/FnmJ9jLCH7IjK/C5FOmpP9gsyrq6vf1tfX+9i/V1RR9BlNIXvFh2dke0zW8N/gP6YGh/VNQNO0fAhGKO575ElDvnwD8WXkhprL5UrEYrEd6tjGIdqbzeZvinAxNwDr0+g/Cvltv99vXXWDjYJCH0WG19I1QmowGKR7UgTTJcLmsR9I+MXtdh9Rx3TkI8l12vJmti1pwzv413p7e/foO0Bzc7MBiS5DMKsI9Rpk52I8vFluMaSOrAC9z1LIOUzaNIIvbbqATWAh2VNbWzsiBZbMc0lzDammyN6lk64Fuu2CbJysNcYzyp+StqVNz9MApbThU2SZW0ssN6FV08g1T6Hf0QjHFW0GyGEi60cQLjLeoCUDjE+QLs38EvqHIRiHSF6v3jHrBSHAEsUek3op6kz7QTQK4WfI/LKG/xz/I4E94jc1NVnQd5rs15VIuio7pxEmqKFTzi1D3kJua4k8Eli5+mMcHh7e3djYeIVAM2it//4IodQFUumetMz5ZR0VOdXRPwNBC6LRqLWhoSFG0ePyLux2+1VuaKfLHK2tre5EIlGktv890DtBUbfmD0cg/2gin3L/OeTl/Qa/hmABUAXaOwAAAABJRU5ErkJggg=="
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def __init__(self):
+                pass
+
+            def message1(self, msg1):  # 报错红
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
+
+            def message2(self, msg2):  # 警告黄
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
+
+            def message3(self, msg3):  # 提示白
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
+
+            def mes_box(self, info, button, title):
+                return rs.MessageBox(info, button, title)
+
+            def RunScript(self, Data_a, Data_b, in_path):
+                try:
+                    DataTree = gd[object]()
+                    if not in_path: return gd[object]()
+
+                    if len(in_path) == Data_b.BranchCount:
+                        if len(in_path) == 1:
+                            Data_a.AddRange(list(Data_b.Branch(0)), in_path[0])
+                        else:
+                            for path_ in range(len(in_path)):
+                                Data_a.AddRange(Data_b.Branch(path_), in_path[path_])
+
+                        paths = Data_a.Paths
+                        Branch = [list(_br) for _br in Data_a.Branches]
+
+                        for _i in range(len(paths)):
+                            for _j in Branch[_i]:
+                                if 'List[object]' in str(type(_j)):
+                                    gh_Geos = [GH_Convert.ToGeometricGoo(_n) for _n in _j]
+                                    ghGroup = GH_GeometryGroup()
+                                    ghGroup.Objects.AddRange(gh_Geos)
+                                    DataTree.Add(ghGroup, paths[_i])
+                                else:
+                                    DataTree.Add(_j, paths[_i])
+                    else:
+                        self.message2("添加的数据和路径数据不匹配，请检查")
+                    return DataTree
+                finally:
+                    self.Message = '属性数据插入'
+
+
+        # 数据偏移
+        class DataShift(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP-数据偏移", "RPP_DataShift", """通过偏移数据列表的方式将数据一一组合""", "Scavenger", "Data")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("c331dd23-ac5f-4032-bffb-339f7e5a874e")
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Data_List", "L", "偏移前的数据")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Integer()
+                self.SetUpParam(p, "Shift", "S", "需要偏移的量，不输入默认为1")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Integer()
+                self.SetUpParam(p, "Eliminate", "E", "剔除不需要的下标（可选）")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Result_List", "RL", "偏移后的数据")
+                self.Params.Output.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Right_Scissor", "RS", "去除每组树枝最末位的偏移数据")
+                self.Params.Output.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Left_Scissor", "LS", "去除每组树枝第一位的偏移数据")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                p1 = self.marshal.GetInput(DA, 1)
+                p2 = self.marshal.GetInput(DA, 2)
+                result = self.RunScript(p0, p1, p2)
+
+                if result is not None:
+                    if not hasattr(result, '__getitem__'):
+                        self.marshal.SetOutput(result, DA, 0, True)
+                    else:
+                        self.marshal.SetOutput(result[0], DA, 0, True)
+                        self.marshal.SetOutput(result[1], DA, 1, True)
+                        self.marshal.SetOutput(result[2], DA, 2, True)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAMCSURBVEhLYxgFQx8YGxt7WVpaykO51Ad6urrH9PX1Pxvo608yMTHRgQrjBkZGRk6Ghobr9HV11xKDdbS1XwLxfyD7v66Ozh+gZWuB+v309Fy5oUaiAqCCAlMTk/+G+vrYsQEIG0AwkA8yXFtLC4yBvgGL6+np3QVaogc1EhUAJeR1dXVDtbS0QpCxtrp2sIaqRqCamqa/hoZGIExcR0vrGjB4QK4H4f1QvWxQ4ygHujq6a4DBswZosC1UiHhQX8/AVD4zlD853tzBL0yvNa3Mpj4hz3RRdJZ5d26rhyhIjb2WPQ9YMTkgt96ML63CtiAu3nRtZazFnfQC01PRWfqvPUPUb8XkmG6IybaMcPfXSXf00iQzmf5nYIxM1m+IzDDaHZNksjS7zPRZQqHhb/8orctxsXrPQhJNZgXEGU3yTzDSheogDdTX17PEZxgui8vW/RCdbnA+J9/4aWy+wbeEfJOHMVEG9wOTdW+FZ5ttSqlx1IZqIQ3kVlu5FWdbLg5JNdyVG2e2uzDJ+E1YmuHViHTDuyFZhpeCkvUeh6cZnwpNtmoOijRQhWojHqSVWoWHphvuS0k2PpeSYnw6Jtz4QGyW6Z24PMPXgfG6Dz3CNO4mR+s/DYw1XO8aoycG1UYcSC+1Uw1J1L0YnKD1LDFB70lElP7xknznyWGJBo/CknR+eoepv3ILUD2dHWl6NDjSqMo/X18AqpU4EFdgqh2fY7wxOlXnd2CE5t34RNNDOdnWD6ITTC9EpBs8Do7VeewTonXcP0nvSGiSSRJUG/EAWEqyBkebx4SkGdfkpVhMy8003xtXYLYiNdPmYGiC0ZHYTINLkam6z9xD1B5EpBqXAbUwQnSSBphCok2LItKND8Um633zj9bfHJdotSMgXD8nvdwyPzvZ/FBElGkxKJmGhoYyQ/WQBJjKfM2Scwtso6uyLBeHJRlNjk+yarO3h4R3p7m56nx7ew6wSmqA7uIY7qwkpwQol/ogL9lJPDvFKQPKpT7ITbGXyUx2AkUokYCBAQAzuxMn1npfOAAAAABJRU5ErkJggg=="
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def __init__(self):
+                self.shift, self.cull_list = None, None
+
+            def message1(self, msg1):  # 报错红
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
+
+            def message2(self, msg2):  # 警告黄
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
+
+            def message3(self, msg3):  # 提示白
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
+
+            def mes_box(self, info, button, title):
+                return rs.MessageBox(info, button, title)
+
+            def Branch_Route(self, Tree):
+                """分解Tree操作，树形以及多进程框架代码"""
+                Tree_list = [list(_) for _ in Tree.Branches]
+                Tree_Path = [list(_) for _ in Tree.Paths]
+                return Tree_list, Tree_Path
+
+            def split_tree(self, tree_data, tree_path):
+                """操作树单枝的代码"""
+                new_tree = ght.list_to_tree(tree_data, True, tree_path)  # 此处可替换复写的Tree_To_List（源码参照Vector组-点集根据与曲线距离分组）
+                result_data, result_path = self.Branch_Route(new_tree)
+                if result_data:
+                    return result_data, result_path
+                else:
+                    return [[]], [tree_path]
+
+            def format_tree(self, result_tree):
+                """匹配树路径的代码，利用空树创造与源树路径匹配的树形结构分支"""
+                stock_tree = gd[object]()
+                for sub_tree in result_tree:
+                    fruit, branch = sub_tree
+                    for index, item in enumerate(fruit):
+                        path = gk.Data.GH_Path(System.Array[int](branch[index]))
+                        if hasattr(item, '__iter__'):
+                            for sub_index in range(len(item)):
+                                stock_tree.Insert(item[sub_index], path, sub_index)
+                        else:
+                            stock_tree.Insert(item, path, index)
+                return stock_tree
+
+            def cull_data(self, data_list):
+                for index in sorted(self.cull_list, reverse=True):
+                    del data_list[index]
+                return data_list
+
+            def OneByOne(self, tuple_data):
+                data, path = tuple_data
+                ensemble_data = list(zip(data, data[1:] + data[:1]))
+                right_scissor, left_scissor = ensemble_data[0: -1], ensemble_data[1:]
+                ensemble_data = self.cull_data(ensemble_data) if self.cull_list else ensemble_data
+                right_scissor = self.cull_data(right_scissor) if self.cull_list else right_scissor
+                left_scissor = self.cull_data(left_scissor) if self.cull_list else left_scissor
+
+                ungroup_data_list = map(lambda single_data: self.split_tree(single_data, path), [ensemble_data, right_scissor, left_scissor])
+                Rhino.RhinoApp.Wait()
+                return ungroup_data_list
+
+            def RunScript(self, Data_List, Shift, Eliminate):
+                try:
+                    sc.doc = Rhino.RhinoDoc.ActiveDoc
+                    Result_List, Right_Scissor, Left_Scissor = (gd[object]() for _ in range(3))
+                    self.shift = Shift if Shift else 1
+                    self.cull_list = Eliminate
+
+                    origin_data, data_path = self.Branch_Route(Data_List)
+                    if origin_data:
+                        iter_ungroup_data = zip(*ghp.run(self.OneByOne, zip(origin_data, data_path)))  # 多输出端使用zip解组
+                        Result_List, Right_Scissor, Left_Scissor = ghp.run(lambda single_tree: self.format_tree(single_tree), iter_ungroup_data)  # 多输出端利用多进程或者map将数据输出
+                    else:
+                        self.message2('L端不能为空！')
+                    sc.doc.Views.Redraw()
+                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                    sc.doc = ghdoc
+
+                    return Result_List, Right_Scissor, Left_Scissor
+                finally:
+                    self.Message = '数据偏移'
 
     else:
         pass

@@ -18,7 +18,7 @@ import ghpythonlib.parallel as ghp
 import Curve_group
 from itertools import chain
 
-Result = Curve_group.decryption()
+Result = Curve_group.Result
 try:
     if Result is True:
         # 多重向量偏移
@@ -719,7 +719,7 @@ try:
                         self.marshal.SetOutput(result[1], DA, 1, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAE7SURBVEhLYxgFgwf8Z6hnWsUQygzlUh98lAoQ/irrJwXlUh/8kwnh/C8aygPlUh/8l4/neC4eww3lUh+ALPgv6cMF5VIf0MWCp7S2ABTRUC5JQLdii6B65y78KZBcC+z3/xfRm3LWQ7v7gC9UCDsg1QKgwSxm2/7xGW/6L8Lw/z8jVBg3eAQ0HIShXKzAYuU/Tv0JJwP1Jp0ND73yn834zH9WqBRhAE5FQAzlogCVbf/YTXf/E7bZ8l9Jq/eYkG77YUGoFPEA3QfafSfc9KZdEAMGhQDQYEGtVf/ZoFLkAXBRgeQDnQmnYoxnXpEL/f+fOgUgKA/8l0zj+s/AwAjCUGEwgIkhyRGOVHTw3ziNFegDgTdC0Xz4sQec/Q8LficYyv9OKZT/i1yg5Fspf1mo8dQHSL4dBfgAAwMApZyFnnf6Mg4AAAAASUVORK5CYII="
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAPESURBVEhLtZZ/TFNXFMfvtO+9dhbkVwlBkCW2/kLsHL9azWSJIyFGJTFgNBoxYYqDNSuCGsCkoqmuKigsYrrISBSlbaQFCwJWQZNVE3+Ly0x0if/otsRNmPgLE3s9573bapVWzdwn+ead872vPX333vNuSSj+JiRySBC+YunHZ5jna0YEwfWPXD6XWR8HSsi4f3ne+EAuX/0rIfwQz1tHOC6VDf93oAD3VBC+hhC/dMdjhSJpWCbLEgfDcI+QT0fhh6DwM8wOC06NSwoJKXSYeBaK5PY1xc8/1fQlSwlMZbKP5zei4KkP+QiJYEMh0YPaMJjTbcnQefffST+xax/mhJrGzXabvdlXrDStc/sK0ZNQg7KfwPTCU0ySrNAECqg7qvekXm+kU1xVo+nWdVzOgEk2+VjlI/XV3XSys9KM9wCxoLugPJ8gfAMFEkU3DIECCXZDjupExVCcrewQLNIn6EUfWVsS3WFwx7Qb/PN9HlSDwTDHLX+oVMZhHA4tyCaFQEOeikVj0QxySOE7yOj6Yem8ywcvJJcs3g7pT5IbFgPoOkgmZm+is9cp9Gd+3KzvbRAbSuPaclH72wGatLNoFNL96IUBO/1PkLigczosiVn9e70ZPZZGQqk4lSS102TMutlMU4/X3kVTZSutTeivohMrFrphuEm8aWxw7v8CzRczQOOs/i7tWiOd3lNLNfZqaRdNcpQbUy6ZaaLDeA93B3p8W/EMuOhARzFPt1q57JMNNfq++gLMAbzvBqhMzBjKlqLp8Z3lz+JtZVeS7OUKybUXKCLb129WthbPk4wA2SBxF83oNC1Lv3aAznJve2Hw+QSwsHDQ+hScq1Ms8FozI35eoyEt+VHMDktgmyY7K/OTf9lKk05vucMlRO0Fqx/919F2mZv1gwfp5907v2fWOwkUwL0f6TGu5BbNxk6+CVI6KB0vjjFSjm28oRmso3DtYFYwOQNNs6h/5SVeFZDAxvkdpM0d6YvPPFV/+4tuS9dM9o6Kai3Jj+0t98QeXpuJeRDabvMm3WUr1brNu5mFYAF/o00A4ZevwkTtqiqeeameTvVso2pnzRT0wvJZ+ybPtMF6CldsGD9YoFUKiQcUKK6yl6pVTsMfsW2lZ1JaiuTMDoBnCgslYo6W5Mb1brgYY/u2kFkIFsBGM4F60AjCsiSCOAqD1sEPFIiGE7F6IFR3M9JA2KVv7Zj3Ac6FpQ+gCEvHBN/t8GPILdBZkPcDpXvO8xVwDQk+Hh6VC0ALP1B5ZRyXBn8aLBD/P8C5vuu+TJb5EotAN0UFAg5rAAAAAElFTkSuQmCC"
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
@@ -914,8 +914,8 @@ try:
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
-                p = GhPython.Assemblies.MarshalParam()
-                self.SetUpParam(p, "Distance", "D", "点与曲线距离小于此值选取点")
+                p = Grasshopper.Kernel.Parameters.Param_Number()
+                self.SetUpParam(p, "Distance", "D", "与曲线距离小于此值的点")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
@@ -1107,11 +1107,11 @@ try:
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                p = Grasshopper.Kernel.Parameters.Param_Point()
                 self.SetUpParam(p, "Point_Group", "Pr", "分组后的点集")
                 self.Params.Output.Add(p)
 
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                p = Grasshopper.Kernel.Parameters.Param_Integer()
                 self.SetUpParam(p, "Index", "I", "分组后的点集在原列表中的下标")
                 self.Params.Output.Add(p)
 
@@ -1128,7 +1128,7 @@ try:
                         self.marshal.SetOutput(result[1], DA, 1, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "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"
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAO/SURBVEhLzVVpaBRJGK3unp57kkyOmcxkJpNEY7yNoiKIEkGIsIKKJxFdlAUVwQMFRQTRKIKKiheoEQNBlP0hKC7iriSKGMQL9M+y7rpBPBB3Xe9b/HyvupMYCSGiLD54VE3Vq/r6e/VVjfqeYbgt4XHbb4b9YBoMYufDg2z/TfS3cQJIgCOdbvcxEZzldDVGgHbMNE80xdMimT5Sn1cotlLrMV4JrqPoSzAarHa6bZiwNzcub4t7yalYSqSkjyyJRAXjfZ3pr8RA29v4Kt1LLhdmZFYoS94j0J/JUsk3rN2upEvMBGeAP4E1HADorel0VXJZJPpGMr3lWbpcHqZ6yku0UlwhU4LhFszDra5R5DIOloJc8DOYDRITjxUUySNsfAkZvMbXL4U9fyfLZHs0Rpv6ObLOkQSXgxvAURxwEQN1aWaZ5pqb2OwsDni2tqdC6nDId4p6yK84D0imU9cZyitt392jBUk5Hy+WBZEcivc4U+0Y6PHW30/10NZw03/R8rDJq8gopMxlkK0CWcrtKPPYjfew4Hcc1prsPJHSvlKXW8ggzKYNVb7AL0/g+X/uxk/Rf4D+Y7S0qdSyN0E2DozqBS7612bno6Z7y/VEiRzKTzgHhyALwjqTYeAi0PwhEG58gTlWEXXUH4BFa7H+Jcb6ebz7uGEHoDzmnYMtryF4nCrXX8avYQYtaBOW5whkP4LG+EC4icHfQcOPOlGQkr+guYpAzKTTAHHDqv0D1rDs6CnTvYHfi1EdLL+5oewHrlSN8QdO0haeATOhlnyDgDz8Msve6krbYCcsawsvChfSWy5kSxs+IABvLXR8IlSl19dwH2dFOzj/D3T8qOdYcw1ZhE2TB9wBSy2lmlnTtIaZzIfvXMhFkqnQzwF0vIAqahi1tO0MynQH6p62MgAzcHWtl7MNKbCmIS+h7bhVVKYPjXZdRNCmWFquoIVmvlYrNfU0xi5gbFduewCu3eZctAGOrCNCc0JZjyiit/waklWyKadA31hodAZAZmVW7jtW3KcW0cqaUOQ25iNgQCs/RZ5h7eMdaF1E8jngRjudLxvqKJUa7vU10z7Oc3Nm24LM05a1GdOTwRVa+BlKJgXCr5gFFzAAS5a/x/qDfMS8IB89PhvTtKUIzozZrsblxPhgMMfVdYrZvFisJi4iN8IijM91ptVCkBdOlVh2M8+GmuN4/MKGcZDj3UFNf9vbMg+Bqv3BF/jNf6pWMAuf01WFOYb5W5Uv+BBV2IDffme4ewiCQ8Bi/atrdHhz/kco9RESr7nIkzHaUwAAAABJRU5ErkJggg=="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
@@ -1147,30 +1147,36 @@ try:
                 return rs.MessageBox(info, button, title)
 
             def Branch_Route(self, Tree):
+                """分解Tree操作，树形以及多进程框架代码"""
                 Tree_list = [list(_) for _ in Tree.Branches]
                 Tree_Path = [list(_) for _ in Tree.Paths]
                 return Tree_list, Tree_Path
 
+            def split_tree(self, tree_data, tree_path):
+                """操作树单枝的代码"""
+                new_tree = ght.list_to_tree(tree_data, True, tree_path)  # 此处可替换复写的Tree_To_List（源码参照Vector组-点集根据与曲线距离分组）
+                result_data, result_path = self.Branch_Route(new_tree)
+                if list(chain(*result_data)):
+                    return result_data, result_path
+                else:
+                    return [[]], result_path
+
             def format_tree(self, result_tree):
+                """匹配树路径的代码，利用空树创造与源树路径匹配的树形结构分支"""
                 stock_tree = gd[object]()
                 for sub_tree in result_tree:
                     fruit, branch = sub_tree
                     for index, item in enumerate(fruit):
                         path = gk.Data.GH_Path(System.Array[int](branch[index]))
                         if hasattr(item, '__iter__'):
-                            for sub_index in range(len(item)):
-                                stock_tree.Insert(item[sub_index], path, sub_index)
+                            if item:
+                                for sub_index in range(len(item)):
+                                    stock_tree.Insert(item[sub_index], path, sub_index)
+                            else:
+                                stock_tree.AddRange(item, path)
                         else:
                             stock_tree.Insert(item, path, index)
                 return stock_tree
-
-            def split_tree(self, tree_data, tree_path):
-                new_tree = ght.list_to_tree(tree_data, True, tree_path)
-                result_data, result_path = self.Branch_Route(new_tree)
-                if result_data:
-                    return result_data, result_path
-                else:
-                    return [[]], [tree_path]
 
             def group_pts(self, tuple_data):
                 origin_pts, origin_path = tuple_data
@@ -1211,7 +1217,7 @@ try:
                         res_pt_list.insert(rest_index, [origin_pts[rest_index]])
                         res_pt_indexes.insert(rest_index, [rest_index])
 
-                ungroup_data = ghp.run(lambda x: self.split_tree(x, origin_path), [res_pt_list, res_pt_indexes])
+                ungroup_data = map(lambda x: self.split_tree(x, origin_path), [res_pt_list, res_pt_indexes])
                 Rhino.RhinoApp.Wait()
                 return ungroup_data
 

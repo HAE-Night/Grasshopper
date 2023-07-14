@@ -12,8 +12,10 @@ import Rhino.Geometry as rg
 import ghpythonlib.components as ghc
 import Curve_group
 import math
+import scriptcontext as sc
+import Grasshopper.DataTree as gd
 
-Result = Curve_group.decryption()
+Result = Curve_group.Result
 
 try:
     if Result is True:
@@ -849,6 +851,162 @@ try:
             切割 -- tertiary
         """
 
+
+        # 延伸曲面（不含非规整曲面）
+        class ExtendSurface(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP-曲面延伸", "RPP-ExtendSurface", """延伸曲面（不含非规整曲面），通过输入曲面的四边延伸曲面""", "Scavenger", "Surface")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("4b5244c4-8cef-489e-b1ad-6b01e301de7b")
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Surface()
+                self.SetUpParam(p, "Surface", "S", "待延伸的曲面")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Curve()
+                self.SetUpParam(p, "Edges", "E", "曲面的边缘")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Number()
+                self.SetUpParam(p, "Distance", "D", "要延伸的距离")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Boolean()
+                self.SetUpParam(p, "Smooth", "S", "是否平滑")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Result_Surface", "S", "延伸后的曲面")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                if isinstance(p0, Rhino.Geometry.Brep) and p0.Faces.Count == 1: p0 = p0.Faces[0].DuplicateSurface()
+                p1 = self.marshal.GetInput(DA, 1)
+                p2 = self.marshal.GetInput(DA, 2)
+                p3 = self.marshal.GetInput(DA, 3)
+                result = self.RunScript(p0, p1, p2, p3)
+
+                if result is not None:
+                    self.marshal.SetOutput(result, DA, 0, True)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAATJSURBVEhLpZVtUFRlFMcvqaSImkwqTVFCoQhDBjuK8lrEy45gCbGlImkwe4ELsuzevXv3cu/uE8uLLG+6CuhOfimNUStCM+1FomR0gOQlorGa+lB5PzSjfmgmZWHZ0/NcFhvLl9b+M3f2d/bunv+ec+5zlrqXWJZdaNHvfoEwQmguqixPddL0PBJXG8sTEMMEK/f05euRTrdSYbZkOTJUJBK+pzQazRzRSKslE92OqrSxFrM2zsJpO5BJG4/4nSstJm2zldMWIL54pYWja618sQ7pi4KsHP2alSt2IIGO8Ka6swAoP7Zpx0IJbduK0M75CGn8RWv+NvwaiKvxl9D2bIQKVpF7ItqeZrFsV5HP4DhYQvl5hL2p7i7NCc0cwZaT5w0poS4HfzFlLuGq2txMsSb3qZn3t6SYbK9EEdajvKCq2i0vE76vSDKzXb3JG1Kmpsws2qlSZiC0qFNMDeonCBsbMzdy9szVhM17spaaG9UZhO8rYsA5kpUhExGercDc9nycsS1FGTLvSI4xtyaGKdygWsLtT04ifF+RFhkPqhK8IWV8S5Uwa8Adio1lO55dTlh/KDaaPRyjtIs7HL9I3xG7gfB/UlrD0iVepNKcf3NK27JAClEPEVY5qQDKSSmtI1I7ghZ78e7yXC5cBIACYRz5y5foAHIR9lzUL5BPET7hD71oPmHPGcfD5JJPoQDP8ZYF4HTeMlMkCEUrvHhLnh/0a92Xy36b/IaRbw4y8kR/uTxxoUKe+KpSdvXqZVcPK09+YpQnz/Ly5GlBnjpZJU99IMru963y9Mk9V6aOomwlUTVbsc7K0/YqS36OuSY3jW9WJ7L7ktfl2sPCrw4WdsIVI8BoBcBIJcDXBoB+HF8wAfSZAXoFgB4R4DMLwFkrwOk3AbptAGcawd1Z/Ss4UQBl4yrCsUGZgPIjzfV5z4hN6aGG9qSQHXiA472aYNcwc909uhtwBYArgInzleDqNYCrxwiTn3KAKwBcAeAKYKpLAvd7VnAfx0Yft4L7SDWjVEHTqnmC8MYyJfiHXEPMPviJ9d3gQztMv2MbUpLY9GXREkc3SdLreeSEcnZ1Crs3MU57IDr65/MF2dNjOo9rAFfhi8GxGpg+WjetGIhseajVVFyMDaIkW244S9rUnBTCtEUGD5/PW3ZzsPSqZ0jnk4G7E8+iqwUUAyLSItGwK8Qb3qYbA8wwjOl9N+hunTEAAD9kLDNIfCEvIM2r5vrN2XxreqqhfWN8wYGIVX8OlPbCuOHBDYiQqWSDaNZmCHVbV6Dm7Ef1LRlBur1rH8HLLeDGIPMFjONB/x8Dp3Pmn+pOwgajD9Si2RlIupLVVpPWIoo7UvEuX29s3PQc60iM1Dqinj73UdbjE4PMNV+H7H2KPF4D3RoLT1eJ6N8Gv/Tt2uwZx0l9PQdddnC/bftWMcDy47jCRV6+TROXSg76fNCOzZ7kGgOFKkvDLCbaIEkFMSbbljWG5hdXsfuTQvNbIx4b79M86Rph/nCP+LYqoLsepjptv3uOoMV42TFx+JDVSVL+S3xNTqqxMT0Bt0fFtK2NujZU1APX8UL7kQX4ngP4jgcYw/EIXnBDOFE/ArhYjRdfDcCXtQDn6gE+b8QX/vXvoq0URVF/Aa0zCJABzoW+AAAAAElFTkSuQmCC"
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def __init__(self):
+                self.smooth = None
+
+            def message1(self, msg1):
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
+
+            def message2(self, msg2):
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
+
+            def message3(self, msg3):
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
+
+            def mes_box(self, info, button, title):
+                return rs.MessageBox(info, button, title)
+
+            def Branch_Route(self, Tree):
+                Tree_list = [list(_) for _ in Tree.Branches]
+                Tree_Path = [list(_) for _ in Tree.Paths]
+                return Tree_list, Tree_Path
+
+            def Restore_Tree(self, Before_Tree, Tree):
+                Tree_Path = [_ for _ in Tree.Paths]
+                After_Tree = gd[object]()
+                for i in range(Tree.BranchCount):
+                    After_Tree.AddRange(Before_Tree[i], Tree_Path[i])
+                return After_Tree
+
+            def _extend_surface(self, surf, edge_list, dis_list):
+
+                def key_fun(surf, iso_curve, dis):
+                    temp_surf = surf.Extend(iso_curve[0], dis[0], self.smooth)
+                    iso_curve.pop(0)
+                    dis.pop(0)
+                    if iso_curve:
+                        return key_fun(temp_surf, iso_curve, dis)
+                    else:
+                        return temp_surf
+
+                iso_type_list = []
+                for index, single_edge in enumerate(edge_list):
+                    temp_curve_2d = surf.Pullback(single_edge, sc.doc.ModelAbsoluteTolerance)
+                    iso_type = surf.IsIsoparametric(temp_curve_2d)
+                    iso_type_list.append(iso_type)
+                result_surface = key_fun(surf, iso_type_list, dis_list)
+                return result_surface
+
+            def _select_edges(self, temp_brep, edge_list, dis_list):
+                if edge_list:
+                    curve_list = [_.ToNurbsCurve() for _ in temp_brep.Edges]
+                    count = 0
+                    new_edge_list, min_index_list = [], []
+                    while len(edge_list) > count:
+                        edge_list[count].Domain = rg.Interval(0, 1)
+                        origin_mid_center = edge_list[count].PointAt(0.5)
+                        min_cur_index = 0
+                        for cur_index, single_cur in enumerate(curve_list):
+                            curve_list[min_cur_index].Domain = rg.Interval(0, 1)
+                            single_cur.Domain = rg.Interval(0, 1)
+                            mid_center = single_cur.PointAt(0.5)
+                            start_mid_center = curve_list[min_cur_index].PointAt(0.5)
+                            if cur_index not in min_index_list:
+                                if mid_center.DistanceTo(origin_mid_center) < start_mid_center.DistanceTo(origin_mid_center):
+                                    min_cur_index = cur_index
+                        new_edge_list.append(curve_list[min_cur_index])
+                        count += 1
+
+                    result_surf = self._extend_surface(temp_brep.Faces[0], new_edge_list, dis_list)
+                    return result_surf
+
+            def RunScript(self, Surface, Edges, Distance, Smooth):
+                try:
+                    sc.doc = Rhino.RhinoDoc.ActiveDoc
+                    Result_Surface = gd[object]()
+                    Distance = Distance if Distance else [10]
+                    self.smooth = True if Smooth else False
+
+                    if not (Surface or Edges):
+                        self.message2('S端数据为空！')
+                        self.message2('E端数据为空！')
+                    elif not Surface:
+                        self.message2('S端数据为空！')
+                    elif not Edges:
+                        self.message2('E端数据为空！')
+                    else:
+                        edge_length, dis_length = len(Edges), len(Distance)
+                        if edge_length > dis_length:
+                            Distance = Distance + [Distance[-1]] * abs(edge_length - dis_length)
+
+                        Temp_Brep = Surface.ToBrep()
+                        Result_Surface = self._select_edges(Temp_Brep, Edges, Distance)
+
+                    sc.doc.Views.Redraw()
+                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                    sc.doc = ghdoc
+                    return Result_Surface
+                finally:
+                    self.Message = '曲面延伸'
+
     else:
         pass
 except:
@@ -856,4 +1014,3 @@ except:
 
 import GhPython
 import System
-
