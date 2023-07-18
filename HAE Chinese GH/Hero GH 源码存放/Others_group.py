@@ -27,7 +27,7 @@ import time
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
-Result = Curve_group.decryption()
+Result = Curve_group.Result
 try:
     if Result is True:
         """
@@ -284,12 +284,12 @@ try:
         """
 
 
-        # 百度翻译
+        # 某度翻译
         class TranslateByBAIDU(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-百度翻译", "RPP_TranslateByBAIDU",
-                                                                   """通过百度API接口进行翻译，需要ID和密钥""",
+                                                                   "RPP-某度翻译", "RPP_TranslateByMODU",
+                                                                   """通过某度API接口进行翻译，需要ID和密钥""",
                                                                    "Scavenger", "Others")
                 return instance
 
@@ -387,7 +387,7 @@ try:
                     else:
                         self.message2("字符不能为空！！！")
                 finally:
-                    self.Message = '百度翻译'
+                    self.Message = '某度翻译'
 
 
         # 图层重命名

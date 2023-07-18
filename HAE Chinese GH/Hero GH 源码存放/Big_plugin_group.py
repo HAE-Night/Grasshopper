@@ -18,8 +18,7 @@ import Rhino.DocObjects.ObjRef as obj
 from itertools import chain
 import math
 
-
-Result = Curve_group.decryption()
+Result = Curve_group.Result
 try:
     if Result is True:
         """
@@ -933,20 +932,19 @@ import System
 
 class AssemblyInfo(GhPython.Assemblies.PythonAssemblyInfo):
     def __init__(self):
-        # use your icon here
         icon_text = 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAOSSURBVDhPHZNbTNtVAMb/GiNz4MYEBMp9XDeg3MatUFpokUsplJHScmkp0MqlLaVcCy0dl1VuU1a2oVFYJDgTHwyZ7mEmPqgP6oyZvpiYLNFo9GUmmhgfTHz4eeDpPJzkO9/3+74jmfVaPMNmFj1DHN/bY393mb9/e8Rfv3zFZtDDZ8f78M8P/PHjpzx5/ICnv37J7z9/zp9Pv+W/f39C0taVMjvey4LLis89zMP7Bzx+9BH3Dm+RliLDYmrjyfcP+O7r+xzeDbO6NMXOVpDwxhLvH4SROpuVOPrasPe2sb3i5Zsvjnn48RGaumrKCnJQVsgJTjuYcw6iU1VgeKUG96CJG8tTrM6NIk2N9uAe6mTMomfrmofd9TmGzR0kxseScTGF1NREjG0qRnp1VBRkUVGYRYOiiMUJG5t+N1JteSFaRSkL7gE++fBAKE9i0jVwIfo8CYlxxMbFoKosxNisoLooB3WVXLgqoFyeja27FSk3PYkr8hxqyi/z5o0AW6teTkRjXorm7NkXeObZ55DnZWK9qqGxtpiuFiWm1nrU1UVUFl9CKshJo6m+HJtZx+2NeazdOvRNaiLORBAVFUmy7GViL5yjU2Q3iyh9Bi16TTUTQ13YTC1I1aX5Qq2Yk3N0oItR61VMolp53kXOvxhF9LkozkQ8j7qyBLu5hb5ONaqqQnoNjbRrFUgj/QbRgA5Tu5Z5p439NwL06FW0a6rQ1VeSmSojKjISc4eWnRUXUyNGAbEMWUI8GSlJSLuhGYLefu5sz3J0J8jexhSa2jIBKY/s9OTT6mIE0P6uZkK+V3EOdqJVlqFvVlFXVYJ0d9fPVtDJ68vjvBteYM1np0J+ieSEONKS4kmXxaMoySfkHxXLHOOdHR8+jxWPw0RocQwpOG0Tlw7Cr00SDk2z4Bmg9ko+eVnpQihPVFwkACoIeIfZWfPy3t41AXuGW5szYjdOpO0VJ28J+zdDXtb945gNGjEcNUbBpKGmDKfVQHerCouI0KgsF3uxsjJnF+u0CQEX0vHhBh+8ff1Udc3nwN7XwbRYp75JSX5uJgliSCetDJrbcInq1gMudq5PC5g9TDqMgsHNgFifm+XZ4dMKJ0fMbC6NMeeyCMoycrPTxZ1d5HfhF/FuC+v74QDbyxPMjJmRNoWNE1uD3S0sToofOWHB7x3AYmzmck4GRn0DR3tL7G5Mi9fH2duaFQ68rM47BBcr/wM++Bm5sApDFQAAAABJRU5ErkJggg=='
         icon = System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(icon_text)))
         Grasshopper.Instances.ComponentServer.AddCategoryIcon("Scavenger", icon)
         Grasshopper.Instances.ComponentServer.AddCategoryShortName('Scavenger', 'Save')
 
     def get_AssemblyName(self):
-        return "Big_plugin_group"
+        return "Tradition v4.1"
 
     def get_AssemblyDescription(self):
-        return """"""
+        return """HAE内部开发插件"""
 
     def get_AssemblyVersion(self):
-        return "1.5"
+        return "4.1"
 
     def get_AuthorName(self):
         return "ZiYe_Niko"

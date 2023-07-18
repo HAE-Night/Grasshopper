@@ -25,16 +25,18 @@ import math
 import Curve_group
 import time
 import copy
+from System.Collections.Generic import List
 
-Result = Curve_group.decryption()
+
+Result = Curve_group.Result
 
 try:
     if Result is True:
-        # Bre切割
+        # Brep切割
         class BrepCut(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-Brep切割（优化实用性）", "RPP_BrepCut", """Brep切割优化数据（时间效率最高）""", "Scavenger", "Brep")
+                                                                   "RPP-Brep切割（高精度）", "RPP_BrepCut", """Brep切割，精准度最高，会输出未相交以及切割失败的Brep""", "Scavenger", "Brep")
                 return instance
 
             def get_ComponentGuid(self):
@@ -68,7 +70,7 @@ try:
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Brep()
-                self.SetUpParam(p, "Res_Breps", "B", "切割出来的Brep集合")
+                self.SetUpParam(p, "Res_Breps", "B", "切割出来的Brep")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Brep()
@@ -110,41 +112,57 @@ try:
             def message3(self, msg3):
                 return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
 
-            def _second_handle(self, w_cut_breps):
-                passive_body, cut_body = w_cut_breps
-                if cut_body:
-                    res_body = []
-                    false_set_body = []
-                    no_intersect_set_body = []
-                    false_set_tip = []
-                    no_intersect_set_tip = []
-                    for sub_index, sub_body in enumerate(passive_body):
-                        count = 0
-                        false_count, false_brep = [], []
-                        no_intersect_count, no_intersect_brep = [], []
-                        while len(cut_body) > count:
-                            temp_brep = rg.Brep.CreateBooleanDifference(sub_body, cut_body[count], self.tol)
-                            if temp_brep is not None and len(temp_brep) == 1:
-                                sub_body = temp_brep[0]
-                            else:
-                                interse_sets = rg.Intersect.Intersection.BrepBrep(sub_body, cut_body[count], self.tol)
-                                if len(interse_sets[1]) != 0 or len(interse_sets[2]) != 0:
-                                    false_count.append(str(count))
-                                    false_brep.append(cut_body[count])
-                                else:
-                                    no_intersect_count.append(str(count))
-                                    no_intersect_brep.append(cut_body[count])
-                                sub_body = sub_body
-                            count += 1
-                        res_body.append(sub_body)
-                        false_set_body.append(false_brep)
-                        no_intersect_set_body.append(no_intersect_brep)
-                        false_set_tip.append(false_count)
-                        no_intersect_set_tip.append(no_intersect_count)
+            def mes_box(self, info, button, title):
+                return rs.MessageBox(info, button, title)
 
-                    return res_body, false_set_body, no_intersect_set_body, false_set_tip, no_intersect_set_tip
-                else:
-                    return False
+            def Branch_Route(self, Tree):
+                Tree_list = [list(_) for _ in Tree.Branches]
+                Tree_Path = [list(_) for _ in Tree.Paths]
+                return Tree_list, Tree_Path
+
+            def Restore_Tree(self, Before_Tree, Tree):
+                Tree_Path = [_ for _ in Tree.Paths]
+                After_Tree = gd[object]()
+                for i in range(Tree.BranchCount):
+                    After_Tree.AddRange(Before_Tree[i], Tree_Path[i])
+                return After_Tree
+
+            def tr_object(self, origin_brep, transform):
+                wxy_origin_breps = []
+                for _ in origin_brep:
+                    _.Transform(transform)
+                    wxy_origin_breps.append(_)
+                return wxy_origin_breps
+
+            def _second_handle(self, set_brep_data):
+                passive_brep, cut_brep = set_brep_data
+                res_brep, no_inter_set_tip, fail_set_tip = [], [], []
+
+                for sub_brep in passive_brep:
+                    count = 0
+                    sub_brep_center = sub_brep.GetBoundingBox(False).Center
+                    center_to_worldxy = rg.Transform.PlaneToPlane(ghc.XYPlane(sub_brep_center), rg.Plane.WorldXY)
+                    worldxy_to_center = rg.Transform.PlaneToPlane(rg.Plane.WorldXY, ghc.XYPlane(sub_brep_center))
+                    sub_brep.Transform(center_to_worldxy)
+                    new_cut_brep = self.tr_object(cut_brep, center_to_worldxy)
+                    while len(new_cut_brep) > count:
+                        temp_brep = sub_brep
+                        sub_brep = rg.Brep.CreateBooleanDifference(temp_brep, new_cut_brep[count], self.tol)
+                        if sub_brep:
+                            sub_brep = sub_brep[0]
+                        else:
+                            sub_brep = temp_brep
+                            interse_sets = rg.Intersect.Intersection.BrepBrep(sub_brep, new_cut_brep[count], self.tol)
+                            if not interse_sets[1]:
+                                no_inter_set_tip.append(count)
+                            else:
+                                fail_set_tip.append(count)
+                        count += 1
+                    sub_brep.Transform(worldxy_to_center)
+                    res_brep.append(sub_brep)
+
+                Rhino.RhinoApp.Wait()
+                return res_brep, no_inter_set_tip, fail_set_tip
 
             def RunScript(self, A_Brep, B_Brep, Tolerance):
                 try:
@@ -152,31 +170,40 @@ try:
                     self.tol = sc.doc.ModelAbsoluteTolerance if Tolerance is None else Tolerance
 
                     Res_Breps, Disjoint, False_Breps = (gd[object]() for _ in range(3))
-                    _a_trunk, _b_trunk = [list(_) for _ in A_Brep.Branches], [list(_) for _ in B_Brep.Branches]
-                    if len(_a_trunk) == 0 and len(_b_trunk) == 0:
+                    _a_trunk, _b_trunk = self.Branch_Route(A_Brep)[0], self.Branch_Route(B_Brep)[0]
+                    _copy_b_trunk = copy.deepcopy(_b_trunk)
+                    _a_tr_len, _b_tr_len = len(_a_trunk), len(_b_trunk)
+                    if _a_tr_len == 0 and _b_tr_len == 0:
                         self.message2("A、B端不能为空！")
-                    elif len(_a_trunk) == 0:
+                    elif _a_tr_len == 0:
                         self.message2("A端不能为空！")
-                    elif len(_b_trunk) == 0:
+                    elif _b_tr_len == 0:
                         self.message2("B端不能为空！")
                     else:
-                        _w_handle_tree = list(zip(_a_trunk, _b_trunk))
-                        _res_breps, _fail_breps, _no_intersect_breps, _fail_tips, _no_intersect_tips = zip(*ghp.run(self._second_handle, _w_handle_tree))
+                        if _a_tr_len == _b_tr_len:
+                            _zip_list = zip(_a_trunk, _b_trunk)
+                        else:
+                            _zip_list = zip(_a_trunk + [_a_trunk[-1]] * (_b_tr_len - _a_tr_len), _b_trunk) if _a_tr_len < _b_tr_len else zip(_a_trunk, _b_trunk + [_b_trunk[-1]] * (_a_tr_len - _b_tr_len))
+                        _res_breps, _disjoint_tips, _false_tips = zip(*ghp.run(self._second_handle, _zip_list))
 
-                        Res_Breps = ght.list_to_tree(_res_breps)
-                        if bool(list(chain(*_fail_tips))):
-                            False_Breps = ght.list_to_tree(_fail_breps)
-                            for t_index, tip in enumerate(_fail_tips):
-                                full_list = list(chain(*tip))
-                                if bool(full_list):
-                                    self.message1("第{}组数据 切割体{}切割失败！".format(t_index + 1, "，".join([str(int(_) + 1) for _ in full_list])))
-                        elif bool(list(chain(*_no_intersect_tips))):
-                            Disjoint = ght.list_to_tree(_no_intersect_breps)
-                            for t_index, tip in enumerate(_fail_tips):
-                                full_list = list(chain(*tip))
-                                if bool(full_list):
-                                    self.message2("第{}组数据 切割体{}为相交！".format(t_index + 1, "，".join([str(int(_) + 1) for _ in full_list])))
+                        _disjoint_breps, _false_breps = [], []
+
+                        for f_disjoint_index in range(len(_disjoint_tips)):
+                            sub_disjoint_brep = []
+                            for s_disjoint_index in _disjoint_tips[f_disjoint_index]:
+                                self.message2("第{}组数据：下标为{}的切割体未相交！".format((f_disjoint_index + 1), s_disjoint_index))
+                                sub_disjoint_brep.append(_copy_b_trunk[f_disjoint_index][s_disjoint_index])
+                            _disjoint_breps.append(sub_disjoint_brep)
+
+                        for f_fail_index in range(len(_false_tips)):
+                            sub_false_brep = []
+                            for s_fail_index in _false_tips[f_fail_index]:
+                                self.message1("第{}组数据：下标为{}的切割体切割失败！".format((f_fail_index + 1), s_fail_index))
+                                sub_false_brep.append(_copy_b_trunk[f_fail_index][s_fail_index])
+                            _false_breps.append(sub_false_brep)
+
                         self.target_paths = A_Brep.Paths if A_Brep.Paths[0].Length > B_Brep.Paths[0].Length else B_Brep.Paths
+                        Res_Breps, Disjoint, False_Breps = (ght.list_to_tree(_) for _ in [_res_breps, _disjoint_breps, _false_breps])
 
                     map(lambda single_p: [single_p.Paths[_].FromString(str(self.target_paths[_])) for _ in range(len(self.target_paths))], [_ for _ in [Res_Breps, Disjoint, False_Breps] if _.BranchCount])
                     sc.doc.Views.Redraw()
@@ -185,6 +212,187 @@ try:
                     return Res_Breps, Disjoint, False_Breps
                 finally:
                     self.Message = 'Brep切割'
+
+
+        # Brep切割（Fast）
+        class FastBrepCut(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP-Brep切割（Fast）", "RPP_BrepCut", """Brep切割，优化时间效率（出现不稳定情况~正常报错），会输出未相交Brep（若要输出切割失败物体，请使用RPP-Brep切割（高精度））""", "Scavenger", "Brep")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("5079bafd-b964-473c-a68c-163f9f940778")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.primary
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Brep()
+                self.SetUpParam(p, "A_Brep", "A", "待切割的Brep（被切割体）")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Brep()
+                self.SetUpParam(p, "B_Brep", "B", "切割的Brep（切割体）")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Number()
+                self.SetUpParam(p, "Tolerance", "T", "容差，默认0.01")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Brep()
+                self.SetUpParam(p, "Res_Breps", "B", "切割出来的Brep")
+                self.Params.Output.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Brep()
+                self.SetUpParam(p, "Disjoint", "D", "不相交的切割体")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                p1 = self.marshal.GetInput(DA, 1)
+                p2 = self.marshal.GetInput(DA, 2)
+                result = self.RunScript(p0, p1, p2)
+
+                if result is not None:
+                    if not hasattr(result, '__getitem__'):
+                        self.marshal.SetOutput(result, DA, 0, True)
+                    else:
+                        self.marshal.SetOutput(result[0], DA, 0, True)
+                        self.marshal.SetOutput(result[1], DA, 1, True)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAQOSURBVEhLrZVLbBtlFIVDu0IskBBL9iy7QxHqmlXLqiwIxW1RF7QB59U2JA6kpYIWGokKcGjsPOv4MdOxPZ7J2OP3K04cpyl51c7DpKROBI2KQxvH9dgOhz/xCCVplMQSRxrN5v73+8/VPTMVh1XmwbljxfkaRWbogiITqFFk3XWKrHBJIbHNColuURTZ7xXr2tZ35PLylR79pA2rTUDiEjDeCIyqgMGrgP86IN4AAu1Y62ztlcvL11+xc9fxqA656GfIhWogeRuQdzSiwDWjwHwF8G3IdF1Vy+Xl60AA14ZsZ+vPcnn52hMgNKBgvYKCqRlgbyJ7p/m2XF6+tgOkoBI5L2k8x2NjwYuNeQ+wGMRC1LFM0ayftwkBp+gOOB0un3z8YO0GZD1XUPxzDHg+C/wdB9Zn8PtMDLzght8XRGRwGOFgBPLxg7Ub8GITsBwF0tPA0wng2TTmJ8Kg7rEY4O1wOT1wiZ6ifPxgpWNnv8MKWc/JOrKiDUCkBXgSIw7I7VeniIM4fpsaBBnRNoC7BKDpD47u96C19chy6IxyPf55Ih34NPHMffHh04G62ZVEsJheHEP6UQyrqTFMxgKgGdtOB0+ip48Vpi8kc7HqZDakTOY8dUlJvJzMc18k80xLcsP8TVLqveYm9zi67Xnlrcr33tBo767oDQz6+ymYTAzukfGwLL/TwVLk9LtYUAJTtcD9emCIjCFAUuoiuz3wNWC/BQJIkaY71NBw6zVtp27FYGSg19OgTGYwzG4AcZAKf1S58fAipFGy34NKSL565J1kBfkmFMxfAtZvNwFzpOeRUuuSGhsbX+/s1q0YSWODgQZNbQJshwQ46kmASIgo4oa+BkmjmpH7/qfKU5WvdnXrNgSyljwvwuFww+Xyw+cLIRyKYCQ6iuHICF4GeGuRD91AIaJG0d8OBDuRFTqWKcr8vs0mnOA4+8mh8NBJSke9/cOP7Ur1L1qVWt2h6iBvrbZH1dXVp+rr06mMekplMpiaXgK8cFZDmuWAzEIpQGtxZP6YgCh64fX4EQyEMT0Vh50Xa2Uz+2tPQMJKms+UArQ6ieeP78Ni4cDZBNgFESPDoxA4R7XcYn9tAv4hgDwBSASQ2xcwsAWIDscOD1gMf3gcj8mKJkg6xy+TnwhZ1QWejGiOQEhC16aRXX6wC1CGA7/+xJtzYlVVwvpxVYI6W5Uynz/lsfRFI0EfAm4BYZ+IoMcJq5UDz5VGVJaDvXT7p+5+g4lFd68BOh0No9GyC1CGg72k0fTQjJknCaVKCSWfgP8VoNX2svyAa+vbYrXypLEDdrtzK52bqzr+6yQE3lEjl5cvtVpzx2A0L/X09qf67xpTRgOdoigmZWHYlI3lUiQLSzYLf0Yu30cVFf8CBoYWjQuZXXMAAAAASUVORK5CYII="
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def __init__(self):
+                self.tol = None
+                self.target_paths = None
+
+            def message1(self, msg1):
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
+
+            def message2(self, msg2):
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
+
+            def message3(self, msg3):
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
+
+            def mes_box(self, info, button, title):
+                return rs.MessageBox(info, button, title)
+
+            def Branch_Route(self, Tree):
+                Tree_list = [list(_) for _ in Tree.Branches]
+                Tree_Path = [list(_) for _ in Tree.Paths]
+                return Tree_list, Tree_Path
+
+            def Restore_Tree(self, Before_Tree, Tree):
+                Tree_Path = [_ for _ in Tree.Paths]
+                After_Tree = gd[object]()
+                for i in range(Tree.BranchCount):
+                    After_Tree.AddRange(Before_Tree[i], Tree_Path[i])
+                return After_Tree
+
+            def tr_object(self, origin_brep, trans):
+                wxy_origin_breps = []
+                for _ in origin_brep:
+                    _.Transform(trans)
+                    wxy_origin_breps.append(_)
+                return wxy_origin_breps
+
+            def _first_handle(self, passive_brep, cut_brep):
+                res_temp_brep = []
+                for sub_index, sub_brep in enumerate(passive_brep):
+                    sub_brep_center = sub_brep.GetBoundingBox(False).Center
+                    center_tr_one = rg.Transform.PlaneToPlane(ghc.XYPlane(sub_brep_center), rg.Plane.WorldXY)
+                    center_tr_two = rg.Transform.PlaneToPlane(rg.Plane.WorldXY, ghc.XYPlane(sub_brep_center))
+                    sub_brep.Transform(center_tr_one)
+                    new_cut_brep = self.tr_object(cut_brep[sub_index], center_tr_one)
+                    sub_res_temp_brep = rg.Brep.CreateBooleanDifference([sub_brep], new_cut_brep, self.tol)
+                    sub_res_temp_brep = [_ for _ in sub_res_temp_brep] if sub_res_temp_brep else None
+                    if sub_res_temp_brep:
+                        sub_area = [_.GetArea() for _ in sub_res_temp_brep]
+                        max_index = sub_area.index(max(sub_area))
+                        sub_res_brep = sub_res_temp_brep[max_index]
+                        sub_res_brep.Transform(center_tr_two)
+                        res_temp_brep.append(sub_res_brep)
+                return res_temp_brep
+
+            def _collision_brep(self, set_breps):
+                bumped_brep, coll_brep = set_breps
+                inter_brep, no_intersect_set_tip = [], []
+                for sub_bumped_brep in bumped_brep:
+                    count = 0
+                    sub_inter_brep, sub_no_intersect = [], []
+                    while len(coll_brep) > count:
+                        interse_sets = rg.Intersect.Intersection.BrepBrep(sub_bumped_brep, coll_brep[count], sc.doc.ModelAbsoluteTolerance)
+                        if interse_sets[1]:
+                            sub_inter_brep.append(coll_brep[count])
+                        else:
+                            sub_no_intersect.append(count)
+                        count += 1
+                    inter_brep.append(sub_inter_brep)
+                    no_intersect_set_tip.append(sub_no_intersect)
+                res_brep = self._first_handle(bumped_brep, inter_brep)
+
+                Rhino.RhinoApp.Wait()
+                return res_brep, no_intersect_set_tip
+
+            def RunScript(self, A_Brep, B_Brep, Tolerance):
+                try:
+                    sc.doc = Rhino.RhinoDoc.ActiveDoc
+                    self.tol = sc.doc.ModelAbsoluteTolerance if Tolerance is None else Tolerance
+
+                    Res_Breps, Disjoint = (gd[object]() for _ in range(2))
+                    _a_trunk, _b_trunk = self.Branch_Route(A_Brep)[0], self.Branch_Route(B_Brep)[0]
+                    _copy_b_trunk = copy.deepcopy(_b_trunk)
+                    _a_tr_len, _b_tr_len = len(_a_trunk), len(_b_trunk)
+                    if _a_tr_len == 0 and _b_tr_len == 0:
+                        self.message2("A、B端不能为空！")
+                    elif _a_tr_len == 0:
+                        self.message2("A端不能为空！")
+                    elif _b_tr_len == 0:
+                        self.message2("B端不能为空！")
+                    else:
+                        if _a_tr_len == _b_tr_len:
+                            _zip_list = zip(_a_trunk, _b_trunk)
+                        else:
+                            _zip_list = zip(_a_trunk + [_a_trunk[-1]] * (_b_tr_len - _a_tr_len), _b_trunk) if _a_tr_len < _b_tr_len else zip(_a_trunk, _b_trunk + [_b_trunk[-1]] * (_a_tr_len - _b_tr_len))
+                        _res_breps, _disjoint_tips = zip(*ghp.run(self._collision_brep, _zip_list))
+
+                        _disjoint_breps = []
+                        for f_res_breps in range(len(_res_breps)):
+                            for f_disjoint_index in range(len(_disjoint_tips[f_res_breps])):
+                                sub_no_inters = [_copy_b_trunk[f_disjoint_index][_] for _ in _disjoint_tips[f_res_breps][f_disjoint_index]]
+                                for s_disjoint_tip in _disjoint_tips[f_res_breps][f_disjoint_index]:
+                                    self.message2("第{}组数据：第{}个被切割体与下标为{}的切割体未相交！".format((f_res_breps + 1), (f_disjoint_index + 1), s_disjoint_tip))
+                                _disjoint_breps.append(sub_no_inters)
+
+                        for _f_res_index in range(len(_res_breps)):
+                            if not _res_breps[_f_res_index]:
+                                self.message1("第{}组数据切割失败：请调用RPP-Brep切割（高精度）插件查看！".format(_f_res_index + 1))
+
+                        self.target_paths = A_Brep.Paths if A_Brep.Paths[0].Length > B_Brep.Paths[0].Length else B_Brep.Paths
+                        Res_Breps, Disjoint = (ght.list_to_tree(_) for _ in [_res_breps, _disjoint_breps])
+
+                    map(lambda single_p: [single_p.Paths[_].FromString(str(self.target_paths[_])) for _ in range(len(self.target_paths))], [_ for _ in [Res_Breps, Disjoint] if _.BranchCount])
+                    sc.doc.Views.Redraw()
+                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                    sc.doc = ghdoc
+                    return Res_Breps, Disjoint
+                finally:
+                    self.Message = 'Brep切割（Fast）'
 
 
         # Brep结合
@@ -351,7 +559,7 @@ try:
 
                 p = Grasshopper.Kernel.Parameters.Param_Plane()
                 self.SetUpParam(p, "Plane", "P", "分割体（平面（Plane）或者平滑的面（Surface））")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
@@ -397,24 +605,44 @@ try:
             def message3(self, msg3):
                 return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
 
+            def mes_box(self, info, button, title):
+                return rs.MessageBox(info, button, title)
+
+            def Branch_Route(self, Tree):
+                Tree_list = [list(_) for _ in Tree.Branches]
+                Tree_Path = [list(_) for _ in Tree.Paths]
+                return Tree_list, Tree_Path
+
+            def Restore_Tree(self, Before_Tree, Tree):
+                Tree_Path = [_ for _ in Tree.Paths]
+                After_Tree = gd[object]()
+                for i in range(Tree.BranchCount):
+                    After_Tree.AddRange(Before_Tree[i], Tree_Path[i])
+                return After_Tree
+
+            def _trim_brep(self, brep, cut):
+                temp_brep = brep.Trim(cut, self.tol)
+                new_brep = temp_brep[0] if temp_brep else brep
+                cap_brep = new_brep.CapPlanarHoles(sc.doc.ModelAbsoluteTolerance)
+                res_brep = cap_brep if cap_brep else new_brep
+                return res_brep
+
             def _get_cutface(self, wait_brep, knife):
                 wait_brep = [wait_brep] if type(wait_brep) is not list else wait_brep
                 cut_k = knife[0]
 
                 new_brep_list = []
                 for single_brep in wait_brep:
-                    temp_one = single_brep.Trim(cut_k, self.tol)
-                    new_one = temp_one[0] if temp_one else single_brep
-                    new_brep_list.append(new_one)
+                    brep_one = self._trim_brep(single_brep, cut_k)
+                    new_brep_list.append(brep_one)
                     cut_k.Flip()
-                    temp_two = single_brep.Trim(cut_k, self.tol)
-                    new_two = temp_two[0] if temp_two else single_brep
-                    new_brep_list.append(new_two)
+                    brep_two = self._trim_brep(single_brep, cut_k)
+                    new_brep_list.append(brep_two)
                 knife.remove(cut_k)
                 if len(knife) > 0:
                     return self._get_cutface(new_brep_list, knife)
                 else:
-                    return new_brep_list
+                    return self._cull_geo(new_brep_list)
 
             def _cull_geo(self, geo_list):
                 total, times, no_need_index = 0, 0, []
@@ -447,6 +675,7 @@ try:
 
             def temp(self, tuple_data):
                 breps, planes = tuple_data
+                Rhino.RhinoApp.Wait()
                 return self._get_cutface(breps, planes)
 
             def RunScript(self, Brep, Plane, Tolerance, Cap):
@@ -454,26 +683,31 @@ try:
                     sc.doc = Rhino.RhinoDoc.ActiveDoc
                     Result_Brep = gd[object]()
 
-                    trunk_list = [list(_) for _ in Brep.Branches]
+                    trunk_list_brep = self.Branch_Route(Brep)[0]
+                    trunk_list_plane = self.Branch_Route(Plane)[0]
                     self.tol = Tolerance if Tolerance is not None else sc.doc.ModelAbsoluteTolerance
                     self.cap_factor = 'F' if Cap else 'T'
 
-                    if not (trunk_list or Plane):
+                    if not (trunk_list_brep or trunk_list_plane):
                         self.message2("B端实体、P端平面未输入！")
-                    elif not trunk_list:
+                    elif not trunk_list_brep:
                         self.message2("B端实体未输入！")
-                    elif not Plane:
+                    elif not trunk_list_plane:
                         self.message2("P端平面未输入！")
                     else:
-                        new_plane_list = ghp.run(lambda li: [copy.copy(_) for _ in li[:]], [Plane] * len(trunk_list))
-                        zip_list = list(zip(trunk_list, new_plane_list))
-                        origin_brep = ghp.run(self.temp, zip_list)
-                        cull_brep = map(self._cull_geo, origin_brep)
-                        Result_Brep = ght.list_to_tree(ghp.run(self._handle_brep, cull_brep))
-                        [Result_Brep.Paths[_].FromString(str(Brep.Paths[_])) for _ in range(len(Brep.Paths))]
+                        if len(trunk_list_brep) != len(trunk_list_plane):
+                            new_plane_list = trunk_list_plane + [trunk_list_plane[-1]] * abs(len(trunk_list_brep) - len(trunk_list_plane))
+                            new_plane_list = ghp.run(lambda li: [copy.copy(_) for _ in li[:]], new_plane_list)
+                        else:
+                            new_plane_list = trunk_list_plane
+                        origin_list = zip(trunk_list_brep, new_plane_list)
+                        trunk_list_res_brep = ghp.run(self.temp, origin_list)
+                        flip_res_brep = ghp.run(self._handle_brep, trunk_list_res_brep)
+                        Result_Brep = self.Restore_Tree(flip_res_brep, Brep)
 
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                    Rhino.RhinoApp.Wait()
                     sc.doc = ghdoc
                     return Result_Brep
                 finally:
@@ -1032,6 +1266,14 @@ try:
             def message3(self, msg3):
                 return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
 
+            def format_tree_data(self, target_tree, *origin_tree):
+                new_tree_by_format = []
+                for single_tree in origin_tree:
+                    if single_tree.BranchCount:
+                        [single_tree.Paths[_].FromString(str(target_tree.Paths[_])) for _ in range(len(target_tree.Paths))]
+                    new_tree_by_format.append(single_tree)
+                return new_tree_by_format
+
             def _do_main(self, group_curve):
                 if all([isinstance(_, (rg.Brep)) for _ in group_curve]) is True:
                     w_set_breps = [group_curve[0], group_curve[-1]]
@@ -1076,7 +1318,9 @@ try:
                         [self.message1("第{}组数据类型有错误！".format(_ + 1)) for _ in range(len(w_filter_list)) if w_filter_list[_] not in w_cap_breps]
 
                         Result_Breps = w_cap_breps if self.c_factor == 'F' else ghp.run(lambda b: [ghc.CapHoles(_) for _ in b], w_cap_breps)
-                        return ght.list_to_tree(Result_Breps)
+                        Result_Breps = ght.list_to_tree(Result_Breps)
+                        self.format_tree_data(Breps, Result_Breps)
+                        return Result_Breps
                 finally:
                     self.Message = 'Loft（面或线）-> 原截面实体（已删除）'
 
@@ -1640,6 +1884,396 @@ try:
                 finally:
                     self.Message = '型材模型展开'
 
+
+        # 区分是否带孔Brep
+        class BrepHole(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP-BrepHole", "区分Brep是否带孔", """区分Brep是否带孔""",
+                                                                   "Scavenger",
+                                                                   "Brep")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("db89262c-b474-413c-8cc2-91b6ff1bbb6f")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.quarternary
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Brep()
+                self.SetUpParam(p, "Brep", "B", "请输入Brep参数")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "BrepHole", "H", "Brep中带圆孔的Brep")
+                self.Params.Output.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "BrepNoHole", "B", "Brep中不带圆孔的Brep")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                result = self.RunScript(p0)
+
+                if result is not None:
+                    if not hasattr(result, '__getitem__'):
+                        self.marshal.SetOutput(result, DA, 0, True)
+                    else:
+                        self.marshal.SetOutput(result[0], DA, 0, True)
+                        self.marshal.SetOutput(result[1], DA, 1, True)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAKHSURBVEhLtVbZb4xRFPe/EN6IqKVePEl4UCKUB8TSiq2oXaPxoLEkQjQeWjGmbZpUU6MtpqPLVKeiTCo6qCb1YJmI2BJpbHOX7/s5d+F7cFszdH7Jyf3uOWd+v3vOXTJTfN9fTFaVL1MC55FHKIEq+/0b3psByOFGyJEmsquQo9fhpfvhve4LLJ0gf8TEVR7le2+TliGAU0B070GmZhpY/QJkwrPB6uZBRLdAdO6EuL3djNHN5J9r4iqvZirEncOWIYBTgMf3gV0rAjJjkI9DmkB07YboPQQRP2DGrjLyz4dMXQLYGOUvh+g7ahkCuCsgEta8BP7HYYjkWbCGhW6BhkKIB2d0HmteSgIVliGAW6CnHJnaGVT+HNMCJdBRSq3ZRS3aYcaOEvJTa67MQiY0k/KnZ1+B/+EpvJc9kEO1kM/b9Yb671Pw3z0KjOZemjb7VdzYi074n0YsQwCngIbMQD4JE9GQdfwb3AK+Rxv8GaK/Uq9Oz5V5IjA1zwLuPbh3AjyyUp8M3rYG/NZGY23FYC3LwNWJuXvcZk8MpwCPbTUn5P5p8Pa1+phqi6wg3ymwxkXg0U02e2K4BeiE/CKQz5rAwgX6UsmH1don4vvBb27Q33/D+BXUFZgL11JkVk8VqbvBiZzVF/5fBbo1qvetq8FvrNOCPFZKq15PvlVkxbRPf/zMCafA+PDtmD2cAt5oK2TyHPX8IuRgNb03l8nJbTQ3OAUUuYiWmCchRq9n70HamC82mhvcArRyTa4etu5yiMQxEvhqo7nBLTB4gVa+jcj3klAZvfNHJrmCVEi3RSQqibwCYuAkHa3vNpobnAKQjFb8zZAKNf6wgdzhFphEKIE8/qsAfgJdGFoFNH4/8QAAAABJRU5ErkJggg=="
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def __init__(self):
+                pass
+
+            def message1(self, msg1):  # 报错红
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
+
+            def message2(self, msg2):  # 警告黄
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
+
+            def message3(self, msg3):  # 提示白
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
+
+            def mes_box(self, info, button, title):
+                return rs.MessageBox(info, button, title)
+
+            # 根据树分支和路径还原树形
+            def Restore_Tree(self, Before_Tree, Tree):
+                Tree_Path = [_ for _ in Tree.Paths]
+                After_Tree = gd[object]()
+                for i in range(Tree.BranchCount):
+                    After_Tree.AddRange(Before_Tree[i], Tree_Path[i])
+                return After_Tree
+
+            # 判断圆弧是否闭合
+            def CurveIsRound(self, Curve):
+                # 先判断是否为弧形、在判断是否闭合
+                return Curve.MakeClosed(0.0001)
+
+            # 是否为带弧度的曲线
+            def IsHole(self, Curve):
+                # 判断原曲线 和 曲线头尾线 两条线的中心点距离为多少
+                Curve = Curve[0].ToNurbsCurve()
+                Start, End, Mid = Curve.PointAtStart, Curve.PointAtEnd, ghc.CurveMiddle(Curve)
+                Line = rg.Line(Start, End)
+                Mid_Mid = ghc.CurveMiddle(Line)
+                Curvature = abs(Mid.DistanceTo(Mid_Mid))
+                return Curve if Curvature > 0.01 else None
+
+            # 是否为闭合的 圆弧 多进程
+            def IsHole_Multiprocess(self, Curve_list):
+                Bool_list = list(ghp.run(self.CurveIsRound, Curve_list))  # 得到列表是否为闭合的圆弧
+                return Bool_list
+
+            # 得到合并曲线
+            def Get_Curve(self, Brep):
+                Curves = list(ghp.run(self.IsHole, zip(Brep.Edges)))
+                return list(rg.Curve.JoinCurves(list(Curves)))
+
+            # 去除多余的真假值
+            def Remove_Excess(self, Bool):
+                if True in Bool:
+                    return True
+                return False
+
+            # 有无圆弧的Brep分开
+            def HoleInBrep_Bool(self, Brep_Bool):
+                Brep, Brep_Bool = Brep_Bool  # 两组列表
+                if Brep_Bool:
+                    return Brep, None
+                return None, Brep
+
+            # Brep 炸开成曲线,判断曲线是否是圆弧
+            # 分类是否带圆弧的 Brep
+            def Brep_Multiprocess(self, Brep_list):
+                Curve_list = list(ghp.run(self.Get_Curve, Brep_list))  # 得到所有的合并曲线,查看是否是孔得到判断结果
+                Brep_Bool_list = list(map(self.IsHole_Multiprocess, Curve_list))  # 判断是否带孔的数据 真假值
+                Brep_Bool_list = list(
+                    ghp.run(self.Remove_Excess, Brep_Bool_list))  # 简化[[False, False--]] 变为 [[False]]去重 有真则为真
+                return zip(*ghp.run(self.HoleInBrep_Bool, zip(Brep_list, Brep_Bool_list)))
+
+            def RunScript(self, Brep):
+                try:
+                    sc.doc = Rhino.RhinoDoc.ActiveDoc
+                    sc.doc.Views.Redraw()
+                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                    sc.doc = ghdoc
+
+                    BrepHole, BrepNoHole = gd[object](), gd[object]()
+                    if 'empty tree' == str(Brep):
+                        self.message2('请输入参数')
+                    else:
+                        Brep_Tree = [i for i in Brep.Branches]  # 拿到数据 二维列表
+                        res = map(self.Brep_Multiprocess, Brep_Tree)  # 得到物体是否有圆的真假值
+                        BrepHole, BrepNoHole = zip(*res)
+                        BrepHole = self.Restore_Tree(BrepHole, Brep)
+                        BrepNoHole = self.Restore_Tree(BrepNoHole, Brep)
+                    return BrepHole, BrepNoHole
+                finally:
+                    self.Message = '区分圆孔'
+
+
+        # 圆孔修复
+        class FixHole(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP-圆孔修复", "RPP_FixHole", """修复Brep或者Surface表面的圆孔""", "Scavenger", "Brep")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("8767239f-b1fc-432b-8fc0-7585f032402c")
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Brep()
+                self.SetUpParam(p, "Hole_Brep", "B", "待修复的Brep")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Number()
+                self.SetUpParam(p, "Tolerance", "T", "修复圆孔的精度")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Brep()
+                self.SetUpParam(p, "No_Hole_Brep", "B", "修复圆孔之后的Brep")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                p1 = self.marshal.GetInput(DA, 1)
+                result = self.RunScript(p0, p1)
+
+                if result is not None:
+                    self.marshal.SetOutput(result, DA, 0, True)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAARWSURBVEhLrZRrTJNnGIaZycj+7NeyxXiIWZTS89fzgba0pSDgYSMIy5iakRnZH0n2Z4kxMU0WY2LIgoRCwiwLy9iCZjgNIIIgwgTsHCDSoehUDlGGgIAcS1vvPd/HK7IBQ41X8vRr3r7vffd97idfxGo0NLjfYV/fLLOTrvhgMLEzFErtmw18kcmW3wwzEy5zOJQQBLZjofYgENh/0u3GOrbl9fH70yOD03E9QAIQdgLPqBBHlYL5+YzLIyNHNrKtr0dgKDET2AHMkWiQxBdN+NqFUOiTgcnJLx1s+6sT7nddRSAJmIgHZlzAPAmHmIlglEQmqeHZ2cxD7MjLM30taVP4lmMeD0l4iAzGqabpe4Buw5ss3obWkUot23fK7z8TyY6vzVSDdRdu2YFuqgckOkhCT6imyGRZy/hcPkYw+Gnr+Hj2Vibx/zys1GejzQL4qLpigb9IiL/NKJlMUs3+x0Qw2kktSxuemzuwg8msTnuJ6sjTOj34CrfGADdswB0HMEAmw2Qg5EImy3LhRzmV6vPD9PEWk1vOpTx5dk+ZCvd+UeFJjQ7BZjPQbgVuU8v6SPhfuSwxoXZ9741Dzolk7NvrbDeZbBfsTmcGk31BRQ7naClSoKVIhttlHB5XaxFoMgF/kMmfZHKfxAZJfGkuNL5ny51QymzglDEwGEzQ6/WwWCywWq3pTHqBM+70yAu5hq7rxRwaCyToKlXiUYUGM1eMq+RCT7jgPmyGRGyAWsVBLpdBq9WSkQFGk/lpcnKKiMkvcNGTtq2+0N7p86rR4BGjvUSB/nNqTNbr8YzPpfN5LvTvxxIQGHKg5BslCWvAcRwUCgXkMpnwNJktsNjsR5n0C7wnvn73UoHrrK9YJ5j87pULuYzV6hBamsvf8eiu0uH+eR0OpGvwwYZoSCRiKElcKpFArdZCbzT9zGSXU+NJPHb1O6PQruYiKXpOcxh+nkubFaGbsWgtVdEAODF104aDaQps+VAhGEjIQKnkoNEZfExuZao9uzMuF8RMNxfJ0VQogf8nJQYrNZj/zYiRaj06KrQ0VTSmwy6E79mxP0WJzVskEIujIaNWaTS6oCM+3s7kVuZc/h5dfaHtjs+rElrW8YNCMOn+kcPdawYKmgIfo5pIwINGK0RR2yASSQQDjlNBbzA/YlKrczov+/26AudFX7EWDfkL4TcXytDvp3bxrw1+ZKfJZDQOhz6LxvoNWyGVSoU2qTXaUSazNjWehNyWU0ahXdU50ei9wRvQuPKvD7rJUJsZ548pstZvjKqIFomgohuotbomdvzlqPLsPHil0BisPylFO00RkCyIBydiUZUn6+P36HTbN4uionrFYjFkEslx4eCrUJmbGltXEDPQ7FWit8OBx3dtuF7KoeyobDfbEuFyud6jWzSKRCILW3o1yvP2bqrN1zTyE1abKwuVH1d8xX5aJCsr6216rP4CXAu3272uvkj30a/fahRsaQUiIv4B6Q48zcsB1rkAAAAASUVORK5CYII="
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def __init__(self):
+                self.tol = None
+
+            def message1(self, msg1):
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
+
+            def message2(self, msg2):
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
+
+            def message3(self, msg3):
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
+
+            def mes_box(self, info, button, title):
+                return rs.MessageBox(info, button, title)
+
+            def Branch_Route(self, Tree):
+                Tree_list = [list(_) for _ in Tree.Branches]
+                Tree_Path = [list(_) for _ in Tree.Paths]
+                return Tree_list, Tree_Path
+
+            def Restore_Tree(self, Before_Tree, Tree):
+                Tree_Path = [_ for _ in Tree.Paths]
+                After_Tree = gd[object]()
+                for i in range(Tree.BranchCount):
+                    After_Tree.AddRange(Before_Tree[i], Tree_Path[i])
+                return After_Tree
+
+            def remove_hole(self, brep_list):
+                new_brep_list = []
+                list = List[rg.ComponentIndex]()
+                for sub_brep in brep_list:
+                    for loop in sub_brep.Loops:
+                        if loop.LoopType == rg.BrepLoopType.Inner:
+                            list.Add(loop.ComponentIndex())
+                    new_sub_brep = sub_brep.RemoveHoles(list, self.tol)
+                    new_sub_brep = new_sub_brep if new_sub_brep else sub_brep
+                    new_brep_list.append(new_sub_brep)
+                return new_brep_list
+
+            def RunScript(self, Hole_Brep, Tolerance):
+                try:
+                    sc.doc = Rhino.RhinoDoc.ActiveDoc
+
+                    No_Hole_Brep = gd[object]()
+                    self.tol = Tolerance if Tolerance else sc.doc.ModelAbsoluteTolerance
+                    ho_brep_trunk = [list(_) for _ in Hole_Brep.Branches]
+                    if ho_brep_trunk:
+                        temp_breps = ghp.run(self.remove_hole, ho_brep_trunk)
+                        No_Hole_Brep = self.Restore_Tree(temp_breps, Hole_Brep)
+                    else:
+                        self.message2("B端不能为空！")
+                    sc.doc.Views.Redraw()
+                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                    sc.doc = ghdoc
+                    return No_Hole_Brep
+                finally:
+                    self.Message = 'Brep孔删除'
+
+
+        # 物体跟随线排序
+        class GeoSortedByCurve(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP-物体随曲线排序", "RPP_ObjectSortedByCurve", """通过曲线的方向确定一组杂乱几何物体集合的排序""", "Scavenger", "Brep")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("54118195-e4ce-423a-b238-3c92d46e8759")
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Geo", "G", "需要排序的物体")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Curve()
+                self.SetUpParam(p, "Curve", "C", "指引的曲线")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Result", "R", "排序后的物体")
+                self.Params.Output.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Index", "i", "排序后物体在原列表中的下标")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                p1 = self.marshal.GetInput(DA, 1)
+                result = self.RunScript(p0, p1)
+
+                if result is not None:
+                    if not hasattr(result, '__getitem__'):
+                        self.marshal.SetOutput(result, DA, 0, True)
+                    else:
+                        self.marshal.SetOutput(result[0], DA, 0, True)
+                        self.marshal.SetOutput(result[1], DA, 1, True)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAJqSURBVEhLtZRtSFNRGMdvRJJQYPbiK2lpjs3VUGuNa6ZJgmE0o0b28iGi+iLUoPo4o4kxg5CK1hsVjYZeIxrSF7EPK8TRsOaHxJJSaJWglpl7sbGdp+fcewYh6Obd/MEP/s95LvdcDuc+3BKyAt0lxQTxTzRkh7wHdayMUo+apZgAf30nNOTPvlHirQmT6ZNb2DLlPpovRZmEA0cMJFg7A1+0EHCVwueeqmesVYFapCgDQg6nRvz1ZgjWgFsoAc8TJThai77amrdVs0duoVulKIPglD4fxqsg7NaA06qER00KZ2sjn83aZegNKSbAty5V25CghvZm1R2DoXM5W6bcROkmiVGZl7fysUldx8ooWpRusGQ8QNVSTD56tEWKi4C8zzpP+nJTWTkfq9BOdL1YLURouNoY8e22kunyU7PDJYdgJAeIJ8PG2vNxFW2Q4gLMvjmuIqO1BKACIFAJkfHyKTKw6QJ8ygLXw3Q79JfR+TKX/ehtKcYg5DKYYEYP8EsHru6dEPquCwJ8SPn4NE3vsa8DMpjZDf3iEIuiQB1omljFggwcbQp768A3sh3gNw9kkg/5vdpcsTeWswd+4HG9zWgTH+a4TLQLjf/W+N0HLIMdO0BoKYBX95Tw2lY8NjHEr2ZtjvRuOAOTG/dipJvSl9OZEz/Ou6XHHNeK3tmvFP58YVGA1VhwlrX+h86YlygvVnIQrqvSO8zFGgBuGVuK0og+RwvFKokoUXpV6QhOoQvJgt6Oyyid89FRnBTon3kOpcdBj2XuUclmLWpEBfQSGt/9joPNqAltR+mXr0GTykX0NBprqC0SjvsHd+zhvsW1w2kAAAAASUVORK5CYII="
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def __init__(self):
+                pass
+
+            def message1(self, msg1):  # 报错红
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
+
+            def message2(self, msg2):  # 警告黄
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
+
+            def message3(self, msg3):  # 提示白
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
+
+            def mes_box(self, info, button, title):
+                return rs.MessageBox(info, button, title)
+
+            def Branch_Route(self, Tree):
+                """分解Tree操作，树形以及多进程框架代码"""
+                Tree_list = [list(_) for _ in Tree.Branches]
+                Tree_Path = [list(_) for _ in Tree.Paths]
+                return Tree_list, Tree_Path
+
+            def split_tree(self, tree_data, tree_path):
+                """操作树单枝的代码"""
+                new_tree = ght.list_to_tree(tree_data, True, tree_path)  # 此处可替换复写的Tree_To_List（源码参照Vector组-点集根据与曲线距离分组）
+                result_data, result_path = self.Branch_Route(new_tree)
+                if result_data:
+                    return result_data, result_path
+                else:
+                    return [[]], [tree_path]
+
+            def format_tree(self, result_tree):
+                """匹配树路径的代码，利用空树创造与源树路径匹配的树形结构分支"""
+                stock_tree = gd[object]()
+                for sub_tree in result_tree:
+                    fruit, branch = sub_tree
+                    for index, item in enumerate(fruit):
+                        path = gk.Data.GH_Path(System.Array[int](branch[index]))
+                        if hasattr(item, '__iter__'):
+                            for sub_index in range(len(item)):
+                                stock_tree.Insert(item[sub_index], path, sub_index)
+                        else:
+                            stock_tree.Insert(item, path, index)
+                return stock_tree
+
+            def center_box(self, Box):
+                type_str = str(type(Box))
+                if 'List[object]' in type_str:
+                    bbox = rg.BoundingBox.Empty
+                    for brep in Box:
+                        bbox.Union(brep.GetBoundingBox(rg.Plane.WorldXY))  # 获取几何边界
+                    center = bbox.Center
+                else:
+                    center = Box.GetBoundingBox(True).Center if "Box" and "Plane" not in type_str else Box.Origin if "Plane" in type_str else Box.Center
+                return center
+
+            def sort_points_on_curve(self, points, curve):
+                param_list = []
+                for point in points:
+                    param_list.append(curve.ClosestPoint(point)[1])
+                sorted_params, sorted_indexes = zip(*sorted(zip(param_list, range(len(param_list)))))
+                return sorted_indexes
+
+            def RunScript(self, Geo, Curve):
+                try:
+                    sc.doc = Rhino.RhinoDoc.ActiveDoc
+                    Result, Index = (gd[object]() for _ in range(2))
+
+                    if Geo and Curve:
+                        center_pt_list = list(ghp.run(self.center_box, Geo))
+                        self.sort_points_on_curve(center_pt_list, Curve)
+                        sorted_indexes = self.sort_points_on_curve(center_pt_list, Curve)
+
+                        Result = [Geo[_] for _ in sorted_indexes]
+                        Index = sorted_indexes
+                    elif not (Geo or Curve):
+                        self.message2('G端不能围为空！')
+                        self.message2('C端不能为空！')
+                    elif not Geo:
+                        self.message2('G端不能围为空！')
+                    elif not Curve:
+                        self.message2('C端不能为空！')
+
+                    sc.doc.Views.Redraw()
+                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                    sc.doc = ghdoc
+
+                    return Result, Index
+                finally:
+                    self.Message = '物体跟随曲线排序'
+
+
     else:
         pass
 except:
@@ -1649,18 +2283,18 @@ import GhPython
 import System
 
 
-class AssemblyInfo(GhPython.Assemblies.PythonAssemblyInfo):
-    def get_AssemblyName(self):
-        return "Brep_group"
-
-    def get_AssemblyDescription(self):
-        return """"""
-
-    def get_AssemblyVersion(self):
-        return "1.5"
-
-    def get_AuthorName(self):
-        return "ZiYE_Niko"
-
-    def get_Id(self):
-        return System.Guid("c0301aca-1ba0-4fd4-a08f-2887f6fe702a")
+# class AssemblyInfo(GhPython.Assemblies.PythonAssemblyInfo):
+#     def get_AssemblyName(self):
+#         return "Brep_group"
+#
+#     def get_AssemblyDescription(self):
+#         return """"""
+#
+#     def get_AssemblyVersion(self):
+#         return "1.5"
+#
+#     def get_AuthorName(self):
+#         return "ZiYE_Niko"
+#
+#     def get_Id(self):
+#         return System.Guid("c0301aca-1ba0-4fd4-a08f-2887f6fe702a")

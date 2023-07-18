@@ -11,7 +11,6 @@ import Grasshopper, GhPython
 import ghpythonlib.treehelpers as ght
 import Curve_group
 
-
 Result = Curve_group.decryption()
 try:
     if Result is True:
