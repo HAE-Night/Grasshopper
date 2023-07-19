@@ -29,9 +29,23 @@ import socket
 from itertools import chain
 import math
 
+Mac_Array = []
+
+
+def _get_macaddress(data):
+    ipconfig_list = {}
+    for _ in data:
+        ipconfig_list[_.Name] = _.Value
+    Mac_Array.append(ipconfig_list['MACAddress'])
+
 
 def decryption():
-    hostname = socket.gethostname()
+    select = "SELECT * FROM WIN32_NetworkAdapterConfiguration"
+    arrInfo = System.Management.ManagementObjectSearcher(select)
+    prop_list = [strInfo.Properties for strInfo in arrInfo.Get()]
+    map(_get_macaddress, prop_list)
+    Mac_Address = filter(None, Mac_Array)
+
     designer_names = init__.designer_database
     origin_data_list = []
     now_time = int(time.time())
@@ -56,8 +70,7 @@ def decryption():
             origin_list = origin_data.split('-')
         except TypeError:
             return False
-        if origin_list[1] == hostname.replace("-", "%") and int(origin_list[2]) > now_time:
-            #            print(hostname)
+        if origin_list[1] in Mac_Address and int(origin_list[-1]) > now_time:
             return True
         else:
             return False
@@ -65,55 +78,7 @@ def decryption():
         return False
 
 
-# def _get_macaddress(data):
-#    ipconfig_list = {}
-#    for _ in data:
-#        ipconfig_list[_.Name] = _.Value
-#    if ipconfig_list['IPAddress']:
-#        return ipconfig_list['MACAddress']
-#
-#
-# def decryption():
-#    select = "SELECT * FROM WIN32_NetworkAdapterConfiguration"
-#    arrInfo = System.Management.ManagementObjectSearcher(select)
-#    prop_list = [strInfo.Properties for strInfo in arrInfo.Get()]
-#    Mac_List = map(_get_macaddress, prop_list)
-#    Mac_Address = filter(None, Mac_List)
-#    Mac_Address = Mac_Address[0] if Mac_Address else None
-#
-#    designer_names = init__.designer_database
-#    origin_data_list = []
-#    now_time = int(time.time())
-#    for name in designer_names:
-#        try:
-#            with open(r'C:\Users\%s\AppData\Roaming\Grasshopper\Libraries\{0}-KEY.licence'.format(
-#                    name) % getpass.getuser(), 'r') as f:
-#                data = f.read()
-#                origin_data_list.append(data)
-#        except:
-#            pass
-#    if len(origin_data_list) == 1:
-#        data_list = [i for i in origin_data_list[0]]
-#        re_reversed_list1 = data_list[0:10]
-#        re_reversed_list1.reverse()
-#        re_reversed_list2 = data_list[10:]
-#        re_reversed_list2.reverse()
-#        result_list = re_reversed_list1 + re_reversed_list2
-#        result = ''.join(result_list)
-#        try:
-#            origin_data = str(base64.b64decode(result))
-#            origin_list = origin_data.split('-')
-#        except TypeError:
-#            return False
-#        if origin_list[1] == Mac_Address and int(origin_list[2]) > now_time:
-#            return True
-#        else:
-#            return False
-#    elif len(origin_data_list) > 1 or len(origin_data_list) == 0:
-#        return False
-
-
-Result = True
+Result = decryption()
 try:
     if Result is True:
         """
@@ -1789,9 +1754,9 @@ try:
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
                                                                    "RPP-Filp Curve", "RPP-统一曲线方向", """统一该曲线的方向。
-            传入曲线则所有曲线跟曲线方向保持一致
-            传入真值则为一组数据中曲线中心点最高的曲线为统一方向
-            反之中心点最低的曲线""", "Scavenger", "Curve")
+                   传入曲线则所有曲线跟曲线方向保持一致
+                   传入真值则为一组数据中曲线中心点最高的曲线为统一方向
+                   反之中心点最低的曲线""", "Scavenger", "Curve")
                 return instance
 
             def get_ComponentGuid(self):
@@ -1815,8 +1780,8 @@ try:
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
                 self.SetUpParam(p, "Direction", "G", "真值则为曲线中中心点最高的曲线、假值则相反（默认真值）\
-                    如果为曲线则使用该曲线统一方向\
-                    ")
+                           如果为曲线则使用该曲线统一方向\
+                           ")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
