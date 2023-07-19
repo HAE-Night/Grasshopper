@@ -2281,20 +2281,3 @@ except:
 
 import GhPython
 import System
-
-
-# class AssemblyInfo(GhPython.Assemblies.PythonAssemblyInfo):
-#     def get_AssemblyName(self):
-#         return "Brep_group"
-#
-#     def get_AssemblyDescription(self):
-#         return """"""
-#
-#     def get_AssemblyVersion(self):
-#         return "1.5"
-#
-#     def get_AuthorName(self):
-#         return "ZiYE_Niko"
-#
-#     def get_Id(self):
-#         return System.Guid("c0301aca-1ba0-4fd4-a08f-2887f6fe702a")

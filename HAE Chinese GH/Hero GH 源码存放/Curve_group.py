@@ -2451,19 +2451,3 @@ except:
 
 import GhPython
 import System
-
-# class AssemblyInfo(GhPython.Assemblies.PythonAssemblyInfo):
-#     def get_AssemblyName(self):
-#         return "Curve_Group"
-#
-#     def get_AssemblyDescription(self):
-#         return """"""
-#
-#     def get_AssemblyVersion(self):
-#         return "1.5"
-#
-#     def get_AuthorName(self):
-#         return "ZiYe_Niko"
-#
-#     def get_Id(self):
-#         return System.Guid("99e47d1b-376c-4606-8812-cd6625f02566")

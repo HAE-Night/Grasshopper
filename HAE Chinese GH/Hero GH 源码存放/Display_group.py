@@ -373,20 +373,3 @@ except:
 
 import GhPython
 import System
-
-
-# class AssemblyInfo(GhPython.Assemblies.PythonAssemblyInfo):
-#     def get_AssemblyName(self):
-#         return "Display_group"
-#
-#     def get_AssemblyDescription(self):
-#         return """"""
-#
-#     def get_AssemblyVersion(self):
-#         return "1.5"
-#
-#     def get_AuthorName(self):
-#         return "ZiYE_Niko"
-#
-#     def get_Id(self):
-#         return System.Guid("454e5931-0b6d-4d5f-bb40-0da0d9ddfab3")
