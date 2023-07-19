@@ -23,7 +23,6 @@ from itertools import chain
 import getpass
 import time
 
-
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
