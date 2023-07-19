@@ -43,8 +43,8 @@ def eto_decryption():
             origin_list = origin_data.split('-')
         except TypeError:
             pass
-        over_second = int(origin_list[2]) - now_time
-        time_Array = time.localtime(int(origin_list[2]))
+        over_second = int(origin_list[-1]) - now_time
+        time_Array = time.localtime(int(origin_list[-1]))
         Style_time = time.strftime("%Y-%m-%d %H:%M:%S", time_Array)
         if over_second > 0:
             over_day = int(round((over_second / 60 / 60 / 24), 0))
