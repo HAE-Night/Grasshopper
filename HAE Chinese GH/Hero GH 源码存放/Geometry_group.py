@@ -11,6 +11,7 @@ import rhinoscriptsyntax as rs
 import Rhino.Geometry as rg
 import ghpythonlib.components as ghc
 import Grasshopper.DataTree as gd
+import Grasshopper.Kernel as gk
 import ghpythonlib.parallel as ghp
 import ghpythonlib.treehelpers as ght
 from Grasshopper.Kernel.Data import GH_Path
@@ -22,6 +23,11 @@ Result = Curve_group.decryption()
 
 try:
     if Result is True:
+        """
+            切割 -- primary
+        """
+
+
         # 几何体中心点
         class GeoCenter(component):
             def __new__(cls):
@@ -71,121 +77,6 @@ try:
             def __init__(self):
                 pass
 
-            # 数据转换成树和原树路径
-            def Restore_Tree(self, Before_Tree, Tree):
-                Tree_Path = [_ for _ in Tree.Paths]
-                After_Tree = gd[object]()
-                for i in range(Tree.BranchCount):
-                    After_Tree.AddRange(Before_Tree[i], Tree_Path[i])
-                return After_Tree
-
-            def Get_different_Center(self, brep, type_str):  # 不同的物体求中心点
-                if "Plane" in type_str:
-                    center = brep.Origin
-                elif "Circle" in type_str or "Box" in type_str or 'Rectangle' in type_str:
-                    center = brep.Center
-                elif "Point" in type_str:
-                    center = brep
-                elif "Line" in type_str:
-                    center = brep.BoundingBox.Center
-                elif "Arc" in type_str:
-                    brep = brep.ToNurbsCurve()
-                    center = brep.GetBoundingBox(True).Center
-                else:
-                    center = brep.GetBoundingBox(True).Center
-                return center
-
-            # 求边界框的中心点
-            def center_box(self, Box):
-                if not Box: return
-                type_str = str(type(Box))
-
-                # 群组物体判断
-                if 'List[object]' in type_str:
-                    bbox = rg.BoundingBox.Empty  # 获取边界框
-                    Pt = []
-                    for brep in Box:
-                        type_str = str(type(brep))
-                        if "Circle" in type_str or 'Rectangle' in type_str or "Box" in type_str:
-                            bbox.Union(brep.BoundingBox)  # 获取几何边界
-                        elif "Plane" in type_str or 'Point' in type_str or 'Arc' in type_str:
-                            Pt.append(self.Get_different_Center(brep, type_str))
-                            bbox = rg.BoundingBox(Pt)
-                        else:
-                            bbox.Union(brep.GetBoundingBox(rg.Plane.WorldXY))
-
-                    center = bbox.Center
-                else:  # 不是群组
-                    center = self.Get_different_Center(Box, type_str)
-                return center
-
-            def GeoCenter(self, Geo):
-                center = ghp.run(self.center_box, Geo)
-                return center
-
-            def RunScript(self, Geometry):
-                try:
-                    sc.doc = Rhino.RhinoDoc.ActiveDoc
-                    sc.doc.Views.Redraw()
-                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
-                    sc.doc = ghdoc
-                    Geolist = [list(Branch) for Branch in Geometry.Branches]  # 将树转化为列表
-                    Cenpt = ghp.run(self.GeoCenter, Geolist)  # 主方法运行
-                    Cenp = self.Restore_Tree(Cenpt, Geometry)  # 还原树分支
-                    return Cenp
-                finally:
-                    # 预知代码Bug之前（抛异常）可用
-                    # self.mes_box("开发组测试", 1 | 32, "标题")
-                    self.Message = 'HAE中心点'
-
-
-        # 几何体的中心平面
-        class GeoCenterPlane(component):
-            def __new__(cls):
-                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-GeometryPlane", "RPP-几何物体中心平面",
-                                                                   """求几何物体的中心平面""",
-                                                                   "Scavenger", "Geometry")
-                return instance
-
-            def get_ComponentGuid(self):
-                return System.Guid("718640f5-8562-4c71-9690-9d6d8f72ebca")
-
-            @property
-            def Exposure(self):
-                return Grasshopper.Kernel.GH_Exposure.primary
-
-            def SetUpParam(self, p, name, nickname, description):
-                p.Name = name
-                p.NickName = nickname
-                p.Description = description
-                p.Optional = True
-
-            def RegisterInputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Geometry", "G", "几何物体")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
-                self.Params.Input.Add(p)
-
-            def RegisterOutputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Plane", "P", "几何物体平面（曲线在起始点、面在中心、几何体在最大面的中心点）")
-                self.Params.Output.Add(p)
-
-            def SolveInstance(self, DA):
-                p0 = self.marshal.GetInput(DA, 0)
-                result = self.RunScript(p0)
-
-                if result is not None:
-                    self.marshal.SetOutput(result, DA, 0, True)
-
-            def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAM6SURBVEhL7ZNrSFNhGMfnZTqmVEODmFpTtMT60BevOHTMSxrmBZW0KZIT04lOsSwT85a2TN3CzbykZ5t5yXmBFPM257XCDCk1L6SEVBpiKmkfRufpPboPUoSmBH3oDw/n5bzv8/+d53nOS/qvvy4A0COeOI6bLqzh9svLy4e2Ng4iZKqNDI3EQ7it4sVaQ6Z8+MndKmxJ8KgVRmaW3TXH9i7CcAnAcHAWTy3r/izOkav6ciseLopKEtRtdX4w2WoD6yoyCMUx3zky3FKTtrtwfMOheXiuMkfa9TJLXLBQXpkAysbzMNNmDhs9ZIAhxB5GMYjiGQlEEp7aswQYmvTdhdrgKFbIYLWPDjCqDfAcGRGmhGEfCtWOQO9Fkji1Txlurkn/VagVR+Lj41N9fX3z/P39BWFRCfIIri9en04CRYY2fO3Q2QbsNN4rAJlTkHGTm5vbvKenp5zFYmEBwWGd/sFeIIjRhWuh+hDCpsCmSgug/yfzPQKo1tbWE0KhsKizszNZJpPZYy3KhNzC6zBXS4G5RgPwsjeASUx3u+/7AOiYmpp2x8XFRUgkEm4Y55IyT1jZmn4nUT0lJ8N0AwWCWVQYJwBooPsB6JqZmSnDw8M5aWlpl5lODp94iRmvMvL43yalZBiv0YNAFypMHARAp9N7eDxeMp/P92G5MJtEpXW9aXlX1RMYGWYa9CHIVQPYZ4vIJiYmHWjQTikpKcfPubMbo6Jj318IDsGvBFnCtMIQIr314U3VwWag5HA4yUlJSRGRkZHcLEFhE5cfAzW3DGC0UgsuuurBu2p0lLgPfwpAl8qAwWAMoK/3KS0ttc3Pzz+jUg0EVLd2j+UUFy1mFN5YdbCzgnYJA9b7qdu/KlEJMt5a76ECGpPJfO3s7HzT2NjYCs3jJINBP1UsvMfOLZB6h8YXJp61c91MFbf0CrDajw+kmfBY6gcjChtY6Tq8Nfjikmi1+/3fAAhhGObBZrOVFhYWCtSuejSTOhqNJjMyomGnbaybY6O5UUQrUbUn2mdxR9HT9ZSKjum32eW1UxJpNtyuqoausRVnjd3BhWAUBDtKVD/yAfdoGfkSOD8/f0yz/V//hEikH9g9dLOaG7vaAAAAAElFTkSuQmCC"
-                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
-
-            def __init__(self):
-                pass
-
             def message1(self, msg1):  # 报错红
                 return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
 
@@ -198,99 +89,75 @@ try:
             def mes_box(self, info, button, title):
                 return rs.MessageBox(info, button, title)
 
-            # 可以作为树分支和路径取出还原模板
-            # 取出树分支和路径
             def Branch_Route(self, Tree):
-                Tree_list = [_ for _ in Tree.Branches]
-                Tree_Path = [_ for _ in Tree.Paths]
+                """分解Tree操作，树形以及多进程框架代码"""
+                Tree_list = [list(_) for _ in Tree.Branches]
+                Tree_Path = [list(_) for _ in Tree.Paths]
                 return Tree_list, Tree_Path
 
-            # 根据树分支和路径还原树形
-            def Restore_Tree(self, Before_Tree, Tree):
-                Tree_list, Tree_Path = self.Branch_Route(Tree)
-                After_Tree = gd[object]()
-                for i in range(Tree.BranchCount):
-                    After_Tree.AddRange(Before_Tree[i], Tree_Path[i])
-                return After_Tree
-
-            # 曲线类的平面
-            def Curve_Plane(self, Curve):
-                NurbsCurve = Curve.ToNurbsCurve()
-                if len(NurbsCurve.Points) - 1 >= 2:
-                    # NurbCurve 不是直线使用三点确定平面
-                    NurbP = NurbsCurve.Points[1]
-                    U = rg.Point3d(NurbP.X, NurbP.Y, NurbP.Z)
-                    V = Curve.PointAtEnd
+            def split_tree(self, tree_data, tree_path):
+                """操作树单枝的代码"""
+                new_tree = ght.list_to_tree(tree_data, True, tree_path)  # 此处可替换复写的Tree_To_List（源码参照Vector组-点集根据与曲线距离分组）
+                result_data, result_path = self.Branch_Route(new_tree)
+                if result_data:
+                    return result_data, result_path
                 else:
-                    # Curve 是直线使用 UV 方向去得到平面
-                    U = rg.Vector3d(Curve.PointAtEnd - Curve.PointAtStart)
-                    V = rg.Vector3d.CrossProduct(U, rg.Vector3d(0, 0, 1))
-                    if V.Length < 0.01:
-                        V = rg.Vector3d.CrossProduct(U, rg.Vector3d(0, 1, 0))
-                Plane = rg.Plane(Curve.PointAtStart, U, -V)
+                    return [[]], [tree_path]
 
-                return Plane
+            def format_tree(self, result_tree):
+                """匹配树路径的代码，利用空树创造与源树路径匹配的树形结构分支"""
+                stock_tree = gd[object]()
+                for sub_tree in result_tree:
+                    fruit, branch = sub_tree
+                    for index, item in enumerate(fruit):
+                        path = gk.Data.GH_Path(System.Array[int](branch[index]))
+                        if hasattr(item, '__iter__'):
+                            for sub_index in range(len(item)):
+                                stock_tree.Insert(item[sub_index], path, sub_index)
+                        else:
+                            stock_tree.Insert(item, path, index)
+                return stock_tree
 
-            # Brep最大面下标
-            def BrepFaces_Max(self, Brep):
-                # rg.AreaMassProperties.Compute(face).Area 方法是得到 Brep 各个面的面积
-                BrepFaces = [rg.AreaMassProperties.Compute(face).Area for face in Brep.Faces]
-                return BrepFaces.index(max(BrepFaces))  # 第一个最大值下标
+            # 求边界框的中心点
+            def center_box(self, Box):
+                type_str = str(type(Box))
+                if 'List[object]' in type_str:
+                    bbox = rg.BoundingBox.Empty
+                    for brep in Box:
+                        bbox.Union(brep.GetBoundingBox(rg.Plane.WorldXY))  # 获取几何边界
+                    center = bbox.Center
+                else:
+                    center = Box.GetBoundingBox(True).Center if "Box" and "Plane" not in type_str else Box.Origin if "Plane" in type_str else Box.Center
+                return center
 
-            # 根据中心点求面 -- U,V与原生不符，却与SEG相符
-            def Brep_Plane(self, Brep):
-                # Surface
-                if Brep.Faces.Count <= 1:
-                    Box = Brep.GetBoundingBox(False)
-                    Center = Box.Center
-                    Normal = Brep.Faces[0].NormalAt(0.5, 0.5)
-                else:  # Brep
-                    # self.BrepFaces_Max()  求 Brep 立体的最大面的下标
-                    BrepFaces = Brep.Faces[self.BrepFaces_Max(Brep)]
-                    Box = BrepFaces.GetBoundingBox(False)
-                    Center = Box.Center
-                    Normal = BrepFaces.NormalAt(0.5, 0.5)
-                # 计算法向量并给面的 Z 轴
-                Plane = rg.Plane(Center, Normal)
-                return Plane
-
-            # 类型对应
-            def Type_Correspondence(self, Geometry):
-                if 'Point' in str(Geometry):
-                    # Geometry 是 Point 类型不属于 Point3d 也转换不了 Point3d
-                    #            return rg.Plane(Geometry, rg.Vector3d.XAxis, rg.Vector3d.YAxis)
-                    return None
-                elif 'Curve' in str(Geometry):
-                    return self.Curve_Plane(Geometry)
-                elif 'Brep' in str(Geometry):
-                    return self.Brep_Plane(Geometry)
-
-            # 对象多进程
-            def Object_Multiprocess(self, Geometry_List):
-                return ghp.run(self.Type_Correspondence, Geometry_List)
-
-            # 物体操作：
-            def Object_Operations(self, Geometry):
-                Geometry_Tree, Geometry_Path = self.Branch_Route(Geometry)
-                return ghp.run(self.Object_Multiprocess, Geometry_Tree)
+            def GeoCenter(self, tuple_data):
+                # 集合结构，待处理数据以及原树形分支
+                Geo, origin_path = tuple_data
+                center = [_ for _ in ghp.run(self.center_box, Geo)]
+                ungroup_data = self.split_tree(center, origin_path)
+                Rhino.RhinoApp.Wait()
+                return ungroup_data
 
             def RunScript(self, Geometry):
                 try:
                     sc.doc = Rhino.RhinoDoc.ActiveDoc
+
+                    Cenpt = gd[object]()
+                    Geolist, geo_path = self.Branch_Route(Geometry)
+
+                    if Geolist:
+                        iter_ungroup_data = map(self.GeoCenter, zip(Geolist, geo_path))  # 树形集合解组数据
+                        Cenpt = self.format_tree(iter_ungroup_data)  # 匹配树路径
+                    else:
+                        self.message2('G端数据为空！')
+
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
                     sc.doc = ghdoc
-                    if 'empty tree' in str(Geometry):
-                        self.message2('请输入几何物体')
-                        return gd[object]()
-                    else:
-                        Plane = self.Object_Operations(Geometry)
-                        Plane = self.Restore_Tree(Plane, Geometry)
-                        return Plane
+
+                    return Cenpt
                 finally:
-                    # 预知代码Bug之前（抛异常）可用
-                    # self.mes_box("开发组测试", 1 | 32, "标题")
-                    self.Message = 'HAE开发组'
+                    self.Message = 'HAE 中心点'
 
 
         # 几何排序
@@ -298,8 +165,7 @@ try:
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
                                                                    "RPP-几何排序", "RPP_Value_And_Sort",
-                                                                   """几何物体的排序，排序完成进行才会进行取值，支持面积和长度的排序，但是同一组数据必须是一样的；增加点序的排序，在点序排序时输入要作为参考的坐标轴（默认为X轴对比）""",
-                                                                   "Scavenger",
+                                                                   """几何物体的排序，排序完成进行才会进行取值，支持面积和长度的排序，但是同一组数据必须是一样的；增加点序的排序，在点序排序时输入要作为参考的坐标轴（默认为X轴对比）""", "Scavenger",
                                                                    "Geometry")
                 return instance
 
@@ -328,8 +194,7 @@ try:
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Loop", "L",
-                                "遍历取值，默认开启，会取0到index的值，关闭输入f，此时只会取第index+1个的值")
+                self.SetUpParam(p, "Loop", "L", "遍历取值，默认开启，会取0到index的值，关闭输入f，此时只会取第index+1个的值")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
@@ -407,8 +272,7 @@ try:
                         return objects, values
 
             def is_sametype(self, list_data):
-                Curve = [rg.PolyCurve, rg.LineCurve, rg.Curve, rg.ArcCurve, rg.PolylineCurve, rg.Polyline, rg.Line,
-                         rg.NurbsCurve]
+                Curve = [rg.PolyCurve, rg.LineCurve, rg.Curve, rg.ArcCurve, rg.PolylineCurve, rg.Polyline, rg.Line, rg.NurbsCurve]
                 temp1 = [type(t) for t in list_data]
                 temp1 = set(temp1)
                 for x in temp1:
@@ -449,6 +313,151 @@ try:
                     pass
 
                 # Geo|Plane分隔
+
+
+        # 几何体的中心平面
+        class GeoCenterPlane(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP-GeometryPlane", "RPP-几何物体中心平面",
+                                                                   """求几何物体的中心平面""",
+                                                                   "Scavenger", "Geometry")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("718640f5-8562-4c71-9690-9d6d8f72ebca")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.primary
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Geometry", "G", "几何物体")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Plane", "P", "几何物体平面（曲线在起始点、面在中心、几何体在最大面的中心点）")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                result = self.RunScript(p0)
+
+                if result is not None:
+                    self.marshal.SetOutput(result, DA, 0, True)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAM6SURBVEhL7ZNrSFNhGMfnZTqmVEODmFpTtMT60BevOHTMSxrmBZW0KZIT04lOsSwT85a2TN3CzbykZ5t5yXmBFPM257XCDCk1L6SEVBpiKmkfRufpPboPUoSmBH3oDw/n5bzv8/+d53nOS/qvvy4A0COeOI6bLqzh9svLy4e2Ng4iZKqNDI3EQ7it4sVaQ6Z8+MndKmxJ8KgVRmaW3TXH9i7CcAnAcHAWTy3r/izOkav6ciseLopKEtRtdX4w2WoD6yoyCMUx3zky3FKTtrtwfMOheXiuMkfa9TJLXLBQXpkAysbzMNNmDhs9ZIAhxB5GMYjiGQlEEp7aswQYmvTdhdrgKFbIYLWPDjCqDfAcGRGmhGEfCtWOQO9Fkji1Txlurkn/VagVR+Lj41N9fX3z/P39BWFRCfIIri9en04CRYY2fO3Q2QbsNN4rAJlTkHGTm5vbvKenp5zFYmEBwWGd/sFeIIjRhWuh+hDCpsCmSgug/yfzPQKo1tbWE0KhsKizszNZJpPZYy3KhNzC6zBXS4G5RgPwsjeASUx3u+/7AOiYmpp2x8XFRUgkEm4Y55IyT1jZmn4nUT0lJ8N0AwWCWVQYJwBooPsB6JqZmSnDw8M5aWlpl5lODp94iRmvMvL43yalZBiv0YNAFypMHARAp9N7eDxeMp/P92G5MJtEpXW9aXlX1RMYGWYa9CHIVQPYZ4vIJiYmHWjQTikpKcfPubMbo6Jj318IDsGvBFnCtMIQIr314U3VwWag5HA4yUlJSRGRkZHcLEFhE5cfAzW3DGC0UgsuuurBu2p0lLgPfwpAl8qAwWAMoK/3KS0ttc3Pzz+jUg0EVLd2j+UUFy1mFN5YdbCzgnYJA9b7qdu/KlEJMt5a76ECGpPJfO3s7HzT2NjYCs3jJINBP1UsvMfOLZB6h8YXJp61c91MFbf0CrDajw+kmfBY6gcjChtY6Tq8Nfjikmi1+/3fAAhhGObBZrOVFhYWCtSuejSTOhqNJjMyomGnbaybY6O5UUQrUbUn2mdxR9HT9ZSKjum32eW1UxJpNtyuqoausRVnjd3BhWAUBDtKVD/yAfdoGfkSOD8/f0yz/V//hEikH9g9dLOaG7vaAAAAAElFTkSuQmCC"
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def __init__(self):
+                pass
+
+            def message1(self, msg1):  # 报错红
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
+
+            def message2(self, msg2):  # 警告黄
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
+
+            def message3(self, msg3):  # 提示白
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
+
+            def mes_box(self, info, button, title):
+                return rs.MessageBox(info, button, title)
+
+            # 根据树分支和路径还原树形
+            def Restore_Tree(self, Before_Tree, Tree):
+                Tree_Path = [i for i in Tree.Paths]
+                After_Tree = gd[object]()
+                for i in range(Tree.BranchCount):
+                    After_Tree.AddRange(Before_Tree[i], Tree_Path[i])
+                return After_Tree
+
+            # 曲线类的平面
+            def Curve_Plane(self, Curve):
+                NurbsCurve = Curve.ToNurbsCurve()
+                if len(NurbsCurve.Points) - 1 >= 2:
+                    # NurbCurve 不是直线使用三点确定平面
+                    NurbP = NurbsCurve.Points[1]
+                    U = rg.Point3d(NurbP.X, NurbP.Y, NurbP.Z)
+                    V = Curve.PointAtEnd
+                else:
+                    # Curve 是直线使用 UV 方向去得到平面
+                    U = rg.Vector3d(Curve.PointAtEnd - Curve.PointAtStart)
+                    V = rg.Vector3d.CrossProduct(U, rg.Vector3d(0, 0, 1))
+                    if V.Length < 0.01:
+                        V = rg.Vector3d.CrossProduct(U, rg.Vector3d(0, 1, 0))
+                Plane = rg.Plane(Curve.PointAtStart, U, -V)
+
+                return Plane
+
+            # Brep最大面下标
+            def BrepFaces_Max(self, Brep):
+                # rg.AreaMassProperties.Compute(face).Area 方法是得到 Brep 各个面的面积
+                BrepFaces = [rg.AreaMassProperties.Compute(face).Area for face in Brep.Faces]
+                return BrepFaces.index(max(BrepFaces))  # 第一个最大值下标
+
+            # 根据中心点求面 -- U,V与原生不符，却与SEG相符
+            def Brep_Plane(self, Brep):
+                # Surface
+                if Brep.Faces.Count <= 1:
+                    Box = Brep.GetBoundingBox(False)
+                    Center = Box.Center
+                    Normal = Brep.Faces[0].NormalAt(0.5, 0.5)
+                else:  # Brep
+                    # self.BrepFaces_Max()  求 Brep 立体的最大面的下标
+                    BrepFaces = Brep.Faces[self.BrepFaces_Max(Brep)]
+                    Box = BrepFaces.GetBoundingBox(False)
+                    Center = Box.Center
+                    Normal = BrepFaces.NormalAt(0.5, 0.5)
+                # 计算法向量并给面的 Z 轴
+                Plane = rg.Plane(Center, Normal)
+                return Plane
+
+            # 类型对应
+            def Type_Correspondence(self, Geometry):
+                if 'Point' in str(Geometry):
+                    # Geometry 是 Point 类型不属于 Point3d 也转换不了 Point3d
+                    #            return rg.Plane(Geometry, rg.Vector3d.XAxis, rg.Vector3d.YAxis)
+                    return None
+                elif 'Curve' in str(Geometry):
+                    return self.Curve_Plane(Geometry)
+                elif 'Brep' in str(Geometry):
+                    return self.Brep_Plane(Geometry)
+
+            # 对象多进程
+            def Object_Multiprocess(self, Geometry_List):
+                return ghp.run(self.Type_Correspondence, Geometry_List)
+
+            # 物体操作：
+            def Object_Operations(self, Geometry):
+                Geometry_Tree = [list(i) for i in Geometry.Branches]
+                return ghp.run(self.Object_Multiprocess, Geometry_Tree)
+
+            def RunScript(self, Geometry):
+                try:
+                    sc.doc = Rhino.RhinoDoc.ActiveDoc
+                    sc.doc.Views.Redraw()
+                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                    sc.doc = ghdoc
+                    if 'empty tree' in str(Geometry):
+                        self.message2('请输入几何物体')
+                        return gd[object]()
+                    else:
+                        Plane = self.Object_Operations(Geometry)
+                        Plane = self.Restore_Tree(Plane, Geometry)
+                        return Plane
+                finally:
+                    self.Message = '几何中心平面'
 
 
         # Geo|Plane分隔
@@ -536,23 +545,19 @@ try:
             def split(self, _brep_dict, _pln_s):
                 _A_brep = []
                 brep_negative = []
-
-                # 排除空值
-                _brep_dict_NoNull = [i_brep for i_brep in _brep_dict if
-                                     str(type(i_brep[0])) not in "<type 'NoneType'>,<type 'str'>"]
-                for brep in range(len(_brep_dict_NoNull)):
-                    if type(_brep_dict_NoNull[brep][0]) == rg.Point3d:
-                        brep_centroid = _brep_dict_NoNull[brep][0]
+                for brep in range(len(_brep_dict)):
+                    if type(_brep_dict[brep][0]) == rg.Point3d:
+                        brep_centroid = _brep_dict[brep][0]
                     else:
-                        brep_centroid = _brep_dict_NoNull[brep][0].GetBoundingBox(True).Center  # 获取Brep物体的中心点
+                        brep_centroid = _brep_dict[brep][0].GetBoundingBox(True).Center  # 获取Brep物体的中心点
                     projection = _pln_s.ClosestPoint(brep_centroid)  # 生成中心点在PLN的投影点，并生成两点向量
                     normal = brep_centroid - projection
 
                     # 判断法线向量是否与Plane法线向量同向
                     if normal * _pln_s.Normal > 0:
-                        _A_brep.append(_brep_dict_NoNull[brep])
+                        _A_brep.append(_brep_dict[brep])
                     else:
-                        brep_negative.append(_brep_dict_NoNull[brep])
+                        brep_negative.append(_brep_dict[brep])
                 return _A_brep, brep_negative
 
             # 主函数
@@ -608,7 +613,6 @@ try:
                         self.message3("缺少必要参数")
                         return gd[object](), gd[object]()
                     sc.doc = Rhino.RhinoDoc.ActiveDoc
-
                     # 属性取值
                     breps_list = [list(_i) for _i in Breps.Branches]
                     paths_list = [_i for _i in Breps.Paths]
@@ -631,14 +635,13 @@ try:
                             else:
                                 Geo_Dtree.AddRange("", GH_Path(GH_PATH))
                                 index_Dtree.AddRange("", GH_Path(GH_PATH))
-
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
                     sc.doc = ghdoc
                     Rhino.RhinoApp.Wait()
                     return Geo_Dtree, index_Dtree
                 finally:
-                    self.Message = 'HAE_GEO平面分组'
+                    self.Message = 'Geo|Plane分组'
 
 
         """
@@ -651,8 +654,7 @@ try:
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
                                                                    "RPP-几何物体的分解", "RPP_DestructionGeometry",
-                                                                   """多个几何物体的分解（Brep，Curve等），注意直线的平面输出与曲线不一致""",
-                                                                   "Scavenger",
+                                                                   """多个几何物体的分解（Brep，Curve等），注意直线的平面输出与曲线不一致""", "Scavenger",
                                                                    "Geometry")
                 return instance
 
@@ -748,8 +750,7 @@ try:
                     p_list = [point[i] for i in range(len(point)) if i % 2 != 0]
                     p_list.insert(0, point[0])
                     if curve.IsClosed is True:
-                        curve_plane = self.get_polygon_plane(p_list) if length_point != 3 else ghc.XYPlane(
-                            ghc.Area(curve)['centroid'])
+                        curve_plane = self.get_polygon_plane(p_list) if length_point != 3 else ghc.XYPlane(ghc.Area(curve)['centroid'])
                     else:
                         curve_plane = self.get_normal_plane(curve)
                     return p_list, c_list, None, curve_plane
@@ -758,8 +759,7 @@ try:
                 V, E, F = brep.Vertices, brep.Edges, brep.Faces
                 length_brep = len([_ for _ in E])
                 vertex_list = [i.Location for i in V]
-                brep_plane = self.get_polygon_plane(vertex_list) if length_brep != 3 else ghc.XYPlane(
-                    ghc.Area(brep)['centroid'])
+                brep_plane = self.get_polygon_plane(vertex_list) if length_brep != 3 else ghc.XYPlane(ghc.Area(brep)['centroid'])
                 return V, E, F, brep_plane
 
             def get_polygon_plane(self, points_list):
@@ -799,8 +799,7 @@ try:
                     if Geometry:
                         temp_geo = Geometry
                         Vertex, Edge, Face, Plane = None, None, None, None
-                        if isinstance(temp_geo,
-                                      (rg.Curve, rg.PolyCurve, rg.Polyline, rg.PolylineCurve, rg.NurbsCurve,)) is True:
+                        if isinstance(temp_geo, (rg.Curve, rg.PolyCurve, rg.Polyline, rg.PolylineCurve, rg.NurbsCurve,)) is True:
                             Vertex, Edge, Face, Plane = self.explode_curve__get_plane(temp_geo)
                         elif isinstance(temp_geo, (rg.Brep, rg.Surface, rg.NurbsSurface,)) is True:
                             Vertex, Edge, Face, Plane = self.explode_brep__get_plane(temp_geo)
@@ -821,8 +820,7 @@ try:
         class TypeClassification(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-GH数据类型分类", "RPP_TypeClassification",
-                                                                   """GH几何数据类型分类""", "Scavenger", "Geometry")
+                                                                   "RPP-GH数据类型分类", "RPP_TypeClassification", """GH几何数据类型分类""", "Scavenger", "Geometry")
                 return instance
 
             def get_ComponentGuid(self):
@@ -923,10 +921,7 @@ try:
                                 Point.append(_)
                             elif isinstance(_, (rg.Vector3d, rg.Vector2d, rg.Vector2f, rg.Vector3f)) is True:
                                 Vector.append(_)
-                            elif isinstance(_, (
-                                    rg.Curve, rg.PolyCurve, rg.Polyline, rg.PolylineCurve, rg.Arc, rg.ArcCurve,
-                                    rg.Circle,
-                                    rg.Line, rg.LineCurve, rg.NurbsCurve)) is True:
+                            elif isinstance(_, (rg.Curve, rg.PolyCurve, rg.Polyline, rg.PolylineCurve, rg.Arc, rg.ArcCurve, rg.Circle, rg.Line, rg.LineCurve, rg.NurbsCurve)) is True:
                                 Curve.append(_)
                             elif isinstance(_, (rg.Plane)) is True:
                                 Plane.append(_)
@@ -941,24 +936,18 @@ try:
                         self.message2("数据列表为空！")
                 finally:
                     self.Message = "GH数据类型分类"
+            # 物体跟随线排序
 
 
-        # 区分是否带孔Brep
-        class BrepHole(component):
+        # 物体跟随线排序
+        class GeoSortedByCurve(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-BrepHole", "区分Brep是否带孔",
-                                                                   """区分Brep是否带孔""",
-                                                                   "Scavenger",
-                                                                   "Brep")
+                                                                   "RPP-物体随曲线排序", "RPP_ObjectSortedByCurve", """通过曲线的方向确定一组杂乱几何物体集合的排序""", "Scavenger", "Geometry")
                 return instance
 
             def get_ComponentGuid(self):
-                return System.Guid("db89262c-b474-413c-8cc2-91b6ff1bbb6f")
-
-            @property
-            def Exposure(self):
-                return Grasshopper.Kernel.GH_Exposure.quarternary
+                return System.Guid("54118195-e4ce-423a-b238-3c92d46e8759")
 
             def SetUpParam(self, p, name, nickname, description):
                 p.Name = name
@@ -967,23 +956,29 @@ try:
                 p.Optional = True
 
             def RegisterInputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_Brep()
-                self.SetUpParam(p, "Brep", "B", "请输入Brep参数")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Geo", "G", "需要排序的物体")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Curve()
+                self.SetUpParam(p, "Curve", "C", "指引的曲线")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "BrepHole", "H", "Brep中带圆孔的Brep")
+                self.SetUpParam(p, "Result", "R", "排序后的物体")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "BrepNoHole", "B", "Brep中不带圆孔的Brep")
+                self.SetUpParam(p, "Index", "i", "排序后物体在原列表中的下标")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
                 p0 = self.marshal.GetInput(DA, 0)
-                result = self.RunScript(p0)
+                p1 = self.marshal.GetInput(DA, 1)
+                result = self.RunScript(p0, p1)
 
                 if result is not None:
                     if not hasattr(result, '__getitem__'):
@@ -993,7 +988,7 @@ try:
                         self.marshal.SetOutput(result[1], DA, 1, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAKHSURBVEhLtVbZb4xRFPe/EN6IqKVePEl4UCKUB8TSiq2oXaPxoLEkQjQeWjGmbZpUU6MtpqPLVKeiTCo6qCb1YJmI2BJpbHOX7/s5d+F7cFszdH7Jyf3uOWd+v3vOXTJTfN9fTFaVL1MC55FHKIEq+/0b3psByOFGyJEmsquQo9fhpfvhve4LLJ0gf8TEVR7le2+TliGAU0B070GmZhpY/QJkwrPB6uZBRLdAdO6EuL3djNHN5J9r4iqvZirEncOWIYBTgMf3gV0rAjJjkI9DmkB07YboPQQRP2DGrjLyz4dMXQLYGOUvh+g7ahkCuCsgEta8BP7HYYjkWbCGhW6BhkKIB2d0HmteSgIVliGAW6CnHJnaGVT+HNMCJdBRSq3ZRS3aYcaOEvJTa67MQiY0k/KnZ1+B/+EpvJc9kEO1kM/b9Yb671Pw3z0KjOZemjb7VdzYi074n0YsQwCngIbMQD4JE9GQdfwb3AK+Rxv8GaK/Uq9Oz5V5IjA1zwLuPbh3AjyyUp8M3rYG/NZGY23FYC3LwNWJuXvcZk8MpwCPbTUn5P5p8Pa1+phqi6wg3ymwxkXg0U02e2K4BeiE/CKQz5rAwgX6UsmH1don4vvBb27Q33/D+BXUFZgL11JkVk8VqbvBiZzVF/5fBbo1qvetq8FvrNOCPFZKq15PvlVkxbRPf/zMCafA+PDtmD2cAt5oK2TyHPX8IuRgNb03l8nJbTQ3OAUUuYiWmCchRq9n70HamC82mhvcArRyTa4etu5yiMQxEvhqo7nBLTB4gVa+jcj3klAZvfNHJrmCVEi3RSQqibwCYuAkHa3vNpobnAKQjFb8zZAKNf6wgdzhFphEKIE8/qsAfgJdGFoFNH4/8QAAAABJRU5ErkJggg=="
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAJqSURBVEhLtZRtSFNRGMdvRJJQYPbiK2lpjs3VUGuNa6ZJgmE0o0b28iGi+iLUoPo4o4kxg5CK1hsVjYZeIxrSF7EPK8TRsOaHxJJSaJWglpl7sbGdp+fcewYh6Obd/MEP/s95LvdcDuc+3BKyAt0lxQTxTzRkh7wHdayMUo+apZgAf30nNOTPvlHirQmT6ZNb2DLlPpovRZmEA0cMJFg7A1+0EHCVwueeqmesVYFapCgDQg6nRvz1ZgjWgFsoAc8TJThai77amrdVs0duoVulKIPglD4fxqsg7NaA06qER00KZ2sjn83aZegNKSbAty5V25CghvZm1R2DoXM5W6bcROkmiVGZl7fysUldx8ooWpRusGQ8QNVSTD56tEWKi4C8zzpP+nJTWTkfq9BOdL1YLURouNoY8e22kunyU7PDJYdgJAeIJ8PG2vNxFW2Q4gLMvjmuIqO1BKACIFAJkfHyKTKw6QJ8ygLXw3Q79JfR+TKX/ehtKcYg5DKYYEYP8EsHru6dEPquCwJ8SPn4NE3vsa8DMpjZDf3iEIuiQB1omljFggwcbQp768A3sh3gNw9kkg/5vdpcsTeWswd+4HG9zWgTH+a4TLQLjf/W+N0HLIMdO0BoKYBX95Tw2lY8NjHEr2ZtjvRuOAOTG/dipJvSl9OZEz/Ou6XHHNeK3tmvFP58YVGA1VhwlrX+h86YlygvVnIQrqvSO8zFGgBuGVuK0og+RwvFKokoUXpV6QhOoQvJgt6Oyyid89FRnBTon3kOpcdBj2XuUclmLWpEBfQSGt/9joPNqAltR+mXr0GTykX0NBprqC0SjvsHd+zhvsW1w2kAAAAASUVORK5CYII="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
@@ -1011,83 +1006,81 @@ try:
             def mes_box(self, info, button, title):
                 return rs.MessageBox(info, button, title)
 
-            # 根据树分支和路径还原树形
-            def Restore_Tree(self, Before_Tree, Tree):
-                Tree_Path = [_ for _ in Tree.Paths]
-                After_Tree = gd[object]()
-                for i in range(Tree.BranchCount):
-                    After_Tree.AddRange(Before_Tree[i], Tree_Path[i])
-                return After_Tree
+            def Branch_Route(self, Tree):
+                """分解Tree操作，树形以及多进程框架代码"""
+                Tree_list = [list(_) for _ in Tree.Branches]
+                Tree_Path = [list(_) for _ in Tree.Paths]
+                return Tree_list, Tree_Path
 
-            # 判断圆弧是否闭合
-            def CurveIsRound(self, Curve):
-                # 先判断是否为弧形、在判断是否闭合
-                return Curve.MakeClosed(0.0001)
+            def split_tree(self, tree_data, tree_path):
+                """操作树单枝的代码"""
+                new_tree = ght.list_to_tree(tree_data, True, tree_path)  # 此处可替换复写的Tree_To_List（源码参照Vector组-点集根据与曲线距离分组）
+                result_data, result_path = self.Branch_Route(new_tree)
+                if result_data:
+                    return result_data, result_path
+                else:
+                    return [[]], [tree_path]
 
-            # 是否为带弧度的曲线
-            def IsHole(self, Curve):
-                # 判断原曲线 和 曲线头尾线 两条线的中心点距离为多少
-                Curve = Curve[0].ToNurbsCurve()
-                Start, End, Mid = Curve.PointAtStart, Curve.PointAtEnd, ghc.CurveMiddle(Curve)
-                Line = rg.Line(Start, End)
-                Mid_Mid = ghc.CurveMiddle(Line)
-                Curvature = abs(Mid.DistanceTo(Mid_Mid))
-                return Curve if Curvature > 0.01 else None
+            def format_tree(self, result_tree):
+                """匹配树路径的代码，利用空树创造与源树路径匹配的树形结构分支"""
+                stock_tree = gd[object]()
+                for sub_tree in result_tree:
+                    fruit, branch = sub_tree
+                    for index, item in enumerate(fruit):
+                        path = gk.Data.GH_Path(System.Array[int](branch[index]))
+                        if hasattr(item, '__iter__'):
+                            for sub_index in range(len(item)):
+                                stock_tree.Insert(item[sub_index], path, sub_index)
+                        else:
+                            stock_tree.Insert(item, path, index)
+                return stock_tree
 
-            # 是否为闭合的 圆弧 多进程
-            def IsHole_Multiprocess(self, Curve_list):
-                Bool_list = list(ghp.run(self.CurveIsRound, Curve_list))  # 得到列表是否为闭合的圆弧
-                return Bool_list
+            def center_box(self, Box):
+                type_str = str(type(Box))
+                if 'List[object]' in type_str:
+                    bbox = rg.BoundingBox.Empty
+                    for brep in Box:
+                        bbox.Union(brep.GetBoundingBox(rg.Plane.WorldXY))  # 获取几何边界
+                    center = bbox.Center
+                else:
+                    center = Box.GetBoundingBox(True).Center if "Box" and "Plane" not in type_str else Box.Origin if "Plane" in type_str else Box.Center
+                return center
 
-            # 得到合并曲线
-            def Get_Curve(self, Brep):
-                Curves = list(ghp.run(self.IsHole, zip(Brep.Edges)))
-                return list(rg.Curve.JoinCurves(list(Curves)))
+            def sort_points_on_curve(self, points, curve):
+                param_list = []
+                for point in points:
+                    param_list.append(curve.ClosestPoint(point)[1])
+                sorted_params, sorted_indexes = zip(*sorted(zip(param_list, range(len(param_list)))))
+                return sorted_indexes
 
-            # 去除多余的真假值
-            def Remove_Excess(self, Bool):
-                if True in Bool:
-                    return True
-                return False
-
-            # 有无圆弧的Brep分开
-            def HoleInBrep_Bool(self, Brep_Bool):
-                Brep, Brep_Bool = Brep_Bool  # 两组列表
-                if Brep_Bool:
-                    return Brep, None
-                return None, Brep
-
-            # Brep 炸开成曲线,判断曲线是否是圆弧
-            # 分类是否带圆弧的 Brep
-            def Brep_Multiprocess(self, Brep_list):
-                Curve_list = list(ghp.run(self.Get_Curve, Brep_list))  # 得到所有的合并曲线,查看是否是孔得到判断结果
-                Brep_Bool_list = list(map(self.IsHole_Multiprocess, Curve_list))  # 判断是否带孔的数据 真假值
-                Brep_Bool_list = list(
-                    ghp.run(self.Remove_Excess, Brep_Bool_list))  # 简化[[False, False--]] 变为 [[False]]去重 有真则为真
-                return zip(*ghp.run(self.HoleInBrep_Bool, zip(Brep_list, Brep_Bool_list)))
-
-            def RunScript(self, Brep):
+            def RunScript(self, Geo, Curve):
                 try:
                     sc.doc = Rhino.RhinoDoc.ActiveDoc
+                    Result, Index = (gd[object]() for _ in range(2))
+
+                    if Geo and Curve:
+                        center_pt_list = list(ghp.run(self.center_box, Geo))
+                        self.sort_points_on_curve(center_pt_list, Curve)
+                        sorted_indexes = self.sort_points_on_curve(center_pt_list, Curve)
+
+                        Result = [Geo[_] for _ in sorted_indexes]
+                        Index = sorted_indexes
+                    elif not (Geo or Curve):
+                        self.message2('G端不能围为空！')
+                        self.message2('C端不能为空！')
+                    elif not Geo:
+                        self.message2('G端不能围为空！')
+                    elif not Curve:
+                        self.message2('C端不能为空！')
+
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
                     sc.doc = ghdoc
 
-                    # 带孔Brep，不带孔Brep
-                    BrepHole, BrepNoHole = gd[object](), gd[object]()
-                    if 'empty tree' == str(Brep):
-                        self.message2('请输入参数')
-                    else:
-                        Brep_Tree = [i for i in Brep.Branches]  # 拿到数据 二维列表
-                        res = map(self.Brep_Multiprocess, Brep_Tree)  # 得到物体是否有圆的真假值
-                        BrepHole, BrepNoHole = zip(*res)
-                        BrepHole = self.Restore_Tree(BrepHole, Brep)
-                        BrepNoHole = self.Restore_Tree(BrepNoHole, Brep)
-                    return BrepHole, BrepNoHole
+                    return Result, Index
                 finally:
-                    # 预知代码Bug之前（抛异常）可用
-                    # self.mes_box("开发组测试", 1 | 32, "标题")
-                    self.Message = 'HAE开发组'
+                    self.Message = '物体跟随曲线排序'
+
     else:
         pass
 except:
