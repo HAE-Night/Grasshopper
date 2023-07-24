@@ -1908,17 +1908,17 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Brep()
-                self.SetUpParam(p, "Brep", "B", "请输入Brep参数")
+                self.SetUpParam(p, "Geometry", "G", "请输入Geometry参数")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "BrepHole", "H", "Brep中带圆孔的Brep")
+                self.SetUpParam(p, "Perforated", "P", "有圆孔的物体")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "BrepNoHole", "B", "Brep中不带圆孔的Brep")
+                self.SetUpParam(p, "Solid", "S", "没有圆孔的物体")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -1976,12 +1976,19 @@ try:
 
             # 是否为闭合的 圆弧 多进程
             def IsHole_Multiprocess(self, Curve_list):
+                if Curve_list == [] or Curve_list == None:
+                    return [False]
                 Bool_list = list(ghp.run(self.CurveIsRound, Curve_list))  # 得到列表是否为闭合的圆弧
                 return Bool_list
 
             # 得到合并曲线
-            def Get_Curve(self, Brep):
-                Curves = list(ghp.run(self.IsHole, zip(Brep.Edges)))
+            def Get_Curve(self, Geo):
+                if 'Point' in str(type(Geo)):
+                    Curves = [None]
+                elif 'Curve' in str(type(Geo)):
+                    Curves = [Geo]
+                else:
+                    Curves = list(ghp.run(self.IsHole, zip(Geo.Edges)))
                 return list(rg.Curve.JoinCurves(list(Curves)))
 
             # 去除多余的真假值
@@ -1990,39 +1997,38 @@ try:
                     return True
                 return False
 
-            # 有无圆弧的Brep分开
-            def HoleInBrep_Bool(self, Brep_Bool):
-                Brep, Brep_Bool = Brep_Bool  # 两组列表
-                if Brep_Bool:
-                    return Brep, None
-                return None, Brep
+            # 有无圆弧的Geometry分开
+            def HoleInGeometry_Bool(self, Geo_Bool):
+                Geo, Geo_Bool = Geo_Bool  # 两组列表
+                if Geo_Bool:
+                    return Geo, None
+                return None, Geo
 
-            # Brep 炸开成曲线,判断曲线是否是圆弧
-            # 分类是否带圆弧的 Brep
-            def Brep_Multiprocess(self, Brep_list):
-                Curve_list = list(ghp.run(self.Get_Curve, Brep_list))  # 得到所有的合并曲线,查看是否是孔得到判断结果
-                Brep_Bool_list = list(map(self.IsHole_Multiprocess, Curve_list))  # 判断是否带孔的数据 真假值
-                Brep_Bool_list = list(
-                    ghp.run(self.Remove_Excess, Brep_Bool_list))  # 简化[[False, False--]] 变为 [[False]]去重 有真则为真
-                return zip(*ghp.run(self.HoleInBrep_Bool, zip(Brep_list, Brep_Bool_list)))
+            # Geometry 炸开成曲线,判断曲线是否是圆弧
+            # 分类是否带圆弧的 Geometry
+            def Geometry_Multiprocess(self, Geometry_list):
+                Curve_list = list(ghp.run(self.Get_Curve, Geometry_list))  # 得到所有的合并曲线,查看是否是孔得到判断结果
+                Geometry_Bool_list = list(map(self.IsHole_Multiprocess, Curve_list))  # 判断是否带孔的数据 真假值
+                Geometry_Bool_list = list(ghp.run(self.Remove_Excess, Geometry_Bool_list))  # 简化[[False, False--]] 变为 [[False]]去重 有真则为真
+                return zip(*ghp.run(self.HoleInGeometry_Bool, zip(Geometry_list, Geometry_Bool_list)))
 
-            def RunScript(self, Brep):
+            def RunScript(self, Geometry):
                 try:
                     sc.doc = Rhino.RhinoDoc.ActiveDoc
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
                     sc.doc = ghdoc
-
-                    BrepHole, BrepNoHole = gd[object](), gd[object]()
-                    if 'empty tree' == str(Brep):
+                    # 带孔Geometry，不带孔Geometry
+                    Perforated, Solid = [], []  # gd[object](), gd[object]()
+                    if 'empty tree' == str(Geometry):
                         self.message2('请输入参数')
                     else:
-                        Brep_Tree = [i for i in Brep.Branches]  # 拿到数据 二维列表
-                        res = map(self.Brep_Multiprocess, Brep_Tree)  # 得到物体是否有圆的真假值
-                        BrepHole, BrepNoHole = zip(*res)
-                        BrepHole = self.Restore_Tree(BrepHole, Brep)
-                        BrepNoHole = self.Restore_Tree(BrepNoHole, Brep)
-                    return BrepHole, BrepNoHole
+                        Geometry_Tree = [i for i in Geometry.Branches]  # 拿到数据 二维列表
+                        res = map(self.Geometry_Multiprocess, Geometry_Tree)  # 得到物体是否有圆的真假值
+                        Perforated, Solid = zip(*res)
+                        Perforated = self.Restore_Tree(Perforated, Geometry)
+                        Solid = self.Restore_Tree(Solid, Geometry)
+                    return Perforated, Solid
                 finally:
                     self.Message = '区分圆孔'
 
