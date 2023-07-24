@@ -422,45 +422,52 @@ try:
             def message3(self, msg3):
                 return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
 
-            def cull_point(self, pts):
-                count = 0
-                base_pt = pts[0]
-                group_data = []
-                while len(pts) > count:
-                    if base_pt.DistanceTo(pts[count]) < self.tol:
-                        group_data.append(pts[count])
-                    count += 1
-                for _ in group_data:
-                    pts.remove(_)
-                return group_data, pts
-
-            def test(self, data):
-                return [self.copy_pts.index(_) for _ in data]
+            def remove_duplicate_points(self, points):  # 删除重复的点
+                new_points = []
+                index_groups = []  # 点分组后的下标
+                for i, p in enumerate(points):
+                    flag = False
+                    for j, np in enumerate(new_points):
+                        if p.DistanceTo(np) <= self.tol:  # 根据公差判断点是否重复
+                            index_groups[j].append(i)
+                            flag = True
+                            break
+                    if not flag:
+                        new_points.append(p)  # 添加唯一点
+                        index_groups.append([i])
+                return new_points, index_groups
 
             def RunScript(self, Points, Tolerance, Output_Format):
                 try:
-                    Output_Format = 0 if Output_Format is None else Output_Format
+                    sc.doc = Rhino.RhinoDoc.ActiveDoc
+                    sc.doc.Views.Redraw()
+                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                    sc.doc = ghdoc
+
+                    Output_Format = 0 if Output_Format is None else Output_Format  # 输出方式默认为0
+
                     if Output_Format > 1:
                         self.message2("请输入正确的数据类型！！")
 
                     self.tol = 0.01 if Tolerance is None else Tolerance
+
                     if len(Points) == 0:
                         self.message2("点序列表不能为空！！")
                     else:
-                        self.copy_pts = Points[:]
-                        tree_data_pts = []
-                        while True:
-                            if len(Points) <= 0:
-                                break
-                            else:
-                                new_cull_pts, Points = self.cull_point(Points)
-                                tree_data_pts.append(new_cull_pts)
-                        tree_data_indexes = map(self.test, tree_data_pts)
-                        if Output_Format == 0:
-                            Reuslt_Pt, Index_Pt = map(lambda x: min(x), tree_data_pts), ght.list_to_tree(tree_data_indexes)
+                        new_cull_pts, Index = self.remove_duplicate_points(Points)
+
+                        if Output_Format:  # 判断输出方式
+                            group_points = [[] for _ in range(len(Index))]
+                            for i in range(len(Index)):
+                                for j in Index[i]:
+                                    group_points[i].append(Points[j])
+                            Reuslt_Pt = ght.list_to_tree(group_points)  # 将重复点列表转化为树
                         else:
-                            Reuslt_Pt, Index_Pt = ght.list_to_tree(tree_data_pts), ght.list_to_tree(tree_data_indexes)
+                            Reuslt_Pt = new_cull_pts
+                        Index_Pt = ght.list_to_tree(Index)  # 将下标列表转化为树
+
                         return Reuslt_Pt, Index_Pt
+
                 finally:
                     self.Message = '删除重复点'
 
