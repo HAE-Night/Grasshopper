@@ -12,6 +12,7 @@ import rhinoscriptsyntax as rs
 from Grasshopper import DataTree  # 树形
 import ghpythonlib.parallel as ghpara  # 多进程
 import ghpythonlib.treehelpers as ght
+from Grasshopper import DataTree as gd
 from Grasshopper.Kernel.Data import GH_Path  # 树形分支
 from ghpythonlib.componentbase import dotnetcompiledcomponent as component
 import Rhino.Geometry as rg
@@ -113,6 +114,11 @@ try:
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Toggle", "T", "是否赋值")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
             def RegisterOutputParams(self, pManager):
                 pass
 
@@ -120,49 +126,56 @@ try:
                 p0 = self.marshal.GetInput(DA, 0)
                 p1 = self.marshal.GetInput(DA, 1)
                 p2 = self.marshal.GetInput(DA, 2)
-                result = self.RunScript(p0, p1, p2)
+                p3 = self.marshal.GetInput(DA, 3)
+                result = self.RunScript(p0, p1, p2, p3)
 
             def get_Internal_Icon_24x24(self):
                 o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAQUSURBVEhLrZVdTJNnFMdbFOMWswxxi0MWl2WJyzYudrVkN9vFFiIZy5Il+8CbuQsNuMQFgbYU+gmlfQvFUtqC0NZ+sFSkiDh12uIHMj4ECS0MRFCgRXCgwFg7Wdz23/O8nZWuVUzk4p8+fc/p88v5n/Oeclytpt0Wm44x1DLrLnovx3RUp9Ub9FAxqnUXvZdTb6lWMAwDsVi87qL3RgFEYtG6KS6gWFSEomLhY0XjEqkobmy1aI5YsgpA/aKBc1e0GJqywnvTBu84+Vwt8mxg3IwWjwTXRuvhuxUnh2gk0ABPjxoiSQEYtQqcOlMYIBQK4Rt3YSZ0DJNLNkwtOaI0E3LC3S2H3cXH/MpZTCxaY3L8yw2YWLChxr4fRaJD0YBCoQC+sRaS2IDxewZM/2HGzQVj5Dz3lxUWVw5MP/AwF3Lj1mINAiETxu4aWAVCdbh934z+CTXkmq8hlvJiAd7RFtwOOjE6p8fFfgVuzNdi9k8bOZeia1gN55lcmJ083F1pQ+ewCp1DDPy/m1h1jzDovVGB4VkdFNo9jwfMP2jChWsyJCVvwfVZI35sF4HD4eBo00GcvMRjAUF0QsJ8hR2pyZgOWUh1dux6KwVFii/ZqtYEtPXJkPzSC7g6Wo5XUrbi86z3sQAXHK0HWcDyP5fh7pEiYUMCfh5SYihQjeee34TzXTLW1jUBF/vlePW1bfjw43ewPSWJ9MCCXx/YIwBqkT9Yh5TUJFRb9sF5uiCcR6r5ZeYpLLriU2Bj4gbWGlrJoF9HbHBEALTJ9+DAZ1+8h6y9H+C7vE+QnvkuqbIRvoA2DkAVDWj3loKbwEWJZg/xNhV7sz/CIprhOPkIMP+3HTrTPux8/WW8+fYOMPpvCMAZCzhiqooB0B68uHULAkEzyo3fgsPlkMky4vi58BRRgD9oQu9YBRI3bQSXyyVTxrA2PhXA0yvB5s2J6BurxNSyibUrJ3c3TncIIgDaTHrhG7u2I3XnNnacA0HL2oA7K41k/vVodgvIS1ZLLnGw03GmQxT1Hkz+dgSzKza09crhuSpjATP3rWyTSw/HAdBVMTjeCu+kEV0jCgxOH0b3dSV5oRTwTlVi5E4V6o/th61JiOmlU+gYkrOxgSkNiWvYc8+oEpcGZCiryloFqA8D6Ir1dFXiVDsfzR4eTrT9X3w0/vQ9jp/l4UJfGVzu/Jgc+rvWywJYT2RDJM17BGDXNVmvJUo+GI0QqgoqQYxoTFnOQ5maT77Hz6HPGU0hWdnF4XX9ECCRSNg9XiwqJNUICbDoCXpS/L/Ywz8ci7VGQf3PyMiATCZDeno6cnNz2TNNehZFAPkF+cj8NBN5eXlIS0tDzoFsyEvWCVBn1mp1Oh2kMimUKiWxScI2XF2uZpv0LDIY9fgXDacNWwRC6S4AAAAASUVORK5CYII="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
-            def RunScript(self, Objects, Keys, Values):
-                if len(Keys) > 1:  # key>1
-                    if len(Keys) < len(Values):  # Keys的长度小于Values
-                        for i in range(len(Objects)):
-                            if type(Objects[i]) is System.Guid:
-                                for k in range(len(Keys)):
-                                    sc.doc = Rhino.RhinoDoc.ActiveDoc
-                                    rs.SetUserText(Objects[i], Keys[k], Values[k])
-                                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
-                                    sc.doc = ghdoc
-                        return
-                    else:  # Keys的长度大于Values
-                        for i in range(len(Objects)):
-                            if type(Objects[i]) is System.Guid:
-                                for k in range(len(Values)):
-                                    sc.doc = Rhino.RhinoDoc.ActiveDoc
-                                    rs.SetUserText(Objects[i], Keys[k], Values[k])
-                                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
-                                    sc.doc = ghdoc
-                        return
-                    # key的长度=1
-                if len(Keys) == 1:
-                    num = 0
+            def Set_values_Greater_one(self, Objects, Keys, Values):  # 当key大于1时调用
+
+                if len(Keys) < len(Values):  # Keys的长度小于Values
                     for i in range(len(Objects)):
                         if type(Objects[i]) is System.Guid:
-                            print(num, Keys[0], Values[num])
-                            sc.doc = Rhino.RhinoDoc.ActiveDoc
-                            rs.SetUserText(Objects[i], Keys[0], Values[num])
-                            ghdoc = GhPython.DocReplacement.GrasshopperDocument()
-                            sc.doc = ghdoc
-                            if num < len(Values) - 1:
-                                num += 1
-                            else:
-                                num = 0
-                    return
-                else:
-                    return
+                            for _key in range(len(Keys)):
+                                obj_attr = sc.doc.Objects.FindId(Objects[i]).Attributes
+                                obj_attr.SetUserString(Keys[_key], Values[_key])
+                else:  # Keys的长度大于Values
+                    for i in range(len(Objects)):
+                        if type(Objects[i]) is System.Guid:
+                            for v in range(len(Values)):
+                                obj_attr = sc.doc.Objects.FindId(Objects[i]).Attributes
+                                obj_attr.SetUserString(Keys[v], Values[v])
+
+            def Set_values_Equal_one(self, Objects, Keys, Values):  # 当key等于1时调用
+                n = 0
+                for i in range(len(Objects)):
+                    if type(Objects[i]) is System.Guid:
+                        obj_attr = sc.doc.Objects.FindId(Objects[i]).Attributes
+                        obj_attr.SetUserString(Keys[0], Values[n])
+                        if n < len(Values) - 1:
+                            n += 1
+                        else:
+                            n = 0
+
+            def RunScript(self, Objects, Keys, Values, T):
+                try:
+                    sc.doc = Rhino.RhinoDoc.ActiveDoc
+                    sc.doc.Views.Redraw()
+
+                    if T:
+                        if len(Keys) > 1:
+                            self.Set_values_Greater_one(Objects, Keys, Values)
+                        elif len(Keys) == 1:
+                            self.Set_values_Equal_one(Objects, Keys, Values)
+                        else:
+                            return
+
+                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                    sc.doc = ghdoc
+                finally:
+                    self.Message = '键值对赋值'
 
 
         # 物件键值对提取
@@ -223,37 +236,51 @@ try:
                 o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAALaSURBVEhLtZbBSxtBFMYXL1ZRqIbERulFiaDgSYIELVQToqX0YFsNJfageJGCOcSqTUwaY7IJ29pSNOIfIIIgCNJLESlK0YPY0ksPeggEqUcxYklU/LrvOaltkaVL4w9edt+8ee+bnZmdjXR6enr//PxcIUskEkpLS4vS1GRVbLYm9arPrFYr51OdXE1J/UlAZWjIi+5uF16GQpBjMcTicUQmJjA6OoKRkX83j8eD9vZ2vhIkoATGxnDnrh3D/jAi8UnEXr1DMBzH+w8fuZNeDg8P0dXVxYLS3NycQiN/5hmGwVAOk9HIZii/iQrzbXz++k2k6SOTyaCjowOS0+FQIhEZwy+CqDAZUVtbK8wCc2UVPm1uiRT98BPYbDZl8s1bPPeFUFx8A1WVZjbzLRPKDUZsbn0R3fUTCAQgNTc3K7IcRTL1HQ9dT9H5+Akeudy496AToehr/MhkRXf9jKlrywKkdB2wAE1RMBgUTflFU2B9fR2Li4vCA6anp7G0tCQ8YG1tDeoOFB6QSqUwNTXFWzSHpkBfXx8sFgvf9/f3Q5IkLC8vs0/Mz89z297eHvterxeFhYVIp9PsE5oCg4ODaG1tRTQaRVFREVZWVkTkgmw2i9LSUszMzLBfU1PDOb+jKeD3+1FSUsKjbGhoEK1/4na74XA4eHoKCgqwsbEhIhdoCvh8Pk6iEZaVlUGWZRG5ZHV1FSaTiaezrq4O6sEpIhdoCgwMDKC+vp7vZ2dn+Ul2dnbYz0EFq6urORZSD8m/0RSgIK2Behiy39jYCJfLdeUo6Qm3t7dFyyWaAsfHx9jf3/8lQIfX7u4uTk5O2M9BgrSTzs7ORMslmgL5gAXoS3StAurcKlctUD6ggUtOp1Oht/A6oLrSwsKCYrfbcXBwIJrzA9WjuvxNHh8fR1tbG5LJpAj/H1SH6tHUS0dHR/yvIhwO877v6enhN7O3t1e3UR7lUx2qBwA/AdFfSvBR19pyAAAAAElFTkSuQmCC"
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
-            def NoneKey(self, Object):  # 提取对象键值对
-                Key, num1 = [], 0
+            def KeyisNone(self, Object):  # 当Key值为空时，提取所有的Key值和Value
+                Key = []
 
-                for i in Object:  # 获取key值
-                    Key.append(rs.GetUserText(i))
+                for obj in Object:  # 根据物体的Guid属性获取Key值
+                    obj_attr = sc.doc.Objects.FindId(obj).Attributes
+                    Key.append(obj_attr.GetUserStrings())
 
-                Keys, Value = DataTree[str](), DataTree[str]()
-                for ke in range(len(Key)):  # 获取Value
-                    for k in range(len(Key[ke])):
-                        Keys.Add(Key[ke][k], GH_Path(num1, k))
+                Keys, Value = gd[object](), gd[object]()
+                for _key in range(len(Key)):
+                    for v in range(len(Key[_key])):
+                        Keys.Add(Key[_key].GetKey(v), GH_Path(_key, v))  # 获取Key
+                        Value.Add(Key[_key].Get(v), GH_Path(_key, v))  # 获取Value
 
-                        Value.Add(rs.GetUserText(Object[ke], Key[ke][k]), GH_Path(num1, k))
-                    num1 += 1
                 return Keys, Value
 
-            def HaveKey(self, Object, Key):
-                num1 = 0
-                Keys, Value = DataTree[str](), DataTree[str]()
-                for ke in Key:
-                    Keys.Add(ke, GH_Path(num1))
-                    for i in range(len(Object)):
-                        Value.Add(rs.GetUserText(Object[i], ke), GH_Path(num1, i))
-                    num1 += 1
+            def HaveKey(self, Object, Key):  # 当Key值不为空时，获取Value
+                n = 0
+                Keys, Value = gd[object](), gd[object]()
+
+                for _key in Key:
+                    Keys.Add(_key, GH_Path(n))
+                    for obj in range(len(Object)):  # 根据key值获取value
+                        obj_attr = sc.doc.Objects.FindId(Object[obj]).Attributes
+                        value = obj_attr.GetUserString(_key)
+                        Value.Add(value, GH_Path(n, obj))
+                    n += 1
                 return Keys, Value
 
             def RunScript(self, Object, Key):
-                if Object and Key:
-                    Keys, Value = self.HaveKey(Object, Key)
-                else:
-                    Keys, Value = self.NoneKey(Object)
-                return Keys, Value
+                try:
+
+                    sc.doc = Rhino.RhinoDoc.ActiveDoc
+                    sc.doc.Views.Redraw()
+
+                    if Object and Key:
+                        Keys, Value = self.HaveKey(Object, Key)
+                    elif Object and not Key:
+                        Keys, Value = self.KeyisNone(Object)
+                    else:
+                        return
+                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                    sc.doc = ghdoc
+                    return Keys, Value
+                finally:
+                    self.Message = '键值对查询'
 
 
         """
@@ -658,4 +685,3 @@ except:
 
 import GhPython
 import System
-
