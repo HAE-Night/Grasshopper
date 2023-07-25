@@ -585,104 +585,6 @@ try:
                 return R1, R2, R3, R4, R5, R6
 
 
-        # 树形取值
-        class Tree_Values(component):
-            def __new__(cls):
-                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-树形规划取值", "RPP_Tree_Values", """Explode-True 对树形数据拆分 统一路径.
-        Explode-False 取出branch路径的值""", "Scavenger", "Data")
-                return instance
-
-            def get_ComponentGuid(self):
-                return System.Guid("0eff0c49-1b47-4d30-a4bf-ddfae9774fb2")
-
-            @property
-            def Exposure(self):
-                return Grasshopper.Kernel.GH_Exposure.secondary
-
-            def SetUpParam(self, p, name, nickname, description):
-                p.Name = name
-                p.NickName = nickname
-                p.Description = description
-                p.Optional = True
-
-            def RegisterInputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Tree", "T", "数据-data")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
-                self.Params.Input.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_Boolean()
-                self.SetUpParam(p, "Explode", "E", "True-将树形数据拆分整合，统一路径；False-根据Branch取树形值")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
-                self.Params.Input.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Branch", "B", "取值路径信息")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
-                self.Params.Input.Add(p)
-
-            def RegisterOutputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Objects", "O", "输出结果")
-                self.Params.Output.Add(p)
-
-            def SolveInstance(self, DA):
-                p0 = self.marshal.GetInput(DA, 0)
-                p1 = self.marshal.GetInput(DA, 1)
-                p2 = self.marshal.GetInput(DA, 2)
-                result = self.RunScript(p0, p1, p2)
-
-                if result is not None:
-                    self.marshal.SetOutput(result, DA, 0, False)
-
-            def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAPuSURBVEhLvZbtT5tlFMb5BzQxJn6ZDlraUkZpmW+JsEEpfX8vMGDMycbalXcN9BXap7VrGJlaB5i5GEQ2J4Np5mLULYuy+fJ/XV7nkbHV1g8asg9X7uZ57udc9/mdc+604YuViufG8idXPsuVDl0St6H4bnS1MjSGcnjk0CVxG4pnxpcvBYew6A4fuiTuczTwhJF1hZC0+ZGw+pGyBep+9Kyy+2vBE0HB248ipXgjB++rDDLOIHIDI1hPTGBtPo6Pp6NIO0MHm/9NC9SY049zlKxxdwg5HlbeVRnI6TM8yU4lgT/vlvH7dyVcnYshZQ/WBM0wSN7Xjw99Axi3uXFUr4fGYECTTgejuQMTrqCaSZWBIFro8eKjiXHs7RTxiNqpJJG0P81CkCgMPMegbzVqmWEAsT4PmpqboWNwVS0tiJNGjUHGQeZDo7hzPYcfNhXc+1JB8fQo0vantSj4B5Fk0BM6IyyvNhJrAHGHH0aTGW2U4VgbHCesKPoH1P1VBoIoxSJtlT/Ao9tF7G0XsM5aCKIlZpdm2pPdDjha23HxZJ+KqRw4hQvMRtdihNFohIGnN3e8gUnuzfObKgNBlLD68OlsFI93i3hMRGKW6ONmGke7ehncjBmrCxPddrz20stY6PPiot1LRFoVTzNXjUGPGDOrQZQlt0V20fa1PHY+z2GXqFaTUzwpiyodRpPLkdNqJoIo3PGmGiTu8MHEwlosx9FmtiB00qa2bH1E7giuL83gxy0FD2/k8Nu3JWwos0g5QmpgQSOIJAv5LRim+PydLiu6OnvUNUhkWT6vMRBEqV4/Vs6fxc83C6rB3jcK7m/loUSGMdPthMfUgdleNwZefxuvvPDiAaKjmiZotRpouTayXc+x8ApbvspAMGQDg9hey+L7jTx+2sypRpWZKBKcbkF0pf8Mznda4TpmxpTViRK7KipFZoGNxlboDS04TlwyfDJsNQaZ4CBur2dxb4PBv8rhwdc0mI0hzUK/z0BOBpYsluRqYCvKKWN2n9qmpnYLWk3t6OnsRrZeDQRRUkX0Hu7fVPBgK4dfb+Xx8JaCwqkRzNu8ZO9UB00MJIAU+YLNBQ07SM9pNuh1aNpHJPdTtQE/kGJuFufwy25JneQ/7l7CnaspZBhI3gsmWZ9IukWuiiNaLRrZokdYAwszSfKwNYikixaJaD09jTW257UMlZ2GMjhcNc3PSoLMEa2f0xuiZJ3khSeZybVSk0GW0ykFFS0Ql1zbUhvB98/gf+8Pq1Ne5KX3RPn94PK+xuCw9XwMSmejy+XQsHp5SXdIyvU2/x+pBvORkdWV/lFcpuQqXiTDZf6u9y/hv6oyNIa/AHG1pSM2zID3AAAAAElFTkSuQmCC"
-                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
-
-            def treegroup(self, Group):
-                GP = Group.Paths
-                treetype = type(Group.Branch(GP[0])[0])
-                Objects = gd[treetype]()
-                gplist = []
-
-                for i in range(len(GP)):
-                    for j in range(Group.BranchCount - i):
-                        gplist.append(GP[i + j].IsAncestor(GP[i], 0)[0])
-
-                for gpbr in range(Group.BranchCount):
-                    grouplist = Group.Branch(gpbr)
-                    if Group.BranchCount > 1:
-                        for libr in range(len(grouplist)):
-                            if gplist[gpbr] == True:
-                                Objects.Add(Group.Branch(gpbr)[libr], GP[gpbr])
-                            else:
-                                Objects.Add(Group.Branch(gpbr)[libr], GH_Path(gpbr, libr))
-
-                    else:
-                        for libr in range(len(grouplist)):
-                            Objects.Add(Group.Branch(gpbr)[libr], GH_Path(0, libr))
-                return Objects
-
-            def RunScript(self, Tree, Explode, Branch):
-                if Tree.BranchCount > 0:
-                    if Explode:
-                        Objects = self.treegroup(Tree)
-                    else:
-                        GP = Tree.Paths
-                        treetype = type(Tree.Branch(GP[0])[0])
-                        Objects = gd[treetype]()
-
-                        if Branch:
-                            for br in range(len(Branch)):
-                                tu = [int(i) for i in Branch[br].split(" ")]
-                                GH = tuple(tu)
-                                obj = Tree.Branch(GH)
-                                Objects.AddRange(obj, GH_Path(br))
-
-                    return Objects
-
-
         # 树形数据处理
         class TreeData(component):
             def __new__(cls):
@@ -1932,7 +1834,7 @@ try:
                     self.Message = '树形数据同步'
 
 
-        # 属性数据插入
+        # 树性数据插入
         class Tree_AddRange(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
@@ -2031,7 +1933,7 @@ try:
                         self.message2("添加的数据和路径数据不匹配，请检查")
                     return DataTree
                 finally:
-                    self.Message = '属性数据插入'
+                    self.Message = '树性数据插入'
 
 
         # 数据偏移
