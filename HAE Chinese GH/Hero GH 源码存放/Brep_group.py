@@ -1117,7 +1117,7 @@ try:
         class BrepOffset(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-多边曲面偏移", "RPP_BrepOffset", """根据折线生成偏移曲面。""", "Scavenger", "Brep")
+                                                                   "RPP-多边曲面偏移", "RPP_BrepOffset", """根据折线生成偏移曲面；输入端D和V输入一个端口数据即可。""", "Scavenger", "Brep")
                 return instance
 
             def get_ComponentGuid(self):
@@ -1173,7 +1173,22 @@ try:
                 o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAP0SURBVEhLtZNdTJNXGMc7pxdmN0t2swuX7Ho3S4ws3hii44IQSMYUgy7bZKBOEAU2QChtpaUtbWn5WAWiI7iBgB2Ikqk4LAUUhraUfkiRtmgDyJAvs4ELLe97/juFEzsDBLqPX/Kkzds+v//pc54K/k9q4+Kj2dv/lt7IlNj+vV93N+9L9LJH/x6JQLLNFp+WaI5J/XUgKhWufWdgiDycwT7+5/Qdytw5ejw7ZeSzTLvncBYcseno3X8CdyOO/VGcHr2LfS18nkokb7/IF2VMZuR5ZtKEGP3iW1g+SUVf9EkMRqXB+FFSI/tqeCzqJe8u6YpEC7LCiUChHNNZQowk05MfOfMqYODjVJgiksO7YJQq3+f1StWyXjmHKh1eyqWYzMmHLz3ntYCBmDSYIpPHLIITOwQQbGftG7OkkX/AVygquQr5ImrKgAsqLGqkmDsvXjdgOC4D3ftTSoK9u8YEO1ck60FUkj18uayOLy8K4JIWqFAgUFYEf7l8wwDrp6dhjjru76duplkfohano1IFVGuAMhm4UimWS2WbBjjiTuH+0dwJ058ksXeOHLk1OfslU74O0YhdqCwGry0Ep6O1xQDLgc9x33APFgAjtLomlz1MGYJoCz4MnhpUHE6AMyEV5qPfoNO7AOMUgdUP3B3n1v7R6HhkqFaDaM+HFxCbhD5tA36ZB0zPCIwTnL97grzHtKtAgDeIWjSE7+ThBXyVCeehUzDe86H9N6CPhrR7Ax1MG4Juzm6USQEq33LA6WyMHjwGa44Wt8aB208I+l4AN71cEtOG4FUFSlTR7SmRbCFAhOmzmRg7eRaD0ko0POxFm4/DnadU7uEWOibIO0y7CiSSbaRY+BjlRZsE0FLk43dhLkZKL8HY6cYNKr3im0fbsB9dU8ANF9fMtCGIRhQBKgrKNwpASQF9LsZ4zWV0mdxo8QAt3qAQaBh+jlZXAMZnwHXXcjzThqCnVwd3HxrxmgBo8mkJMVV7GT3dbhiGAQNd9GtOnhaHVifBlaFZtLkJrjm46Ts28hbTroKEhDeJUuhZueC/BUCVB6jz8LymBj2dj9H0CGgcAprtPJpt3KtqsRHUOWZwe4z+okH+e6YNQYole1fGo6byYEDxOVq5mLl4ET0dLjTYgXoncNXKw2Dl1tRPVuAH+yyuB0dmIQeYNgRRCHXQKwFFDq1szFZXoaf9EeqDjTZ6agtBk5lH4wbVZKZ34FrCj+aXPosFO5h2Fbo924k06wlUuZi7oEfPz3bU0YZaKq9/QLfjAb9pNfTTsY3SnofzWqYNsaQ4F4OmqxjsGkML3YYmN708OudWOu/W4OsWqo32Geh4dA7HHqZlCAR/AcjfanxY7dq3AAAAAElFTkSuQmCC"
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
-            def polyhedral(self, obj, set_line, vector, distance, acc):
+            def __init__(self):
+                pass
+
+            def message1(self, msg1):  # 报错红
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
+
+            def message2(self, msg2):  # 警告黄
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
+
+            def message3(self, msg3):  # 提示白
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
+
+            def mes_box(self, info, button, title):
+                return rs.MessageBox(info, button, title)
+
+            def polyhedral(self, obj, set_line, vector, acc):
                 surface = []
                 if len(vector) == 1:
                     surface = [rg.Surface.CreateExtrusion(set_line[i], vector[0]) for i in range(len(set_line))]
@@ -1189,13 +1204,24 @@ try:
                 return new_obj
 
             def RunScript(self, Brep, Distance, Vector, Tolerance):
-                Tolerance = 0.02 if Tolerance is None else Tolerance
-                if Brep:
-                    Line_list = [_.EdgeCurve for _ in Brep.Edges]
-                    origin_data = self.polyhedral(Brep, Line_list, Vector, Distance, Tolerance) if Vector else self.offset(Brep, Distance, Tolerance)
-                    New_Brep = origin_data
-                    New_Brep.MergeCoplanarFaces(0.02, True)
+                try:
+                    sc.doc = Rhino.RhinoDoc.ActiveDoc
+                    Tolerance = 0.02 if Tolerance is None else Tolerance
+                    New_Brep = gd[object]()
+
+                    if Brep:
+                        Line_list = [_.EdgeCurve for _ in Brep.Edges]
+                        origin_data = self.polyhedral(Brep, Line_list, Vector, Tolerance) if Vector else self.offset(Brep, Distance, Tolerance)
+                        New_Brep = origin_data
+                    else:
+                        self.message2('B端数据不能为空！')
+
+                    sc.doc.Views.Redraw()
+                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                    sc.doc = ghdoc
                     return New_Brep
+                finally:
+                    self.Message = '曲面偏移'
 
 
         # 截面实体
@@ -1219,13 +1245,13 @@ try:
                 p.Optional = True
 
             def RegisterInputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                p = Grasshopper.Kernel.Parameters.Param_Generic-Object()
                 self.SetUpParam(p, "Breps", "B", "N N一组的数据，可为线或面")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
-                self.SetUpParam(p, "Options", "O", "放样的类型")
+                self.SetUpParam(p, "Options", "O", "放样的类型；0=Normal，1=Loose，2=Tight，3=Straight，5=Uniform")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
