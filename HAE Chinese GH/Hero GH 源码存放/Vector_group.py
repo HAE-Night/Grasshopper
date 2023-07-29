@@ -31,6 +31,10 @@ try:
             def get_ComponentGuid(self):
                 return System.Guid("3e8b5fff-1d6e-49d1-b6be-f5c5b36bc816")
 
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.tertiary
+
             def SetUpParam(self, p, name, nickname, description):
                 p.Name = name
                 p.NickName = nickname
@@ -152,6 +156,10 @@ try:
             def get_ComponentGuid(self):
                 return System.Guid("b852c643-79d1-48fc-9a5a-2c674bb342fe")
 
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.secondary
+
             def SetUpParam(self, p, name, nickname, description):
                 p.Name = name
                 p.NickName = nickname
@@ -249,6 +257,10 @@ try:
 
             def get_ComponentGuid(self):
                 return System.Guid("9b7d7417-b3aa-4580-bb4c-1c3193c78eeb")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.secondary
 
             def SetUpParam(self, p, name, nickname, description):
                 p.Name = name
@@ -360,6 +372,10 @@ try:
 
             def get_ComponentGuid(self):
                 return System.Guid("bbfb844f-0f92-43e6-be07-6a26d8de96b7")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.primary
 
             def SetUpParam(self, p, name, nickname, description):
                 p.Name = name
@@ -482,6 +498,10 @@ try:
             def get_ComponentGuid(self):
                 return System.Guid("4d413cd7-9c52-47a6-9af6-92502286f023")
 
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.secondary
+
             def SetUpParam(self, p, name, nickname, description):
                 p.Name = name
                 p.NickName = nickname
@@ -579,6 +599,10 @@ try:
 
             def get_ComponentGuid(self):
                 return System.Guid("599bb86f-b653-44de-b1a9-591ed5808e1f")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.secondary
 
             def SetUpParam(self, p, name, nickname, description):
                 p.Name = name
@@ -680,6 +704,10 @@ try:
 
             def get_ComponentGuid(self):
                 return System.Guid("40c698a6-1657-4619-a587-a75b8ed2614d")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.secondary
 
             def SetUpParam(self, p, name, nickname, description):
                 p.Name = name
@@ -792,6 +820,10 @@ try:
             def get_ComponentGuid(self):
                 return System.Guid("77574345-7551-4edf-9a62-6aa7461f03f2")
 
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.primary
+
             def SetUpParam(self, p, name, nickname, description):
                 p.Name = name
                 p.NickName = nickname
@@ -903,6 +935,10 @@ try:
 
             def get_ComponentGuid(self):
                 return System.Guid("46d778e1-7959-4851-aae1-2d983a231676")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.tertiary
 
             def SetUpParam(self, p, name, nickname, description):
                 p.Name = name
@@ -1095,6 +1131,10 @@ try:
 
             def get_ComponentGuid(self):
                 return System.Guid("ffb381c9-9d67-40af-9c68-c57301c1a1a3")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.primary
 
             def SetUpParam(self, p, name, nickname, description):
                 p.Name = name
