@@ -9,7 +9,6 @@ import Rhino.RhinoDoc as rd
 import Grasshopper, GhPython
 from Rhino.DocObjects import *
 import rhinoscriptsyntax as rs
-from Grasshopper import DataTree  # 树形
 import ghpythonlib.parallel as ghpara  # 多进程
 import ghpythonlib.treehelpers as ght
 from Grasshopper import DataTree as gd
