@@ -174,7 +174,7 @@ try:
 
             @property
             def Exposure(self):
-                return Grasshopper.Kernel.GH_Exposure.primary
+                return Grasshopper.Kernel.GH_Exposure.secondary
 
             def SetUpParam(self, p, name, nickname, description):
                 p.Name = name
@@ -319,7 +319,7 @@ try:
         class GeoCenterPlane(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-GeometryPlane", "RPP-几何物体中心平面",
+                                                                   "RPP-几何物体中心平面", "RPP_GeometryPlane",
                                                                    """求几何物体的中心平面""",
                                                                    "Scavenger", "Geometry")
                 return instance
@@ -663,7 +663,7 @@ try:
 
             @property
             def Exposure(self):
-                return Grasshopper.Kernel.GH_Exposure.secondary
+                return Grasshopper.Kernel.GH_Exposure.tertiary
 
             def SetUpParam(self, p, name, nickname, description):
                 p.Name = name
@@ -948,6 +948,10 @@ try:
 
             def get_ComponentGuid(self):
                 return System.Guid("54118195-e4ce-423a-b238-3c92d46e8759")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.secondary
 
             def SetUpParam(self, p, name, nickname, description):
                 p.Name = name
