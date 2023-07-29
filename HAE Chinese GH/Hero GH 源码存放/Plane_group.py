@@ -6,9 +6,16 @@
 from ghpythonlib.componentbase import dotnetcompiledcomponent as component
 import Grasshopper, GhPython
 import Rhino.Geometry as rg
+import rhinoscriptsyntax as rs
+import ghpythonlib.treehelpers as ght
+from Grasshopper import DataTree as gd
+import Grasshopper.Kernel as gk
+import scriptcontext as sc
+import Rhino
 import math
 import re
 import copy
+from itertools import chain
 import Curve_group
 
 Result = Curve_group.Result
@@ -293,6 +300,158 @@ try:
                     pass
 
 
+        # 偏移平面
+        class OffsetPlane(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP-偏移平面", "RPP_OffsetPlane", """通过X、Y、Z端选项去偏移平面""", "Scavenger", "Plane")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("f4ab7050-c453-4eba-b276-c71fbbf73420")
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Plane()
+                self.SetUpParam(p, "Plane", "P", "平面")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Number()
+                self.SetUpParam(p, "Distance", "D", "偏移距离")
+                distance = 10
+                p.SetPersistentData(gk.Types.GH_Number(distance))
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Boolean()
+                self.SetUpParam(p, "Offset_X", "X", "按X方向偏移")
+                bool_x = False
+                p.SetPersistentData(gk.Types.GH_Boolean(bool_x))
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Boolean()
+                self.SetUpParam(p, "Offset_Y", "Y", "按Y方向偏移")
+                bool_y = False
+                p.SetPersistentData(gk.Types.GH_Boolean(bool_y))
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Boolean()
+                self.SetUpParam(p, "Offset_Z", "Z", "按Z方向偏移")
+                bool_z = True
+                p.SetPersistentData(gk.Types.GH_Boolean(bool_z))
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Offset", "O", "生成偏移平面")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                p1 = self.marshal.GetInput(DA, 1)
+                p2 = self.marshal.GetInput(DA, 2)
+                p3 = self.marshal.GetInput(DA, 3)
+                p4 = self.marshal.GetInput(DA, 4)
+                result = self.RunScript(p0, p1, p2, p3, p4)
+
+                if result is not None:
+                    self.marshal.SetOutput(result, DA, 0, True)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAOISURBVEhL7ZRfiFRVHMcnWTUsUEyoB7USfKioe869M7N/dBOMqJeIBMVKpIdY6tEHCREdl5X+YEEWPYSEZT7ElL4EMtu2ze78uTN3vP90Z9udiXZtqV1X2Fxn9s69M3Pv/PqdO0fbdVdUCALxCx/O+f3O78+5B+4v8L/LyoptdV38ztWJ5mYFFUxB9UaRgqA1xugvjb/I6xj2QDP6LlRRaLuri2fgAgUoSgB5tiJncP9xEOA4IwRwOgTuBapXDfFNuJNGtVywwzXpWb9wQQRQBfByTUAT4Oy5rVD6hkL1NAHnFIHaDwTg1+YlXJ0aVY3uiUQiy3i5pkCVVjmK+Jqr0TRM4K2uhAF+x5uym/82D7R/nNgOMIG3n0Cbcanp988nWW4ruCb5o6bRfXNK6DG/wdTPbWFLDX/o5IKfWynpfSsl9lip4CJsRJfbeso3+ZuwHLGnnBSPzqVCX9ha8Phssn2n3+C/lnOg81T5nc7t3Ly94vH4E4qi7BwYGNh1nWQyuSuTyeyIxWJreZiveCTSUune8v3f3Z2vctetNTg4+GQ2m/0UKQ8NDYFpmgtgPjybxEYH+/r6HuFpAevI1p65ox2Em4uFt9uESZ8hc/l8HnAF9C1JLpcDHjOFHIrF5LXuvg17nf2bNvNy/woTnsGgE4hXLBZB0zTAp7kj2BexnEw2e1WW5Q/wizbysv4br0ulUofT6fQwrpVEIjGDz3MZ17uC58zKcsbBRhdx/67foLe39yFVVTdOT0+/VSiME2z48HxOxuFBqQuWS1/C8i4O20eisCJ6UywjGo2ydV1/f//jfoPrsu1qt2XVwtxcILi6eg0Y8xhfvaZRDKzkx7cX+70tyz5WLtsvcFcAok+vwHn0tmfQIVcjpboilBqaUHJNoeRdJCVvhEx6I+JHVja8nqfcWvhJLbbjKjPVxu54JNBS08Qu1yAj/ghgg07HmTNMoPS1BM4BCaoRCeqH8OyrMBsNs3WDHqvkght4uaX157hBKsaL+z3jueEbhc8L0OCwwfdt6nmwYhS8nwi4vUg/NjYRnF2eQa7VdfJJJU0Xvn050/po7bz0nqs+NeYPsHEcZnmcpIzheaB9rrANYBRjRtFmjDT9PmzoTYaxEYW6Rk+UZfFZv8G1gdbNVTO428nRHXaCvmynxZdsZTF1ZEwJLXl2A8x1ZPpKVRffKCWkLX6D+7qXFQj8A01+NViTqfE/AAAAAElFTkSuQmCC"
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def __init__(self):
+                pass
+
+            def message1(self, msg1):  # 报错红
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
+
+            def message2(self, msg2):  # 警告黄
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
+
+            def message3(self, msg3):  # 提示白
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
+
+            def mes_box(self, info, button, title):
+                return rs.MessageBox(info, button, title)
+
+            def Branch_Route(self, Tree):
+                """分解Tree操作，树形以及多进程框架代码"""
+                Tree_list = [list(_) for _ in Tree.Branches]
+                Tree_Path = [list(_) for _ in Tree.Paths]
+                return Tree_list, Tree_Path
+
+            def split_tree(self, tree_data, tree_path):
+                """操作树单枝的代码"""
+                new_tree = ght.list_to_tree(tree_data, True, tree_path)  # 此处可替换复写的Tree_To_List（源码参照Vector组-点集根据与曲线距离分组）
+                result_data, result_path = self.Branch_Route(new_tree)
+                if list(chain(*result_data)):
+                    return result_data, result_path
+                else:
+                    return [[]], result_path
+
+            def format_tree(self, result_tree):
+                """匹配树路径的代码，利用空树创造与源树路径匹配的树形结构分支"""
+                stock_tree = gd[object]()
+                for sub_tree in result_tree:
+                    fruit, branch = sub_tree
+                    for index, item in enumerate(fruit):
+                        path = gk.Data.GH_Path(System.Array[int](branch[index]))
+                        if hasattr(item, '__iter__'):
+                            if item:
+                                for sub_index in range(len(item)):
+                                    stock_tree.Insert(item[sub_index], path, sub_index)
+                            else:
+                                stock_tree.AddRange(item, path)
+                        else:
+                            stock_tree.Insert(item, path, index)
+                return stock_tree
+
+            def Offset(self, Plane, distance, Axis):
+                P = rg.Plane(Plane)
+                Vec = rg.Vector3d.Multiply(Axis, distance)
+                P.Translate(Vec)
+                return P
+
+            def RunScript(self, Plane, distance, X, Y, Z):
+                try:
+                    sc.doc = Rhino.RhinoDoc.ActiveDoc
+                    sc.doc.Views.Redraw()
+                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                    sc.doc = ghdoc
+                    Offset = []
+
+                    if Plane != None:
+                        if X or Y or Z:
+                            if X:
+                                Axis = Plane.XAxis
+                                Offset.append(self.Offset(Plane, distance, Axis))
+                            if Y:
+                                Axis = Plane.YAxis
+                                Offset.append(self.Offset(Plane, distance, Axis))
+                            if Z:
+                                Axis = Plane.ZAxis
+                                Offset.append(self.Offset(Plane, distance, Axis))
+                        else:
+                            Offset.append(Plane)
+                    else:
+                        self.message2("平面为空！")
+                    return Offset
+
+                finally:
+                    self.Message = 'Offset Plane'
+
+
         """
             切割 -- secondary
         """
@@ -308,4 +467,3 @@ except:
 
 import GhPython
 import System
-
