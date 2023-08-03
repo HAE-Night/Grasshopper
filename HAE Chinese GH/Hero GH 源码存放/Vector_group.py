@@ -1290,6 +1290,188 @@ try:
                 finally:
                     self.Message = 'Point Group'
 
+
+        # 点排序（右手定则）
+        class SortPointByRightHand(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP-右手定则排序", "RPP_SortPointByRightHand", """将点按平面Z向量逆时针排序，多点与原点共线按照距原点远近排序""", "Scavenger", "Vector")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("c37bf920-19b2-4d86-9ee4-18cfcddc05db")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.secondary
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Point()
+                self.SetUpParam(p, "Points", "Pi", "点列表")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Integer()
+                self.SetUpParam(p, "FirstIndex", "F", "指定开始的元素下标")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Plane()
+                self.SetUpParam(p, "Plane", "P", "排序用平面")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Points_Result", "P", "排序后的点")
+                self.Params.Output.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "index", "I", "输出点在原列表中的顺序")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                p1 = self.marshal.GetInput(DA, 1)
+                p2 = self.marshal.GetInput(DA, 2)
+                result = self.RunScript(p0, p1, p2)
+
+                if result is not None:
+                    if not hasattr(result, '__getitem__'):
+                        self.marshal.SetOutput(result, DA, 0, True)
+                    else:
+                        self.marshal.SetOutput(result[0], DA, 0, True)
+                        self.marshal.SetOutput(result[1], DA, 1, True)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAL/SURBVEhL7VJdSFNxFBcqKIOIiCgiQjJFyZltLnfv3Z0u0CyioA99iEIh+qKXHnopFayIwnrxqfDFTA2/PwK1UFJDYzmbliESay4CPzbd5py6ef+/zl2XYoSkMqKHfvDj/s/hnN/5uCfin0J6q2sLV+8+opjhh7bJc2J/jdeq7sM6xRVeaJ/abiTVzizoizp3Ka7wYm0x0+x75nyrmOEDm9DvYExrfNBbcp2rGh1hc1rjsCXTiGnDZiVk9bDbUzZIbv4ToMXHscvI6TBhxs7hzEkR7c26DiVs9ZCmuBLAAHiT0PftInI6TbAOa7B1Www+WwQwP5+nhK4czMdlBcW7iFc5mNuvILvuHWBKgaUnmYpyQECAf1zglZTlg/nSdgfmRLd/WIBXZQTiRHRlXsOponfw7RSB4jRASiEKkDyczTGi3aSkLg8DPWJ3dpaIkYEUTD45CEeGGk0lF3Cs0gzbo0TMH6cCNh6YpyIQIU1zlUrqn8ECQqF9SETkxli8fyMLcPCNJ8LiycX5rpdkJ4PdpKneCrQiHTBLq6Iiiw5driKxNPwTggGLekguDt1tGgRcJGCmlbw2QGpLg/tFOtCUCpZ1CI5+AWfP8ejvphjwYD7eNz/JxSpSv0O+a2mG/yoXgFvuilYAHbznDHBuS4NrrwHeGD0mtqfCmc/hi1WH9ZFxqC3XUJwcT425OTNweo0iGQppiq8JXg11L1+I66sAc6+IyW4tbM/VsNdoMFpN3wY1FpwHKUaHuvIDmBqlNc7SFG55EprUoXuoSP6Cf4y7FBT3kHiwew6lj3lERanhcf6wQ0jiPwTpLYvLq5Rt+XSZHgEnn6lI009lRhVj4rw8Ivz042TSu7VBi8MZ8ZC8tCpG9C+TlMsk/QRjR3cGC/Q1qjpHetUYbFFhsDXxJweIpkYVPryS/Ssg6VhNapjqE0qDBUpv7RlquBODivzoEFYWRKOqMNS3XDbfi0VZXnRLsEBFwT5V9d04ffnteCFcrL+foC8rjF36ZP/jLyEi4jtfFZxJXHP09QAAAABJRU5ErkJggg=="
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def __init__(self):
+                pass
+
+            def message1(self, msg1):  # 报错红
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
+
+            def message2(self, msg2):  # 警告黄
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
+
+            def message3(self, msg3):  # 提示白
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
+
+            def mes_box(self, info, button, title):
+                return rs.MessageBox(info, button, title)
+
+            def Branch_Route(self, Tree):
+                """分解Tree操作，树形以及多进程框架代码"""
+                Tree_list = [list(_) for _ in Tree.Branches]
+                Tree_Path = [list(_) for _ in Tree.Paths]
+                return Tree_list, Tree_Path
+
+            def split_tree(self, tree_data, tree_path):
+                """操作树单枝的代码"""
+                new_tree = ght.list_to_tree(tree_data, True, tree_path)  # 此处可替换复写的Tree_To_List（源码参照Vector组-点集根据与曲线距离分组）
+                result_data, result_path = self.Branch_Route(new_tree)
+                if list(chain(*result_data)):
+                    return result_data, result_path
+                else:
+                    return [[]], result_path
+
+            def format_tree(self, result_tree):
+                """匹配树路径的代码，利用空树创造与源树路径匹配的树形结构分支"""
+                stock_tree = gd[object]()
+                for sub_tree in result_tree:
+                    fruit, branch = sub_tree
+                    for index, item in enumerate(fruit):
+                        path = gk.Data.GH_Path(System.Array[int](branch[index]))
+                        if hasattr(item, '__iter__'):
+                            if item:
+                                for sub_index in range(len(item)):
+                                    stock_tree.Insert(item[sub_index], path, sub_index)
+                            else:
+                                stock_tree.AddRange(item, path)
+                        else:
+                            stock_tree.Insert(item, path, index)
+                return stock_tree
+
+            def is_nan(self, angle):
+                # 判断是否为失效值
+                nan_bool = (not float('-inf')) < angle < float('inf')
+                return not nan_bool
+
+            def right_hand_rule(self, pts, center_pt, vec, pl):
+                # 右手定则；共线的点将按点到源点的距离排序
+                angle_list, collinear_list, coll_index_list, no_collinear_list, no_coll_index_list, null_index = ([] for _ in range(6))
+                for pt_index, pt_item in enumerate(pts):
+                    if pt_item:
+                        pt_vector = rg.Vector3d(pt_item - center_pt)
+                        angle = rg.Vector3d.VectorAngle(pt_vector, vec, pl)
+                        # 是否共线筛选
+                        if angle == 0 or self.is_nan(angle):
+                            collinear_list.append(pt_item)
+                            coll_index_list.append(pt_index)
+                        else:
+                            no_collinear_list.append(pt_item)
+                            no_coll_index_list.append(pt_index)
+                            angle_list.append(angle)
+                    else:
+                        null_index.append(pt_index)
+
+                if coll_index_list:
+                    collinear_indexes = [zip_coll_pt[1] for zip_coll_pt in zip(*self.sortbydistance(center_pt, zip(collinear_list, coll_index_list)))[1]]  # 共线点按距离排序
+                else:
+                    collinear_indexes = []
+                no_collinear_indexes = [zip_no_coll_pt[2] for zip_no_coll_pt in sorted(zip(angle_list, no_collinear_list, no_coll_index_list), reverse=True)]  # 不共线点以逆时针排序
+                res_index_list = null_index + collinear_indexes + no_collinear_indexes
+                return res_index_list
+
+            def sortbydistance(self, xyz, zip_coll):
+                coll_pts, coll_indexes = zip(*zip_coll)
+                distance_list = [xyz.DistanceTo(single_pt) for single_pt in coll_pts]
+                sort_zip_list = sorted(zip(distance_list, zip_coll))
+                return sort_zip_list
+
+            def RunScript(self, Points, FirstIndex, Plane):
+                try:
+                    sc.doc = Rhino.RhinoDoc.ActiveDoc
+                    Points_Result, index = (gd[object]() for _ in range(2))
+                    Plane = Plane if Plane else rg.Plane.WorldXY
+                    base_pt, ref_vector = Plane.Origin, Plane.XAxis
+
+                    if Points:
+                        # 平面投影
+                        projected_point_set = [Plane.ClosestPoint(_) if _ else None for _ in Points]
+                        # 投影点重排序并输出下标
+                        temp_index = self.right_hand_rule(projected_point_set, base_pt, ref_vector, Plane)
+
+                        if FirstIndex is not None:
+                            if 0 <= FirstIndex < len(temp_index):
+                                split_index = temp_index.index(FirstIndex)
+                                a_temp_list, b_temp_list = temp_index[split_index:], temp_index[:split_index]
+                                index = a_temp_list + b_temp_list
+                                Points_Result = [Points[single_index] for single_index in index]
+                            else:
+                                self.message1('索引下标不在区间范围内！')
+                        else:
+                            Points_Result = [Points[single_index] for single_index in temp_index]
+                            index = temp_index
+
+                    else:
+                        self.message2('P端不能为空！')
+                    sc.doc.Views.Redraw()
+                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                    sc.doc = ghdoc
+
+                    return Points_Result, index
+                finally:
+                    self.Message = '点以右手定则排序'
+
     else:
         pass
 except:
