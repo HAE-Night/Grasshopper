@@ -366,11 +366,15 @@ try:
                     count = 0
                     for c_index, c_item in enumerate(line_list):
                         if c_index in sub_index_list:
-                            new_item = c_item.Offset(curve_planar, sub_dis_list[count], sc.doc.ModelAbsoluteTolerance, rg.CurveOffsetCornerStyle.
-                            None)[0]
+                            if sub_dis_list[count]:
+                                new_item = c_item.Offset(curve_planar, sub_dis_list[count], sc.doc.ModelAbsoluteTolerance, rg.CurveOffsetCornerStyle.
+                                None)[0]
+                            else:
+                                new_item = c_item
                             offset_line_list.append(new_item)
                         else:
                             offset_line_list.append(c_item)
+                        count += 1
                     return self._find_closest_pt(offset_line_list, colse_factor)
 
             def _find_closest_pt(self, lines, res_bool):
@@ -418,8 +422,7 @@ try:
                     Result_Curve = gd[object]()
                     no_rendering_line = []
 
-                    trunk_list_curve, trunk_list_index, trunk_list_dis = self.Branch_Route(Curve)[0], \
-                        self.Branch_Route(Indexs)[0], self.Branch_Route(Distance)[0]
+                    trunk_list_curve, trunk_list_index, trunk_list_dis = self.Branch_Route(Curve)[0], self.Branch_Route(Indexs)[0], self.Branch_Route(Distance)[0]
                     curve_len, index_len, dis_len = len(trunk_list_curve), len(trunk_list_index), len(trunk_list_dis)
                     if not (curve_len and index_len):
                         self.message2("C端、I端不能为空！")
@@ -451,13 +454,11 @@ try:
                                 for sub_index in range(len(temp_res_lines[_])):
                                     if temp_res_lines[_][sub_index] is False:
                                         self.message2(
-                                            "第{}组第{}根折线偏移失败；原因：被偏移的折线必须为直线！".format(_ + 1,
-                                                                                                           sub_index + 1))
+                                            "第{}组第{}根折线偏移失败；原因：被偏移的折线必须为直线！".format(_ + 1, sub_index + 1))
                                         sub_res_line.append(trunk_list_curve[_][sub_index])
                                     elif temp_res_lines[_][sub_index] is 1:
                                         self.message2(
-                                            "第{}组第{}根折线偏移失败；原因：输入下标大于折线段数！".format(_ + 1,
-                                                                                                         sub_index + 1))
+                                            "第{}组第{}根折线偏移失败；原因：输入下标大于折线段数！".format(_ + 1, sub_index + 1))
                                         sub_res_line.append(trunk_list_curve[_][sub_index])
                                     else:
                                         sub_res_line.append(temp_res_lines[_][sub_index])
@@ -3319,6 +3320,165 @@ try:
                 finally:
                     self.Message = '曲线延伸至目标曲线'
 
+
+        # 物体确定曲线方向
+        class CurveDirGroupByGeo(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP-物件确定曲线方向", "CurveDirGroupByGeo", """将曲线最接近的物体的一端作为曲线的起点或终点""", "Scavenger", "Curve")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("1e6b916b-ce90-4429-a503-f0e18f0a8578")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.secondary
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Curve()
+                self.SetUpParam(p, "Curve", "C", "待确定方向的曲线")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Geometry()
+                self.SetUpParam(p, "Geometry", "G", "一组影响曲线方向的物件")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Boolean()
+                default_bool_x = False
+                p.SetPersistentData(gk.Types.GH_Boolean(default_bool_x))
+                self.SetUpParam(p, "Reverse", "R", "True靠近物件的一端为终点，False靠近物件的一端为起点")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Curve", "C", "确定方向后的曲线")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                p1 = self.marshal.GetInput(DA, 1)
+                p2 = self.marshal.GetInput(DA, 2)
+                result = self.RunScript(p0, p1, p2)
+
+                if result is not None:
+                    self.marshal.SetOutput(result, DA, 0, True)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAQJSURBVEhLrdV9TBtlHAfwTqbI4qJmhmVSxmyLKX3v9WqQWtlwdFAZA8ZKCXGaLItkZvqP8e0P8Y2hsiqWJW7Z4iKysWaMUSnrKIyObVSSVbJNg0qqe3FMvL7QhZWXrdzP36NHIrRCM/dNPuk9z3P3/O7uubvy7lXyu/5ILbnOruCa9y75F9hUnfv2M2r7+Bmlcyqgds24NMf9b2ZbPCncLolnwxC7Sue+s5Z2Rl5TdU42Ke0Tl+THI1G1G0DRBaB0AchaghHqoO+lGoD7uMPiR/PtyLJs95319MmJ11WOyRacbEjRPgHq0wDUOQB1N4C8JQTyZmZIfejPA1TreDtlv9206eDlR7gpFg7VwuhpD4CmH0CFZydrZkDRzFykbOH9Okd0m2EANKXHfKkP83hkQmHy0qXV+PsF6kFjyIz+O/o+Nl3bdmuPrpPdahhglUX7vI9xkz2JSlAdcqMwgnn8KB/NTTj81qPcJslyJEabUT06i26h+ZONom70KapAMhS7wNPRLaYZtjgwM12wF5vkTBk0f7IR5ES7ECmchR5EC4cd3pk8M2a8BpALEFkHpw7Qxdjdh06g9xG5JeTW3F2mBssl4MsDuEIBXM2BkdPPvsENzQm7WrwqnC4Sku1AmvAdBtt/DywWf2chPXkmG6b6FRA5pwH319pabmhOQnzRDj9f2Orlae7HAiMJF/ilyaC82KSEHw6L4ftvZGCrp8gTEhPmcZEaJz4/yheU+vkiD9e9eG60F0t6G6VwrC4DOj4Tw5HdWvJExARXeQkW6AvyhYMBvjDuScQN01GW2WuVskdrM8CBBWwW2sINxSSQJtoDa7LAnyZcy3UtnlFHmcDdKI2SKyAFjlpoKzcUE4YvMEfSMyEkEOB7l2DGe8wr8RZNttWtgc7PxWBvoD/ihmIS4GemMXzRu1wzsQDAEleD5EKPVQAnGrLgvZfF27E7G61GyWSf/x2HRV3Q1SAJOa2qr5KSkj7Brtm3l3wKBtBh9AHaivToCbQMJZ7GXSWz/0g61IEuIVJgGs0W/LcgGkStiDxV21AeIm89+ZYtnhznJr380HpryorlG7FZit5GzciLQiheYeIm2o3iR+8152l/M/mo302gvlEBT4+9YNvAvlJdwdbk1LL2lbhuSdyu5MMoR+TjRxaf3MrziFzdERQ/fEt2iuSkYbvMuzGovFwOqqtbQHOzCuhwFVDXTEANl49qr5i79eEXPy5gd5a/yn6ZSR4W7nASsj4P/LO5QLLq12XITxXuVbQZihSuwmpZn3GftN/okX73fFg5XAZUsBLo8SrQMJWg+qksSl+v/PGpn0013OF3n9wduQ/Jbc/JVV0F5bLewg9lZ412qcf4q9K3GeSeIrI+GB7vLxGcxVTGg02mAAAAAElFTkSuQmCC"
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def __init__(self):
+                pass
+
+            def message1(self, msg1):  # 报错红
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
+
+            def message2(self, msg2):  # 警告黄
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
+
+            def message3(self, msg3):  # 提示白
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
+
+            def mes_box(self, info, button, title):
+                return rs.MessageBox(info, button, title)
+
+            def Branch_Route(self, Tree):
+                """分解Tree操作，树形以及多进程框架代码"""
+                Tree_list = [list(_) for _ in Tree.Branches]
+                Tree_Path = [list(_) for _ in Tree.Paths]
+                return Tree_list, Tree_Path
+
+            def split_tree(self, tree_data, tree_path):
+                """操作树单枝的代码"""
+                new_tree = ght.list_to_tree(tree_data, True, tree_path)  # 此处可替换复写的Tree_To_List（源码参照Vector组-点集根据与曲线距离分组）
+                result_data, result_path = self.Branch_Route(new_tree)
+                if list(chain(*result_data)):
+                    return result_data, result_path
+                else:
+                    return [[]], result_path
+
+            def format_tree(self, result_tree):
+                """匹配树路径的代码，利用空树创造与源树路径匹配的树形结构分支"""
+                stock_tree = gd[object]()
+                for sub_tree in result_tree:
+                    fruit, branch = sub_tree
+                    for index, item in enumerate(fruit):
+                        path = gk.Data.GH_Path(System.Array[int](branch[index]))
+                        if hasattr(item, '__iter__'):
+                            if item:
+                                for sub_index in range(len(item)):
+                                    stock_tree.Insert(item[sub_index], path, sub_index)
+                            else:
+                                stock_tree.AddRange(item, path)
+                        else:
+                            stock_tree.Insert(item, path, index)
+                return stock_tree
+
+            def get_closestPoints(self, curve, geo_list):
+                point = curve.ClosestPoints(geo_list)[2]  # 得到物件距离最近的那个点
+                return point
+
+            def get_curve_extreme_point(self, Curve):
+                # 获取曲线的两个端点
+                return Curve.PointAtStart, Curve.PointAtEnd
+
+            def compare_distance(self, curve, geo_list):
+                geo_point = self.get_closestPoints(curve, geo_list)
+                curve_PS, curve_PE = self.get_curve_extreme_point(curve)
+                curve_point = []
+                if curve_PS.DistanceTo(geo_point) < curve_PE.DistanceTo(geo_point):  # 比较两点之间的距离
+                    curve_point.append(curve_PS)
+                    curve_point.append(curve_PE)
+                else:
+                    curve_point.append(curve_PE)
+                    curve_point.append(curve_PS)
+                return curve_point
+
+            def get_vector(self, points, curve):
+                vector = points[1] - points[0]
+                curve_PS, curve_PE = self.get_curve_extreme_point(curve)
+                cvector = curve_PE - curve_PS
+                rcurve = curve
+                if vector != cvector:
+                    rcurve.Reverse()
+                return rcurve
+
+            def RunScript(self, Curve, Geomertry, Reverse):
+                try:
+                    rcurve = gd[object]()
+                    sc.doc = Rhino.RhinoDoc.ActiveDoc
+
+                    if Curve == None:
+                        self.message2("C端为空！")
+                        return rcurve
+
+                    elif Geomertry == None or len(Geomertry) == 0:
+                        self.message2("G端为空！")
+                        return rcurve
+                    else:
+                        curve_point = self.compare_distance(Curve, Geomertry)
+                        if Reverse:
+                            rcurve = self.get_vector(curve_point[::-1], Curve)
+                        else:
+                            rcurve = self.get_vector(curve_point, Curve)
+
+                    sc.doc.Views.Redraw()
+                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                    sc.doc = ghdoc
+                    return rcurve
+
+                finally:
+                    self.Message = '通过物件确定曲线方向'
 
     else:
         pass
