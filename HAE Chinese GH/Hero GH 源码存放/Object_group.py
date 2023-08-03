@@ -12,6 +12,7 @@ import rhinoscriptsyntax as rs
 import ghpythonlib.parallel as ghpara  # 多进程
 import ghpythonlib.treehelpers as ght
 from Grasshopper import DataTree as gd
+import Grasshopper.Kernel as gk
 from Grasshopper.Kernel.Data import GH_Path  # 树形分支
 from ghpythonlib.componentbase import dotnetcompiledcomponent as component
 import Rhino.Geometry as rg
@@ -587,6 +588,171 @@ try:
                         self.message2("尚未选择Rhino中的物体")
                 finally:
                     self.Message = 'Rhino物件提取'
+
+
+        # 按对象的用户属性筛选对象
+        class FilterByAttr(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP-以用户属性筛选对象", "RPP_FilterByAttr", """按对象的用户属性筛选对象，或在没有对象的情况下并行筛选属性""", "Scavenger", "Object")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("3e5f7e76-814c-478b-b898-756e3141815f")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.primary
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Guid()
+                self.SetUpParam(p, "Attributes", "A", "物件集合列表")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Key", "K", "参与筛选的Key")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Val", "V", "参与筛选的Value")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Objects", "O", "筛选出的物件Guid")
+                self.Params.Output.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Key", "K", "筛选的Key")
+                self.Params.Output.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Val", "V", "筛选的Value")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                p1 = self.marshal.GetInput(DA, 1)
+                p2 = self.marshal.GetInput(DA, 2)
+                result = self.RunScript(p0, p1, p2)
+
+                if result is not None:
+                    if not hasattr(result, '__getitem__'):
+                        self.marshal.SetOutput(result, DA, 0, True)
+                    else:
+                        self.marshal.SetOutput(result[0], DA, 0, True)
+                        self.marshal.SetOutput(result[1], DA, 1, True)
+                        self.marshal.SetOutput(result[2], DA, 2, True)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAPISURBVEhLrZV9TFtVGMbxj2nURE0WE+NfbMGNizhAsNJ10sIY0DjmJAXG6AeDtthSYLIvGUJBaDfEkvFlx/xYZCoWkCl0pYXxJVQ+OyJJY1wTlshMpzEjMmWrsPt4bnP+cMkcc+sveXJOzvu+z3PuzU1uUCAA8AjdPhjEYAPRc0SRLMu+TqQlqiX6imVvTZB1nmgjbV8f0ixh2ducQTvL+px/Ll9dWPC4bkw6+2DtOYdPztTBWF2Cg7ostJi0JBcgvZl0fH1Is5kbOlmlwtAFI86e1kEpi8PRohR8UJ2Bz1vz4eg+iomBKswOVuD6dQ8X0EnH14d4R3MBl0ZrMdJzHDe8bfjOVomuthKY65WoOp6BEt1uaJVJKFDuwuz4R1zAEhl5mlqsDxlw/3p1GJrceHgvn0FNeRZOVmajpV6Fj5s1+NSsxekGNUwGmb+2urbKhaTR8btzuTDlMbSqN3B70mwEfGg07IO94xg8M/UoVidDLY8nr0sEHbl5WcleNNfmoPeLIrBri1yAhZvlPDr06Y9y+zuYPiLZ6ioSuZyqqIWR/JjF6dJUnN0TjO5sBhfzo/Bl2mYMaaMxVybETzXJ8JwQ40eDGHP6RAwdToD9YMpatyzqStcBwZRFl7qJ2t7JiE4s/l4j8E3mhaM3PRiDcgYD0q3oz96CIQXjX21ZL6A3MwTn00PQJQlBe1oI2t7YjG/2haFTHrt8Lm+niNrdncG334xwagSLE6oI9ElDYZcxcJCgfnkoEQM70QVy9i15sq+zGLRnMLDKI9Gp4Hs+U4q3UJt74zgk2eTUbHdPkhAbCXH4Q8hKA6xSBuf3M7BkhsKqiESH/FVXU+6e5+n4/WErlTw7ns+fnVJv8wdcJK+IU788jDxBmP/2NmJukceOtarT7/8T/TfDxYpnxtS8qWkSMpjDYORAGFlfhJUEOHIiYJHxRuuk0idp+4MxULB347gqxj2jfglOZThGyQcwnLcNFmn0XENh9lO07eGYPrQr/AddzE13YQTmdZGw5768ZFYIg2k5MPxSHnfl92OvwPsODz25PD09Dhw365LmYRTgj3I++t8SxtLjwOEzJdnQlAD2/Th4qxMK6HHg8BkTm2FOxO3GeFyrFLpZk+RxWgoMtwxJFWjeCZ9xB/4yiHCpVCSkpcDgq06uYRsTsPzeDqzUCDFz+LVyWgoMf59IsbH18fitgg/vuwKMFQpqaenhWWmS8PFhKmASYkm/HT+XCdCni7v3D+b/sHIqbf9qg7jlmp7f6CrmnepWxBzpUe9+gpb/g6CgfwBBDUUSb4DINAAAAABJRU5ErkJggg=="
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def __init__(self):
+                pass
+
+            def message1(self, msg1):  # 报错红
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
+
+            def message2(self, msg2):  # 警告黄
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
+
+            def message3(self, msg3):  # 提示白
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
+
+            def mes_box(self, info, button, title):
+                return rs.MessageBox(info, button, title)
+
+            def Branch_Route(self, Tree):
+                """分解Tree操作，树形以及多进程框架代码"""
+                Tree_list = [list(_) for _ in Tree.Branches]
+                Tree_Path = [_ for _ in Tree.Paths]
+                return Tree_list, Tree_Path
+
+            def split_tree(self, tree_data, tree_path):
+                """操作树单枝的代码"""
+                new_tree = ght.list_to_tree(tree_data, True, tree_path)  # 此处可替换复写的Tree_To_List（源码参照Vector组-点集根据与曲线距离分组）
+                result_data, result_path = self.Branch_Route(new_tree)
+                if list(chain(*result_data)):
+                    return result_data, result_path
+                else:
+                    return [[]], result_path
+
+            def format_tree(self, result_tree):
+                """匹配树路径的代码，利用空树创造与源树路径匹配的树形结构分支"""
+                stock_tree = gd[object]()
+                for sub_tree in result_tree:
+                    fruit, branch = sub_tree
+                    for index, item in enumerate(fruit):
+                        path = gk.Data.GH_Path(System.Array[int](branch[index]))
+                        if hasattr(item, '__iter__'):
+                            if item:
+                                for sub_index in range(len(item)):
+                                    stock_tree.Insert(item[sub_index], path, sub_index)
+                            else:
+                                stock_tree.AddRange(item, path)
+                        else:
+                            stock_tree.Insert(item, path, index)
+                return stock_tree
+
+            def HaveKey(self, Object, key, contrast_value):  # 根据Key值，获取Value
+                Obj, Keys, Value = [], [], []
+
+                for v in contrast_value:  # 遍历得到的value
+                    for obj in range(len(Object)):
+                        obj_attr = sc.doc.Objects.FindId(Object[obj]).Attributes
+                        value = obj_attr.GetUserString(key)  # 根据输入的key值得到Value
+                        if value == str(v):  # 判断得到的value是否与输入的value相等
+                            Keys.append(key)
+                            Obj.append(obj)
+                            Value.append(value)
+                return Obj, Keys, Value
+
+            def RunScript(self, attr, key, val):
+                try:
+                    sc.doc = Rhino.RhinoDoc.ActiveDoc
+                    Obj, Keys, Value = gd[object](), gd[object](), gd[object]()
+                    attr_str = [str(_) for _ in attr]
+
+                    if len(attr) == 0:
+                        self.message2("A端为空!")
+                        return Obj, Keys, Value
+
+                    if key == None:
+                        self.message2("K端为空!")
+                        return Obj, Keys, Value
+
+                    if len(val.AllData()) == 0:  # 判断是否为空树
+                        self.message2("V端为空!")
+                        return Obj, Keys, Value
+
+                    value, value_path = self.Branch_Route(val)  # 得到输入的value和path
+
+                    for i in range(len(value)):
+                        O, K, V = self.HaveKey(attr, key, value[i])
+                        for _ in O:
+                            Obj.Add(attr_str[_], value_path[i])
+                        for _ in K:
+                            Keys.Add(_, GH_Path(value_path[i]))
+                        for _ in V:
+                            Value.Add(_, GH_Path(value_path[i]))
+
+                    sc.doc.Views.Redraw()
+                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                    sc.doc = ghdoc
+
+                    return Obj, Keys, Value
+                finally:
+                    self.Message = 'Filter by User Attributes'
 
 
         """
