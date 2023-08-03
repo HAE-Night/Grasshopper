@@ -89,75 +89,74 @@ try:
             def mes_box(self, info, button, title):
                 return rs.MessageBox(info, button, title)
 
-            def Branch_Route(self, Tree):
-                """分解Tree操作，树形以及多进程框架代码"""
-                Tree_list = [list(_) for _ in Tree.Branches]
-                Tree_Path = [list(_) for _ in Tree.Paths]
-                return Tree_list, Tree_Path
+            # 数据转换成树和原树路径
+            def Restore_Tree(self, Before_Tree, Tree):
+                Tree_Path = [_ for _ in Tree.Paths]
+                After_Tree = gd[object]()
+                for i in range(Tree.BranchCount):
+                    After_Tree.AddRange(Before_Tree[i], Tree_Path[i])
+                return After_Tree
 
-            def split_tree(self, tree_data, tree_path):
-                """操作树单枝的代码"""
-                new_tree = ght.list_to_tree(tree_data, True, tree_path)  # 此处可替换复写的Tree_To_List（源码参照Vector组-点集根据与曲线距离分组）
-                result_data, result_path = self.Branch_Route(new_tree)
-                if result_data:
-                    return result_data, result_path
+            def Get_different_Center(self, brep, type_str):  # 不同的物体求中心点
+                if "Plane" in type_str:
+                    center = brep.Origin
+                elif "Circle" in type_str or "Box" in type_str or 'Rectangle' in type_str:
+                    center = brep.Center
+                elif "Point" in type_str:
+                    center = brep
+                elif "Line" in type_str:
+                    center = brep.BoundingBox.Center
+                elif "Arc" in type_str:
+                    brep = brep.ToNurbsCurve()
+                    center = brep.GetBoundingBox(True).Center
                 else:
-                    return [[]], [tree_path]
-
-            def format_tree(self, result_tree):
-                """匹配树路径的代码，利用空树创造与源树路径匹配的树形结构分支"""
-                stock_tree = gd[object]()
-                for sub_tree in result_tree:
-                    fruit, branch = sub_tree
-                    for index, item in enumerate(fruit):
-                        path = gk.Data.GH_Path(System.Array[int](branch[index]))
-                        if hasattr(item, '__iter__'):
-                            for sub_index in range(len(item)):
-                                stock_tree.Insert(item[sub_index], path, sub_index)
-                        else:
-                            stock_tree.Insert(item, path, index)
-                return stock_tree
+                    center = brep.GetBoundingBox(True).Center
+                return center
 
             # 求边界框的中心点
             def center_box(self, Box):
+                if not Box: return
                 type_str = str(type(Box))
+
+                # 群组物体判断
                 if 'List[object]' in type_str:
-                    bbox = rg.BoundingBox.Empty
+                    bbox = rg.BoundingBox.Empty  # 获取边界框
+                    Pt = []
                     for brep in Box:
-                        bbox.Union(brep.GetBoundingBox(rg.Plane.WorldXY))  # 获取几何边界
+                        type_str = str(type(brep))
+                        if "Circle" in type_str or 'Rectangle' in type_str or "Box" in type_str:
+                            bbox.Union(brep.BoundingBox)  # 获取几何边界
+                        elif "Plane" in type_str or 'Point' in type_str or 'Arc' in type_str:
+                            Pt.append(self.Get_different_Center(brep, type_str))
+                            bbox = rg.BoundingBox(Pt)
+                        else:
+                            bbox.Union(brep.GetBoundingBox(rg.Plane.WorldXY))
+
                     center = bbox.Center
-                else:
-                    center = Box.GetBoundingBox(True).Center if "Box" and "Plane" not in type_str else Box.Origin if "Plane" in type_str else Box.Center
+                else:  # 不是群组
+                    center = self.Get_different_Center(Box, type_str)
                 return center
 
-            def GeoCenter(self, tuple_data):
-                # 集合结构，待处理数据以及原树形分支
-                Geo, origin_path = tuple_data
-                center = [_ for _ in ghp.run(self.center_box, Geo)]
-                ungroup_data = self.split_tree(center, origin_path)
-                Rhino.RhinoApp.Wait()
-                return ungroup_data
+            def GeoCenter(self, Geo):
+                center = ghp.run(self.center_box, Geo)
+                return center
 
             def RunScript(self, Geometry):
                 try:
                     sc.doc = Rhino.RhinoDoc.ActiveDoc
-
-                    Cenpt = gd[object]()
-                    Geolist, geo_path = self.Branch_Route(Geometry)
-
-                    if Geolist:
-                        iter_ungroup_data = map(self.GeoCenter, zip(Geolist, geo_path))  # 树形集合解组数据
-                        Cenpt = self.format_tree(iter_ungroup_data)  # 匹配树路径
+                    Cenp = gd[object]()
+                    Geolist = [list(Branch) for Branch in Geometry.Branches]  # 将树转化为列表
+                    if len(Geolist):
+                        Cenpt = ghp.run(self.GeoCenter, Geolist)  # 主方法运行
+                        Cenp = self.Restore_Tree(Cenpt, Geometry)  # 还原树分支
                     else:
-                        self.message2('G端数据为空！')
-
+                        self.message2('没有数据输入！')
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
                     sc.doc = ghdoc
-
-                    return Cenpt
+                    return Cenp
                 finally:
-                    self.Message = 'HAE 中心点'
+                    self.Message = 'HAE中心点'
 
 
         # 几何排序
