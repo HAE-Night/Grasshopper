@@ -3325,7 +3325,7 @@ try:
         class CurveDirGroupByGeo(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-物件确定曲线方向", "CurveDirGroupByGeo", """将曲线最接近的物体的一端作为曲线的起点或终点""", "Scavenger", "Curve")
+                                                                   "RPP-物件确定曲线方向", "RPP_CurveDirGroupByGeo", """将曲线最接近的物体的一端作为曲线的起点或终点""", "Scavenger", "Curve")
                 return instance
 
             def get_ComponentGuid(self):
@@ -3478,7 +3478,7 @@ try:
                     return rcurve
 
                 finally:
-                    self.Message = '通过物件确定曲线方向'
+                    self.Message = '物件确定曲线方向'
 
     else:
         pass
