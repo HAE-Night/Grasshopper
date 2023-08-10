@@ -16,8 +16,10 @@ import ghpythonlib.components as ghc
 import ghpythonlib.treehelpers as ght
 import ghpythonlib.parallel as ghp
 import Grasshopper.DataTree as gd
+import Grasshopper.Kernel as gk
 from itertools import chain
 import Curve_group
+import Geometry_group
 
 Result = Curve_group.Result
 try:
@@ -53,6 +55,13 @@ try:
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
+                p = Grasshopper.Kernel.Parameters.Param_Boolean()
+                self.SetUpParam(p, "Format", "F", "是否格式化点序")
+                Factor = True
+                p.SetPersistentData(gk.Types.GH_Boolean(Factor))
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
                 self.SetUpParam(p, "_place", "*", "占位符（各中心点）")
@@ -60,7 +69,8 @@ try:
 
             def SolveInstance(self, DA):
                 p0 = self.marshal.GetInput(DA, 0)
-                result = self.RunScript(p0)
+                p1 = self.marshal.GetInput(DA, 1)
+                result = self.RunScript(p0, p1)
 
                 if result is not None:
                     self.marshal.SetOutput(result, DA, 0, True)
@@ -70,7 +80,7 @@ try:
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
-                self.pts, self.lines, self.bbox = None, None, None
+                self.pts, self.lines, self.bbox, self.factor = (None for _ in range(4))
 
             def message1(self, msg1):
                 return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
@@ -85,9 +95,20 @@ try:
                 return rs.MessageBox(info, button, title)
 
             def _get_lines(self, pts):
-                loop_items = zip(pts, pts[1:] + pts[:1])[:len(pts) - 1]
-                line_list = ghp.run(lambda pts: rg.Line(pts[0], pts[1]), loop_items)
-                return line_list
+                new_pts, line_list = None, None
+                if pts:
+                    ply_line = rg.PolylineCurve(pts)
+                    center_pt = ght.tree_to_list(Geometry_group.GeoCenter().RunScript(ght.list_to_tree([ply_line])))[0]
+                    sc_trf = rg.Transform.Scale(center_pt, 0.8)
+                    copy_ply_line = ply_line.Duplicate()
+                    copy_ply_line.Transform(sc_trf)
+                    res_ply_line = copy_ply_line if self.factor else ply_line
+
+                    new_pts = [_.Location for _ in res_ply_line.ToNurbsCurve().Points]
+                    loop_items = zip(new_pts, new_pts[1:] + new_pts[:1])[:len(new_pts) - 1]
+                    line_list = ghp.run(lambda pt_list: rg.Line(pt_list[0], pt_list[1]), loop_items)
+
+                return new_pts, line_list
 
             def _get_all_pts(self, obj):
                 _obj_pts = []
@@ -102,7 +123,7 @@ try:
                 return _obj_pts
 
             def _do_main(self, data):
-                _gener = ghp.run(self._get_all_pts, data)
+                _gener = map(self._get_all_pts, data)
                 pt_list = []
                 if len(_gener) == 1:
                     pt_list = _gener[0]
@@ -113,19 +134,23 @@ try:
                         else:
                             pt_list.append(_)
 
-                set_of_line = self._get_lines(pt_list)
-                center_pt = rg.PointCloud(pt_list).GetBoundingBox(True).Center
-                return pt_list, set_of_line, center_pt
+                set_of_pts, set_of_line = self._get_lines(pt_list)
+                if set_of_pts:
+                    center_pt = rg.PointCloud(set_of_pts).GetBoundingBox(True).Center
+                else:
+                    center_pt = rg.Point3d(0, 0, 0)
+                return set_of_pts, set_of_line, center_pt
 
-            def RunScript(self, Geo):
+            def RunScript(self, Geo, Format):
                 try:
                     sc.doc = Rhino.RhinoDoc.ActiveDoc
 
                     origin_data = [list(_) for _ in Geo.Branches]
                     _place = gd[object]()
+                    self.factor = Format
 
                     if origin_data:
-                        list_pts, list_line, cen_pts = zip(*map(self._do_main, origin_data))
+                        list_pts, list_line, cen_pts = zip(*ghp.run(self._do_main, origin_data))
                     else:
                         self.message2("待解析的点序列为空！")
                         list_pts, list_line, cen_pts = (None for _ in range(3))
@@ -147,11 +172,13 @@ try:
             def DrawViewportWires(self, args):
                 try:
                     for f_lines in self.lines:
-                        for line in f_lines:
-                            args.Display.DrawArrow(line, System.Drawing.Color.FromArgb(0, 255, 255))
+                        if f_lines:
+                            for line in f_lines:
+                                args.Display.DrawArrow(line, System.Drawing.Color.FromArgb(0, 255, 255))
                     for f_items in self.pts:
-                        for sub_index in range(len(f_items)):
-                            args.Display.DrawDot(f_items[sub_index], str(sub_index), System.Drawing.Color.Wheat, System.Drawing.Color.Black)
+                        if f_items:
+                            for sub_index in range(len(f_items)):
+                                args.Display.DrawDot(f_items[sub_index], str(sub_index), System.Drawing.Color.Wheat, System.Drawing.Color.Black)
                 except:
                     pass
 
