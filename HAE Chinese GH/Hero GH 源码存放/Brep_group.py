@@ -477,7 +477,6 @@ try:
                 for Re_ in Result:
                     Re_.MergeCoplanarFaces(0.02)
                     Merge_Result.append(Re_)
-                print(Merge_Result)
                 return Merge_Result
 
             def RunScript(self, Breps, PRE):
@@ -487,7 +486,6 @@ try:
                     breplist = zip([tb for tb in Breps.Branches], [PRE] * Breps.BranchCount)
                 res = ghp.run(self.brepbp, breplist)
                 Brep = ght.list_to_tree(res)
-                # return outputs if you have them; here I try it for you:
                 return Brep
 
 
@@ -722,7 +720,7 @@ try:
 
             def temp(self, tuple_data):
                 breps, planes, origin_path = tuple_data
-                list_pln = [planes[:] for _ in range(len(planes))]
+                list_pln = [planes[:] for _ in range(len(breps))]
 
                 res_list = []
                 for brep_index, brep_item in enumerate(breps):
