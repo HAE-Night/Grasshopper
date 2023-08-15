@@ -22,6 +22,7 @@ from itertools import chain
 import Curve_group
 
 Result = Curve_group.Result
+Message = Curve_group.message()
 try:
     if Result is True:
         """
@@ -73,9 +74,17 @@ try:
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def RunScript(self, Objects):
-                if Objects:
-                    Group = Objects.TopologyDescription
-                    return Group
+                try:
+                    re_mes = Message.RE_MES([Objects], ['Objects'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                        return gd[object]()
+                    else:
+                        Group = Objects.TopologyDescription
+                        return Group
+                finally:
+                    self.Message = '数据详情'
 
 
         # 键值对赋值
@@ -104,7 +113,7 @@ try:
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                p = Grasshopper.Kernel.Parameters.Param_String()
                 self.SetUpParam(p, "Keys", "K", "Key-键,")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
@@ -266,19 +275,22 @@ try:
 
             def RunScript(self, Object, Key):
                 try:
-
-                    sc.doc = Rhino.RhinoDoc.ActiveDoc
-                    sc.doc.Views.Redraw()
-
-                    if Object and Key:
-                        Keys, Value = self.HaveKey(Object, Key)
-                    elif Object and not Key:
-                        Keys, Value = self.KeyisNone(Object)
+                    re_mes = Message.RE_MES([Object, Key], ['Object', 'Key'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                        return gd[object](), gd[object]()
                     else:
-                        return
-                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
-                    sc.doc = ghdoc
-                    return Keys, Value
+                        sc.doc = Rhino.RhinoDoc.ActiveDoc
+
+                        if Object and Key:
+                            Keys, Value = self.HaveKey(Object, Key)
+                        elif Object and not Key:
+                            Keys, Value = self.KeyisNone(Object)
+                        ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                        sc.doc.Views.Redraw()
+                        sc.doc = ghdoc
+                        return Keys, Value
                 finally:
                     self.Message = '键值对查询'
 
@@ -319,8 +331,9 @@ try:
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
-                p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Switch", "S", "插件运行按钮，输入‘t’执行，默认不执行")
+                p = Grasshopper.Kernel.Parameters.Param_Boolean()
+                self.SetUpParam(p, "Switch", "S", "插件运行按钮，输入‘True’执行，默认不执行")
+                p.PersistentData.Append(Grasshopper.Kernel.Types.GH_Boolean(False))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
@@ -378,36 +391,35 @@ try:
                 return object
 
             def RunScript(self, Father_Keys, Unique_ID, Switch):
-                Switch = 'f' if Switch is None else 't'
-                self.factor = False if Switch == 'f' else True
-                if self.factor is True:
-                    if Unique_ID:
-                        duplicate_rm = list(set(Unique_ID))
-                        sc.doc = rd.ActiveDoc
-                        all_layers = rs.LayerNames()
-                        children_layers = [_ for _ in all_layers if "::" in _]
-                        father_layers = [_ for _ in all_layers if "::" not in _]
-                        Father_Keys = Father_Keys if len(Father_Keys) > 0 else [_ for _ in range(len(father_layers))]
-                        value_data = []
-                        for f in father_layers:
-                            re = [_ for _ in children_layers if f in _]
-                            value_data.append(re)
-                        result_children_layers = [[value_data[_], duplicate_rm] for _ in Father_Keys]
-                        result = [_ for _ in ghpara.run(self.eliminate_illegal_data, result_children_layers)]
-                        name_of_list = [name for names in result for name in names]
-                        Info = name_of_list
-                        Data_list = []
-                        for _ in name_of_list:
-                            if _ in all_layers:
-                                Data_list.append(rs.ObjectsByLayer(_, True))
-                        sc.doc = Rhino.RhinoDoc
-                        Data = [_ for _ in ghpara.run(self._get_rhino_objects, Data_list)]
-                        return Data, Info
+                try:
+                    self.factor = Switch
+                    if self.factor is True:
+                        if Unique_ID:
+                            duplicate_rm = list(set(Unique_ID))
+                            sc.doc = rd.ActiveDoc
+                            all_layers = rs.LayerNames()
+                            children_layers = [_ for _ in all_layers if "::" in _]
+                            father_layers = [_ for _ in all_layers if "::" not in _]
+                            Father_Keys = Father_Keys if len(Father_Keys) > 0 else [_ for _ in range(len(father_layers))]
+                            value_data = []
+                            for f in father_layers:
+                                re = [_ for _ in children_layers if f in _]
+                                value_data.append(re)
+                            result_children_layers = [[value_data[_], duplicate_rm] for _ in Father_Keys]
+                            result = [_ for _ in ghpara.run(self.eliminate_illegal_data, result_children_layers)]
+                            name_of_list = [name for names in result for name in names]
+                            Info = name_of_list
+                            Data_list = []
+                            for _ in name_of_list:
+                                if _ in all_layers:
+                                    Data_list.append(rs.ObjectsByLayer(_, True))
+                            sc.doc = Rhino.RhinoDoc
+                            Data = [_ for _ in ghpara.run(self._get_rhino_objects, Data_list)]
+                            return Data, Info
                     else:
-                        pass
-                else:
-                    pass
-
+                        Message.message2(self, '程序默认不运行')
+                finally:
+                    self.Message = '拾取图层物体'
 
         # 提取指定图层的物体
         class ExtractObject(component):
@@ -437,11 +449,13 @@ try:
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
                 self.SetUpParam(p, "Layer_Type", "T", "默认拿图层全部的物体，输入数字去选择{0：全部物体，1：父图层物体，2：子图层物体}")
+                p.SetPersistentData(Grasshopper.Kernel.Types.GH_Integer(0))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
                 self.SetUpParam(p, "Geo_Type", "GT", "指定要选择输出的物体类型，{0：几何物体（默认），1：点，2：面，3：线，4：Brep}")
+                p.SetPersistentData(Grasshopper.Kernel.Types.GH_Integer(0))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
@@ -484,17 +498,23 @@ try:
                 return objects
 
             def RunScript(self, LayerName, Layer_Type, Geo_Type):
-                if LayerName:
-                    Layer_Type = 0 if Layer_Type is None else Layer_Type
-                    Geo_Type = self.which[0] if Geo_Type is None else self.which[Geo_Type]
-                    sc.doc = Rhino.RhinoDoc.ActiveDoc
-                    res_layer = self.filter_layers(LayerName)[Layer_Type]
-                    rhino_ids = self.choice(res_layer)
-                    Bulk_Geo = map(lambda x: rs.coercegeometry(x), rhino_ids)
-                    Geo = Bulk_Geo if Geo_Type is rg.GeometryBase else [_ for _ in Bulk_Geo if type(_) is Geo_Type or type(_) in Geo_Type]
-                    return Geo
-                else:
-                    pass
+                try:
+                    re_mes = Message.RE_MES([LayerName], ['LayerName'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                        return gd[object]()
+                    else:
+                        Layer_Type = 0 if Layer_Type is None else Layer_Type
+                        Geo_Type = self.which[0] if Geo_Type is None else self.which[Geo_Type]
+                        sc.doc = Rhino.RhinoDoc.ActiveDoc
+                        res_layer = self.filter_layers(LayerName)[Layer_Type]
+                        rhino_ids = self.choice(res_layer)
+                        Bulk_Geo = map(lambda x: rs.coercegeometry(x), rhino_ids)
+                        Geo = Bulk_Geo if Geo_Type is rg.GeometryBase else [_ for _ in Bulk_Geo if type(_) is Geo_Type or type(_) in Geo_Type]
+                        return Geo
+                finally:
+                    self.Message = '提取图层物体'
 
 
         # Rhino文本物体提取
@@ -560,199 +580,28 @@ try:
             def __init__(self):
                 pass
 
-            def message1(self, msg1):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
-
             def get_center_pt(self, single_pt):
                 center_pt = single_pt.GetBoundingBox(True).Center
                 return center_pt, single_pt.Explode()
 
             def RunScript(self, Objects):
                 try:
-                    if Objects:
+                    re_mes = Message.RE_MES([Objects], ['Objects'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                        return gd[object](), gd[object](), gd[object](), gd[object]()
+                    else:
                         temp_geo = ghp.run(lambda x: Rhino.DocObjects.ObjRef(x).Geometry(), Objects)
                         filter_t_list = [_ for _ in temp_geo if isinstance(_, (rg.TextEntity,)) is True]
                         Text_Entity = filter_t_list
                         Text = [_.PlainText for _ in filter_t_list]
 
                         Center_Pts, Contour_Line = zip(*[_ for _ in ghp.run(self.get_center_pt, Text_Entity)])
-                        self.message3("已选择{}个Rhino物件，提取{}个文字！".format(len(temp_geo), len(filter_t_list)))
+                        Message.message3(self, "已选择{}个Rhino物件，提取{}个文字！".format(len(temp_geo), len(filter_t_list)))
                         return Text_Entity, Text, Center_Pts, ght.list_to_tree(Contour_Line)
-                    else:
-                        self.message2("尚未选择Rhino中的物体")
                 finally:
                     self.Message = 'Rhino物件提取'
-
-
-        # 按对象的用户属性筛选对象
-        class FilterByAttr(component):
-            def __new__(cls):
-                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-以用户属性筛选对象", "RPP_FilterByAttr", """按对象的用户属性筛选对象，或在没有对象的情况下并行筛选属性""", "Scavenger", "Object")
-                return instance
-
-            def get_ComponentGuid(self):
-                return System.Guid("3e5f7e76-814c-478b-b898-756e3141815f")
-
-            @property
-            def Exposure(self):
-                return Grasshopper.Kernel.GH_Exposure.primary
-
-            def SetUpParam(self, p, name, nickname, description):
-                p.Name = name
-                p.NickName = nickname
-                p.Description = description
-                p.Optional = True
-
-            def RegisterInputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_Guid()
-                self.SetUpParam(p, "Attributes", "A", "物件集合列表")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
-                self.Params.Input.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Key", "K", "参与筛选的Key")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
-                self.Params.Input.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Val", "V", "参与筛选的Value")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
-                self.Params.Input.Add(p)
-
-            def RegisterOutputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Objects", "O", "筛选出的物件Guid")
-                self.Params.Output.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Key", "K", "筛选的Key")
-                self.Params.Output.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Val", "V", "筛选的Value")
-                self.Params.Output.Add(p)
-
-            def SolveInstance(self, DA):
-                p0 = self.marshal.GetInput(DA, 0)
-                p1 = self.marshal.GetInput(DA, 1)
-                p2 = self.marshal.GetInput(DA, 2)
-                result = self.RunScript(p0, p1, p2)
-
-                if result is not None:
-                    if not hasattr(result, '__getitem__'):
-                        self.marshal.SetOutput(result, DA, 0, True)
-                    else:
-                        self.marshal.SetOutput(result[0], DA, 0, True)
-                        self.marshal.SetOutput(result[1], DA, 1, True)
-                        self.marshal.SetOutput(result[2], DA, 2, True)
-
-            def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAPISURBVEhLrZV9TFtVGMbxj2nURE0WE+NfbMGNizhAsNJ10sIY0DjmJAXG6AeDtthSYLIvGUJBaDfEkvFlx/xYZCoWkCl0pYXxJVQ+OyJJY1wTlshMpzEjMmWrsPt4bnP+cMkcc+sveXJOzvu+z3PuzU1uUCAA8AjdPhjEYAPRc0SRLMu+TqQlqiX6imVvTZB1nmgjbV8f0ixh2ducQTvL+px/Ll9dWPC4bkw6+2DtOYdPztTBWF2Cg7ostJi0JBcgvZl0fH1Is5kbOlmlwtAFI86e1kEpi8PRohR8UJ2Bz1vz4eg+iomBKswOVuD6dQ8X0EnH14d4R3MBl0ZrMdJzHDe8bfjOVomuthKY65WoOp6BEt1uaJVJKFDuwuz4R1zAEhl5mlqsDxlw/3p1GJrceHgvn0FNeRZOVmajpV6Fj5s1+NSsxekGNUwGmb+2urbKhaTR8btzuTDlMbSqN3B70mwEfGg07IO94xg8M/UoVidDLY8nr0sEHbl5WcleNNfmoPeLIrBri1yAhZvlPDr06Y9y+zuYPiLZ6ioSuZyqqIWR/JjF6dJUnN0TjO5sBhfzo/Bl2mYMaaMxVybETzXJ8JwQ40eDGHP6RAwdToD9YMpatyzqStcBwZRFl7qJ2t7JiE4s/l4j8E3mhaM3PRiDcgYD0q3oz96CIQXjX21ZL6A3MwTn00PQJQlBe1oI2t7YjG/2haFTHrt8Lm+niNrdncG334xwagSLE6oI9ElDYZcxcJCgfnkoEQM70QVy9i15sq+zGLRnMLDKI9Gp4Hs+U4q3UJt74zgk2eTUbHdPkhAbCXH4Q8hKA6xSBuf3M7BkhsKqiESH/FVXU+6e5+n4/WErlTw7ns+fnVJv8wdcJK+IU788jDxBmP/2NmJukceOtarT7/8T/TfDxYpnxtS8qWkSMpjDYORAGFlfhJUEOHIiYJHxRuuk0idp+4MxULB347gqxj2jfglOZThGyQcwnLcNFmn0XENh9lO07eGYPrQr/AddzE13YQTmdZGw5768ZFYIg2k5MPxSHnfl92OvwPsODz25PD09Dhw365LmYRTgj3I++t8SxtLjwOEzJdnQlAD2/Th4qxMK6HHg8BkTm2FOxO3GeFyrFLpZk+RxWgoMtwxJFWjeCZ9xB/4yiHCpVCSkpcDgq06uYRsTsPzeDqzUCDFz+LVyWgoMf59IsbH18fitgg/vuwKMFQpqaenhWWmS8PFhKmASYkm/HT+XCdCni7v3D+b/sHIqbf9qg7jlmp7f6CrmnepWxBzpUe9+gpb/g6CgfwBBDUUSb4DINAAAAABJRU5ErkJggg=="
-                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
-
-            def __init__(self):
-                pass
-
-            def message1(self, msg1):  # 报错红
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):  # 警告黄
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):  # 提示白
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
-
-            def mes_box(self, info, button, title):
-                return rs.MessageBox(info, button, title)
-
-            def Branch_Route(self, Tree):
-                """分解Tree操作，树形以及多进程框架代码"""
-                Tree_list = [list(_) for _ in Tree.Branches]
-                Tree_Path = [_ for _ in Tree.Paths]
-                return Tree_list, Tree_Path
-
-            def split_tree(self, tree_data, tree_path):
-                """操作树单枝的代码"""
-                new_tree = ght.list_to_tree(tree_data, True, tree_path)  # 此处可替换复写的Tree_To_List（源码参照Vector组-点集根据与曲线距离分组）
-                result_data, result_path = self.Branch_Route(new_tree)
-                if list(chain(*result_data)):
-                    return result_data, result_path
-                else:
-                    return [[]], result_path
-
-            def format_tree(self, result_tree):
-                """匹配树路径的代码，利用空树创造与源树路径匹配的树形结构分支"""
-                stock_tree = gd[object]()
-                for sub_tree in result_tree:
-                    fruit, branch = sub_tree
-                    for index, item in enumerate(fruit):
-                        path = gk.Data.GH_Path(System.Array[int](branch[index]))
-                        if hasattr(item, '__iter__'):
-                            if item:
-                                for sub_index in range(len(item)):
-                                    stock_tree.Insert(item[sub_index], path, sub_index)
-                            else:
-                                stock_tree.AddRange(item, path)
-                        else:
-                            stock_tree.Insert(item, path, index)
-                return stock_tree
-
-            def HaveKey(self, Object, key, contrast_value):  # 根据Key值，获取Value
-                Obj, Keys, Value = [], [], []
-
-                for v in contrast_value:  # 遍历得到的value
-                    for obj in range(len(Object)):
-                        obj_attr = sc.doc.Objects.FindId(Object[obj]).Attributes
-                        value = obj_attr.GetUserString(key)  # 根据输入的key值得到Value
-                        if value == str(v):  # 判断得到的value是否与输入的value相等
-                            Keys.append(key)
-                            Obj.append(obj)
-                            Value.append(value)
-                return Obj, Keys, Value
-
-            def RunScript(self, attr, key, val):
-                try:
-                    sc.doc = Rhino.RhinoDoc.ActiveDoc
-                    Obj, Keys, Value = gd[object](), gd[object](), gd[object]()
-                    attr_str = [str(_) for _ in attr]
-
-                    if len(attr) == 0:
-                        self.message2("A端为空!")
-                        return Obj, Keys, Value
-
-                    if key == None:
-                        self.message2("K端为空!")
-                        return Obj, Keys, Value
-
-                    if len(val.AllData()) == 0:  # 判断是否为空树
-                        self.message2("V端为空!")
-                        return Obj, Keys, Value
-
-                    value, value_path = self.Branch_Route(val)  # 得到输入的value和path
-
-                    for i in range(len(value)):
-                        O, K, V = self.HaveKey(attr, key, value[i])
-                        for _ in O:
-                            Obj.Add(attr_str[_], value_path[i])
-                        for _ in K:
-                            Keys.Add(_, GH_Path(value_path[i]))
-                        for _ in V:
-                            Value.Add(_, GH_Path(value_path[i]))
-
-                    sc.doc.Views.Redraw()
-                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
-                    sc.doc = ghdoc
-
-                    return Obj, Keys, Value
-                finally:
-                    self.Message = 'Filter by User Attributes'
 
 
         """
@@ -791,8 +640,9 @@ try:
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
-                p = GhPython.Assemblies.MarshalParam()
-                self.SetUpParam(p, "Switch", "S", "是否生成，默认为不生成（F），输入（T）生成")
+                p = Grasshopper.Kernel.Parameters.Param_Boolean()
+                self.SetUpParam(p, "Switch", "S", "是否生成，默认为不生成（False），输入（True）生成")
+                p.PersistentData.Append(Grasshopper.Kernel.Types.GH_Boolean(False))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
@@ -827,20 +677,18 @@ try:
 
             def RunScript(self, Full_Name, Color, Switch):
                 try:
-                    sc.doc = Rhino.RhinoDoc.ActiveDoc
-                    if Full_Name:
-
-                        Switch = 'F' if Switch is None else Switch.upper()
-
-                        zip_list = list(zip(Full_Name, Color))
-                        if Switch == 'T':
-                            map(self.test, zip_list)
+                    re_mes = Message.RE_MES([Full_Name], ['Full_Name'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
                     else:
-                        self.message2("图层名为空！")
-
-                    sc.doc.Views.Redraw()
-                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
-                    sc.doc = ghdoc
+                        sc.doc = Rhino.RhinoDoc.ActiveDoc
+                        zip_list = list(zip(Full_Name, Color))
+                        if Switch:
+                            map(self.test, zip_list)
+                        sc.doc.Views.Redraw()
+                        ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                        sc.doc = ghdoc
                 finally:
                     self.Message = '图层生成'
     else:

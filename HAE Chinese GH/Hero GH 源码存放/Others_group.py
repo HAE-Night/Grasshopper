@@ -27,13 +27,12 @@ reload(sys)
 sys.setdefaultencoding('utf-8')
 
 Result = Curve_group.Result
+Message = Curve_group.message()
 try:
     if Result is True:
         """
             切割 -- primary
         """
-
-
         # 新建视图
         class CreateView(component):
             def __new__(cls):
@@ -55,23 +54,27 @@ try:
                 p.Optional = True
 
             def RegisterInputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Create", "C", "创建视图的开关（输入t开启）")
+                p = Grasshopper.Kernel.Parameters.Param_Boolean()
+                self.SetUpParam(p, "Create", "C", "创建视图的开关（Ture开启）")
+                p.PersistentData.Append(Grasshopper.Kernel.Types.GH_Boolean(False))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
                 self.SetUpParam(p, "Name", "N", "视图的名称")
+                p.SetPersistentData(Grasshopper.Kernel.Types.GH_String('HAE'))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
                 self.SetUpParam(p, "Wide", "W", "窗口宽度")
+                p.SetPersistentData(Grasshopper.Kernel.Types.GH_Number(500))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
                 self.SetUpParam(p, "High", "H", "窗口的高度")
+                p.SetPersistentData(Grasshopper.Kernel.Types.GH_Number(500))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
@@ -106,20 +109,12 @@ try:
 
             def RunScript(self, Create, Name, Wide, High):
                 try:
-                    Create = 't' if 'T' == Create.upper() else 'f'
-                except:
-                    Create = 'f'
-                self.factor = True if Create == 't' else False
-                Name = 'New View' if Name is None else Name
-                Wide = 500.0 if Wide is None else Wide
-                High = 500.0 if High is None else High
-
-                element = Name if Name not in rs.ViewNames() else self._str_handing(Name)
-                if self.factor is True:
-                    Rhino.RhinoDoc.ActiveDoc.Views.Add(element, Rhino.Display.DefinedViewportProjection.Perspective, System.Drawing.Rectangle(600, 300, Wide, High), True)
-                else:
-                    pass
-                return
+                    self.factor = Create
+                    element = Name if Name not in rs.ViewNames() else self._str_handing(Name)
+                    if self.factor is True:
+                        Rhino.RhinoDoc.ActiveDoc.Views.Add(element, Rhino.Display.DefinedViewportProjection.Perspective, System.Drawing.Rectangle(600, 300, Wide, High), True)
+                finally:
+                    self.Message = '视图创建'
 
 
         # 字符串处理

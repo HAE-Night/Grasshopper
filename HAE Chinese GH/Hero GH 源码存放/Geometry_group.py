@@ -20,15 +20,13 @@ import math
 import Curve_group
 from itertools import chain
 
-Result = Curve_group.decryption()
-
+Result = Curve_group.Result
+Message = Curve_group.message()
 try:
     if Result is True:
         """
             切割 -- primary
         """
-
-
         # 几何体中心点
         class GeoCenter(component):
             def __new__(cls):
@@ -78,86 +76,78 @@ try:
             def __init__(self):
                 pass
 
-            def message1(self, msg1):  # 报错红
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):  # 警告黄
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):  # 提示白
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
-
             def mes_box(self, info, button, title):
                 return rs.MessageBox(info, button, title)
 
-            # 数据转换成树和原树路径
-            def Restore_Tree(self, Before_Tree, Tree):
-                Tree_Path = [_ for _ in Tree.Paths]
-                After_Tree = gd[object]()
-                for i in range(Tree.BranchCount):
-                    After_Tree.AddRange(Before_Tree[i], Tree_Path[i])
-                return After_Tree
+            def Branch_Route(self, Tree):
+                """分解Tree操作，树形以及多进程框架代码"""
+                Tree_list = [list(_) for _ in Tree.Branches]
+                Tree_Path = [list(_) for _ in Tree.Paths]
+                return Tree_list, Tree_Path
 
-            def Get_different_Center(self, brep, type_str):  # 不同的物体求中心点
-                if "Plane" in type_str:
-                    center = brep.Origin
-                elif "Circle" in type_str or "Box" in type_str or 'Rectangle' in type_str:
-                    center = brep.Center
-                elif "Point" in type_str:
-                    center = brep
-                elif "Line" in type_str:
-                    center = brep.BoundingBox.Center
-                elif "Arc" in type_str:
-                    brep = brep.ToNurbsCurve()
-                    center = brep.GetBoundingBox(True).Center
+            def split_tree(self, tree_data, tree_path):
+                """操作树单枝的代码"""
+                new_tree = ght.list_to_tree(tree_data, True, tree_path)  # 此处可替换复写的Tree_To_List（源码参照Vector组-点集根据与曲线距离分组）
+                result_data, result_path = self.Branch_Route(new_tree)
+                if result_data:
+                    return result_data, result_path
                 else:
-                    center = brep.GetBoundingBox(True).Center
-                return center
+                    return [[]], [tree_path]
+
+            def format_tree(self, result_tree):
+                """匹配树路径的代码，利用空树创造与源树路径匹配的树形结构分支"""
+                stock_tree = gd[object]()
+                for sub_tree in result_tree:
+                    fruit, branch = sub_tree
+                    for index, item in enumerate(fruit):
+                        path = gk.Data.GH_Path(System.Array[int](branch[index]))
+                        if hasattr(item, '__iter__'):
+                            for sub_index in range(len(item)):
+                                stock_tree.Insert(item[sub_index], path, sub_index)
+                        else:
+                            stock_tree.Insert(item, path, index)
+                return stock_tree
 
             # 求边界框的中心点
             def center_box(self, Box):
-                if not Box: return
                 type_str = str(type(Box))
-
-                # 群组物体判断
                 if 'List[object]' in type_str:
-                    bbox = rg.BoundingBox.Empty  # 获取边界框
-                    Pt = []
+                    bbox = rg.BoundingBox.Empty
                     for brep in Box:
-                        type_str = str(type(brep))
-                        if "Circle" in type_str or 'Rectangle' in type_str or "Box" in type_str:
-                            bbox.Union(brep.BoundingBox)  # 获取几何边界
-                        elif "Plane" in type_str or 'Point' in type_str or 'Arc' in type_str:
-                            Pt.append(self.Get_different_Center(brep, type_str))
-                            bbox = rg.BoundingBox(Pt)
-                        else:
-                            bbox.Union(brep.GetBoundingBox(rg.Plane.WorldXY))
-
+                        bbox.Union(brep.GetBoundingBox(rg.Plane.WorldXY))  # 获取几何边界
                     center = bbox.Center
-                else:  # 不是群组
-                    center = self.Get_different_Center(Box, type_str)
+                else:
+                    center = Box.GetBoundingBox(True).Center if "Box" and "Plane" not in type_str else Box.Origin if "Plane" in type_str else Box.Center
                 return center
 
-            def GeoCenter(self, Geo):
-                center = ghp.run(self.center_box, Geo)
-                return center
+            def GeoCenter(self, tuple_data):
+                # 集合结构，待处理数据以及原树形分支
+                Geo, origin_path = tuple_data
+                center = [_ for _ in ghp.run(self.center_box, Geo)]
+                ungroup_data = self.split_tree(center, origin_path)
+                Rhino.RhinoApp.Wait()
+                return ungroup_data
 
             def RunScript(self, Geometry):
                 try:
-                    sc.doc = Rhino.RhinoDoc.ActiveDoc
-                    Cenp = gd[object]()
-                    Geolist = [list(Branch) for Branch in Geometry.Branches]  # 将树转化为列表
-                    if len(Geolist):
-                        Cenpt = ghp.run(self.GeoCenter, Geolist)  # 主方法运行
-                        Cenp = self.Restore_Tree(Cenpt, Geometry)  # 还原树分支
+                    re_mes = Message.RE_MES([Geometry], ['Geometry'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                        return gd[object]()
                     else:
-                        self.message2('没有数据输入！')
-                    sc.doc.Views.Redraw()
-                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
-                    sc.doc = ghdoc
-                    return Cenp
+                        sc.doc = Rhino.RhinoDoc.ActiveDoc
+
+                        Geolist, geo_path = self.Branch_Route(Geometry)
+                        iter_ungroup_data = map(self.GeoCenter, zip(Geolist, geo_path))  # 树形集合解组数据
+                        Cenpt = self.format_tree(iter_ungroup_data)  # 匹配树路径
+
+                        sc.doc.Views.Redraw()
+                        ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                        sc.doc = ghdoc
+                        return Cenpt
                 finally:
-                    self.Message = 'HAE中心点'
+                    self.Message = '中心点'
 
 
         # 几何排序
@@ -165,7 +155,8 @@ try:
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
                                                                    "RPP-几何排序", "RPP_Value_And_Sort",
-                                                                   """几何物体的排序，排序完成进行才会进行取值，支持面积和长度的排序，但是同一组数据必须是一样的；增加点序的排序，在点序排序时输入要作为参考的坐标轴（默认为X轴对比）""", "Scavenger",
+                                                                   """几何物体的排序，排序完成进行才会进行取值，支持面积和长度的排序，但是同一组数据必须是一样的；增加点序的排序，在点序排序时输入要作为参考的坐标轴（默认为X轴对比）""",
+                                                                   "Scavenger",
                                                                    "Geometry")
                 return instance
 
@@ -174,7 +165,7 @@ try:
 
             @property
             def Exposure(self):
-                return Grasshopper.Kernel.GH_Exposure.secondary
+                return Grasshopper.Kernel.GH_Exposure.primary
 
             def SetUpParam(self, p, name, nickname, description):
                 p.Name = name
@@ -183,7 +174,7 @@ try:
                 p.Optional = True
 
             def RegisterInputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                p = Grasshopper.Kernel.Parameters.Param_Geometry()
                 self.SetUpParam(p, "Geometry", "G", "几何物体")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
@@ -193,35 +184,38 @@ try:
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
-                p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Loop", "L", "遍历取值，默认开启，会取0到index的值，关闭输入f，此时只会取第index+1个的值")
+                p = Grasshopper.Kernel.Parameters.Param_Boolean()
+                self.SetUpParam(p, "Loop", "L", "遍历取值，默认开启，会取0到index的值，Float关闭，此时只会取第index+1个的值")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
-                self.Params.Input.Add(p)
+                p.PersistentData.Append(Grasshopper.Kernel.Types.GH_Boolean(True))  # 将默认值设为True
+                self.Params.RegisterInputParam(p)
 
-                p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Sort", "S", "选择排序方式，默认降序，升序输入a")
+                p = Grasshopper.Kernel.Parameters.Param_Boolean()
+                self.SetUpParam(p, "Sort", "S", "选择排序方式，默认降序，升序选择Float")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
-                self.Params.Input.Add(p)
+                p.PersistentData.Append(Grasshopper.Kernel.Types.GH_Boolean(True))  # 将默认值设为True
+                self.Params.RegisterInputParam(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
                 self.SetUpParam(p, "Axis", "A", "在点序排序时输入，其他几何物体的排序不用输入")
+                p.SetPersistentData(Grasshopper.Kernel.Types.GH_String('X'))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                p = Grasshopper.Kernel.Parameters.Param_Geometry()
                 self.SetUpParam(p, "A_Objects", "AO", "若输入下标则取出0到index的几何物体，不输入默认全部输出")
                 self.Params.Output.Add(p)
 
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                p = Grasshopper.Kernel.Parameters.Param_Integer()
                 self.SetUpParam(p, "A_Values", "A", "若输入下标则取出0到index的值，不输入默认全部输出")
                 self.Params.Output.Add(p)
 
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                p = Grasshopper.Kernel.Parameters.Param_Geometry()
                 self.SetUpParam(p, "B_Objects", "BO", "若输入下标则取出index到末端的几何物体，不输入默认全部输出")
                 self.Params.Output.Add(p)
 
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                p = Grasshopper.Kernel.Parameters.Param_Integer()
                 self.SetUpParam(p, "B_Values", "B", "若输入下标则取出index到末端的值，不输入默认全部输出")
                 self.Params.Output.Add(p)
 
@@ -261,18 +255,16 @@ try:
                 temp_list = sorted(enumerate(origin_data), key=lambda x: x[1])
                 index_list = [t[0] for t in temp_list]
                 objects = [object_list[index] for index in index_list]
-                if sorting is None:
+                if sorting == True:
                     return objects, values
-                else:
-                    if sorting.upper() == "D":
-                        return objects, values
-                    elif sorting.upper() == "A":
-                        values = values[::-1]
-                        objects = objects[::-1]
-                        return objects, values
+                elif sorting == False:
+                    values = values[::-1]
+                    objects = objects[::-1]
+                    return objects, values
 
             def is_sametype(self, list_data):
-                Curve = [rg.PolyCurve, rg.LineCurve, rg.Curve, rg.ArcCurve, rg.PolylineCurve, rg.Polyline, rg.Line, rg.NurbsCurve]
+                Curve = [rg.PolyCurve, rg.LineCurve, rg.Curve, rg.ArcCurve, rg.PolylineCurve, rg.Polyline, rg.Line,
+                         rg.NurbsCurve]
                 temp1 = [type(t) for t in list_data]
                 temp1 = set(temp1)
                 for x in temp1:
@@ -293,26 +285,30 @@ try:
                     return array_data, array_data
                 else:
                     a_list_data = b_list_data = None
-                    if loop is None or loop == 'T' or loop == 't':
+                    if loop == True:
                         a_list_data, b_list_data = array_data[0:index], array_data[index:len(array_data)]
-                    elif loop == 'F' or loop == 'f':
+                    elif loop == False:
                         a_list_data, b_list_data = array_data[index], array_data[index]
                     return a_list_data, b_list_data
 
             def RunScript(self, Geometry, Index, Loop, Sort, Axis):
-                self.axis = Axis.upper() if Axis is not None else 'X'
-                if Geometry:
-                    g_bool, g_type = self.is_sametype(Geometry)
-                    objs, vals = None, None
-                    if g_bool is True:
-                        objs, vals = self.get_value_sort(Geometry, g_type, Sort)
-                    A_Objects, B_Objects = self.switch_handing(objs, Index, Loop)
-                    A_Values, B_Values = self.switch_handing(vals, Index, Loop)
-                    return A_Objects, A_Values, B_Objects, B_Values
-                else:
-                    pass
-
-                # Geo|Plane分隔
+                try:
+                    re_mes = Message.RE_MES([Geometry], ['Geometry'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                        return gd[object](), gd[object]()
+                    else:
+                        self.axis = Axis.upper()
+                        g_bool, g_type = self.is_sametype(Geometry)
+                        objs, vals = None, None
+                        if g_bool is True:
+                            objs, vals = self.get_value_sort(Geometry, g_type, Sort)
+                        A_Objects, B_Objects = self.switch_handing(objs, Index, Loop)
+                        A_Values, B_Values = self.switch_handing(vals, Index, Loop)
+                        return A_Objects, A_Values, B_Objects, B_Values
+                finally:
+                    self.Message = '几何排序'
 
 
         # 几何体的中心平面
@@ -344,7 +340,7 @@ try:
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                p = Grasshopper.Kernel.Parameters.Param_Plane()
                 self.SetUpParam(p, "Plane", "P", "几何物体平面（曲线在起始点、面在中心、几何体在最大面的中心点）")
                 self.Params.Output.Add(p)
 
@@ -361,15 +357,6 @@ try:
 
             def __init__(self):
                 pass
-
-            def message1(self, msg1):  # 报错红
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):  # 警告黄
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):  # 提示白
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
 
             def mes_box(self, info, button, title):
                 return rs.MessageBox(info, button, title)
@@ -445,16 +432,18 @@ try:
 
             def RunScript(self, Geometry):
                 try:
-                    sc.doc = Rhino.RhinoDoc.ActiveDoc
-                    sc.doc.Views.Redraw()
-                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
-                    sc.doc = ghdoc
-                    if 'empty tree' in str(Geometry):
-                        self.message2('请输入几何物体')
+                    re_mes = Message.RE_MES([Geometry], ['Geometry'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
                         return gd[object]()
                     else:
+                        sc.doc = Rhino.RhinoDoc.ActiveDoc
+                        sc.doc.Views.Redraw()
                         Plane = self.Object_Operations(Geometry)
                         Plane = self.Restore_Tree(Plane, Geometry)
+                        ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                        sc.doc = ghdoc
                         return Plane
                 finally:
                     self.Message = '几何中心平面'
@@ -520,15 +509,6 @@ try:
 
             def __init__(self):
                 pass
-
-            def message1(self, msg1):  # 报错红
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):  # 警告黄
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):  # 提示白
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
 
             def mes_box(self, info, button, title):
                 return rs.MessageBox(info, button, title)
@@ -609,37 +589,40 @@ try:
 
             def RunScript(self, Breps, Planes):
                 try:
-                    if 'empty tree' in str(Breps) or 'empty tree' in str(Planes):
-                        self.message3("缺少必要参数")
+                    re_mes = Message.RE_MES([Breps, Planes], ['Breps', 'Planes'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
                         return gd[object](), gd[object]()
-                    sc.doc = Rhino.RhinoDoc.ActiveDoc
-                    # 属性取值
-                    breps_list = [list(_i) for _i in Breps.Branches]
-                    paths_list = [_i for _i in Breps.Paths]
-                    Planes_list = [list(_i) for _i in Planes.Branches]
-                    # 数据处理
-                    new_data = self.data_settle(breps_list, Planes_list)
-                    BPSdatas = ghp.run(self.Brep_Plane_split, new_data)
+                    else:
+                        sc.doc = Rhino.RhinoDoc.ActiveDoc
+                        # 属性取值
+                        breps_list = [list(_i) for _i in Breps.Branches]
+                        paths_list = [_i for _i in Breps.Paths]
+                        Planes_list = [list(_i) for _i in Planes.Branches]
+                        # 数据处理
+                        new_data = self.data_settle(breps_list, Planes_list)
+                        BPSdatas = ghp.run(self.Brep_Plane_split, new_data)
 
-                    Geo_Dtree = gd[object]()
-                    index_Dtree = gd[object]()
+                        Geo_Dtree = gd[object]()
+                        index_Dtree = gd[object]()
 
-                    # 树形数据结果匹配
-                    for _1 in range(len(BPSdatas)):
-                        for _2 in range(len(BPSdatas[_1])):
-                            GH_PATH = paths_list[_1].AppendElement(_2)
-                            BPSdatas_list = list(zip(*BPSdatas[_1][_2]))
-                            if BPSdatas_list:
-                                Geo_Dtree.AddRange(BPSdatas_list[0], GH_Path(GH_PATH))
-                                index_Dtree.AddRange(BPSdatas_list[1], GH_Path(GH_PATH))
-                            else:
-                                Geo_Dtree.AddRange("", GH_Path(GH_PATH))
-                                index_Dtree.AddRange("", GH_Path(GH_PATH))
-                    sc.doc.Views.Redraw()
-                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
-                    sc.doc = ghdoc
-                    Rhino.RhinoApp.Wait()
-                    return Geo_Dtree, index_Dtree
+                        # 树形数据结果匹配
+                        for _1 in range(len(BPSdatas)):
+                            for _2 in range(len(BPSdatas[_1])):
+                                GH_PATH = paths_list[_1].AppendElement(_2)
+                                BPSdatas_list = list(zip(*BPSdatas[_1][_2]))
+                                if BPSdatas_list:
+                                    Geo_Dtree.AddRange(BPSdatas_list[0], GH_Path(GH_PATH))
+                                    index_Dtree.AddRange(BPSdatas_list[1], GH_Path(GH_PATH))
+                                else:
+                                    Geo_Dtree.AddRange("", GH_Path(GH_PATH))
+                                    index_Dtree.AddRange("", GH_Path(GH_PATH))
+                        sc.doc.Views.Redraw()
+                        ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                        sc.doc = ghdoc
+                        Rhino.RhinoApp.Wait()
+                        return Geo_Dtree, index_Dtree
                 finally:
                     self.Message = 'Geo|Plane分组'
 
@@ -647,8 +630,6 @@ try:
         """
             切割 -- secondary
         """
-
-
         # 分解几何物体
         class DestructionGeometry(component):
             def __new__(cls):
@@ -724,15 +705,6 @@ try:
             def __init__(self):
                 pass
 
-            def message1(self, msg1):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
-
             def explode_curve__get_plane(self, curve):
                 origin_list = curve.DuplicateSegments()
                 length_point = len(origin_list)
@@ -796,7 +768,12 @@ try:
 
             def RunScript(self, Geometry):
                 try:
-                    if Geometry:
+                    re_mes = Message.RE_MES([Geometry], ['Geometry'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                        return gd[object](), gd[object](), gd[object](), gd[object](), gd[object](), gd[object]()
+                    else:
                         temp_geo = Geometry
                         Vertex, Edge, Face, Plane = None, None, None, None
                         if isinstance(temp_geo, (rg.Curve, rg.PolyCurve, rg.Polyline, rg.PolylineCurve, rg.NurbsCurve,)) is True:
@@ -805,8 +782,6 @@ try:
                             Vertex, Edge, Face, Plane = self.explode_brep__get_plane(temp_geo)
                         PlaneA, PlaneB, PlaneC = Plane, self.base_rotate(Plane, 1), self.base_rotate(Plane, 2)
                         return Vertex, Edge, Face, PlaneA, PlaneB, PlaneC
-                    else:
-                        self.message2("Geometry为空！")
                 finally:
                     self.Message = '几何分解'
 
@@ -814,8 +789,6 @@ try:
         """
             切割 -- tertiary
         """
-
-
         # 数据类型分类
         class TypeClassification(component):
             def __new__(cls):
@@ -894,15 +867,6 @@ try:
             def __init__(self):
                 pass
 
-            def message1(self, msg1):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
-
             def RunScript(self, Geo):
                 try:
                     eliminate_list = [_ for _ in Geo if _ is not None]
@@ -930,10 +894,10 @@ try:
                             elif isinstance(_, (rg.Surface, rg.SumSurface, rg.NurbsSurface)) is True:
                                 Surface.append(_)
                             else:
-                                self.message3("数据组未添加")
+                                Message.message3(self, "数据组未添加")
                         return Id, Point, Vector, Curve, Plane, Brep, Surface
                     else:
-                        self.message2("数据列表为空！")
+                        Message.message2(self, "数据列表为空！")
                 finally:
                     self.Message = "GH数据类型分类"
             # 物体跟随线排序
@@ -960,7 +924,7 @@ try:
                 p.Optional = True
 
             def RegisterInputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                p = Grasshopper.Kernel.Parameters.Param_Geometry()
                 self.SetUpParam(p, "Geo", "G", "需要排序的物体")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
@@ -971,11 +935,11 @@ try:
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                p = Grasshopper.Kernel.Parameters.Param_Geometry()
                 self.SetUpParam(p, "Result", "R", "排序后的物体")
                 self.Params.Output.Add(p)
 
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                p = Grasshopper.Kernel.Parameters.Param_Integer()
                 self.SetUpParam(p, "Index", "i", "排序后物体在原列表中的下标")
                 self.Params.Output.Add(p)
 
@@ -997,15 +961,6 @@ try:
 
             def __init__(self):
                 pass
-
-            def message1(self, msg1):  # 报错红
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):  # 警告黄
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):  # 提示白
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
 
             def mes_box(self, info, button, title):
                 return rs.MessageBox(info, button, title)
@@ -1059,338 +1014,24 @@ try:
 
             def RunScript(self, Geo, Curve):
                 try:
-                    sc.doc = Rhino.RhinoDoc.ActiveDoc
-                    Result, Index = (gd[object]() for _ in range(2))
-
-                    if Geo and Curve:
+                    re_mes = Message.RE_MES([Geo, Curve], ['Geo', 'Curve'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                        return gd[object](), gd[object]()
+                    else:
+                        sc.doc = Rhino.RhinoDoc.ActiveDoc
                         center_pt_list = list(ghp.run(self.center_box, Geo))
                         self.sort_points_on_curve(center_pt_list, Curve)
                         sorted_indexes = self.sort_points_on_curve(center_pt_list, Curve)
-
                         Result = [Geo[_] for _ in sorted_indexes]
                         Index = sorted_indexes
-                    elif not (Geo or Curve):
-                        self.message2('G端不能围为空！')
-                        self.message2('C端不能为空！')
-                    elif not Geo:
-                        self.message2('G端不能围为空！')
-                    elif not Curve:
-                        self.message2('C端不能为空！')
-
-                    sc.doc.Views.Redraw()
-                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
-                    sc.doc = ghdoc
-
-                    return Result, Index
+                        sc.doc.Views.Redraw()
+                        ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                        sc.doc = ghdoc
+                        return Result, Index
                 finally:
                     self.Message = '物体跟随曲线排序'
-
-
-        # 多重向量偏移
-        class Skewing(component):
-            def __new__(cls):
-                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-多向量位移", "RPP_Skewing", """多向量位移""", "Scavenger", "Geometry")
-                return instance
-
-            def get_ComponentGuid(self):
-                return System.Guid("3e8b5fff-1d6e-49d1-b6be-f5c5b36bc816")
-
-            @property
-            def Exposure(self):
-                return Grasshopper.Kernel.GH_Exposure.tertiary
-
-            def SetUpParam(self, p, name, nickname, description):
-                p.Name = name
-                p.NickName = nickname
-                p.Description = description
-                p.Optional = True
-
-            def RegisterInputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_Geometry()
-                self.SetUpParam(p, "Geo", "G", "需移动的几何物体")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
-                self.Params.Input.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_Plane()
-                self.SetUpParam(p, "Plane", "P", "参考平面")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
-                self.Params.Input.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "XVector", "X", "X轴向量")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
-                self.Params.Input.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "YVector", "Y", "Y轴向量")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
-                self.Params.Input.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "ZVector", "Z", "Z轴向量")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
-                self.Params.Input.Add(p)
-
-            def RegisterOutputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_Geometry()
-                self.SetUpParam(p, "Res_Geo", "G", "位移后的物体")
-                self.Params.Output.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_Vector()
-                self.SetUpParam(p, "Transform", "T", "偏移后的向量总量")
-                self.Params.Output.Add(p)
-
-            def SolveInstance(self, DA):
-                p0 = self.marshal.GetInput(DA, 0)
-                p1 = self.marshal.GetInput(DA, 1)
-                p2 = self.marshal.GetInput(DA, 2)
-                p3 = self.marshal.GetInput(DA, 3)
-                p4 = self.marshal.GetInput(DA, 4)
-                result = self.RunScript(p0, p1, p2, p3, p4)
-
-                if result is not None:
-                    if not hasattr(result, '__getitem__'):
-                        self.marshal.SetOutput(result, DA, 0, True)
-                    else:
-                        self.marshal.SetOutput(result[0], DA, 0, True)
-                        self.marshal.SetOutput(result[1], DA, 1, True)
-
-            def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAHYSURBVEhL5dU9SJVRHMfxpyxUMigRpBwKERqqKSqEojCCEGppFDGQSkKJIiJpKqWUSgqlIV16UfAFGlpNFEtRo0HDHKSht0GMRHNp8vt9zhXiUnCH50794MM9z3Ovzznn/5xzjP6r3EFZaCafo/iNx9jgjaSzGzdwHFnpwNShKDSzk4vIWgfbcA/H4quEk4NevEA3fA8lf7ELj3AKm5BxtuIVOvEM91GPhjTn8RWTKETG2Y4HeIkB2OG/4uidccbJhxvsMOwo0VjHZhyJrxLOBbTAF5p4rOFnfEDiZTHWvRIuvUSPBVdH+grIxcbQjNt5oRnHXe1gjL/xO3+jzX/ci3MTlmQa1r0fE3iD03iNMQzDk9Ul6/VTnIB/Owrv92AKPmsE0SGsoBTX8AnzKIcjcYcuwBPVldWEJThjr6vxEVtSnNktvEMxoit4a4P4kEX4QEfyEAfgS+9CK9wTc5jFWZzET/ShDeYSnHUcT8mZ0Iz24Ae+4DZqsQ924OxqsJ4qrOIJxrEf6//xLmMoNEMJltGIQThyS7QXZgd+oSC+iqIz8AGW5hva8R0Oxk7NdbwPzRB3qw+2vr55p+gyNdb6aurTWBJP1ueowE7cRQfcnOYgzoVmVhNFaxZkV0zB5eR1AAAAAElFTkSuQmCC"
-                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
-
-            def __init__(self):
-                dict_data = None
-
-            def message1(self, msg1):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
-
-            def judgment_type(self, obj):
-                return False if type(obj) is rg.LinearDimension else True
-
-            def normal_move(self, plane, vector_iter):
-                origin_vector = [plane.XAxis, plane.YAxis, plane.ZAxis]
-                zip_list = list(zip(origin_vector, vector_iter))
-                offset_total_vector = map(lambda total: ghc.Amplitude(total[0], total[1]), zip_list)
-                offset_vector = reduce(lambda n1, n2: n1 + n2, offset_total_vector)
-                return offset_vector
-
-            def RunScript(self, Object, Ref_Plane, XVector, YVector, ZVector):
-                try:
-                    Ref_Plane = ghc.XYPlane(rg.Point3d(0, 0, 0)) if Ref_Plane is None else Ref_Plane
-                    XVector = [0] if len(XVector) == 0 else XVector
-                    YVector = [0] if len(YVector) == 0 else YVector
-                    ZVector = [0] if len(ZVector) == 0 else ZVector
-                    total_offset_x, total_offset_y, total_offset_z = sum(XVector), sum(YVector), sum(ZVector)
-                    zip_vector = (total_offset_x, total_offset_y, total_offset_z)
-                    Transform = self.normal_move(Ref_Plane, zip_vector)
-
-                    if Object:
-                        if isinstance(Object, (rg.Point3d, rg.Point)) is True:
-                            Object = rg.Point(Object)
-                        elif isinstance(Object, (rg.Line, rg.LineCurve)) is True:
-                            Object = Object.ToNurbsCurve()
-
-                        if self.judgment_type(Object) is True:
-                            Object.Translate(Transform)
-                            New_Objcet = Object
-                            return New_Objcet, Transform
-                        else:
-                            return None, Transform
-                    else:
-                        self.message2("物体为空！！")
-                        return None, Transform
-                finally:
-                    self.Message = "多向量位移"
-
-
-        # 多向量位移
-        class SuperSkewing(component):
-            def __new__(cls):
-                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-多向量位移（叠加）", "RPP_SuperSkewing", """多向量位移（叠加态）""", "Scavenger", "Geometry")
-                return instance
-
-            def get_ComponentGuid(self):
-                return System.Guid("3ab5ab26-b1c2-4f66-b5dd-c85f3d20c1b4")
-
-            @property
-            def Exposure(self):
-                return Grasshopper.Kernel.GH_Exposure.tertiary
-
-            def SetUpParam(self, p, name, nickname, description):
-                p.Name = name
-                p.NickName = nickname
-                p.Description = description
-                p.Optional = True
-
-            def RegisterInputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_Geometry()
-                self.SetUpParam(p, "Geo", "G", "需移动的几何物体")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
-                self.Params.Input.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_Plane()
-                self.SetUpParam(p, "Plane", "P", "参考平面")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
-                self.Params.Input.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "XVector", "X", "X轴向量")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
-                self.Params.Input.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "YVector", "Y", "Y轴向量")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
-                self.Params.Input.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "ZVector", "Z", "Z轴向量")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
-                self.Params.Input.Add(p)
-
-            def RegisterOutputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_Geometry()
-                self.SetUpParam(p, "Res_Geo", "G", "位移后的物体")
-                self.Params.Output.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_Vector()
-                self.SetUpParam(p, "Transform", "T", "偏移后的向量总量")
-                self.Params.Output.Add(p)
-
-            def SolveInstance(self, DA):
-                p0 = self.marshal.GetInput(DA, 0)
-                p1 = self.marshal.GetInput(DA, 1)
-                p2 = self.marshal.GetInput(DA, 2)
-                p3 = self.marshal.GetInput(DA, 3)
-                p4 = self.marshal.GetInput(DA, 4)
-                result = self.RunScript(p0, p1, p2, p3, p4)
-
-                if result is not None:
-                    if not hasattr(result, '__getitem__'):
-                        self.marshal.SetOutput(result, DA, 0, True)
-                    else:
-                        self.marshal.SetOutput(result[0], DA, 0, True)
-                        self.marshal.SetOutput(result[1], DA, 1, True)
-
-            def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAJ4SURBVEhL7ZRLaxNRFIDzIFqDSkUErUaQahNmMu8knaRNU1uLCoH6IKIgpSC6qIqIj0UVLD5wowsXIiKIIirWRV0ouBFalYJQcaMLQfAHiLhwIa7id5wxGJu0Fc1G/ODjnnsnMydz5t4T+GeIYB+2Ygzn42xcQrlHOIabvbA2a/EADoRCoYOMa1CSNOFqlMQB13VXWpa1SWLowud4HJ/hcqyLPPAo7gyHwyXGPZjE7XgSFQyYhnFR07TPJFogcxjGMs74cEHeYASXkWAD4yHM4y4s4LZsNmXpmvbR0PUPtmWfZi2NE3gBRzGEdWlBXYJIJGIwZFHqutG3L5PJKJRnt6nrpzrb251gMHiPdUku3MYzXvj7VP6ZZtuOrutn/WnYHwWJVS/8AwzD6CDBOX/69/mfYADl0OzD/Si7qQpFUUzOwQl/WgW7bDHKearLIJ7HL/gJu7GKnu6uI6lUamKoNLTQX6rQ319otgxjnLfc4S9VEUQbn+BjXI9LsIrOrPvVse0yZ+EFh27USCbvO6Z53dC0u3oyeUfXkm9syyqn0+lpSaTnyMPf4hg+wr34nWKxGHUs86qqKK/b2ta9U1U1l0gkVsTj8ZZoNDoYi8VapTy2Zb6khMMc1ivctsq7exY60mmV9jBO/aUZhkql0jzvSgVpG5cl6MnnpQpyEG+gdOja5F1XfhjIOE6JUkyq8fi07/ETctInUcq6FZ+ilLw2hUKhyTLNh45ljGiqOial8C/NhDTL9ziFS2WhLjS0XvmQJHmVy+UW+ctzQZrfFi+cAXbEYXbEA9M0b7mp1I9uOReuobT4hnETe72wMchOaugbNOMvWzgQ+AbNsHjNK2GeuwAAAABJRU5ErkJggg=="
-                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
-
-            def __init__(self):
-                pass
-
-            def message1(self, msg1):  # 报错红
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):  # 警告黄
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):  # 提示白
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
-
-            def mes_box(self, info, button, title):
-                return rs.MessageBox(info, button, title)
-
-            def Branch_Route(self, Tree):
-                """分解Tree操作，树形以及多进程框架代码"""
-                Tree_list = [list(_) for _ in Tree.Branches]
-                Tree_Path = [list(_) for _ in Tree.Paths]
-                return Tree_list, Tree_Path
-
-            def split_tree(self, tree_data, tree_path):
-                """操作树单枝的代码"""
-                new_tree = ght.list_to_tree(tree_data, True, tree_path)  # 此处可替换复写的Tree_To_List（源码参照Vector组-点集根据与曲线距离分组）
-                result_data, result_path = self.Branch_Route(new_tree)
-                if list(chain(*result_data)):
-                    return result_data, result_path
-                else:
-                    return [[]], result_path
-
-            def format_tree(self, result_tree):
-                """匹配树路径的代码，利用空树创造与源树路径匹配的树形结构分支"""
-                stock_tree = gd[object]()
-                for sub_tree in result_tree:
-                    fruit, branch = sub_tree
-                    for index, item in enumerate(fruit):
-                        path = gk.Data.GH_Path(System.Array[int](branch[index]))
-                        if hasattr(item, '__iter__'):
-                            if item:
-                                for sub_index in range(len(item)):
-                                    stock_tree.Insert(item[sub_index], path, sub_index)
-                            else:
-                                stock_tree.AddRange(item, path)
-                        else:
-                            stock_tree.Insert(item, path, index)
-                return stock_tree
-
-            def match_lists(self, *lists):
-                # 获取最长列表的长度
-                max_length = max(len(lst) for lst in lists)
-
-                # 对每个列表进行补零，使其长度与最长列表相等
-                padded_lists = []
-                for lst in lists:
-                    padded_list = lst + [0] * (max_length - len(lst))
-                    padded_lists.append(padded_list)
-
-                # 创建一个新列表，将所有列表中的对应元素放入其中
-                matched_elements = []
-                for elements in zip(*padded_lists):
-                    matched_elements.append(elements)
-
-                return matched_elements
-
-            def iter_offset(self, origin_object, vector_list, new_object_list):
-                origin_vector = vector_list[0]
-                copy_object = origin_object.Duplicate()
-                copy_object.Translate(origin_vector)
-                new_object_list.append(copy_object)
-                vector_list.pop(0)
-                if len(vector_list) > 0:
-                    return self.iter_offset(new_object_list[-1], vector_list, new_object_list)
-                else:
-                    return new_object_list
-
-            def trun_to_vector(self, tuple_num):
-                x, y, z = tuple_num
-                origin_x, origin_y, origin_z = [self.pln.XAxis, self.pln.YAxis, self.pln.ZAxis]
-                new_x, new_y, new_z = origin_x * x, origin_y * y, origin_z * z
-                res_vector = new_x + new_y + new_z
-                return res_vector
-
-            def RunScript(self, Geo, Plane, XVector, YVector, ZVector):
-                try:
-                    sc.doc = Rhino.RhinoDoc.ActiveDoc
-                    Res_Geo, Transform = (gd[object]() for _ in range(2))
-                    self.pln = Plane if Plane else rg.Plane.WorldXY
-
-                    self.xvector = [0] if len(XVector) == 0 else XVector
-                    self.yvector = [0] if len(YVector) == 0 else YVector
-                    self.zvector = [0] if len(ZVector) == 0 else ZVector
-                    if Geo:
-                        zip_vector = self.match_lists(self.xvector, self.yvector, self.zvector)
-                        total_vector = map(self.trun_to_vector, zip_vector)
-                        copy_total_vec = copy.copy(total_vector)
-                        Res_Geo = self.iter_offset(Geo, total_vector, [])
-                        Transform = copy_total_vec
-                    else:
-                        self.message2('G端数据为空！')
-                    sc.doc.Views.Redraw()
-                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
-                    sc.doc = ghdoc
-                    return Res_Geo, Transform
-                finally:
-                    self.Message = '多向量位移（叠加态）'
-
 
     else:
         pass

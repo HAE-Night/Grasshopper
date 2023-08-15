@@ -22,13 +22,12 @@ from decimal import Decimal as dd
 import math
 
 Result = Curve_group.Result
+Message = Curve_group.message()
 try:
     if Result is True:
         """
             切割 -- primary
         """
-
-
         # 区间取值
         class GetSectionValue(component):
             def __new__(cls):
@@ -57,6 +56,7 @@ try:
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
                 self.SetUpParam(p, "Start", "S", "开始的区间")
+                p.SetPersistentData(Grasshopper.Kernel.Types.GH_Integer(0))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
@@ -84,12 +84,18 @@ try:
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def RunScript(self, List_Data, Start, End):
-                Start = 0 if Start is None else Start
-                if List_Data:
-                    Result = List_Data[Start: End + 1] if End is not None else List_Data[Start:]
-                    return Result
-                else:
-                    self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, '列表数据为空！')
+                try:
+                    re_mes = Message.RE_MES([List_Data], ['List_Data'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                        return gd[object]()
+                    else:
+                        Result = List_Data[Start: End + 1] if End is not None else List_Data[Start:]
+                        return Result
+                finally:
+                    self.Message = '区间取值'
+
 
 
         # 根据长度得树形数据
@@ -120,6 +126,7 @@ try:
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
                 self.SetUpParam(p, "Length", "L", "长度，默认为1")
+                p.SetPersistentData(Grasshopper.Kernel.Types.GH_Integer(1))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
@@ -148,15 +155,23 @@ try:
                 return index_list
 
             def RunScript(self, Tree, Length):
-                self.len = 1 if Length is None else Length
-                leaf_list = [list(_) for _ in Tree.Branches]
-                if len(leaf_list) != 0:
-                    length_list = map(lambda x: len(x), leaf_list)
-                    res_index = self.get_tree(length_list)
-                    Result = self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, '没有指定长度的树形数据！') if len(res_index) == 0 else ght.list_to_tree([leaf_list[_] for _ in res_index])
-                    return Result
-                else:
-                    self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, '空树无法取值！')
+                try:
+                    re_mes = Message.RE_MES([Tree], ['Tree'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                        return gd[object]()
+                    else:
+                        self.len = Length
+                        leaf_list = [list(_) for _ in Tree.Branches]
+
+                        length_list = map(lambda x: len(x), leaf_list)
+                        res_index = self.get_tree(length_list)
+                        Result = Message.message2(self, '没有指定长度的树形数据！') if len(res_index) == 0 else ght.list_to_tree([leaf_list[_] for _ in res_index])
+                        return Result
+                finally:
+                    self.Message = '根据长度取树形值'
+
 
 
         # 输出列表前N项的和
@@ -186,7 +201,7 @@ try:
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                p = Grasshopper.Kernel.Parameters.Param_Number()
                 self.SetUpParam(p, "Final_data", "F", "输出结果")
                 self.Params.Output.Add(p)
 
@@ -204,14 +219,6 @@ try:
             def __init__(self):
                 pass
 
-            def message1(self, msg1):  # 报错红
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):  # 警告黄
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):  # 提示白
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
 
             def mes_box(self, info, button, title):
                 return rs.MessageBox(info, button, title)
@@ -250,14 +257,20 @@ try:
 
             def RunScript(self, List_Num):
                 try:
-                    sc.doc = Rhino.RhinoDoc.ActiveDoc
-                    sc.doc.Views.Redraw()
-                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
-                    sc.doc = ghdoc
-                    Final_data = []
-                    for index in range(1, len(List_Num) + 1):
-                        Final_data.append(sum(List_Num[:index]))
-                    return Final_data
+                    re_mes = Message.RE_MES([List_Num], ['List_Num'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                        return gd[object](), gd[object]()
+                    else:
+                        sc.doc = Rhino.RhinoDoc.ActiveDoc
+                        Final_data = []
+                        for index in range(1, len(List_Num) + 1):
+                            Final_data.append(sum(List_Num[:index]))
+                        sc.doc.Views.Redraw()
+                        ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                        sc.doc = ghdoc
+                        return Final_data
                 finally:
                     self.Message = '列表前n项之和'
 
@@ -313,19 +326,13 @@ try:
             def __init__(self):
                 pass
 
-            def message1(self, msg1):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
-
             def RunScript(self, Data, Random):
                 try:
-                    if Data is None:
-                        self.message2("请输入至少一个数据组！")
+                    re_mes = Message.RE_MES([Data], ['Data'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                        return gd[object]()
                     else:
                         if len(Random) == 0:
                             index_list = random.sample([index for index in range(len(Data))], len(Data))
@@ -339,7 +346,7 @@ try:
                                 Result = [Data[_] for _ in Random]
                                 return Result
                             else:
-                                self.message3("随机列表的数量要与原始列表一致！请检查")
+                                Message.message3(self, "随机列表的数量要与原始列表一致！请检查")
                                 Result = Data
                                 return Result
                 finally:
@@ -368,14 +375,13 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Decimal ", "D", "数字（小数）")
+                self.SetUpParam(p, "Decimal ", "D ", "小数（浮点数）")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
-                self.SetUpParam(p, "Precision", "P", "保留位数")
-                accuracy = 1
-                p.SetPersistentData(gk.Types.GH_Boolean(accuracy))
+                self.SetUpParam(p, "Precision", "P", "保留的位数")
+                p.SetPersistentData(Grasshopper.Kernel.Types.GH_Integer(0))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
@@ -411,18 +417,6 @@ try:
 
             def __init__(self):
                 self.switch = False
-
-            def message1(self, msg1):  # 报错红
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):  # 警告黄
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):  # 提示白
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
-
-            def mes_box(self, info, button, title):
-                return rs.MessageBox(info, button, title)
 
             def compare_five(self, carry, keep):
                 if keep >= 0:
@@ -479,152 +473,20 @@ try:
 
             def RunScript(self, Decimal, Precision):
                 try:
-                    decimal.getcontext().prec = 10000
-                    Precision = 0 if Precision is None else Precision
-                    Result, Percentage, Per_thousand = (gd[object]() for _ in range(3))
-                    if Decimal is not None:
+                    re_mes = Message.RE_MES([Decimal], ['Decimal'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                        return gd[object](), gd[object](), gd[object]()
+                    else:
                         per = Decimal * 100
                         per_th = Decimal * 1000
                         Result = str(dd(Decimal).quantize(dd("1e-{}".format(Precision)), rounding="ROUND_HALF_UP")) if "e" in str(Decimal) else self.handle_str(Decimal, Precision)
                         Percentage = str(dd(per).quantize(dd("1e-{}".format(Precision)), rounding="ROUND_HALF_UP")) + '%' if "e" in str(per) else self.handle_str(per, Precision) + "%"
                         Per_thousand = str(dd(per_th).quantize(dd("1e-{}".format(Precision)), rounding="ROUND_HALF_UP")) + '‰' if "e" in str(per) else self.handle_str(per_th, Precision) + '‰'
-                    else:
-                        self.message2('D端未输入数据！')
-                    return Result, Percentage, Per_thousand
+                        return Result, Percentage, Per_thousand
                 finally:
                     self.Message = "科学计数（精度提取）"
-
-
-        # 四舍五入
-        class GHRound(component):
-            def __new__(cls):
-                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-四舍五入", "RPP_GHRound", """小数点（浮点数）四舍五入以及上下取整""", "Scavenger", "Math")
-                return instance
-
-            def get_ComponentGuid(self):
-                return System.Guid("0b6b166d-332d-4c95-95bd-b7f85482351c")
-
-            @property
-            def Exposure(self):
-                return Grasshopper.Kernel.GH_Exposure.secondary
-
-            def SetUpParam(self, p, name, nickname, description):
-                p.Name = name
-                p.NickName = nickname
-                p.Description = description
-                p.Optional = True
-
-            def RegisterInputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Decimal", "D", "数字（小数）")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
-                self.Params.Input.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_Integer()
-                self.SetUpParam(p, "Precision", "P", "保留位数")
-                accuracy = 1
-                p.SetPersistentData(gk.Types.GH_Boolean(accuracy))
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
-                self.Params.Input.Add(p)
-
-            def RegisterOutputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Result", "R", "四舍五入后结果")
-                self.Params.Output.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Floor", "F", "下取整")
-                self.Params.Output.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Ceil", "C", "上取整")
-                self.Params.Output.Add(p)
-
-            def SolveInstance(self, DA):
-                p0 = self.marshal.GetInput(DA, 0)
-                p1 = self.marshal.GetInput(DA, 1)
-                result = self.RunScript(p0, p1)
-
-                if result is not None:
-                    if not hasattr(result, '__getitem__'):
-                        self.marshal.SetOutput(result, DA, 0, True)
-                    else:
-                        self.marshal.SetOutput(result[0], DA, 0, True)
-                        self.marshal.SetOutput(result[1], DA, 1, True)
-                        self.marshal.SetOutput(result[2], DA, 2, True)
-
-            def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAARVSURBVEhLrZZrTJtVHMarX7Z4+eKcic5Fs2l0xg/bMuOyaIgJ2YxGTMwSjXHo3FyM84ObxCCDFRnI/VJWroOB47bBoEDLegNsYStQCoUgXem49n6n3AcCj//z0qUhftHBk/ySc/558zzn/M9525f3H/Q0sWNjuP16ktAQdkJNJBPhBAvdFj1B+AkWcoloJ1yEm6gljhJbEguYJsq4WUhHiLsEiDBWeFw9CijlZjzey8QXxA3CQrC2vUI8tliAmTARbYSXGCfKCXYWWxY7ZCPBWjFE7Ce2VWwHUwQLYTuREnuJbdOjMygg9hDdxApxmtgWsQB2Tau52YZiCNayJmI3K2xFLGCNEHGzkN4i+ggnseXDziZObQx5vK/DwnZi4s+dUd99vn/f3j3ig28fqEmNvRiRFhv1zY2CrKjirKT3g4+GJOT/8EyVMOO95ptVn1QV50UKEuN+yoiPvpKTGCcsy80sKhGkN1QW53UrxU2G60KBtaqkKFBfWb6olDROSxvrV1vvSNClVkF6uwa5yQnsCm9W9i9nDpTlpqO+ogw9nWoMDw5geEAPk8GAyfFx+L1eeD1eeNw+uFweeDx++PwzcDg9eDA6gSmzDTNzS5A3iZB1JVYRtA0p9dtjz+an/Oa9mpKA7rudmFtY5gw8vgAWl5axvLIKN5k6nO4NHG7Y7C4YRx5geNgIMwV4/QGolAoKiBvh8/ns/dms/OR4fWFWCmTNjfB4p2G1Ojij+YVFCgvAYrHDanNwdZvdidGxCQwNGTBCITaqswVoOtTITrw8J0j69d+3K+/3yw0lggyIblXDRa2wWGxcO+bmF2B3uLi5xUohFDBlttLK71PAMMbGJrlgp8uLfp0OeWlJEKbxDwZtQ8pLupRWLsxC9fVr3Aq5bXv9tBsfN2bmDJvNCZNpjGvNfSOtnlrFzsLjDVB9FGXkkZ0QHRG0DSk/IfocCygV5sBM7fAHZhGYnecMrGTKapNTVs68t7cPPd1adGu6oO/rh66nB1qNBmqlHLdogcL07NigbUj5/KjwigIBinLS0Sa7A+29TqgUMiglzVCKG6FoboC8sR6yhlpIaqvRUlcNlVQMuYjNK9FCyEU3oVWroRJLZpr/KNr8P5F55uRzdYWZLm1rC4Z6NRjUdqGrXYF+TQfUcgnUMgnaW5po3AJtpwqdSikMg3r8pddhYtQEPT1vnhzHwsI85n1O3JOKHna3ije/dIILkR/Iq4rWLaYhrK+vYW52Fqurf+Ph0hLmZgJw260w9PVg3DAIo14L06AOXrsFPocVllEjjAM69Ha0QdFYh7pruStFqfGGoHVIhXHnzylrSqFTyaFVtaK16fYabX9WVFHiuFWSN1ImSOspSObLribEVKfHXBDyz5+O/zny5I/ff3b8y6+OH/3wo8Ovv3vs1V1vHH7+qRffefOlXUHbzbp46tMTZz8OPxFxaN+RQ7t3vEafEC9QmX1JsB+//yEe7x9yo/Z81vR4yAAAAABJRU5ErkJggg=="
-                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
-
-            def __init__(self):
-                pass
-
-            def message1(self, msg1):  # 报错红
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):  # 警告黄
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):  # 提示白
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
-
-            def mes_box(self, info, button, title):
-                return rs.MessageBox(info, button, title)
-
-            def Branch_Route(self, Tree):
-                """分解Tree操作，树形以及多进程框架代码"""
-                Tree_list = [list(_) for _ in Tree.Branches]
-                Tree_Path = [list(_) for _ in Tree.Paths]
-                return Tree_list, Tree_Path
-
-            def split_tree(self, tree_data, tree_path):
-                """操作树单枝的代码"""
-                new_tree = ght.list_to_tree(tree_data, True, tree_path)  # 此处可替换复写的Tree_To_List（源码参照Vector组-点集根据与曲线距离分组）
-                result_data, result_path = self.Branch_Route(new_tree)
-                if list(chain(*result_data)):
-                    return result_data, result_path
-                else:
-                    return [[]], result_path
-
-            def format_tree(self, result_tree):
-                """匹配树路径的代码，利用空树创造与源树路径匹配的树形结构分支"""
-                stock_tree = gd[object]()
-                for sub_tree in result_tree:
-                    fruit, branch = sub_tree
-                    for index, item in enumerate(fruit):
-                        path = gk.Data.GH_Path(System.Array[int](branch[index]))
-                        if hasattr(item, '__iter__'):
-                            if item:
-                                for sub_index in range(len(item)):
-                                    stock_tree.Insert(item[sub_index], path, sub_index)
-                            else:
-                                stock_tree.AddRange(item, path)
-                        else:
-                            stock_tree.Insert(item, path, index)
-                return stock_tree
-
-            def RunScript(self, Decimal, Precision):
-                try:
-                    decimal.getcontext().prec = 10000
-                    sc.doc = Rhino.RhinoDoc.ActiveDoc
-                    Precision = 0 if Precision is None else Precision
-                    Result, Floor, Ceil = (gd[object]() for _ in range(3))
-
-                    if Decimal is not None:
-                        Result = str(dd(Decimal).quantize(dd("1e-{}".format(Precision)), rounding="ROUND_HALF_UP")) if "e" in str(Decimal) else NewRound().handle_str(Decimal, Precision)
-                        Floor = math.floor(Decimal)
-                        Ceil = math.ceil(Decimal)
-                    else:
-                        self.message2('D端未输入数据！')
-                    sc.doc.Views.Redraw()
-                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
-                    sc.doc = ghdoc
-
-                    return Result, Floor, Ceil
-                finally:
-                    self.Message = '四舍五入'
 
 
         """

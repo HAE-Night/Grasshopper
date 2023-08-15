@@ -19,6 +19,7 @@ from itertools import chain
 import Curve_group
 
 Result = Curve_group.Result
+Message = Curve_group.message()
 try:
     if Result is True:
         """
@@ -54,6 +55,7 @@ try:
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
                 self.SetUpParam(p, "Angle", "A", "旋转的角度，不输入默认为0.5*pi")
+                p.SetPersistentData(Grasshopper.Kernel.Types.GH_Number(math.radians(90)))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
@@ -143,13 +145,20 @@ try:
                 return alphabet_list, None
 
             def RunScript(self, Rotated_Plane, Angle, Direction, Follow_rotation1, Follow_rotation2):
-                if Rotated_Plane:
-                    Angle = math.radians(90) if Angle is None else float(Angle)
-                    center_point = Rotated_Plane.Origin
-                    New_Plane, Rotated_object1, Rotated_object2 = self.get_new_plane(Rotated_Plane, Follow_rotation1,
-                                                                                     Follow_rotation2, Angle, Direction,
-                                                                                     center_point)
-                    return New_Plane, Rotated_object1, Rotated_object2
+                try:
+                    re_mes = Message.RE_MES([Rotated_Plane], ['Rotated_Plane'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                        return gd[object](), gd[object](), gd[object]()
+                    else:
+                        center_point = Rotated_Plane.Origin
+                        New_Plane, Rotated_object1, Rotated_object2 = self.get_new_plane(Rotated_Plane, Follow_rotation1,
+                                                                                         Follow_rotation2, Angle, Direction,
+                                                                                         center_point)
+                        return New_Plane, Rotated_object1, Rotated_object2
+                finally:
+                    self.Message = '平面旋转'
 
 
         # 重构XY轴平面
@@ -283,359 +292,27 @@ try:
                     return string_list
 
             def RunScript(self, Plane, New_Axis, Switch):
-                if Plane:
-                    Axis_list = self.str_handing(New_Axis)
-                    if Switch is None:
-                        self.factor = False
-                    else:
-                        self.factor = Switch
-                    Origin_Point = Plane.Origin
-                    self.get_new_plane(Plane, Axis_list)
-                    origin_redirect, Origin_XAxis, Origin_YAxis, Origin_ZAxis = self.get_new_plane(Plane, Axis_list)
-                    Symmetry_Plane = rg.Plane(Origin_Point, origin_redirect[0], origin_redirect[1])
-                    # 重构后的xyz轴向量
-                    New_XAxis, New_YAxis, New_ZAxis = Symmetry_Plane.XAxis, Symmetry_Plane.YAxis, Symmetry_Plane.ZAxis
-                    return Symmetry_Plane, Origin_Point, Origin_XAxis, Origin_YAxis, Origin_ZAxis, New_XAxis, New_YAxis, New_ZAxis
-                else:
-                    pass
-
-
-        # 偏移平面
-        class OffsetPlane(component):
-            def __new__(cls):
-                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-偏移平面", "RPP_OffsetPlane", """通过X、Y、Z端选项去偏移平面""", "Scavenger", "Plane")
-                return instance
-
-            def get_ComponentGuid(self):
-                return System.Guid("f4ab7050-c453-4eba-b276-c71fbbf73420")
-
-            def SetUpParam(self, p, name, nickname, description):
-                p.Name = name
-                p.NickName = nickname
-                p.Description = description
-                p.Optional = True
-
-            def RegisterInputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_Plane()
-                self.SetUpParam(p, "Plane", "P", "平面")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
-                self.Params.Input.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Distance", "D", "偏移距离")
-                distance = 10
-                p.SetPersistentData(gk.Types.GH_Number(distance))
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
-                self.Params.Input.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_Boolean()
-                self.SetUpParam(p, "Offset_X", "X", "按X方向偏移")
-                bool_x = False
-                p.SetPersistentData(gk.Types.GH_Boolean(bool_x))
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
-                self.Params.Input.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_Boolean()
-                self.SetUpParam(p, "Offset_Y", "Y", "按Y方向偏移")
-                bool_y = False
-                p.SetPersistentData(gk.Types.GH_Boolean(bool_y))
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
-                self.Params.Input.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_Boolean()
-                self.SetUpParam(p, "Offset_Z", "Z", "按Z方向偏移")
-                bool_z = True
-                p.SetPersistentData(gk.Types.GH_Boolean(bool_z))
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
-                self.Params.Input.Add(p)
-
-            def RegisterOutputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Offset", "O", "生成偏移平面")
-                self.Params.Output.Add(p)
-
-            def SolveInstance(self, DA):
-                p0 = self.marshal.GetInput(DA, 0)
-                p1 = self.marshal.GetInput(DA, 1)
-                p2 = self.marshal.GetInput(DA, 2)
-                p3 = self.marshal.GetInput(DA, 3)
-                p4 = self.marshal.GetInput(DA, 4)
-                result = self.RunScript(p0, p1, p2, p3, p4)
-
-                if result is not None:
-                    self.marshal.SetOutput(result, DA, 0, True)
-
-            def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAOISURBVEhL7ZRfiFRVHMcnWTUsUEyoB7USfKioe869M7N/dBOMqJeIBMVKpIdY6tEHCREdl5X+YEEWPYSEZT7ElL4EMtu2ze78uTN3vP90Z9udiXZtqV1X2Fxn9s69M3Pv/PqdO0fbdVdUCALxCx/O+f3O78+5B+4v8L/LyoptdV38ztWJ5mYFFUxB9UaRgqA1xugvjb/I6xj2QDP6LlRRaLuri2fgAgUoSgB5tiJncP9xEOA4IwRwOgTuBapXDfFNuJNGtVywwzXpWb9wQQRQBfByTUAT4Oy5rVD6hkL1NAHnFIHaDwTg1+YlXJ0aVY3uiUQiy3i5pkCVVjmK+Jqr0TRM4K2uhAF+x5uym/82D7R/nNgOMIG3n0Cbcanp988nWW4ruCb5o6bRfXNK6DG/wdTPbWFLDX/o5IKfWynpfSsl9lip4CJsRJfbeso3+ZuwHLGnnBSPzqVCX9ha8Phssn2n3+C/lnOg81T5nc7t3Ly94vH4E4qi7BwYGNh1nWQyuSuTyeyIxWJreZiveCTSUune8v3f3Z2vctetNTg4+GQ2m/0UKQ8NDYFpmgtgPjybxEYH+/r6HuFpAevI1p65ox2Em4uFt9uESZ8hc/l8HnAF9C1JLpcDHjOFHIrF5LXuvg17nf2bNvNy/woTnsGgE4hXLBZB0zTAp7kj2BexnEw2e1WW5Q/wizbysv4br0ulUofT6fQwrpVEIjGDz3MZ17uC58zKcsbBRhdx/67foLe39yFVVTdOT0+/VSiME2z48HxOxuFBqQuWS1/C8i4O20eisCJ6UywjGo2ydV1/f//jfoPrsu1qt2XVwtxcILi6eg0Y8xhfvaZRDKzkx7cX+70tyz5WLtsvcFcAok+vwHn0tmfQIVcjpboilBqaUHJNoeRdJCVvhEx6I+JHVja8nqfcWvhJLbbjKjPVxu54JNBS08Qu1yAj/ghgg07HmTNMoPS1BM4BCaoRCeqH8OyrMBsNs3WDHqvkght4uaX157hBKsaL+z3jueEbhc8L0OCwwfdt6nmwYhS8nwi4vUg/NjYRnF2eQa7VdfJJJU0Xvn050/po7bz0nqs+NeYPsHEcZnmcpIzheaB9rrANYBRjRtFmjDT9PmzoTYaxEYW6Rk+UZfFZv8G1gdbNVTO428nRHXaCvmynxZdsZTF1ZEwJLXl2A8x1ZPpKVRffKCWkLX6D+7qXFQj8A01+NViTqfE/AAAAAElFTkSuQmCC"
-                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
-
-            def __init__(self):
-                pass
-
-            def message1(self, msg1):  # 报错红
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):  # 警告黄
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):  # 提示白
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
-
-            def mes_box(self, info, button, title):
-                return rs.MessageBox(info, button, title)
-
-            def Branch_Route(self, Tree):
-                """分解Tree操作，树形以及多进程框架代码"""
-                Tree_list = [list(_) for _ in Tree.Branches]
-                Tree_Path = [list(_) for _ in Tree.Paths]
-                return Tree_list, Tree_Path
-
-            def split_tree(self, tree_data, tree_path):
-                """操作树单枝的代码"""
-                new_tree = ght.list_to_tree(tree_data, True, tree_path)  # 此处可替换复写的Tree_To_List（源码参照Vector组-点集根据与曲线距离分组）
-                result_data, result_path = self.Branch_Route(new_tree)
-                if list(chain(*result_data)):
-                    return result_data, result_path
-                else:
-                    return [[]], result_path
-
-            def format_tree(self, result_tree):
-                """匹配树路径的代码，利用空树创造与源树路径匹配的树形结构分支"""
-                stock_tree = gd[object]()
-                for sub_tree in result_tree:
-                    fruit, branch = sub_tree
-                    for index, item in enumerate(fruit):
-                        path = gk.Data.GH_Path(System.Array[int](branch[index]))
-                        if hasattr(item, '__iter__'):
-                            if item:
-                                for sub_index in range(len(item)):
-                                    stock_tree.Insert(item[sub_index], path, sub_index)
-                            else:
-                                stock_tree.AddRange(item, path)
-                        else:
-                            stock_tree.Insert(item, path, index)
-                return stock_tree
-
-            def Offset(self, Plane, distance, Axis):
-                P = rg.Plane(Plane)
-                Vec = rg.Vector3d.Multiply(Axis, distance)
-                P.Translate(Vec)
-                return P
-
-            def RunScript(self, Plane, distance, X, Y, Z):
                 try:
-                    sc.doc = Rhino.RhinoDoc.ActiveDoc
-                    sc.doc.Views.Redraw()
-                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
-                    sc.doc = ghdoc
-                    Offset = []
-
-                    if Plane != None:
-                        if X or Y or Z:
-                            if X:
-                                Axis = Plane.XAxis
-                                Offset.append(self.Offset(Plane, distance, Axis))
-                            if Y:
-                                Axis = Plane.YAxis
-                                Offset.append(self.Offset(Plane, distance, Axis))
-                            if Z:
-                                Axis = Plane.ZAxis
-                                Offset.append(self.Offset(Plane, distance, Axis))
+                    re_mes = Message.RE_MES([Breps], ['Breps'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                        return gd[object](), gd[object](), gd[object](), gd[object](), gd[object](), gd[object](), gd[object](), gd[object]()
+                    else:
+                        Axis_list = self.str_handing(New_Axis)
+                        if Switch is None:
+                            self.factor = False
                         else:
-                            Offset.append(Plane)
-                    else:
-                        self.message2("平面为空！")
-                    return Offset
-
+                            self.factor = Switch
+                        Origin_Point = Plane.Origin
+                        self.get_new_plane(Plane, Axis_list)
+                        origin_redirect, Origin_XAxis, Origin_YAxis, Origin_ZAxis = self.get_new_plane(Plane, Axis_list)
+                        Symmetry_Plane = rg.Plane(Origin_Point, origin_redirect[0], origin_redirect[1])
+                        # 重构后的xyz轴向量
+                        New_XAxis, New_YAxis, New_ZAxis = Symmetry_Plane.XAxis, Symmetry_Plane.YAxis, Symmetry_Plane.ZAxis
+                        return Symmetry_Plane, Origin_Point, Origin_XAxis, Origin_YAxis, Origin_ZAxis, New_XAxis, New_YAxis, New_ZAxis
                 finally:
-                    self.Message = 'Offset Plane'
-
-
-        # 构造工作平面
-        class ConstructionPlane(component):
-            def __new__(cls):
-                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-构造工作平面", "RPP_ConstructionPlane", """构造工作平面""", "Scavenger", "Plane")
-                return instance
-
-            def get_ComponentGuid(self):
-                return System.Guid("a7e30adb-dc28-418c-b318-555ade4dfa5a")
-
-            @property
-            def Exposure(self):
-                return Grasshopper.Kernel.GH_Exposure.primary
-
-            def SetUpParam(self, p, name, nickname, description):
-                p.Name = name
-                p.NickName = nickname
-                p.Description = description
-                p.Optional = True
-
-            def RegisterInputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_Point()
-                self.SetUpParam(p, "Origin", "O", "平面原点")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
-                self.Params.Input.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_Vector()
-                self.SetUpParam(p, "X-Axis", "X", "X轴方向")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
-                self.Params.Input.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_Vector()
-                self.SetUpParam(p, "Y-Axis", "Y", "Y轴方向")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
-                self.Params.Input.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_Vector()
-                self.SetUpParam(p, "Z-Axis", "Z", "Z轴方向")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
-                self.Params.Input.Add(p)
-
-            def RegisterOutputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_Plane()
-                self.SetUpParam(p, "Plane", "P", "平面")
-                self.Params.Output.Add(p)
-
-            def SolveInstance(self, DA):
-                p0 = self.marshal.GetInput(DA, 0)
-                p1 = self.marshal.GetInput(DA, 1)
-                p2 = self.marshal.GetInput(DA, 2)
-                p3 = self.marshal.GetInput(DA, 3)
-                result = self.RunScript(p0, p1, p2, p3)
-
-                if result is not None:
-                    self.marshal.SetOutput(result, DA, 0, True)
-
-            def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAMfSURBVEhLvZRrSFNhGMcXXYwKoisFoa3S3Kam2MYWhQ26QijlpaAg0VNBlln2IYqgsj74peiGZkZENyhKorxitTlnllFaQpB9CU0F8doHNef59393jjnTrRXVD368z3vgPP9znhdezf9kK72glBqJ3lTKv4eWNtB82kjXUV/Mo2XUoa6V9Dr1yQYKmu3e+WYSNdEoGk/FeweoVyJoMxXNxRpH/WEiFX9+zL3zwRF6Rik126j45XHunXdm0jp6173TaKZSEegXk9XVFylUjKaGiqB6mkW902S1Lv0cYF2sbn+FOAdx2EF0obrOoN7pCLGkNWdYHj6TI1Lt/eHSaCOlSjlUsrsMqS3yWjGS36Nrvvlaf9YK1GIZ3iOSitWzDsYHmPAWZtj6FgWrr/kHEhMntRuMjd2rzXB+jYADYagcFIajEktRhSA4XyfBlnUe9o5olwOBi9RX/eOTxTK3VW+sbY0zwdnEANmgBMg6ONssqLiUhZLIN3j6YC+fBbkcveG/FyDonrhiR9M9E2xQm1Mnv/zp5eMoXtiAoh13UOXS87nOn4AJ6jpMzxSz9OWWCfahADGaAQPKD+XhsbUU5YXJqIYWjoEwzwAjvaSUP5hNq5TSgxEB0HHuwXiWmY+Sk9mwdYXD8S0CL3g2PwWIZp00yb1TyKGFSunBcIBoroXt9DkU78/lgS/hqEIYamAAg0YGCDbRDjqezqVdVFygI3EH3DaiAoGw55xA0c5bqOjjIXNUQ2fiJUDwhJ6lV6i4lUfTE2CWmgt1eF56EEUJD2DvjGTzYDZmUzZ/BT3eiPGNHSBG1U3F188SD0bRq9VK7SlpsCU/Qk2LSa6TtXKtrKc6uV4Ole/3LkfBgBGvBg0uYMxr4RQduvxG0xATta/g8GnsepeC9K+rkN62ga53m9m2DtaGWBg+xiOpOw7WT5svmuq2L1BfHWIPzVXKMbiYtjFkdc3a1ID3a6TpZQnS9PJhp5UnpIZWxzrD6jd/CareclX/Mi45+vkmMRZP0mmeUv4BK4sS5sTcS5ymbscig4pD/mccpTeU8t8QS3crpUbzHdgixmO91slmAAAAAElFTkSuQmCC"
-                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
-
-            def __init__(self):
-                self.origin = rg.Point3d(0, 0, 0)
-
-            def message1(self, msg1):  # 报错红
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):  # 警告黄
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):  # 提示白
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
-
-            def mes_box(self, info, button, title):
-                return rs.MessageBox(info, button, title)
-
-            def Branch_Route(self, Tree):
-                """分解Tree操作，树形以及多进程框架代码"""
-                Tree_list = [list(_) for _ in Tree.Branches]
-                Tree_Path = [list(_) for _ in Tree.Paths]
-                return Tree_list, Tree_Path
-
-            def split_tree(self, tree_data, tree_path):
-                """操作树单枝的代码"""
-                new_tree = ght.list_to_tree(tree_data, True, tree_path)  # 此处可替换复写的Tree_To_List（源码参照Vector组-点集根据与曲线距离分组）
-                result_data, result_path = self.Branch_Route(new_tree)
-                if list(chain(*result_data)):
-                    return result_data, result_path
-                else:
-                    return [[]], result_path
-
-            def format_tree(self, result_tree):
-                """匹配树路径的代码，利用空树创造与源树路径匹配的树形结构分支"""
-                stock_tree = gd[object]()
-                for sub_tree in result_tree:
-                    fruit, branch = sub_tree
-                    for index, item in enumerate(fruit):
-                        path = gk.Data.GH_Path(System.Array[int](branch[index]))
-                        if hasattr(item, '__iter__'):
-                            if item:
-                                for sub_index in range(len(item)):
-                                    stock_tree.Insert(item[sub_index], path, sub_index)
-                            else:
-                                stock_tree.AddRange(item, path)
-                        else:
-                            stock_tree.Insert(item, path, index)
-                return stock_tree
-
-            def get_x_y_vector(self, vector, z_vector):  # 根据z轴和xy其中一个向量求另外一个向量
-                # 确保向量是单位向量
-                vector.Unitize()
-                z_vector.Unitize()
-
-                # 获取 另外 向量（通过 两个向量 的叉积获得）
-                other_vector = rg.Vector3d.CrossProduct(z_vector, vector)
-                other_vector.Unitize()
-
-                return other_vector
-
-            def get_one_AXis(self, one_Axis):
-                # 根据一个向量构建平面
-                return rg.Plane(self.origin, one_Axis)
-
-            def get_two_Axis(self, one_Axis, other_Axis):
-                # 根据两个向量构建平面
-                return rg.Plane(self.origin, one_Axis, other_Axis)
-
-            def Construct_plane(self, x, y, z):
-                # 根据三个向量构建工作平面
-                plane = rg.Plane(self.origin, x, y)
-                plane.ZAxis = z
-                return plane
-
-            def Judge_Vector_Plane(self, x, y, z):
-                Axis_List = [x, y, z]
-                res = list(filter(None, Axis_List))
-                if len(res) == 1:
-                    if Axis_List[0] != None:
-                        # x轴
-                        y_vector = rg.Vector3d(0, 1, 0)
-                        plane = self.get_two_Axis(x, y_vector)
-                    elif Axis_List[1] != None:
-                        # y轴
-                        x_vector = rg.Vector3d(1, 0, 0)
-                        plane = self.get_two_Axis(x_vector, y)
-                    else:
-                        # z轴
-                        plane = self.get_one_AXis(Axis_List[2])
-                elif len(res) == 2:
-                    if x != None and y != None:
-                        plane = self.get_two_Axis(x, y)
-
-                    if x != None and z != None:
-                        y_vector = self.get_x_y_vector(x, z)
-                        plane = self.get_two_Axis(x, y_vector)
-
-                    if y != None and z != None:
-                        x_vector = self.get_x_y_vector(y, z)
-                        plane = self.get_two_Axis(x_vector, y)
-
-                else:
-                    plane = self.get_two_Axis(x, y)
-                return plane
-
-            def RunScript(self, origin, x, y, z):
-                try:
-                    sc.doc = Rhino.RhinoDoc.ActiveDoc
-
-                    plane = gd[object]()
-                    self.origin = origin if origin else self.origin
-                    if x == None and y == None and z == None:
-                        plane = rg.Plane.WorldXY
-                        self.message2("你不给轴，我就输出XY平面喽!")
-                        plane.Origin = self.origin
-                        return plane
-                    else:
-                        plane = self.Judge_Vector_Plane(x, y, z)
-
-                    sc.doc.Views.Redraw()
-                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
-                    sc.doc = ghdoc
-
-                    return plane
-                finally:
-                    self.Message = '构建工作平面'
+                    self.Message = '重构平面'
 
 
         """

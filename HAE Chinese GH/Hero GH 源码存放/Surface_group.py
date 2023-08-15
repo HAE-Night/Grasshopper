@@ -17,7 +17,7 @@ import Grasshopper.DataTree as gd
 import System.Collections.Generic.IEnumerable as IEnumerable
 
 Result = Curve_group.Result
-
+Message = Curve_group.message()
 try:
     if Result is True:
         """
@@ -53,11 +53,12 @@ try:
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
                 self.SetUpParam(p, "Type", "T", "{0: \"不收东边\", 1: \"不收北边\", 2: \"不收南边\", 3: \"不收西边\", 4: \"收至最小\"}")
+                p.SetPersistentData(Grasshopper.Kernel.Types.GH_Integer(4))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                p = Grasshopper.Kernel.Parameters.Param_Brep()
                 self.SetUpParam(p, "Result", "R", "收边后的结果")
                 self.Params.Output.Add(p)
 
@@ -78,25 +79,19 @@ try:
                                   2: "DoNotShrinkSouthSide", 3: "DoNotShrinkWestSide", 4: "ShrinkAllSides"}
                 self.type_of_shrink = None
 
-            def message1(self, msg1):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
-
             def RunScript(self, Surface, Type):
                 try:
-                    self.type_of_shrink = 4 if Type is None else Type
-                    if Surface is not None:
+                    self.type_of_shrink = Type
+                    re_mes = Message.RE_MES([Surface], ['Surface'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                        return gd[object]()
+                    else:
                         list_of_surf = [_ for _ in Surface.Faces]
                         map(lambda surf: surf.ShrinkFace(eval("rg.BrepFace.ShrinkDisableSide.{}".format(self.dict_data[self.type_of_shrink]))), list_of_surf)
                         Result = list_of_surf
                         return Result
-                    else:
-                        self.message2("请输入一个曲面！")
                 finally:
                     self.Message = "修剪曲面收边"
 
@@ -161,15 +156,6 @@ try:
                 o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAMeSURBVEhLYxgFMKBV8V3FuvpifHjz8kwGhv+MUGHyAchAg5KLUfZl22eG1M2+VNpV+XvawvL/3uWzj0GVkAf8apZPCq2be7Ggo/b3vAVJ/09tsv7/bq/Y///HGf5/OSj237Ns3naoUkwwYcIEcQsLi+VBQUEbL1265AIVZrC0tGxxcHDYPGnBrqqExq5v7/aL//9/lAFsKJg+BMSHGf4/362I34LW1lZnYWHh/0Dm/7q6uqsgsfT0dDNBQUGwWHXrtFsVk7ofwQ09gISJsaC+vt5BQUHhv5mZ2X87O7v///79kxUQEOgE+uC/ooL8/5K6/rOlE3oegw0/SKYFEhIS//v6+v5IS0v/37NnzwJWVtab7e3tf9XVVP8VV/eeo4oFW7Zs2aOsrPzYysrqv7q6+v+TJ09u4eHm+gr0wQWKLKitrXUGuXzDhg1To6Ki5gGF/oeHh4OCKoaDnfV/cU3v9dJJFFgwffp0M2tr6zurV6+uWrFihaOmpuadadOmrf3//7+cgb7e3fquOTuKejqekm0BCAANYwNiFhgbLAgEILbron9iWU31H/4fZiTfgpiYmGhgXlABsUNCQlLc3NyEgEzmkED/FIb6/wJZLQ3vKbLAz8+v0NDQUA/Ednd3rwFiSSCTxdXZsUZj8j9hii0IDg5O0tbWVgaxPT09c+zt7QVAbDcXpxzR/f95spopCKLMzExBoAWrfX19E0pLS6WAQbQRmJpcwsLC9IMC/Dd650yzzW5tfE62BcXFxdzm5ub/gSlpOjBPCNnY2Px3cXFJ8fb2drG2svzvGN3pl9ve9IiiIAIavhFYTESB2MDIPuHk5KQH9ImQuanJcY2qf5LZLXUf/58EGggq6ICGwi0i1oKMjAwnYAGnAGJnZ2f75ebm8q1atYo5IzXRM2nDa96QmlkvZ87L+H9kg+P/V3ukIJaALANa+navDGEL8IH//xkY0yackTMsvx5sW75nYlDt/NPAIPs+Y27a/xOb7f5f22Hx36ts9m6ocuoA4/r/cnol14Mdy3dMDGlcfsG/esEGqBRtQPvSw4JQJj0AAwMAfgZy+8cqEK0AAAAASUVORK5CYII="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
-            def message1(self, msg1):  # 爆红
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):  # 黄泡
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):  # 白泡
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
-
             def bubbling(self, Face):
                 # 面积质量属性
                 FaceAMP = [rg.AreaMassProperties.Compute(i) for i in Face]
@@ -188,8 +174,14 @@ try:
 
             def RunScript(self, Geometry):
                 try:
-                    Face, Area_Arc, Centroid = self.bubbling(Geometry)
-                    return Face, Area_Arc, Centroid
+                    re_mes = Message.RE_MES([Geometry], ['Geometry'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                        return gd[object](), gd[object](), gd[object]()
+                    else:
+                        Face, Area_Arc, Centroid = self.bubbling(Geometry)
+                        return Face, Area_Arc, Centroid
                 except Exception as e:
                     self.message1("运行报错：\n{}".format(str(e)))
                 finally:
@@ -225,12 +217,14 @@ try:
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Divisor", "D1", "除数，默认百万1000000")
+                self.SetUpParam(p, "Divisor", "D1", "除数，默认1000000")
+                p.SetPersistentData(Grasshopper.Kernel.Types.GH_Number(1000000))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
                 self.SetUpParam(p, "Decimals", "D2", "保留小数位，默认三位")
+                p.SetPersistentData(Grasshopper.Kernel.Types.GH_Number(3))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
@@ -253,110 +247,20 @@ try:
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def RunScript(self, Breps, Divisor, Decimals):
-                # 初始化参数
-                divisor = Divisor if Divisor else 1000000
-                digit = ".%uF" % Decimals if Decimals else ".3F"
-
-                # 计算
-                Area = [format(rs.SurfaceArea(i)[0] / divisor, digit) for i in Breps]
-                return Area
-
-
-        # Surface中心面
-        class Surface_PLA(component):
-            def __new__(cls):
-                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-求中心平面", "RPP_Surface Plane",
-                                                                   """求几何物体的中心平面PLane""", "Scavenger",
-                                                                   "Surface")
-                return instance
-
-            def get_ComponentGuid(self):
-                return System.Guid("e595f6f2-245f-452b-b117-2ff864c578dd")
-
-            @property
-            def Exposure(self):
-                return Grasshopper.Kernel.GH_Exposure.primary
-
-            def SetUpParam(self, p, name, nickname, description):
-                p.Name = name
-                p.NickName = nickname
-                p.Description = description
-                p.Optional = True
-
-            def RegisterInputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_Surface()
-                self.SetUpParam(p, "Surface", "S", "面")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
-                self.Params.Input.Add(p)
-
-            def RegisterOutputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_Plane()
-                self.SetUpParam(p, "Plane", "P", "依附中心点生成的Plane")
-                self.Params.Output.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_Boolean()
-                self.SetUpParam(p, "B", "B", "查看Sur是否有效")
-                self.Params.Output.Add(p)
-
-            def SolveInstance(self, DA):
-                p0 = self.marshal.GetInput(DA, 0)
-                if isinstance(p0, Rhino.Geometry.Brep) and p0.Faces.Count == 1: p0 = p0.Faces[0].DuplicateSurface()
-                result = self.RunScript(p0)
-
-                if result is not None:
-                    if not hasattr(result, '__getitem__'):
-                        self.marshal.SetOutput(result, DA, 0, True)
-                    else:
-                        self.marshal.SetOutput(result[0], DA, 0, True)
-                        self.marshal.SetOutput(result[1], DA, 1, True)
-
-            def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAM6SURBVEhL7ZNrSFNhGMfnZTqmVEODmFpTtMT60BevOHTMSxrmBZW0KZIT04lOsSwT85a2TN3CzbykZ5t5yXmBFPM257XCDCk1L6SEVBpiKmkfRufpPboPUoSmBH3oDw/n5bzv8/+d53nOS/qvvy4A0COeOI6bLqzh9svLy4e2Ng4iZKqNDI3EQ7it4sVaQ6Z8+MndKmxJ8KgVRmaW3TXH9i7CcAnAcHAWTy3r/izOkav6ciseLopKEtRtdX4w2WoD6yoyCMUx3zky3FKTtrtwfMOheXiuMkfa9TJLXLBQXpkAysbzMNNmDhs9ZIAhxB5GMYjiGQlEEp7aswQYmvTdhdrgKFbIYLWPDjCqDfAcGRGmhGEfCtWOQO9Fkji1Txlurkn/VagVR+Lj41N9fX3z/P39BWFRCfIIri9en04CRYY2fO3Q2QbsNN4rAJlTkHGTm5vbvKenp5zFYmEBwWGd/sFeIIjRhWuh+hDCpsCmSgug/yfzPQKo1tbWE0KhsKizszNZJpPZYy3KhNzC6zBXS4G5RgPwsjeASUx3u+/7AOiYmpp2x8XFRUgkEm4Y55IyT1jZmn4nUT0lJ8N0AwWCWVQYJwBooPsB6JqZmSnDw8M5aWlpl5lODp94iRmvMvL43yalZBiv0YNAFypMHARAp9N7eDxeMp/P92G5MJtEpXW9aXlX1RMYGWYa9CHIVQPYZ4vIJiYmHWjQTikpKcfPubMbo6Jj318IDsGvBFnCtMIQIr314U3VwWag5HA4yUlJSRGRkZHcLEFhE5cfAzW3DGC0UgsuuurBu2p0lLgPfwpAl8qAwWAMoK/3KS0ttc3Pzz+jUg0EVLd2j+UUFy1mFN5YdbCzgnYJA9b7qdu/KlEJMt5a76ECGpPJfO3s7HzT2NjYCs3jJINBP1UsvMfOLZB6h8YXJp61c91MFbf0CrDajw+kmfBY6gcjChtY6Tq8Nfjikmi1+/3fAAhhGObBZrOVFhYWCtSuejSTOhqNJjMyomGnbaybY6O5UUQrUbUn2mdxR9HT9ZSKjum32eW1UxJpNtyuqoausRVnjd3BhWAUBDtKVD/yAfdoGfkSOD8/f0yz/V//hEikH9g9dLOaG7vaAAAAAElFTkSuQmCC"
-                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
-
-            def __init__(self):
-                pass
-
-            def message1(self, msg1):  # 报错红
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):  # 警告黄
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):  # 提示白
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
-
-            def mes_box(self, info, button, title):
-                return rs.MessageBox(info, button, title)
-
-            # 根据中心点求面 -- U,V与原生不符，却与SEG相符
-            def Plane_box(self, box):
-                Center = box.Center
-                UPT = (box.GetCorners()[0] + box.GetCorners()[1]) / 2
-                VPT = (box.GetCorners()[1] + box.GetCorners()[2]) / 2
-                Plane = rg.Plane(Center, UPT, VPT)
-                return Plane
-
-            # 判断Surface的有效性
-            def IsValid(self, Sur):
-                return Sur.IsValid
-
-            def GeoBox(self, Surface):
-                boxs = [g.GetBoundingBox(False) for g in Surface]  # 获取几何边界
-
-                Plane = map(self.Plane_box, boxs)
-                Bool = map(self.IsValid, Surface)
-                return Plane, Bool
-
-            def RunScript(self, Geometry):
                 try:
-                    PB = self.GeoBox(Geometry)
-                    return PB
-                except Exception as e:
-                    self.message2(str(e))
+                    re_mes = Message.RE_MES([Breps], ['Breps'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                        return gd[object]()
+                    else:
+                        divisor = Divisor
+                        digit = ".%uF" % Decimals
+                        # 计算
+                        Area = [format(rs.SurfaceArea(i)[0] / divisor, digit) for i in Breps]
+                        return Area
                 finally:
-                    self.Message = 'HAE 中心平面'
+                    self.Message = 'Sur面积'
 
 
         # 曲面或者Brep反转
@@ -410,15 +314,6 @@ try:
             def __init__(self):
                 self.set_vector = None
 
-            def message1(self, msg1):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
-
             def _get_normal_vector(self, _srf):
                 pts = [_.Location for _ in _srf.Vertices]
                 center_pt = reduce(lambda pt1, pt2: pt1 + pt2, pts) / len(pts)
@@ -431,26 +326,26 @@ try:
 
             def RunScript(self, Brep, Vector):
                 try:
-                    if Brep is None:
-                        self.message2("Brep不能为空！！！")
+                    re_mes = Message.RE_MES([Brep], ['Brep'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                        return gd[object]()
                     else:
-                        if Brep is None:
-                            self.message2("Brep不能为空！！！")
-                        else:
-                            if Vector:
-                                normal_vector = self._get_normal_vector(Brep)
-                                self.set_vector = Vector
-                                angle = math.degrees(rg.Vector3d.VectorAngle(normal_vector, self.set_vector))
-                                if (90 >= angle >= 0) or (360 >= angle >= 270):
-                                    New_Brep = Brep
-                                else:
-                                    Brep.Flip()
-                                    New_Brep = Brep
+                        if Vector:
+                            normal_vector = self._get_normal_vector(Brep)
+                            self.set_vector = Vector
+                            angle = math.degrees(rg.Vector3d.VectorAngle(normal_vector, self.set_vector))
+                            if (90 >= angle >= 0) or (360 >= angle >= 270):
+                                New_Brep = Brep
                             else:
-                                self.message3("向量未设置，默认反转Brep")
                                 Brep.Flip()
                                 New_Brep = Brep
-                            return New_Brep
+                        else:
+                            Message.message3(self, "向量未设置，默认反转Brep")
+                            Brep.Flip()
+                            New_Brep = Brep
+                        return New_Brep
                 finally:
                     self.Message = "Brep反转"
 
@@ -494,7 +389,7 @@ try:
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                p = Grasshopper.Kernel.Parameters.Param_Geometry()
                 self.SetUpParam(p, "Brep", "B", "一个新的Brep")
                 self.Params.Output.Add(p)
 
@@ -511,13 +406,17 @@ try:
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def RunScript(self, Sweep_Curve, Shape_Curve):
-                if Sweep_Curve is not None and Shape_Curve is not None:
-                    Brep = rg.Brep.CreateFromSweep(Sweep_Curve, Shape_Curve, 1, 1.0)
-                    return Brep
-                elif Sweep_Curve is None:
-                    return '轨道线不能为空！'
-                elif Shape_Curve is None:
-                    return '曲线不能为空！'
+                try:
+                    re_mes = Message.RE_MES([Sweep_Curve, Shape_Curve], ['Sweep_Curve', Shape_Curve])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                        return gd[object]()
+                    else:
+                        Brep = rg.Brep.CreateFromSweep(Sweep_Curve, Shape_Curve, 1, 1.0)
+                        return Brep
+                finally:
+                    self.Message = '扫出曲面'
 
 
         # 曲面挤出（曲线修剪）
@@ -550,6 +449,7 @@ try:
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
                 self.SetUpParam(p, "Type", "T", "挤出的类型，{0： Line， 1： Arc， 2： Smooth}")
+                p.SetPersistentData(Grasshopper.Kernel.Types.GH_String('0'))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
@@ -637,16 +537,23 @@ try:
                 return object
 
             def RunScript(self, Curve, Type, Start, End, Extrusion, Move):
-                if Curve:
-                    _style = {'0': 'Line', '1': 'Arc', '2': 'Smooth'}
-                    self._curve_style = _style[Type] if Type is not None else _style['0']
-                    first = self.str_handle(Start)
-                    second = self.str_handle(End)
-                    curve_of_handle = self.processing_curve(Curve, first, second)
-
-                    Extrusion_Surface = curve_of_handle if Extrusion is None else self.create_extrude(curve_of_handle, Extrusion)
-                    Objects = Extrusion_Surface if Move is None else self.init_movement(Extrusion_Surface, Move)
-                    return Objects
+                try:
+                    re_mes = Message.RE_MES([Curve], ['Curve'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                        return gd[object]()
+                    else:
+                        _style = {'0': 'Line', '1': 'Arc', '2': 'Smooth'}
+                        self._curve_style = _style[Type]
+                        first = self.str_handle(Start)
+                        second = self.str_handle(End)
+                        curve_of_handle = self.processing_curve(Curve, first, second)
+                        Extrusion_Surface = curve_of_handle if Extrusion is None else self.create_extrude(curve_of_handle, Extrusion)
+                        Objects = Extrusion_Surface if Move is None else self.init_movement(Extrusion_Surface, Move)
+                        return Objects
+                finally:
+                    self.Message = '曲面挤出'
 
 
         # 两曲面间夹角
@@ -671,12 +578,12 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Brep()
-                self.SetUpParam(p, "x", "G1", "The x script variable")
+                self.SetUpParam(p, "G1", "G1", "The x script variable")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Brep()
-                self.SetUpParam(p, "y", "G2", "Script input Geo2.")
+                self.SetUpParam(p, "G2", "G2", "Script input Geo2.")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
@@ -728,14 +635,22 @@ try:
                 return angle
 
             def RunScript(self, Geo1, Geo2):
-                if Geo1 and Geo2:
-                    ptsx = self.Point(Geo1.Vertices)
-                    ptsy = self.Point(Geo2.Vertices)
-                    cptx, cpax = self.CP(ptsx)
-                    cpty, cpay = self.CP(ptsy)
-                    angle = math.degrees(self.Angle(cpax, cpay))
-                    angle2 = 180 - angle
-                    return (angle, angle2)
+                try:
+                    re_mes = Message.RE_MES([Geo1, Geo2], ['Geo1', 'Geo2'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                        return gd[object](), gd[object]()
+                    else:
+                        ptsx = self.Point(Geo1.Vertices)
+                        ptsy = self.Point(Geo2.Vertices)
+                        cptx, cpax = self.CP(ptsx)
+                        cpty, cpay = self.CP(ptsy)
+                        angle = math.degrees(self.Angle(cpax, cpay))
+                        angle2 = 180 - angle
+                        return (angle, angle2)
+                finally:
+                    self.Message = '两曲面间夹角'
 
 
         # 曲面按照参照平面排序
@@ -771,6 +686,7 @@ try:
 
                 p = Grasshopper.Kernel.Parameters.Param_Plane()
                 self.SetUpParam(p, "CP", "CP", "参照平面")
+                p.SetPersistentData(Grasshopper.Kernel.Types.GH_Plane(rg.Plane.WorldXY))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
@@ -795,14 +711,6 @@ try:
             def __init__(self):
                 self.dict_axis = {'X': 'x_coordinate', 'Y': 'y_coordinate', 'Z': 'z_coordinate'}
 
-            def message1(self, msg1):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
 
             def _normal_fun(self, geo_list):
                 for f_index in range(len(geo_list)):
@@ -829,9 +737,11 @@ try:
 
             def RunScript(self, Geo, Axis, CP):
                 try:
-                    CP = CP if CP is not None else ghc.XYPlane(rg.Point3d(0, 0, 0))
-                    if len(Geo) == 0:
-                        self.message2("曲面列表不能为空！")
+                    re_mes = Message.RE_MES([Breps], ['Breps'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                        return gd[object](), gd[object]()
                     else:
                         if Axis:
                             Axis = Axis.upper()
@@ -839,9 +749,9 @@ try:
                                 Sort_Geo = self._other_fun(Geo, Axis, CP)
                                 return Sort_Geo
                             else:
-                                self.message1("请输入正确的轴坐标！")
+                                Message.message1(self, "请输入正确的轴坐标！")
                         else:
-                            self.message3("轴坐标未输入，将按照面积排序！")
+                            Message.message3(self, "轴坐标未输入，将按照面积排序！")
                             Sort_Geo = self._normal_fun(Geo)
                             return Sort_Geo
                 finally:
@@ -882,11 +792,13 @@ try:
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
                 self.SetUpParam(p, "Distance", "D", "要延伸的距离")
+                p.SetPersistentData(Grasshopper.Kernel.Types.GH_Number(10))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Boolean()
                 self.SetUpParam(p, "Smooth", "S", "是否平滑")
+                p.SetPersistentData(Grasshopper.Kernel.Types.GH_Boolean(True))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
@@ -912,15 +824,6 @@ try:
 
             def __init__(self):
                 self.smooth = None
-
-            def message1(self, msg1):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
 
             def mes_box(self, info, button, title):
                 return rs.MessageBox(info, button, title)
@@ -981,139 +884,26 @@ try:
 
             def RunScript(self, Surface, Edges, Distance, Smooth):
                 try:
-                    sc.doc = Rhino.RhinoDoc.ActiveDoc
-                    Result_Surface = gd[object]()
-                    Distance = Distance if Distance else [10]
-                    self.smooth = True if Smooth else False
-
-                    if not (Surface or Edges):
-                        self.message2('S端数据为空！')
-                        self.message2('E端数据为空！')
-                    elif not Surface:
-                        self.message2('S端数据为空！')
-                    elif not Edges:
-                        self.message2('E端数据为空！')
+                    re_mes = Message.RE_MES([Surface, Edges], ['Surface', 'Edges'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                        return gd[object]()
                     else:
+                        sc.doc = Rhino.RhinoDoc.ActiveDoc
+                        self.smooth = Smooth
                         edge_length, dis_length = len(Edges), len(Distance)
                         if edge_length > dis_length:
                             Distance = Distance + [Distance[-1]] * abs(edge_length - dis_length)
 
                         Temp_Brep = Surface.ToBrep()
                         Result_Surface = self._select_edges(Temp_Brep, Edges, Distance)
-
-                    sc.doc.Views.Redraw()
-                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
-                    sc.doc = ghdoc
-                    return Result_Surface
+                        sc.doc.Views.Redraw()
+                        ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                        sc.doc = ghdoc
+                        return Result_Surface
                 finally:
                     self.Message = '曲面延伸'
-
-
-        # 曲线切割曲面
-        class BrepSplitByCurve(component):
-            def __new__(cls):
-                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-曲线分割曲面", "RPP_BrepSplitByCurve", """利用曲线对曲面进行切割；
-        注：需要两者相交""", "Scavenger", "Surface")
-                return instance
-
-            def get_ComponentGuid(self):
-                return System.Guid("47db7cdf-8a92-4944-91be-32da81b9294b")
-
-            @property
-            def Exposure(self):
-                return Grasshopper.Kernel.GH_Exposure.secondary
-
-            def SetUpParam(self, p, name, nickname, description):
-                p.Name = name
-                p.NickName = nickname
-                p.Description = description
-                p.Optional = True
-
-            def RegisterInputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_Brep()
-                self.SetUpParam(p, "Surface", "S", "需要分割的面")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
-                self.Params.Input.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_Curve()
-                self.SetUpParam(p, "Curve", "C", "分割线--列表")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
-                self.Params.Input.Add(p)
-
-            def RegisterOutputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Surfaces", "S", "切割后的曲面列表")
-                self.Params.Output.Add(p)
-
-            def SolveInstance(self, DA):
-                p0 = self.marshal.GetInput(DA, 0)
-                p1 = self.marshal.GetInput(DA, 1)
-                result = self.RunScript(p0, p1)
-
-                if result is not None:
-                    self.marshal.SetOutput(result, DA, 0, True)
-
-            def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAJ3SURBVEhLtdbLS1RRHAfw352HOY/utYdkoJsoiJ6oZSpKRWaOmkVFCLUvsGxRG2mbBW0ipBcWLlw0RahkVhCE4B9Q2UOkpqQHYaCLnoTVt+/v3C4tmhl0nH7wgZk75/y+c+4585BZVgFVUcQ8y2KV0WX6RqA2ykqtpT7SpmqcTlMhzbpa6Ttp4yHaQdOupXQ4jQ7y3nWCjtI+OkCHKNkclU+mdDBkzRZIxW7Ihp2uSj5etclrjED5AgTrChCsWZRarAD+4jxvju6VqT1iWZCLCcg9QPr/GKRjcTPYtywK50UMzusGOK/qU8qbaEKke70XUKLNtdyAMw8gvT8h8U+uOwzY324GBzbnwxmrh/1oa1rOyxjCl0qmGXCLAa1dZrBvSQT201rYjylJY8/MAnqmIOdHIYEciCWIxMvhJGJJG3tmFuCtoqzJTAhuXwznTUPSxp6ZB9z8BTk55E7wWYjeqDBN7IfZCoh/htzmKqqbzSR/6TxzmlLtRQYB1Mu96ByDhB0zMbdtOZx3jUlXkVnA1Y/uKlo63YkhP6IDVUlvVWYB6toXyABDyneZyf4VNuyRbbCfUVYClB7b7g+QhUWmQU5zEZy3PFXD2QrQW6XHtn2QJ8pnmoROrWbI3/1IH3BuxL3XGpJKzw/IfY45eME0seb4EO3h0eWmO6N1yHvfiHDXun8C9pqA4/38wnsOOTucXscTyBWequJa08hXGEK0rxLRu9WYO7gRoRMrvYBSba6lPx6TXDb5pycQnJTcyCTnTZHbMGCNi9+a4AdSryv9BTSVQ/MzVEzaTEOuk/4B8F4LUFaqhrzbckQv/I9qIQ34SmG9ICLyGxmXtpYnbPhWAAAAAElFTkSuQmCC"
-                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
-
-            def __init__(self):
-                pass
-
-            def message1(self, msg1):  # 报错红
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):  # 警告黄
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):  # 提示白
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
-
-            def mes_box(self, info, button, title):
-                return rs.MessageBox(info, button, title)
-
-            def RE_MES(self, parameter, para_name):
-                remes = []
-                for i_parameter in range(len(parameter)):
-                    if not parameter[i_parameter]:
-                        remes.append("缺少必要参数：{}".format(para_name[i_parameter]))
-                return remes
-
-            # 数据转换成树和原树路径
-            def Restore_Tree(self, Before_Tree, Tree):
-                Tree_Path = [_ for _ in Tree.Paths]
-                After_Tree = gd[object]()
-                for i in range(Tree.BranchCount):
-                    After_Tree.AddRange(Before_Tree[i], Tree_Path[i])
-                return After_Tree
-
-            def split_surface_with_curves(self, Brep, curves):
-                tol = sc.doc.ModelAbsoluteTolerance
-                # 将曲线转换为NURBS曲线列表
-                nurbs_curves = [crv_ for crv_ in curves]
-
-                # 使用Brep对象的Split方法来分割曲面
-                split_breps = Brep.Split.Overloads[IEnumerable[Rhino.Geometry.Curve], System.Double](nurbs_curves, 0.01)
-
-                return split_breps
-
-            def RunScript(self, split_surfaces, split_curves):
-                try:
-                    re_mes = self.RE_MES([split_surfaces, split_curves], ['split_surfaces', 'split_curves'])
-                    res_surfaces = gd[object]()
-                    if len(re_mes) > 0:
-                        for mes_i in re_mes:
-                            self.message2(mes_i)
-                    else:
-                        sc.doc = Rhino.RhinoDoc.ActiveDoc
-                        res_surfaces = self.split_surface_with_curves(split_surfaces, split_curves)
-                    sc.doc.Views.Redraw()
-                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
-                    sc.doc = ghdoc
-                    return res_surfaces
-                finally:
-                    self.Message = 'HAE\n曲线分割曲面'
 
     else:
         pass
