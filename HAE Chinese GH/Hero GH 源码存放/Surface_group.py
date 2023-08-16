@@ -737,7 +737,7 @@ try:
 
             def RunScript(self, Geo, Axis, CP):
                 try:
-                    re_mes = Message.RE_MES([Breps], ['Breps'])
+                    re_mes = Message.RE_MES([Geo], ['Geo'])
                     if len(re_mes) > 0:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
