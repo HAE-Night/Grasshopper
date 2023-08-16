@@ -195,7 +195,7 @@ try:
                         for f_fail_index in range(len(_false_tips)):
                             sub_false_brep = []
                             for s_fail_index in _false_tips[f_fail_index]:
-                                Message.message1(
+                                Message.message1(self,
                                     "第{}组数据：下标为{}的切割体切割失败！".format((f_fail_index + 1), s_fail_index))
                                 sub_false_brep.append(_copy_b_trunk[f_fail_index][s_fail_index])
                             _false_breps.append(sub_false_brep)
@@ -1188,6 +1188,7 @@ try:
 
                 p = Grasshopper.Kernel.Parameters.Param_Plane()
                 self.SetUpParam(p, "Origin_Plane", "A", "原始的平面")
+                p.SetPersistentData(Grasshopper.Kernel.Types.GH_Plane(rg.Plane.WorldXY))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
@@ -2584,9 +2585,6 @@ try:
         pass
 except:
     pass
-
-import GhPython
-import System
 
 
 class AssemblyInfo(GhPython.Assemblies.PythonAssemblyInfo):
