@@ -2771,7 +2771,7 @@ try:
                     if self.is_curve_closed(curve):
                         Curve, Bool = self.unify_curve(curve, plane)
                     else:
-                        Message.message1("要求闭合的Curve!")
+                        Message.message1(self, "要求闭合的Curve!")
 
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()

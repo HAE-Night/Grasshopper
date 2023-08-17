@@ -20,7 +20,7 @@ import math
 import Curve_group
 from itertools import chain
 
-Result = Curve_group.decryption()
+Result = Curve_group.Result
 Message = Curve_group.message()
 try:
     if Result is True:

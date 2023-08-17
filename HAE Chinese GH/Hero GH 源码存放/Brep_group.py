@@ -919,7 +919,7 @@ try:
                         if HoleCirBrep.SolidOrientation == rg.BrepSolidOrientation.Inward:
                             HoleCirBrep.Flip()
                     else:
-                        Message.message1("长圆孔生成失败")
+                        Message.message1(self, "长圆孔生成失败")
                         HoleCirBrep = None
                 else:
                     HoleCirBrep = None

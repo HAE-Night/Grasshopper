@@ -345,15 +345,6 @@ try:
                 self.path = '/api/trans/vip/translate'
                 self.lang_of_kind = {0: 'en', 1: 'zh', 2: 'yue'}
 
-            def message1(self, msg1):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
-
             def RunScript(self, Text, Appid, Appkey, To_lang):
                 try:
                     Appid = '20221022001408099' if Appid is None else Appid
@@ -379,7 +370,7 @@ try:
                         result = urllib.urlopen(url, form_data).read()
                         return [_['dst'] for _ in json.loads(result)['trans_result']]
                     else:
-                        self.message2("字符不能为空！！！")
+                        Message.message2(self, "字符不能为空！！！")
                 finally:
                     self.Message = '某度翻译'
 
@@ -431,15 +422,6 @@ try:
 
             def __init__(self):
                 self.dict_csv_data = None
-
-            def message1(self, msg1):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
 
             def read_file(self, file_path):
                 with open(file_path) as csv_f:
@@ -500,11 +482,11 @@ try:
                         tips_tranl_info = set(list(chain(*temp_info)))
                         if len(tips_tranl_info) != 0:
                             for tip in tips_tranl_info:
-                                self.message2("“{}”没有对应的翻译".format(tip))
+                                Message.message2(self, "“{}”没有对应的翻译".format(tip))
                         else:
-                            self.message3("图层名已全部替换！")
+                            Message.message3(self, "图层名已全部替换！")
                     else:
-                        self.message3("开启按钮替换图层名")
+                        Message.message3(self, "开启按钮替换图层名")
                 finally:
                     self.Message = '图层名称替换'
 

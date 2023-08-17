@@ -183,7 +183,7 @@ try:
                         Face, Area_Arc, Centroid = self.bubbling(Geometry)
                         return Face, Area_Arc, Centroid
                 except Exception as e:
-                    self.message1("运行报错：\n{}".format(str(e)))
+                    Message.message1(self, "运行报错：\n{}".format(str(e)))
                 finally:
                     self.Message = 'HAE 面积排序'
 

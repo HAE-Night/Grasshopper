@@ -491,7 +491,7 @@ try:
                             Alum_Material = self.counter_bore(order_sp_al)
                             Iron_Material = self.counter_bore(order_sp_fe)
                         else:
-                            self.message1('未包含此螺丝规格！')
+                            Message.message1(self, '未包含此螺丝规格！')
                         sc.doc.Views.Redraw()
                         ghdoc = GhPython.DocReplacement.GrasshopperDocument()
                         sc.doc = ghdoc
