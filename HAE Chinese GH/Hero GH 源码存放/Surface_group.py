@@ -674,7 +674,7 @@ try:
                 p.Optional = True
 
             def RegisterInputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_Geometry()
+                p = Grasshopper.Kernel.Parameters.Param_Brep()
                 self.SetUpParam(p, "Geo", "G", "曲面列表数据")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)

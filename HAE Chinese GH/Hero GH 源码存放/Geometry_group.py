@@ -27,6 +27,7 @@ try:
         """
             切割 -- primary
         """
+        # 中心点
         class GeoCenter(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
@@ -93,8 +94,8 @@ try:
                     center = brep.Center
                 elif "Point" in type_str:
                     center = brep
-                elif "Line" in type_str:
-                    center = brep.BoundingBox.Center
+                elif "Line" in type_str or "Curve" in type_str:
+                    center = brep.PointAtLength(brep.GetLength() / 2)
                 elif "Arc" in type_str:
                     brep = brep.ToNurbsCurve()
                     center = brep.GetBoundingBox(True).Center
@@ -120,7 +121,6 @@ try:
                             bbox = rg.BoundingBox(Pt)
                         else:
                             bbox.Union(brep.GetBoundingBox(rg.Plane.WorldXY))
-
                     center = bbox.Center
                 else:  # 不是群组
                     center = self.Get_different_Center(Box, type_str)
@@ -149,7 +149,6 @@ try:
                         return Cenp
                 finally:
                     self.Message = 'HAE中心点'
-
 
 
         # 几何排序
