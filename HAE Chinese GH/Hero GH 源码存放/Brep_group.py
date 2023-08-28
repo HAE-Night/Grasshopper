@@ -24,6 +24,7 @@ import math
 import Curve_group
 import time
 import copy
+import System
 from System.Collections.Generic import List
 
 Result = Curve_group.Result
@@ -473,7 +474,6 @@ try:
                 for Re_ in Result:
                     Re_.MergeCoplanarFaces(0.01)
                     Merge_Result.append(Re_)
-                print(Merge_Result)
                 return Merge_Result
 
             def RunScript(self, Breps, PRE):
@@ -607,6 +607,7 @@ try:
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
                 self.SetUpParam(p, "Tolerance", "T", "分割的精度")
+                p.SetPersistentData(Grasshopper.Kernel.Types.GH_Number(0.01))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
@@ -883,7 +884,7 @@ try:
                     data_b_new = data_b
                 return data_b_new
 
-            def create_rectangle_from_center(self, pln, width, cykkd):
+            def create_rectangle_from_center(self, pln, width):
                 # 创建矩形的中心点和半宽、半高
                 half_width = rg.Interval(width * -20, width * 20)
                 half_height = rg.Interval(width * -20, width * 20)
@@ -893,17 +894,21 @@ try:
                 return rectangle_brep
 
             def circle(self, Data):  # 根据面生成圆柱Brep
-                circle = rg.Arc(Data[0], Data[1], math.radians(360)).ToNurbsCurve()  # 圆弧转曲线
-                Surface = rg.Surface.CreateExtrusion(circle, Data[2]).ToBrep()
-                CirBrep = Surface.CapPlanarHoles(0.1)
+                Cri_Vec = Data[2] * 2
+                Data[0].Translate(-Data[2])
+                C_Plane = Data[0]
+
+                circle = rg.Arc(C_Plane, Data[1], math.radians(360)).ToNurbsCurve()  # 圆弧转曲线
+                Surface = rg.Surface.CreateExtrusion(circle, Cri_Vec).ToBrep()
+                CirBrep = Surface.CapPlanarHoles(0.01)
                 if CirBrep.SolidOrientation == rg.BrepSolidOrientation.Inward:
                     CirBrep.Flip()
 
                 if Data[3]:
                     # 创建长圆孔的圆柱体
-                    pln = rg.Plane(Data[0].Origin, Data[0].YAxis, Data[0].ZAxis)
+                    pln = rg.Plane(C_Plane.Origin, C_Plane.YAxis, C_Plane.ZAxis)
                     cir_split = [ci_ for ci_ in
-                                 circle.Split(self.create_rectangle_from_center(pln, Data[3], Data[3]), 0.1, 0.1)]
+                                 circle.Split(self.create_rectangle_from_center(pln, Data[3]), 0.1, 0.1)]
                     Move_Vec = pln.ZAxis
                     # 切割曲线偏移
                     cir_split_move_1, cir_split_move_2 = cir_split[0], cir_split[1]
@@ -912,12 +917,11 @@ try:
                     cir_split_move_2.Reverse()
                     HoleCir = rg.NurbsSurface.CreateRuledSurface(cir_split_move_1, cir_split_move_2).ToBrep()
                     HC_Curve = [HC for HC in HoleCir.Edges]
-                    Surface_Hold = HoleCir.Faces[0].CreateExtrusion(rg.Line(Data[0].Origin, Data[2]).ToNurbsCurve(),
+                    Surface_Hold = HoleCir.Faces[0].CreateExtrusion(rg.Line(C_Plane.Origin, Cri_Vec).ToNurbsCurve(),
                                                                     False)
-                    HoleCirBrep = Surface_Hold.CapPlanarHoles(0.1)
-                    if HoleCirBrep:
-                        if HoleCirBrep.SolidOrientation == rg.BrepSolidOrientation.Inward:
-                            HoleCirBrep.Flip()
+                    HoleCirBrep = Surface_Hold.CapPlanarHoles(0.02)
+                    if HoleCirBrep.SolidOrientation == rg.BrepSolidOrientation.Inward:
+                        HoleCirBrep.Flip()
                     else:
                         Message.message1(self, "长圆孔生成失败")
                         HoleCirBrep = None
@@ -931,7 +935,7 @@ try:
                     sc.doc = Rhino.RhinoDoc.ActiveDoc
                     CirBrepList, HoleCirBrepList = (gd[object]() for _ in range(2))
 
-                    re_mes = Message.RE_MES([Plane, Radi, CriVec], ['Plane', 'Radi', 'CriVec'])
+                    re_mes = Message.RE_MES([Plane, Radi], ['Plane', 'Radi'])
                     if len(re_mes) > 0:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
@@ -985,6 +989,7 @@ try:
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
                 self.SetUpParam(p, "Count", "C", "迭代次数，默认为18（建议15~18之间）")
+                p.SetPersistentData(Grasshopper.Kernel.Types.GH_Integer(18))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
@@ -2438,6 +2443,7 @@ try:
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
                 self.SetUpParam(p, "fold_size", "S", "通用折边宽度")
+                p.SetPersistentData(Grasshopper.Kernel.Types.GH_Number(20))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
