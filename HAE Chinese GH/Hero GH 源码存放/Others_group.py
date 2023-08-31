@@ -26,14 +26,13 @@ import time
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
-Result = Curve_group.decryption()
+Result = Curve_group.Result
+Message = Curve_group.message()
 try:
     if Result is True:
         """
             切割 -- primary
         """
-
-
         # 新建视图
         class CreateView(component):
             def __new__(cls):
@@ -55,23 +54,27 @@ try:
                 p.Optional = True
 
             def RegisterInputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Create", "C", "创建视图的开关（输入t开启）")
+                p = Grasshopper.Kernel.Parameters.Param_Boolean()
+                self.SetUpParam(p, "Create", "C", "创建视图的开关（Ture开启）")
+                p.PersistentData.Append(Grasshopper.Kernel.Types.GH_Boolean(False))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
                 self.SetUpParam(p, "Name", "N", "视图的名称")
+                p.SetPersistentData(Grasshopper.Kernel.Types.GH_String('HAE'))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
                 self.SetUpParam(p, "Wide", "W", "窗口宽度")
+                p.SetPersistentData(Grasshopper.Kernel.Types.GH_Number(500))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
                 self.SetUpParam(p, "High", "H", "窗口的高度")
+                p.SetPersistentData(Grasshopper.Kernel.Types.GH_Number(500))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
@@ -106,20 +109,12 @@ try:
 
             def RunScript(self, Create, Name, Wide, High):
                 try:
-                    Create = 't' if 'T' == Create.upper() else 'f'
-                except:
-                    Create = 'f'
-                self.factor = True if Create == 't' else False
-                Name = 'New View' if Name is None else Name
-                Wide = 500.0 if Wide is None else Wide
-                High = 500.0 if High is None else High
-
-                element = Name if Name not in rs.ViewNames() else self._str_handing(Name)
-                if self.factor is True:
-                    Rhino.RhinoDoc.ActiveDoc.Views.Add(element, Rhino.Display.DefinedViewportProjection.Perspective, System.Drawing.Rectangle(600, 300, Wide, High), True)
-                else:
-                    pass
-                return
+                    self.factor = Create
+                    element = Name if Name not in rs.ViewNames() else self._str_handing(Name)
+                    if self.factor is True:
+                        Rhino.RhinoDoc.ActiveDoc.Views.Add(element, Rhino.Display.DefinedViewportProjection.Perspective, System.Drawing.Rectangle(600, 300, Wide, High), True)
+                finally:
+                    self.Message = '视图创建'
 
 
         # 字符串处理
@@ -283,12 +278,12 @@ try:
         """
 
 
-        # 百度翻译
+        # 某度翻译
         class TranslateByBAIDU(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-百度翻译", "RPP_TranslateByBAIDU",
-                                                                   """通过百度API接口进行翻译，需要ID和密钥""",
+                                                                   "RPP-某度翻译", "RPP_TranslateByMODU",
+                                                                   """通过某度API接口进行翻译，需要ID和密钥""",
                                                                    "Scavenger", "Others")
                 return instance
 
@@ -350,15 +345,6 @@ try:
                 self.path = '/api/trans/vip/translate'
                 self.lang_of_kind = {0: 'en', 1: 'zh', 2: 'yue'}
 
-            def message1(self, msg1):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
-
             def RunScript(self, Text, Appid, Appkey, To_lang):
                 try:
                     Appid = '20221022001408099' if Appid is None else Appid
@@ -384,9 +370,9 @@ try:
                         result = urllib.urlopen(url, form_data).read()
                         return [_['dst'] for _ in json.loads(result)['trans_result']]
                     else:
-                        self.message2("字符不能为空！！！")
+                        Message.message2(self, "字符不能为空！！！")
                 finally:
-                    self.Message = '百度翻译'
+                    self.Message = '某度翻译'
 
 
         # 图层重命名
@@ -436,15 +422,6 @@ try:
 
             def __init__(self):
                 self.dict_csv_data = None
-
-            def message1(self, msg1):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
 
             def read_file(self, file_path):
                 with open(file_path) as csv_f:
@@ -505,11 +482,11 @@ try:
                         tips_tranl_info = set(list(chain(*temp_info)))
                         if len(tips_tranl_info) != 0:
                             for tip in tips_tranl_info:
-                                self.message2("“{}”没有对应的翻译".format(tip))
+                                Message.message2(self, "“{}”没有对应的翻译".format(tip))
                         else:
-                            self.message3("图层名已全部替换！")
+                            Message.message3(self, "图层名已全部替换！")
                     else:
-                        self.message3("开启按钮替换图层名")
+                        Message.message3(self, "开启按钮替换图层名")
                 finally:
                     self.Message = '图层名称替换'
 
@@ -609,19 +586,3 @@ except:
 import GhPython
 import System
 
-
-class AssemblyInfo(GhPython.Assemblies.PythonAssemblyInfo):
-    def get_AssemblyName(self):
-        return "Others_group"
-
-    def get_AssemblyDescription(self):
-        return """"""
-
-    def get_AssemblyVersion(self):
-        return "1.5"
-
-    def get_AuthorName(self):
-        return ""
-
-    def get_Id(self):
-        return System.Guid("a252e0f7-b694-48e1-9f4a-e146b5a80251")

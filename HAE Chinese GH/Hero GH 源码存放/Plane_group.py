@@ -6,12 +6,20 @@
 from ghpythonlib.componentbase import dotnetcompiledcomponent as component
 import Grasshopper, GhPython
 import Rhino.Geometry as rg
+import rhinoscriptsyntax as rs
+import ghpythonlib.treehelpers as ght
+from Grasshopper import DataTree as gd
+import Grasshopper.Kernel as gk
+import scriptcontext as sc
+import Rhino
 import math
 import re
 import copy
+from itertools import chain
 import Curve_group
 
-Result = Curve_group.decryption()
+Result = Curve_group.Result
+Message = Curve_group.message()
 try:
     if Result is True:
         """
@@ -47,6 +55,7 @@ try:
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
                 self.SetUpParam(p, "Angle", "A", "旋转的角度，不输入默认为0.5*pi")
+                p.SetPersistentData(Grasshopper.Kernel.Types.GH_Number(math.radians(90)))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
@@ -136,13 +145,20 @@ try:
                 return alphabet_list, None
 
             def RunScript(self, Rotated_Plane, Angle, Direction, Follow_rotation1, Follow_rotation2):
-                if Rotated_Plane:
-                    Angle = math.radians(90) if Angle is None else float(Angle)
-                    center_point = Rotated_Plane.Origin
-                    New_Plane, Rotated_object1, Rotated_object2 = self.get_new_plane(Rotated_Plane, Follow_rotation1,
-                                                                                     Follow_rotation2, Angle, Direction,
-                                                                                     center_point)
-                    return New_Plane, Rotated_object1, Rotated_object2
+                try:
+                    re_mes = Message.RE_MES([Rotated_Plane], ['Rotated_Plane'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                        return gd[object](), gd[object](), gd[object]()
+                    else:
+                        center_point = Rotated_Plane.Origin
+                        New_Plane, Rotated_object1, Rotated_object2 = self.get_new_plane(Rotated_Plane, Follow_rotation1,
+                                                                                         Follow_rotation2, Angle, Direction,
+                                                                                         center_point)
+                        return New_Plane, Rotated_object1, Rotated_object2
+                finally:
+                    self.Message = '平面旋转'
 
 
         # 重构XY轴平面
@@ -276,21 +292,27 @@ try:
                     return string_list
 
             def RunScript(self, Plane, New_Axis, Switch):
-                if Plane:
-                    Axis_list = self.str_handing(New_Axis)
-                    if Switch is None:
-                        self.factor = False
+                try:
+                    re_mes = Message.RE_MES([Breps], ['Breps'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                        return gd[object](), gd[object](), gd[object](), gd[object](), gd[object](), gd[object](), gd[object](), gd[object]()
                     else:
-                        self.factor = Switch
-                    Origin_Point = Plane.Origin
-                    self.get_new_plane(Plane, Axis_list)
-                    origin_redirect, Origin_XAxis, Origin_YAxis, Origin_ZAxis = self.get_new_plane(Plane, Axis_list)
-                    Symmetry_Plane = rg.Plane(Origin_Point, origin_redirect[0], origin_redirect[1])
-                    # 重构后的xyz轴向量
-                    New_XAxis, New_YAxis, New_ZAxis = Symmetry_Plane.XAxis, Symmetry_Plane.YAxis, Symmetry_Plane.ZAxis
-                    return Symmetry_Plane, Origin_Point, Origin_XAxis, Origin_YAxis, Origin_ZAxis, New_XAxis, New_YAxis, New_ZAxis
-                else:
-                    pass
+                        Axis_list = self.str_handing(New_Axis)
+                        if Switch is None:
+                            self.factor = False
+                        else:
+                            self.factor = Switch
+                        Origin_Point = Plane.Origin
+                        self.get_new_plane(Plane, Axis_list)
+                        origin_redirect, Origin_XAxis, Origin_YAxis, Origin_ZAxis = self.get_new_plane(Plane, Axis_list)
+                        Symmetry_Plane = rg.Plane(Origin_Point, origin_redirect[0], origin_redirect[1])
+                        # 重构后的xyz轴向量
+                        New_XAxis, New_YAxis, New_ZAxis = Symmetry_Plane.XAxis, Symmetry_Plane.YAxis, Symmetry_Plane.ZAxis
+                        return Symmetry_Plane, Origin_Point, Origin_XAxis, Origin_YAxis, Origin_ZAxis, New_XAxis, New_YAxis, New_ZAxis
+                finally:
+                    self.Message = '重构平面'
 
 
         """
@@ -308,20 +330,3 @@ except:
 
 import GhPython
 import System
-
-
-class AssemblyInfo(GhPython.Assemblies.PythonAssemblyInfo):
-    def get_AssemblyName(self):
-        return "Plane_Group"
-
-    def get_AssemblyDescription(self):
-        return """"""
-
-    def get_AssemblyVersion(self):
-        return "1.5"
-
-    def get_AuthorName(self):
-        return "ZiYe_Niko"
-
-    def get_Id(self):
-        return System.Guid("b116b1a2-c43b-4da1-b465-0db11dc9104d")

@@ -18,7 +18,7 @@ import getpass
 import base64
 
 
-def decryption():
+def eto_decryption():
     designer_names = init__.designer_database
     origin_data_list = []
     now_time = int(time.time())
@@ -43,8 +43,8 @@ def decryption():
             origin_list = origin_data.split('-')
         except TypeError:
             pass
-        over_second = int(origin_list[2]) - now_time
-        time_Array = time.localtime(int(origin_list[2]))
+        over_second = int(origin_list[-1]) - now_time
+        time_Array = time.localtime(int(origin_list[-1]))
         Style_time = time.strftime("%Y-%m-%d %H:%M:%S", time_Array)
         if over_second > 0:
             over_day = int(round((over_second / 60 / 60 / 24), 0))
@@ -54,7 +54,7 @@ def decryption():
         return text
 
 
-result_text = decryption()
+result_text = eto_decryption()
 
 if result_text is not None:
     class Tip(forms.Dialog[bool]):

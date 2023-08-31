@@ -16,17 +16,18 @@ import ghpythonlib.components as ghc
 import ghpythonlib.treehelpers as ght
 import ghpythonlib.parallel as ghp
 import Grasshopper.DataTree as gd
+import Grasshopper.Kernel as gk
 from itertools import chain
 import Curve_group
+import Geometry_group
 
-Result = Curve_group.decryption()
+Result = Curve_group.Result
+Message = Curve_group.message()
 try:
     if Result is True:
         """
             切割 -- primary
         """
-
-
         # 显示点序指向
         class ShowPointLine(component):
             def __new__(cls):
@@ -71,15 +72,6 @@ try:
 
             def __init__(self):
                 self.pts, self.lines, self.bbox = None, None, None
-
-            def message1(self, msg1):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
 
             def mes_box(self, info, button, title):
                 return rs.MessageBox(info, button, title)
@@ -127,7 +119,7 @@ try:
                     if origin_data:
                         list_pts, list_line, cen_pts = zip(*map(self._do_main, origin_data))
                     else:
-                        self.message2("待解析的点序列为空！")
+                        Message.message2(self, "待解析的点序列为空！")
                         list_pts, list_line, cen_pts = (None for _ in range(3))
 
                     self.pts = list_pts
@@ -281,15 +273,6 @@ try:
             def __init__(self):
                 self.vector_surface, self.bb_pts, self.breps = None, None, None
 
-            def message1(self, msg1):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
-
             def mes_box(self, info, button, title):
                 return rs.MessageBox(info, button, title)
 
@@ -329,7 +312,7 @@ try:
                         center_pts = list(chain(*_cen_pt))
                         _cen_pt = ght.list_to_tree(_cen_pt)
                     else:
-                        self.message2("B端为空！！")
+                        Message.message2(self, "B端为空！！")
 
                     self.vector_surface = temp_pt_vect
                     self.bb_pts = rg.BoundingBox(center_pts) if center_pts else rg.BoundingBox.Empty
@@ -373,20 +356,3 @@ except:
 
 import GhPython
 import System
-
-
-class AssemblyInfo(GhPython.Assemblies.PythonAssemblyInfo):
-    def get_AssemblyName(self):
-        return "Display_group"
-
-    def get_AssemblyDescription(self):
-        return """"""
-
-    def get_AssemblyVersion(self):
-        return "1.5"
-
-    def get_AuthorName(self):
-        return "ZiYE_Niko"
-
-    def get_Id(self):
-        return System.Guid("454e5931-0b6d-4d5f-bb40-0da0d9ddfab3")
