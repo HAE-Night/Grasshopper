@@ -3371,6 +3371,179 @@ try:
                 finally:
                     self.Message = '物件确定曲线方向'
 
+
+        # RPP_边界矩形
+        class BoundingRectangle(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP_边界矩形", "RPP-BoundingRectangle",
+                                                                   """为一组几何物体创建边界矩形""", "Scavenger", "Curve")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("ce6e9b19-3d20-4985-b63e-645dae646330")
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Object", "O", "一组几何物体")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Plane()
+                self.SetUpParam(p, "Plane", "Pl", "原始的平面")
+                ORIGIN_PLANE = rg.Plane.WorldXY
+                p.SetPersistentData(gk.Types.GH_Plane(ORIGIN_PLANE))
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Rectangle()
+                self.SetUpParam(p, "Bounding", "B", "生成的边界矩形")
+                self.Params.Output.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Number()
+                self.SetUpParam(p, "Dim-X", "X", "矩形平面的X方向尺寸")
+                self.Params.Output.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Number()
+                self.SetUpParam(p, "Dim-Y", "Y", "矩形平面的Y方向尺寸")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                p1 = self.marshal.GetInput(DA, 1)
+                result = self.RunScript(p0, p1)
+
+                if result is not None:
+                    if not hasattr(result, '__getitem__'):
+                        self.marshal.SetOutput(result, DA, 0, True)
+                    else:
+                        self.marshal.SetOutput(result[0], DA, 0, True)
+                        self.marshal.SetOutput(result[1], DA, 1, True)
+                        self.marshal.SetOutput(result[2], DA, 2, True)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAADPSURBVEhLvY3RDQMhDEOZpN+dsut0hy7ScTiSJuAEJAh3V0sPhdjgVJRvJuXX95F2magVvD/PPKPkmJHn4e/vLCiyBfpY5mXoI6Ts+B+aawEdaMyQN7/BedsFkkNYPhcuEF/p5HLrBbJXhnI5VrSgk/O7TKTACPZ0KEbkhwv0Ljs6minCzHIBIhkevMDnOVQgnmLkfBbtdgqMnGd82kcLjOCRUqVvtgrgTkczRPgmVIBIjgeUz50tqBpliDMFVSNfmRZcxf8LaHE19e/7SPkAfwbyenorel0AAAAASUVORK5CYII="
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def __init__(self):
+                self.ref_plane = None
+
+            def Branch_Route(self, Tree):
+                """分解Tree操作，树形以及多进程框架代码"""
+                Tree_list = [list(_) for _ in Tree.Branches]
+                Tree_Path = [list(_) for _ in Tree.Paths]
+                return Tree_list, Tree_Path
+
+            def split_tree(self, tree_data, tree_path):
+                """操作树单枝的代码"""
+                new_tree = ght.list_to_tree(tree_data, True, tree_path)  # 此处可替换复写的Tree_To_List（源码参照Vector组-点集根据与曲线距离分组）
+                result_data, result_path = self.Branch_Route(new_tree)
+                if list(chain(*result_data)):
+                    return result_data, result_path
+                else:
+                    return [[]], result_path
+
+            def format_tree(self, result_tree):
+                """匹配树路径的代码，利用空树创造与源树路径匹配的树形结构分支"""
+                stock_tree = gd[object]()
+                for sub_tree in result_tree:
+                    fruit, branch = sub_tree
+                    for index, item in enumerate(fruit):
+                        path = gk.Data.GH_Path(System.Array[int](branch[index]))
+                        if hasattr(item, '__iter__'):
+                            if item:
+                                for sub_index in range(len(item)):
+                                    stock_tree.Insert(item[sub_index], path, sub_index)
+                            else:
+                                stock_tree.AddRange(item, path)
+                        else:
+                            stock_tree.Insert(item, path, index)
+                return stock_tree
+
+            def get_boxegde(self, obj):
+                origin_boundingbox = rg.BoundingBox.Empty
+                pts_list = [[_] if type(_) is rg.Point3d else rg.Box(self.ref_plane, _).GetCorners() for _ in obj]
+                box_egde = rg.Box(self.ref_plane, list(chain(*pts_list)))
+                return box_egde
+
+            def get_sub_box(self, box, pln):
+                turn_box = box.ToBrep()
+                if turn_box:
+                    face_list = [_ for _ in box.ToBrep().Faces]
+                    face_pln_list = []
+                    for face in face_list:
+                        set_data = face.TryGetPlane()
+                        if set_data[0]:
+                            face_pln_list.append(set_data[1])
+                        else:
+                            face_pln_list.append(rg.Plane.WorldXY)
+
+                    ref_vector = pln.Normal
+                    vector_is_parallel = [_.Normal.IsParallelTo(ref_vector) for _ in face_pln_list]
+                    sub_index = vector_is_parallel.index(-1)
+                    sub_suface = face_list[sub_index]
+
+                    new_sub_box = rg.Box(pln, sub_suface)
+                    work_pln = face_pln_list[sub_index]
+                    work_pln.Flip()
+                else:
+                    new_sub_box = box
+                    work_pln = pln
+                corners = list(set(new_sub_box.GetCorners()))
+                pt_1, pt_2 = self.get_two_pt(corners)
+                sub_box = rg.Rectangle3d(work_pln, pt_1, pt_2)
+                return sub_box
+
+            def get_two_pt(self, pts):
+                pt_one = pts[0]
+                max_values = []
+                for pt in pts:
+                    max_values.append(pt_one.DistanceTo(pt))
+                pt_two = pts[max_values.index(max(max_values))]
+                return pt_one, pt_two
+
+            def do_main(self, tuple_data):
+                objs, origin_path = tuple_data
+                objs = list(objs[0]) if 'List[object]' in str(objs) else objs
+                new_box = self.get_boxegde(objs)
+
+                New_BoundingBox = self.get_sub_box(new_box, self.ref_plane)
+                X_Dir = New_BoundingBox.Width
+                Y_Dir = New_BoundingBox.Height
+                ungroup_data = map(lambda x: self.split_tree(x, origin_path), [[New_BoundingBox], [X_Dir], [Y_Dir]])
+                Rhino.RhinoApp.Wait()
+                return ungroup_data
+
+            def RunScript(self, Object, Plane):
+                try:
+                    re_mes = Message.RE_MES([Object], ['Object'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                            return gd[object](), gd[object](), gd[object]()
+                    else:
+                        sc.doc = Rhino.RhinoDoc.ActiveDoc
+
+                        self.ref_plane = Plane
+                        trunk_object, trunk_path = self.Branch_Route(Object)
+
+                        iter_ungroup_data = zip(*ghp.run(self.do_main, zip(trunk_object, trunk_path)))
+                        Bounding, X, Y = ghp.run(lambda single_tree: self.format_tree(single_tree), iter_ungroup_data)
+
+                        sc.doc.Views.Redraw()
+                        ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                        sc.doc = ghdoc
+
+                        return Bounding, X, Y
+                finally:
+                    self.Message = '边界矩形'
     else:
         pass
 except:
