@@ -27,7 +27,6 @@ try:
         """
             切割 -- primary
         """
-        # 中心点
         class GeoCenter(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
@@ -94,11 +93,11 @@ try:
                     center = brep.Center
                 elif "Point" in type_str:
                     center = brep
-                elif "Line" in type_str or "Curve" in type_str:
-                    center = brep.PointAtLength(brep.GetLength() / 2)
-                elif "Arc" in type_str:
+                elif "Arc" in type_str or "Curve" in type_str:
                     brep = brep.ToNurbsCurve()
                     center = brep.GetBoundingBox(True).Center
+                elif "Line" in type_str:
+                    center = brep.BoundingBox.Center
                 else:
                     center = brep.GetBoundingBox(True).Center
                 return center
@@ -119,8 +118,14 @@ try:
                         elif "Plane" in type_str or 'Point' in type_str or 'Arc' in type_str:
                             Pt.append(self.Get_different_Center(brep, type_str))
                             bbox = rg.BoundingBox(Pt)
+                        elif "Curve" in type_str:
+                            brep = brep.ToNurbsCurve()
+                            bbox.Union(brep.GetBoundingBox(True))
+                        elif "Line" in type_str:
+                            bbox.Union(brep.BoundingBox.Center)
                         else:
                             bbox.Union(brep.GetBoundingBox(rg.Plane.WorldXY))
+
                     center = bbox.Center
                 else:  # 不是群组
                     center = self.Get_different_Center(Box, type_str)
