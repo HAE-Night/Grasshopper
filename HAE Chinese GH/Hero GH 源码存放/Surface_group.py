@@ -58,7 +58,7 @@ try:
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_Brep()
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
                 self.SetUpParam(p, "Result", "R", "收边后的结果")
                 self.Params.Output.Add(p)
 
@@ -674,7 +674,7 @@ try:
                 p.Optional = True
 
             def RegisterInputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_Brep()
+                p = Grasshopper.Kernel.Parameters.Param_Geometry()
                 self.SetUpParam(p, "Geo", "G", "曲面列表数据")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
@@ -686,7 +686,6 @@ try:
 
                 p = Grasshopper.Kernel.Parameters.Param_Plane()
                 self.SetUpParam(p, "CP", "CP", "参照平面")
-                p.SetPersistentData(Grasshopper.Kernel.Types.GH_Plane(rg.Plane.WorldXY))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
@@ -741,7 +740,7 @@ try:
                     if len(re_mes) > 0:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
-                        return gd[object](), gd[object]()
+                        return gd[object]()
                     else:
                         if Axis:
                             Axis = Axis.upper()
@@ -905,6 +904,91 @@ try:
                 finally:
                     self.Message = '曲面延伸'
 
+        # 曲线切割曲面
+        class BrepSplitByCurve(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP-曲线分割曲面", "RPP_BrepSplitByCurve", """利用曲线对曲面进行切割；
+        注：需要两者相交""", "Scavenger", "Surface")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("47db7cdf-8a92-4944-91be-32da81b9294b")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.secondary
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Brep()
+                self.SetUpParam(p, "Surface", "S", "需要分割的面")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Curve()
+                self.SetUpParam(p, "Curve", "C", "分割线--列表")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Surface()
+                self.SetUpParam(p, "Surfaces", "S", "切割后的曲面列表")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                p1 = self.marshal.GetInput(DA, 1)
+                result = self.RunScript(p0, p1)
+
+                if result is not None:
+                    self.marshal.SetOutput(result, DA, 0, True)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAJ3SURBVEhLtdbLS1RRHAfw352HOY/utYdkoJsoiJ6oZSpKRWaOmkVFCLUvsGxRG2mbBW0ipBcWLlw0RahkVhCE4B9Q2UOkpqQHYaCLnoTVt+/v3C4tmhl0nH7wgZk75/y+c+4585BZVgFVUcQ8y2KV0WX6RqA2ykqtpT7SpmqcTlMhzbpa6Ttp4yHaQdOupXQ4jQ7y3nWCjtI+OkCHKNkclU+mdDBkzRZIxW7Ihp2uSj5etclrjED5AgTrChCsWZRarAD+4jxvju6VqT1iWZCLCcg9QPr/GKRjcTPYtywK50UMzusGOK/qU8qbaEKke70XUKLNtdyAMw8gvT8h8U+uOwzY324GBzbnwxmrh/1oa1rOyxjCl0qmGXCLAa1dZrBvSQT201rYjylJY8/MAnqmIOdHIYEciCWIxMvhJGJJG3tmFuCtoqzJTAhuXwznTUPSxp6ZB9z8BTk55E7wWYjeqDBN7IfZCoh/htzmKqqbzSR/6TxzmlLtRQYB1Mu96ByDhB0zMbdtOZx3jUlXkVnA1Y/uKlo63YkhP6IDVUlvVWYB6toXyABDyneZyf4VNuyRbbCfUVYClB7b7g+QhUWmQU5zEZy3PFXD2QrQW6XHtn2QJ8pnmoROrWbI3/1IH3BuxL3XGpJKzw/IfY45eME0seb4EO3h0eWmO6N1yHvfiHDXun8C9pqA4/38wnsOOTucXscTyBWequJa08hXGEK0rxLRu9WYO7gRoRMrvYBSba6lPx6TXDb5pycQnJTcyCTnTZHbMGCNi9+a4AdSryv9BTSVQ/MzVEzaTEOuk/4B8F4LUFaqhrzbckQv/I9qIQ34SmG9ICLyGxmXtpYnbPhWAAAAAElFTkSuQmCC"
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def __init__(self):
+                pass
+
+            # 数据转换成树和原树路径
+            def Restore_Tree(self, Before_Tree, Tree):
+                Tree_Path = [_ for _ in Tree.Paths]
+                After_Tree = gd[object]()
+                for i in range(Tree.BranchCount):
+                    After_Tree.AddRange(Before_Tree[i], Tree_Path[i])
+                return After_Tree
+
+            def split_surface_with_curves(self, Brep, curves):
+                tol = sc.doc.ModelAbsoluteTolerance
+                # 将曲线转换为NURBS曲线列表
+                nurbs_curves = [crv_ for crv_ in curves]
+                # 使用Brep对象的Split方法来分割曲面
+                split_breps = Brep.Split.Overloads[IEnumerable[Rhino.Geometry.Curve], System.Double](nurbs_curves, 0.01)
+
+                return split_breps
+
+            def RunScript(self, split_surfaces, split_curves):
+                try:
+                    re_mes = Message.RE_MES([split_surfaces, split_curves], ['split_surfaces', 'split_curves'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                            return gd[object]()
+                    else:
+                        sc.doc = Rhino.RhinoDoc.ActiveDoc
+                        res_surfaces = self.split_surface_with_curves(split_surfaces, split_curves)
+                        sc.doc.Views.Redraw()
+                        ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                        sc.doc = ghdoc
+                        return res_surfaces
+                finally:
+                    self.Message = '曲线分割曲面'
     else:
         pass
 except:
