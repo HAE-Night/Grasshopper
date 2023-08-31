@@ -608,12 +608,13 @@ try:
             切割 -- tertiary
         """
 
-
         # 创建图层
         class Add_Layer(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-创建图层", "RPP_AddLayer", """生成未存在的图层（只考虑最优时间，除图层名和颜色之外全为默认值）""", "Scavenger", "Object")
+                                                                   "RPP-创建图层", "RPP_AddLayer",
+                                                                   """生成未存在的图层（只考虑最优时间，除图层名和颜色之外全为默认值）""",
+                                                                   "Scavenger", "Object")
                 return instance
 
             def get_ComponentGuid(self):
@@ -640,20 +641,33 @@ try:
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
+                p = Grasshopper.Kernel.Parameters.Param_String()
+                self.SetUpParam(p, "LineType", "LT",
+                                "线型名称：Continuous，Border，Center，\nDashDot，Dashed，Dots，Hidden\n默认为Continuous")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+                self.Params.Input.Add(p)
+
                 p = Grasshopper.Kernel.Parameters.Param_Boolean()
-                self.SetUpParam(p, "Switch", "S", "是否生成，默认为不生成（False），输入（True）生成")
-                p.PersistentData.Append(Grasshopper.Kernel.Types.GH_Boolean(False))
+                SWITCH = False
+                p.SetPersistentData(gk.Types.GH_Boolean(SWITCH))
+                self.SetUpParam(p, "Switch", "S", "输入True按钮，生成图层")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
-                pass
+                p = Grasshopper.Kernel.Parameters.Param_String()
+                self.SetUpParam(p, "Layer", "L", "创建的图层")
+                self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
                 p0 = self.marshal.GetInput(DA, 0)
                 p1 = self.marshal.GetInput(DA, 1)
                 p2 = self.marshal.GetInput(DA, 2)
-                result = self.RunScript(p0, p1, p2)
+                p3 = self.marshal.GetInput(DA, 3)
+                result = self.RunScript(p0, p1, p2, p3)
+
+                if result is not None:
+                    self.marshal.SetOutput(result, DA, 0, True)
 
             def get_Internal_Icon_24x24(self):
                 o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAGeSURBVEhL5dVJKEVRHMfxZyhTyZCpbAyZNpQoU2yUjaJMyYKNnbBQUrK2EVlIlnaShYUSsbAylSKsDEspkZUyfX+5p2638+7zXi8bv/rU63/v/b9z7znn3sC/Syyqf35GP004whcOUIuoJA0LUGO3D8wiBRGnG7fwNne7RjvCSiHWYWsYzCry4Zs4jOIZtiahPGIYMbCmE7YLw9UKayqhUdgu+q0HVCBoErEC28WhLCMBQZOJSWShEZewNfI6Rz1yMYFUWNMPXfCEASRhGlrz3qbyjinovCG8QPUOWJOHXZgGOyhCCfacmvdYKfadmmwjG77RnZjJ/oQZ5SDUTHeXjBmYxprcXvimCqfogZ6ne7Iv0AClBdrB5tgScqCBHaMc1rj3wSa0o5tx5dTkzvVbk6s/LcaWU5M2WKOdPI5X6MQ3jCEDmmzTQI9Nq011rRpNtup6A4xAr3XfaEQbMA1PUANtIDUuQx3OYM5ZQwHCSh/uYZrMQR+cRVftBl2IOOlwN3Sbh74XUYkmW49KjQ9hVlRUEw99KkNO4h8lEPgG/yjLPxScSSkAAAAASUVORK5CYII="
@@ -662,33 +676,45 @@ try:
             def __init__(self):
                 pass
 
-            def message1(self, msg1):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
+            def create_layer(self, tuple_data):
+                name, color = tuple_data
+                rs.AddLayer(name, color)
 
-            def message2(self, msg2):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
+            def change_line_type(self, tuple_data_two):
+                layer_name, line_type = tuple_data_two
+                rs.LayerLinetype(layer_name, line_type)
 
-            def message3(self, msg3):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
-
-            def test(self, tuple_data):
-                layer_name, color = tuple_data
-                rs.AddLayer(layer_name, color)
-
-            def RunScript(self, Full_Name, Color, Switch):
+            def RunScript(self, Full_Name, Color, LineType, Switch):
                 try:
                     re_mes = Message.RE_MES([Full_Name], ['Full_Name'])
                     if len(re_mes) > 0:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
+                            return gd[object]()
                     else:
                         sc.doc = Rhino.RhinoDoc.ActiveDoc
-                        zip_list = list(zip(Full_Name, Color))
                         if Switch:
-                            map(self.test, zip_list)
+                            diff_values_one = len(Full_Name) - len(Color)
+                            diff_values_two = len(Full_Name) - len(LineType)
+
+                            if diff_values_one > 0:
+                                Color = Color + [System.Drawing.Color.White] * diff_values_one
+                                zip_list_one = zip(Full_Name, Color)
+                            else:
+                                zip_list_one = zip(Full_Name, Color)
+                            map(self.create_layer, zip_list_one)
+
+                            format_linetype = LineType
+                            if diff_values_two > 0:
+                                format_linetype = format_linetype + ['Continuous'] * diff_values_two
+                                zip_list_two = zip(Full_Name, format_linetype)
+                            else:
+                                zip_list_two = zip(Full_Name, format_linetype)
+                            map(self.change_line_type, zip_list_two)
                         sc.doc.Views.Redraw()
                         ghdoc = GhPython.DocReplacement.GrasshopperDocument()
                         sc.doc = ghdoc
+                        return Full_Name
                 finally:
                     self.Message = '图层生成'
     else:
