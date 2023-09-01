@@ -533,6 +533,7 @@ try:
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def RunScript(self, Suface_Or_Brep_List):
+
                 if Suface_Or_Brep_List:
                     # 封顶
                     Brep_List = [i.CapPlanarHoles(0.1) for i in Suface_Or_Brep_List]

@@ -367,7 +367,8 @@ try:
                     for c_index, c_item in enumerate(line_list):
                         if c_index in sub_index_list:
                             if sub_dis_list[count]:
-                                new_item = c_item.Offset(curve_planar, sub_dis_list[count], sc.doc.ModelAbsoluteTolerance, rg.CurveOffsetCornerStyle.
+                                new_item = c_item.Offset(curve_planar, sub_dis_list[count],
+                                                         sc.doc.ModelAbsoluteTolerance, rg.CurveOffsetCornerStyle.
                                 None)[0]
                             else:
                                 new_item = c_item
@@ -422,7 +423,9 @@ try:
                     Result_Curve = gd[object]()
                     no_rendering_line = []
 
-                    trunk_list_curve, trunk_list_index, trunk_list_dis = self.Branch_Route(Curve)[0], self.Branch_Route(Indexs)[0], self.Branch_Route(Distance)[0]
+                    trunk_list_curve, trunk_list_index, trunk_list_dis = self.Branch_Route(Curve)[0], \
+                                                                         self.Branch_Route(Indexs)[0], \
+                                                                         self.Branch_Route(Distance)[0]
                     curve_len, index_len, dis_len = len(trunk_list_curve), len(trunk_list_index), len(trunk_list_dis)
                     if not (curve_len and index_len):
                         self.message2("C端、I端不能为空！")
@@ -2010,7 +2013,8 @@ try:
                 re_sorted = double_curves[::-1] if first_curve.GetLength() < sce_curve.GetLength() else double_curves
                 new_first_curve, new_sce_cuvre = re_sorted
                 first_line_start_pt, sce_line_strat_pt = [_.PointAtStart for _ in re_sorted]
-                intersection_pt = rg.Intersect.Intersection.CurveCurve(new_first_curve, new_sce_cuvre, self.tol, self.tol)[0].PointA
+                intersection_pt = \
+                rg.Intersect.Intersection.CurveCurve(new_first_curve, new_sce_cuvre, self.tol, self.tol)[0].PointA
                 if first_line_start_pt.DistanceTo(intersection_pt) >= self.tol:
                     new_first_curve.Reverse()
 
@@ -2087,7 +2091,8 @@ try:
         class PtsCurveRelationship(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-点与曲线关系", "RPP_PtsCurveRelationship", """确定所选取的点与封闭曲线之间的关系""", "Scavenger", "Curve")
+                                                                   "RPP-点与曲线关系", "RPP_PtsCurveRelationship",
+                                                                   """确定所选取的点与封闭曲线之间的关系""", "Scavenger", "Curve")
                 return instance
 
             def get_ComponentGuid(self):
@@ -2225,7 +2230,8 @@ try:
             def RunScript(self, Points, Curve, Tol):
                 try:
                     sc.doc = Rhino.RhinoDoc.ActiveDoc
-                    Relationship, In_Curve_Index, Outside_Curve_Index, Inside_Curve_Index = (gd[object]() for _ in range(4))
+                    Relationship, In_Curve_Index, Outside_Curve_Index, Inside_Curve_Index = (gd[object]() for _ in
+                                                                                             range(4))
                     self.tol = Tol
 
                     if not (Points or Curve):
@@ -2236,7 +2242,8 @@ try:
                     elif not Curve:
                         self.message2('C端不能为空！')
                     else:
-                        Relationship, In_Curve_Index, Outside_Curve_Index, Inside_Curve_Index = self.relationship_point_curve(Points, Curve)
+                        Relationship, In_Curve_Index, Outside_Curve_Index, Inside_Curve_Index = self.relationship_point_curve(
+                            Points, Curve)
 
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
@@ -2251,7 +2258,8 @@ try:
         class CurveVectorParallel(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-线与向量关系", "RPP_CurveVectorParallel", """判断线是否与置顶的向量平行（包含反向平行）""", "Scavenger", "Curve")
+                                                                   "RPP-线与向量关系", "RPP_CurveVectorParallel",
+                                                                   """判断线是否与置顶的向量平行（包含反向平行）""", "Scavenger", "Curve")
                 return instance
 
             def get_ComponentGuid(self):
@@ -2387,7 +2395,8 @@ try:
                         else:
                             curve_not_parallel.append(single_curve);
                             not_parallel_index.append(curve_index)
-                ungroup_data = map(lambda x: self.split_tree(x, origin_path), [curve_parallel, curve_not_parallel, parallel_index, not_parallel_index])
+                ungroup_data = map(lambda x: self.split_tree(x, origin_path),
+                                   [curve_parallel, curve_not_parallel, parallel_index, not_parallel_index])
                 Rhino.RhinoApp.Wait()
                 return ungroup_data
 
@@ -2412,7 +2421,8 @@ try:
                             tree_of_vector = tree_of_vector + [tree_of_vector[-1]] * abs(c_len - v_len)
                         zip_list = zip(tree_of_curve, tree_of_vector, curve_tree_path)
                         iter_ungroup_data = zip(*ghp.run(self.unified_direction, zip_list))
-                        Curve1, Curve2, Index1, Index2 = ghp.run(lambda single_tree: self.format_tree(single_tree), iter_ungroup_data)
+                        Curve1, Curve2, Index1, Index2 = ghp.run(lambda single_tree: self.format_tree(single_tree),
+                                                                 iter_ungroup_data)
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
                     sc.doc = ghdoc
@@ -2426,7 +2436,8 @@ try:
         class TweenCurves(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-创建中间线", "RPP_TweenCurves", """在两曲线中创建多条中间线""", "Scavenger", "Curve")
+                                                                   "RPP-创建中间线", "RPP_TweenCurves", """在两曲线中创建多条中间线""",
+                                                                   "Scavenger", "Curve")
                 return instance
 
             def get_ComponentGuid(self):
@@ -2555,7 +2566,8 @@ try:
         class PlaneTrimCurve(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-平面修剪曲线", "RPP_PlaneTrimCurve", """移除平面一侧的曲线部分""", "Scavenger", "Curve")
+                                                                   "RPP-平面修剪曲线", "RPP_PlaneTrimCurve",
+                                                                   """移除平面一侧的曲线部分""", "Scavenger", "Curve")
                 return instance
 
             def get_ComponentGuid(self):
@@ -2694,7 +2706,8 @@ try:
                             origin_dim = Curve.Domain
                             cut_off_point = curve_event.PointA
                             point_t = Curve.ClosestPoint(cut_off_point)[1]
-                            Trim_List = Curve.Trim(rg.Interval(origin_dim[0], point_t)) if self.flip else Curve.Trim(rg.Interval(point_t, origin_dim[1]))
+                            Trim_List = Curve.Trim(rg.Interval(origin_dim[0], point_t)) if self.flip else Curve.Trim(
+                                rg.Interval(point_t, origin_dim[1]))
                             Parameters = point_t
 
                     sc.doc.Views.Redraw()
@@ -2710,7 +2723,8 @@ try:
         class UnifyCurve(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-统一曲线方向（逆时针）", "RPP_UnifyCurve", """统一曲线方向为逆时针""", "Scavenger", "Curve")
+                                                                   "RPP-统一曲线方向（逆时针）", "RPP_UnifyCurve",
+                                                                   """统一曲线方向为逆时针""", "Scavenger", "Curve")
                 return instance
 
             def get_ComponentGuid(self):
@@ -2853,7 +2867,9 @@ try:
         class RemoveOverlapCurve(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-删除重复曲线", "RPP_RemoveOverlapCurve", """删除重合的线段和曲线，可调节公差将相似重合的曲线删除""", "Scavenger", "Curve")
+                                                                   "RPP-删除重复曲线", "RPP_RemoveOverlapCurve",
+                                                                   """删除重合的线段和曲线，可调节公差将相似重合的曲线删除""", "Scavenger",
+                                                                   "Curve")
                 return instance
 
             def get_ComponentGuid(self):
@@ -2946,7 +2962,37 @@ try:
                             stock_tree.Insert(item, path, index)
                 return stock_tree
 
-            def remove_duplicate_lines(self, lines, tolerance):
+            def unify_curve_direction(self, reference_curve, curve_list):  # 统一曲线方向
+                reference_start_point = reference_curve.PointAtStart
+                reference_end_point = reference_curve.PointAtEnd
+
+                # 计算参考曲线的方向向量
+                reference_curve_vector = rg.Vector3d(reference_end_point - reference_start_point)
+
+                # 创建一个存储处理后的曲线的列表
+                unified_curves = []
+
+                for curve in curve_list:
+                    # 判断曲线是否闭合
+                    if curve.IsClosed:
+                        unified_curves.append(curve)
+                    else:
+                        # 获取曲线的起点和终点
+                        start_point = curve.PointAtStart
+                        end_point = curve.PointAtEnd
+
+                        # 计算曲线的方向向量
+                        curve_vector = rg.Vector3d(end_point - start_point)
+
+                        # 判断曲线方向是否需要反转
+                        if not curve_vector.IsTiny() and curve_vector * reference_curve_vector < 0:
+                            curve.Reverse()
+
+                        unified_curves.append(curve)
+
+                return unified_curves
+
+            def remove_duplicate_lines(self, lines, tolerance):  # 删除重复的线
                 unique_lines = []
                 for line in lines:
                     is_duplicate = False
@@ -2966,7 +3012,8 @@ try:
 
                     tol = tol if tol else self.tol
                     if len(curves) != 0:
-                        Res_Curve = self.remove_duplicate_lines(curves, tol)
+                        curve_list = self.unify_curve_direction(curves[0], curves)  # 根据曲线列表中的第一根曲线来统一曲线方向
+                        Res_Curve = self.remove_duplicate_lines(curve_list, tol)
                     else:
                         self.message2("Curve为空!")
 
@@ -2983,7 +3030,8 @@ try:
         class IntersectionBreak(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-相交位置打断曲线", "RPP_IntersectionBreak", """曲线相交位置打断曲线""", "Scavenger", "Curve")
+                                                                   "RPP-相交位置打断曲线", "RPP_IntersectionBreak",
+                                                                   """曲线相交位置打断曲线""", "Scavenger", "Curve")
                 return instance
 
             def get_ComponentGuid(self):
@@ -3095,7 +3143,8 @@ try:
                         if curve == other_curve:  # 判断是否同一根线
                             continue
                         # 找线的交点
-                        curve_intersections = rg.Intersect.Intersection.CurveCurve(curve, other_curve, self.tol, self.tol)
+                        curve_intersections = rg.Intersect.Intersection.CurveCurve(curve, other_curve, self.tol,
+                                                                                   self.tol)
                         for i in curve_intersections:
                             if i.IsPoint:
                                 pts.append(i.PointA)
@@ -3129,7 +3178,8 @@ try:
         class ExtendTargetCurve(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-曲线延伸至目标曲线", "RPP_ExtendTargetCurve", """将原始曲线延伸至目标曲线""", "Scavenger", "Curve")
+                                                                   "RPP-曲线延伸至目标曲线", "RPP_ExtendTargetCurve",
+                                                                   """将原始曲线延伸至目标曲线""", "Scavenger", "Curve")
                 return instance
 
             def get_ComponentGuid(self):
@@ -3173,7 +3223,8 @@ try:
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Extend_Type", "E", "原始曲线两侧都能延伸至目标曲线则为BothExtend；只能起点位置延伸则为StartExtend；只能终点位置延伸则为EndExtend；如果两侧都不能延伸则为NoneExtend")
+                self.SetUpParam(p, "Extend_Type", "E",
+                                "原始曲线两侧都能延伸至目标曲线则为BothExtend；只能起点位置延伸则为StartExtend；只能终点位置延伸则为EndExtend；如果两侧都不能延伸则为NoneExtend")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -3272,8 +3323,10 @@ try:
                     elif not Target_Curve:
                         self.message2('T端不能为空！')
                     else:
-                        start_curve = Curve.Extend(rg.CurveEnd.Start, 100000, eval('rg.CurveExtensionStyle.{}'.format(self.type_dict[Type])))
-                        end_curve = Curve.Extend(rg.CurveEnd.End, 100000, eval('rg.CurveExtensionStyle.{}'.format(self.type_dict[Type])))
+                        start_curve = Curve.Extend(rg.CurveEnd.Start, 100000,
+                                                   eval('rg.CurveExtensionStyle.{}'.format(self.type_dict[Type])))
+                        end_curve = Curve.Extend(rg.CurveEnd.End, 100000,
+                                                 eval('rg.CurveExtensionStyle.{}'.format(self.type_dict[Type])))
 
                         start_par = self.intersection_curve(start_curve, Target_Curve)
                         end_par = self.intersection_curve(end_curve, Target_Curve)
@@ -3325,7 +3378,8 @@ try:
         class CurveDirGroupByGeo(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-物件确定曲线方向", "RPP_CurveDirGroupByGeo", """将曲线最接近的物体的一端作为曲线的起点或终点""", "Scavenger", "Curve")
+                                                                   "RPP-物件确定曲线方向", "RPP_CurveDirGroupByGeo",
+                                                                   """将曲线最接近的物体的一端作为曲线的起点或终点""", "Scavenger", "Curve")
                 return instance
 
             def get_ComponentGuid(self):

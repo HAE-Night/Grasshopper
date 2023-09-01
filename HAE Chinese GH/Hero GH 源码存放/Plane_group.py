@@ -608,7 +608,7 @@ try:
                         plane = self.get_two_Axis(x, y_vector)
 
                     if y != None and z != None:
-                        x_vector = self.get_x_y_vector(y, z)
+                        x_vector = self.get_x_y_vector(z, y)
                         plane = self.get_two_Axis(x_vector, y)
 
                 else:
