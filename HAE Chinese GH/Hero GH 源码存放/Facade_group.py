@@ -19,11 +19,12 @@ import ghpythonlib.treehelpers as ght
 from Grasshopper import DataTree as gd
 import Grasshopper.Kernel as gk
 from itertools import chain
-import Curve_group
+import initialization
 import Geometry_group
 import copy
 
-Result = Curve_group.Result
+Result = initialization.Result
+Message = initialization.message()
 
 try:
     if Result is True:
@@ -105,15 +106,6 @@ try:
             def __init__(self):
                 self.center, self.corner, self.line_center = None, None, None
 
-            def message1(self, msg1):  # 报错红
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):  # 警告黄
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):  # 提示白
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
-
             def mes_box(self, info, button, title):
                 return rs.MessageBox(info, button, title)
 
@@ -181,21 +173,20 @@ try:
                 try:
                     sc.doc = Rhino.RhinoDoc.ActiveDoc
                     Center_Pt, Corner_Pt, Line_Center_Pt = (gd[object]() for _ in range(3))
-                    self.center, self.corner, self.line_center = Center, Corner, Line_Center
+                    re_mes = Message.RE_MES([Surface], ['Surface'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                    else:
+                        self.center, self.corner, self.line_center = Center, Corner, Line_Center
 
-                    brep_trunk_list, brep_path_list = self.Branch_Route(Surface)
-                    brep_len = len(brep_trunk_list)
-
-                    if brep_len:
+                        brep_trunk_list, brep_path_list = self.Branch_Route(Surface)
                         iter_ungroup_data = zip(*ghp.run(self.get_pt, zip(brep_trunk_list, brep_path_list)))
                         Corner_Pt, Center_Pt, Line_Center_Pt = ghp.run(lambda single_tree: self.format_tree(single_tree), iter_ungroup_data)
-                    else:
-                        self.message2('S端为空！')
 
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
                     sc.doc = ghdoc
-
                     return Center_Pt, Corner_Pt, Line_Center_Pt
                 finally:
                     self.Message = '曲面关键点'
@@ -269,15 +260,6 @@ try:
             def __init__(self):
                 pass
 
-            def message1(self, msg1):  # 报错红
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):  # 警告黄
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):  # 提示白
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
-
             def mes_box(self, info, button, title):
                 return rs.MessageBox(info, button, title)
 
@@ -347,26 +329,20 @@ try:
                 try:
                     sc.doc = Rhino.RhinoDoc.ActiveDoc
                     Res_Order_Item, Order_Index, Distance = (gd[object]() for _ in range(3))
-                    self.count = Count if Count else 6
-
-                    main_trunk_list, main_path_list = self.Branch_Route(Main_Item)
-                    order_trunk_list = self.Branch_Route(Order_Item)[0]
-
-                    main_len, order_len = len(main_trunk_list), len(order_trunk_list)
-                    if not (main_len or order_len):
-                        self.message2('M端数据为空！')
-                        self.message2('O端数据为空！')
-                    elif not main_len:
-                        self.message2('M端数据为空！')
-                    elif not order_len:
-                        self.message2('O端数据为空！')
+                    re_mes = Message.RE_MES([Main_Item], ['Main_Item'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
                     else:
+                        self.count = Count
+
+                        main_trunk_list, main_path_list = self.Branch_Route(Main_Item)
+                        order_trunk_list = self.Branch_Route(Order_Item)[0]
                         iter_ungroup_data = zip(*ghp.run(self.closest_object, zip(main_trunk_list, order_trunk_list, main_path_list)))
                         Res_Order_Item, Order_Index, Distance = ghp.run(lambda single_tree: self.format_tree(single_tree), iter_ungroup_data)
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
                     sc.doc = ghdoc
-
                     return Res_Order_Item, Order_Index, Distance
                 finally:
                     self.Message = '粗略最小范围'
@@ -439,15 +415,6 @@ try:
                 self.fe_specifications = {'M4': (6.0, 9.6), 'M5': (7.0, 11.6), 'M6': (8.0, 13.6), 'M8': (10.0, 17.8), 'M10': (12.0, 22.0), 'M12': (14.0, 26.0), 'M16': (18.0, 32.0), 'M20': (22.0, 38.0)}
                 self.deep1, self.deep2 = 0, 0
 
-            def message1(self, msg1):  # 报错红
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):  # 警告黄
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):  # 提示白
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
-
             def mes_box(self, info, button, title):
                 return rs.MessageBox(info, button, title)
 
@@ -499,10 +466,10 @@ try:
                 copy_two.Translate(deep_vector_two)
                 small_circle_two = copy_two
 
-                start_pt = big_circle.PointAtStart
-                end_pt = small_circle_two.PointAtEnd
+                # start_pt = big_circle.PointAtStart
+                # end_pt = small_circle_two.PointAtEnd
                 unset_pt = rg.Point3d.Unset
-                loft_brep = rg.Brep.CreateFromLoft([big_circle, small_circle_one, small_circle_two], start_pt, unset_pt, rg.LoftType.Straight, False)[0]
+                loft_brep = rg.Brep.CreateFromLoft([big_circle, small_circle_one, small_circle_two], origin_pln.Origin, unset_pt, rg.LoftType.Straight, False)[0]
                 res_brep = loft_brep.CapPlanarHoles(sc.doc.ModelAbsoluteTolerance)
                 return res_brep
 
