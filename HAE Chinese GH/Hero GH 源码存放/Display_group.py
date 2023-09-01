@@ -18,16 +18,13 @@ import ghpythonlib.parallel as ghp
 import Grasshopper.DataTree as gd
 import Grasshopper.Kernel as gk
 from itertools import chain
-import Curve_group
+import initialization
 import Geometry_group
 
-Result = Curve_group.Result
+Result = initialization.Result
+Message = initialization.message()
 try:
     if Result is True:
-        """
-            切割 -- primary
-        """
-
 
         # 显示点序指向
         class ShowPointLine(component):
@@ -160,7 +157,7 @@ try:
                     self.bbox = rg.BoundingBox(cen_pts) if cen_pts else rg.BoundingBox.Empty
                     if cen_pts:
                         cen_pts = ght.list_to_tree([[_] for _ in cen_pts])
-                    _place = cen_pts
+                        _place = cen_pts
 
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
@@ -308,15 +305,6 @@ try:
             def __init__(self):
                 self.vector_surface, self.bb_pts, self.breps = None, None, None
 
-            def message1(self, msg1):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
-
             def mes_box(self, info, button, title):
                 return rs.MessageBox(info, button, title)
 
@@ -356,7 +344,7 @@ try:
                         center_pts = list(chain(*_cen_pt))
                         _cen_pt = ght.list_to_tree(_cen_pt)
                     else:
-                        self.message2("B端为空！！")
+                        Message.message2(self, "B端为空！！")
 
                     self.vector_surface = temp_pt_vect
                     self.bb_pts = rg.BoundingBox(center_pts) if center_pts else rg.BoundingBox.Empty
@@ -384,14 +372,6 @@ try:
             def get_ClippingBox(self):
                 return self.bb_pts
 
-
-        """
-            切割 -- secondary
-        """
-
-        """
-            切割 -- tertiary
-        """
 
     else:
         pass
