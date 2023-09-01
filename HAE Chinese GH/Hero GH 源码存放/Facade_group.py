@@ -19,12 +19,13 @@ import ghpythonlib.treehelpers as ght
 from Grasshopper import DataTree as gd
 import Grasshopper.Kernel as gk
 from itertools import chain
-import Curve_group
+import initialization
 import Geometry_group
 import copy
 
-Result = Curve_group.Result
-Message = Curve_group.message()
+Result = initialization.Result
+Message = initialization.message()
+
 try:
     if Result is True:
         # 获取曲面板关键点
@@ -170,23 +171,23 @@ try:
 
             def RunScript(self, Surface, Center, Corner, Line_Center):
                 try:
+                    sc.doc = Rhino.RhinoDoc.ActiveDoc
+                    Center_Pt, Corner_Pt, Line_Center_Pt = (gd[object]() for _ in range(3))
                     re_mes = Message.RE_MES([Surface], ['Surface'])
                     if len(re_mes) > 0:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
-                        return gd[object](), gd[object](), gd[object]()
                     else:
-                        sc.doc = Rhino.RhinoDoc.ActiveDoc
                         self.center, self.corner, self.line_center = Center, Corner, Line_Center
 
                         brep_trunk_list, brep_path_list = self.Branch_Route(Surface)
                         iter_ungroup_data = zip(*ghp.run(self.get_pt, zip(brep_trunk_list, brep_path_list)))
                         Corner_Pt, Center_Pt, Line_Center_Pt = ghp.run(lambda single_tree: self.format_tree(single_tree), iter_ungroup_data)
 
-                        sc.doc.Views.Redraw()
-                        ghdoc = GhPython.DocReplacement.GrasshopperDocument()
-                        sc.doc = ghdoc
-                        return Center_Pt, Corner_Pt, Line_Center_Pt
+                    sc.doc.Views.Redraw()
+                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                    sc.doc = ghdoc
+                    return Center_Pt, Corner_Pt, Line_Center_Pt
                 finally:
                     self.Message = '曲面关键点'
 
@@ -326,23 +327,23 @@ try:
 
             def RunScript(self, Main_Item, Order_Item, Count):
                 try:
+                    sc.doc = Rhino.RhinoDoc.ActiveDoc
+                    Res_Order_Item, Order_Index, Distance = (gd[object]() for _ in range(3))
                     re_mes = Message.RE_MES([Main_Item], ['Main_Item'])
                     if len(re_mes) > 0:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
-                        return gd[object](), gd[object](), gd[object]()
                     else:
-                        sc.doc = Rhino.RhinoDoc.ActiveDoc
                         self.count = Count
 
                         main_trunk_list, main_path_list = self.Branch_Route(Main_Item)
                         order_trunk_list = self.Branch_Route(Order_Item)[0]
                         iter_ungroup_data = zip(*ghp.run(self.closest_object, zip(main_trunk_list, order_trunk_list, main_path_list)))
                         Res_Order_Item, Order_Index, Distance = ghp.run(lambda single_tree: self.format_tree(single_tree), iter_ungroup_data)
-                        sc.doc.Views.Redraw()
-                        ghdoc = GhPython.DocReplacement.GrasshopperDocument()
-                        sc.doc = ghdoc
-                        return Res_Order_Item, Order_Index, Distance
+                    sc.doc.Views.Redraw()
+                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                    sc.doc = ghdoc
+                    return Res_Order_Item, Order_Index, Distance
                 finally:
                     self.Message = '粗略最小范围'
 
@@ -465,25 +466,20 @@ try:
                 copy_two.Translate(deep_vector_two)
                 small_circle_two = copy_two
 
-                start_pt = big_circle.PointAtStart
-                end_pt = small_circle_two.PointAtEnd
+                # start_pt = big_circle.PointAtStart
+                # end_pt = small_circle_two.PointAtEnd
                 unset_pt = rg.Point3d.Unset
-                loft_brep = rg.Brep.CreateFromLoft([big_circle, small_circle_one, small_circle_two], start_pt, unset_pt, rg.LoftType.Straight, False)[0]
+                loft_brep = rg.Brep.CreateFromLoft([big_circle, small_circle_one, small_circle_two], origin_pln.Origin, unset_pt, rg.LoftType.Straight, False)[0]
                 res_brep = loft_brep.CapPlanarHoles(sc.doc.ModelAbsoluteTolerance)
                 return res_brep
 
             def RunScript(self, Code, Deep1, Deep2):
                 try:
-                    re_mes = Message.RE_MES([Code], ['Code'])
-                    if len(re_mes) > 0:
-                        for mes_i in re_mes:
-                            Message.message2(self, mes_i)
-                        return gd[object](), gd[object]()
-                    else:
-                        sc.doc = Rhino.RhinoDoc.ActiveDoc
-                        Alum_Material, Iron_Material = (gd[object]() for _ in range(2))
-                        self.deep1 = Deep1
-                        self.deep2 = Deep2
+                    sc.doc = Rhino.RhinoDoc.ActiveDoc
+                    Alum_Material, Iron_Material = (gd[object]() for _ in range(2))
+                    self.deep1 = Deep1
+                    self.deep2 = Deep2
+                    if Code:
                         if Code in self.al_specifications.keys():
                             order_sp_al = self.al_specifications[Code]
                             order_sp_fe = self.fe_specifications[Code]
@@ -491,11 +487,13 @@ try:
                             Alum_Material = self.counter_bore(order_sp_al)
                             Iron_Material = self.counter_bore(order_sp_fe)
                         else:
-                            Message.message1(self, '未包含此螺丝规格！')
-                        sc.doc.Views.Redraw()
-                        ghdoc = GhPython.DocReplacement.GrasshopperDocument()
-                        sc.doc = ghdoc
-                        return Alum_Material, Iron_Material
+                            self.message1('未包含此螺丝规格！')
+                    else:
+                        self.message2('螺丝规格未输入！')
+                    sc.doc.Views.Redraw()
+                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                    sc.doc = ghdoc
+                    return Alum_Material, Iron_Material
                 finally:
                     self.Message = '沉头螺丝（孔）'
 
