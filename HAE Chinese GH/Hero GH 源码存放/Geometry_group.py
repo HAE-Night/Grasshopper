@@ -17,16 +17,14 @@ import ghpythonlib.treehelpers as ght
 from Grasshopper.Kernel.Data import GH_Path
 import copy
 import math
-import Curve_group
+import initialization
 from itertools import chain
 
-Result = Curve_group.Result
-Message = Curve_group.message()
+Result = initialization.decryption()
+Message = initialization.message()
 try:
     if Result is True:
-        """
-            切割 -- primary
-        """
+        # 几何体中心点
         class GeoCenter(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
@@ -171,7 +169,7 @@ try:
 
             @property
             def Exposure(self):
-                return Grasshopper.Kernel.GH_Exposure.primary
+                return Grasshopper.Kernel.GH_Exposure.secondary
 
             def SetUpParam(self, p, name, nickname, description):
                 p.Name = name
@@ -204,7 +202,8 @@ try:
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
                 self.SetUpParam(p, "Axis", "A", "在点序排序时输入，其他几何物体的排序不用输入")
-                p.SetPersistentData(Grasshopper.Kernel.Types.GH_String('X'))
+                DEFAULTAXIS = 'x'
+                p.SetPersistentData(gk.Types.GH_String(DEFAULTAXIS))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
@@ -299,11 +298,11 @@ try:
 
             def RunScript(self, Geometry, Index, Loop, Sort, Axis):
                 try:
+                    A_Objects, A_Values, B_Objects, B_Values = (gd[object]() for _ in range(4))
                     re_mes = Message.RE_MES([Geometry], ['Geometry'])
                     if len(re_mes) > 0:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
-                        return gd[object](), gd[object]()
                     else:
                         self.axis = Axis.upper()
                         g_bool, g_type = self.is_sametype(Geometry)
@@ -312,7 +311,7 @@ try:
                             objs, vals = self.get_value_sort(Geometry, g_type, Sort)
                         A_Objects, B_Objects = self.switch_handing(objs, Index, Loop)
                         A_Values, B_Values = self.switch_handing(vals, Index, Loop)
-                        return A_Objects, A_Values, B_Objects, B_Values
+                    return A_Objects, A_Values, B_Objects, B_Values
                 finally:
                     self.Message = '几何排序'
 
@@ -494,7 +493,7 @@ try:
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
-                self.SetUpParam(p, "a", "I", "几何体原下标")
+                self.SetUpParam(p, "Index", "I", "几何体原下标")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -633,9 +632,6 @@ try:
                     self.Message = 'Geo|Plane分组'
 
 
-        """
-            切割 -- secondary
-        """
         # 分解几何物体
         class DestructionGeometry(component):
             def __new__(cls):
@@ -792,9 +788,6 @@ try:
                     self.Message = '几何分解'
 
 
-        """
-            切割 -- tertiary
-        """
         # 数据类型分类
         class TypeClassification(component):
             def __new__(cls):
@@ -875,6 +868,7 @@ try:
 
             def RunScript(self, Geo):
                 try:
+                    Id, Point, Vector, Curve, Plane, Brep, Surface = (gd[object]() for _ in range(7))
                     eliminate_list = [_ for _ in Geo if _ is not None]
                     if len(eliminate_list) != 0:
                         Id = []
@@ -901,9 +895,9 @@ try:
                                 Surface.append(_)
                             else:
                                 Message.message3(self, "数据组未添加")
-                        return Id, Point, Vector, Curve, Plane, Brep, Surface
                     else:
                         Message.message2(self, "数据列表为空！")
+                    return Id, Point, Vector, Curve, Plane, Brep, Surface
                 finally:
                     self.Message = "GH数据类型分类"
             # 物体跟随线排序
@@ -1020,24 +1014,521 @@ try:
 
             def RunScript(self, Geo, Curve):
                 try:
+                    Result, Index = (gd[object]() for _ in range(2))
                     re_mes = Message.RE_MES([Geo, Curve], ['Geo', 'Curve'])
                     if len(re_mes) > 0:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
-                        return gd[object](), gd[object]()
                     else:
                         sc.doc = Rhino.RhinoDoc.ActiveDoc
                         center_pt_list = list(ghp.run(self.center_box, Geo))
                         self.sort_points_on_curve(center_pt_list, Curve)
                         sorted_indexes = self.sort_points_on_curve(center_pt_list, Curve)
+
                         Result = [Geo[_] for _ in sorted_indexes]
                         Index = sorted_indexes
                         sc.doc.Views.Redraw()
                         ghdoc = GhPython.DocReplacement.GrasshopperDocument()
                         sc.doc = ghdoc
-                        return Result, Index
+                    return Result, Index
                 finally:
                     self.Message = '物体跟随曲线排序'
+
+
+        # 多重向量偏移
+        class Skewing(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP-多向量位移", "RPP_Skewing", """多向量位移""", "Scavenger", "Geometry")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("3e8b5fff-1d6e-49d1-b6be-f5c5b36bc816")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.tertiary
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Geometry()
+                self.SetUpParam(p, "Geo", "G", "需移动的几何物体")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Plane()
+                self.SetUpParam(p, "Plane", "P", "参考平面")
+                REF_PLANE = rg.Plane.WorldXY
+                p.SetPersistentData(gk.Types.GH_Plane(REF_PLANE))
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Number()
+                self.SetUpParam(p, "XVector", "X", "X轴向量")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Number()
+                self.SetUpParam(p, "YVector", "Y", "Y轴向量")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Number()
+                self.SetUpParam(p, "ZVector", "Z", "Z轴向量")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Geometry()
+                self.SetUpParam(p, "Res_Geo", "G", "位移后的物体")
+                self.Params.Output.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Vector()
+                self.SetUpParam(p, "Transform", "T", "偏移后的向量总量")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                p1 = self.marshal.GetInput(DA, 1)
+                p2 = self.marshal.GetInput(DA, 2)
+                p3 = self.marshal.GetInput(DA, 3)
+                p4 = self.marshal.GetInput(DA, 4)
+                result = self.RunScript(p0, p1, p2, p3, p4)
+
+                if result is not None:
+                    if not hasattr(result, '__getitem__'):
+                        self.marshal.SetOutput(result, DA, 0, True)
+                    else:
+                        self.marshal.SetOutput(result[0], DA, 0, True)
+                        self.marshal.SetOutput(result[1], DA, 1, True)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAHYSURBVEhL5dU9SJVRHMfxpyxUMigRpBwKERqqKSqEojCCEGppFDGQSkKJIiJpKqWUSgqlIV16UfAFGlpNFEtRo0HDHKSht0GMRHNp8vt9zhXiUnCH50794MM9z3Ovzznn/5xzjP6r3EFZaCafo/iNx9jgjaSzGzdwHFnpwNShKDSzk4vIWgfbcA/H4quEk4NevEA3fA8lf7ELj3AKm5BxtuIVOvEM91GPhjTn8RWTKETG2Y4HeIkB2OG/4uidccbJhxvsMOwo0VjHZhyJrxLOBbTAF5p4rOFnfEDiZTHWvRIuvUSPBVdH+grIxcbQjNt5oRnHXe1gjL/xO3+jzX/ci3MTlmQa1r0fE3iD03iNMQzDk9Ul6/VTnIB/Owrv92AKPmsE0SGsoBTX8AnzKIcjcYcuwBPVldWEJThjr6vxEVtSnNktvEMxoit4a4P4kEX4QEfyEAfgS+9CK9wTc5jFWZzET/ShDeYSnHUcT8mZ0Iz24Ae+4DZqsQ924OxqsJ4qrOIJxrEf6//xLmMoNEMJltGIQThyS7QXZgd+oSC+iqIz8AGW5hva8R0Oxk7NdbwPzRB3qw+2vr55p+gyNdb6aurTWBJP1ueowE7cRQfcnOYgzoVmVhNFaxZkV0zB5eR1AAAAAElFTkSuQmCC"
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def __init__(self):
+                dict_data = None
+
+            def message1(self, msg1):
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
+
+            def message2(self, msg2):
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
+
+            def message3(self, msg3):
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
+
+            def judgment_type(self, obj):
+                return False if type(obj) is rg.LinearDimension else True
+
+            def normal_move(self, plane, vector_iter):
+                origin_vector = [plane.XAxis, plane.YAxis, plane.ZAxis]
+                zip_list = list(zip(origin_vector, vector_iter))
+                offset_total_vector = map(lambda total: ghc.Amplitude(total[0], total[1]), zip_list)
+                offset_vector = reduce(lambda n1, n2: n1 + n2, offset_total_vector)
+                return offset_vector
+
+            def RunScript(self, Object, Ref_Plane, XVector, YVector, ZVector):
+                try:
+                    New_Objcet, Transform = (gd[object]() for _ in range(2))
+                    XVector = [0] if len(XVector) == 0 else XVector
+                    YVector = [0] if len(YVector) == 0 else YVector
+                    ZVector = [0] if len(ZVector) == 0 else ZVector
+                    total_offset_x, total_offset_y, total_offset_z = sum(XVector), sum(YVector), sum(ZVector)
+                    zip_vector = (total_offset_x, total_offset_y, total_offset_z)
+                    Transform = self.normal_move(Ref_Plane, zip_vector)
+
+                    if Object:
+                        if isinstance(Object, (rg.Point3d, rg.Point)) is True:
+                            Object = rg.Point(Object)
+                        elif isinstance(Object, (rg.Line, rg.LineCurve)) is True:
+                            Object = Object.ToNurbsCurve()
+
+                        if self.judgment_type(Object) is True:
+                            Object.Translate(Transform)
+                            New_Objcet = Object
+                            return New_Objcet, Transform
+                    else:
+                        self.message2("物体为空！！")
+                    return New_Objcet, Transform
+                finally:
+                    self.Message = "多向量位移"
+
+
+        # 多向量位移
+        class SuperSkewing(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP-多向量位移（叠加）", "RPP_SuperSkewing", """多向量位移（叠加态）""", "Scavenger", "Geometry")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("3ab5ab26-b1c2-4f66-b5dd-c85f3d20c1b4")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.tertiary
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Geometry()
+                self.SetUpParam(p, "Geo", "G", "需移动的几何物体")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Plane()
+                self.SetUpParam(p, "Plane", "P", "参考平面")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Number()
+                self.SetUpParam(p, "XVector", "X", "X轴向量")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Number()
+                self.SetUpParam(p, "YVector", "Y", "Y轴向量")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Number()
+                self.SetUpParam(p, "ZVector", "Z", "Z轴向量")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Geometry()
+                self.SetUpParam(p, "Res_Geo", "G", "位移后的物体")
+                self.Params.Output.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Vector()
+                self.SetUpParam(p, "Transform", "T", "偏移后的向量总量")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                p1 = self.marshal.GetInput(DA, 1)
+                p2 = self.marshal.GetInput(DA, 2)
+                p3 = self.marshal.GetInput(DA, 3)
+                p4 = self.marshal.GetInput(DA, 4)
+                result = self.RunScript(p0, p1, p2, p3, p4)
+
+                if result is not None:
+                    if not hasattr(result, '__getitem__'):
+                        self.marshal.SetOutput(result, DA, 0, True)
+                    else:
+                        self.marshal.SetOutput(result[0], DA, 0, True)
+                        self.marshal.SetOutput(result[1], DA, 1, True)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAJ4SURBVEhL7ZRLaxNRFIDzIFqDSkUErUaQahNmMu8knaRNU1uLCoH6IKIgpSC6qIqIj0UVLD5wowsXIiKIIirWRV0ouBFalYJQcaMLQfAHiLhwIa7id5wxGJu0Fc1G/ODjnnsnMydz5t4T+GeIYB+2Ygzn42xcQrlHOIabvbA2a/EADoRCoYOMa1CSNOFqlMQB13VXWpa1SWLowud4HJ/hcqyLPPAo7gyHwyXGPZjE7XgSFQyYhnFR07TPJFogcxjGMs74cEHeYASXkWAD4yHM4y4s4LZsNmXpmvbR0PUPtmWfZi2NE3gBRzGEdWlBXYJIJGIwZFHqutG3L5PJKJRnt6nrpzrb251gMHiPdUku3MYzXvj7VP6ZZtuOrutn/WnYHwWJVS/8AwzD6CDBOX/69/mfYADl0OzD/Si7qQpFUUzOwQl/WgW7bDHKearLIJ7HL/gJu7GKnu6uI6lUamKoNLTQX6rQ319otgxjnLfc4S9VEUQbn+BjXI9LsIrOrPvVse0yZ+EFh27USCbvO6Z53dC0u3oyeUfXkm9syyqn0+lpSaTnyMPf4hg+wr34nWKxGHUs86qqKK/b2ta9U1U1l0gkVsTj8ZZoNDoYi8VapTy2Zb6khMMc1ivctsq7exY60mmV9jBO/aUZhkql0jzvSgVpG5cl6MnnpQpyEG+gdOja5F1XfhjIOE6JUkyq8fi07/ETctInUcq6FZ+ilLw2hUKhyTLNh45ljGiqOial8C/NhDTL9ziFS2WhLjS0XvmQJHmVy+UW+ctzQZrfFi+cAXbEYXbEA9M0b7mp1I9uOReuobT4hnETe72wMchOaugbNOMvWzgQ+AbNsHjNK2GeuwAAAABJRU5ErkJggg=="
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def __init__(self):
+                pass
+
+            def message1(self, msg1):  # 报错红
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
+
+            def message2(self, msg2):  # 警告黄
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
+
+            def message3(self, msg3):  # 提示白
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
+
+            def mes_box(self, info, button, title):
+                return rs.MessageBox(info, button, title)
+
+            def Branch_Route(self, Tree):
+                """分解Tree操作，树形以及多进程框架代码"""
+                Tree_list = [list(_) for _ in Tree.Branches]
+                Tree_Path = [list(_) for _ in Tree.Paths]
+                return Tree_list, Tree_Path
+
+            def split_tree(self, tree_data, tree_path):
+                """操作树单枝的代码"""
+                new_tree = ght.list_to_tree(tree_data, True, tree_path)  # 此处可替换复写的Tree_To_List（源码参照Vector组-点集根据与曲线距离分组）
+                result_data, result_path = self.Branch_Route(new_tree)
+                if list(chain(*result_data)):
+                    return result_data, result_path
+                else:
+                    return [[]], result_path
+
+            def format_tree(self, result_tree):
+                """匹配树路径的代码，利用空树创造与源树路径匹配的树形结构分支"""
+                stock_tree = gd[object]()
+                for sub_tree in result_tree:
+                    fruit, branch = sub_tree
+                    for index, item in enumerate(fruit):
+                        path = gk.Data.GH_Path(System.Array[int](branch[index]))
+                        if hasattr(item, '__iter__'):
+                            if item:
+                                for sub_index in range(len(item)):
+                                    stock_tree.Insert(item[sub_index], path, sub_index)
+                            else:
+                                stock_tree.AddRange(item, path)
+                        else:
+                            stock_tree.Insert(item, path, index)
+                return stock_tree
+
+            def match_lists(self, *lists):
+                # 获取最长列表的长度
+                max_length = max(len(lst) for lst in lists)
+
+                # 对每个列表进行补零，使其长度与最长列表相等
+                padded_lists = []
+                for lst in lists:
+                    padded_list = lst + [0] * (max_length - len(lst))
+                    padded_lists.append(padded_list)
+
+                # 创建一个新列表，将所有列表中的对应元素放入其中
+                matched_elements = []
+                for elements in zip(*padded_lists):
+                    matched_elements.append(elements)
+
+                return matched_elements
+
+            def iter_offset(self, origin_object, vector_list, new_object_list):
+                origin_vector = vector_list[0]
+                copy_object = origin_object.Duplicate()
+                copy_object.Translate(origin_vector)
+                new_object_list.append(copy_object)
+                vector_list.pop(0)
+                if len(vector_list) > 0:
+                    return self.iter_offset(new_object_list[-1], vector_list, new_object_list)
+                else:
+                    return new_object_list
+
+            def trun_to_vector(self, tuple_num):
+                x, y, z = tuple_num
+                origin_x, origin_y, origin_z = [self.pln.XAxis, self.pln.YAxis, self.pln.ZAxis]
+                new_x, new_y, new_z = origin_x * x, origin_y * y, origin_z * z
+                res_vector = new_x + new_y + new_z
+                return res_vector
+
+            def RunScript(self, Geo, Plane, XVector, YVector, ZVector):
+                try:
+                    sc.doc = Rhino.RhinoDoc.ActiveDoc
+                    Res_Geo, Transform = (gd[object]() for _ in range(2))
+                    self.pln = Plane if Plane else rg.Plane.WorldXY
+
+                    self.xvector = [0] if len(XVector) == 0 else XVector
+                    self.yvector = [0] if len(YVector) == 0 else YVector
+                    self.zvector = [0] if len(ZVector) == 0 else ZVector
+                    if Geo:
+                        zip_vector = self.match_lists(self.xvector, self.yvector, self.zvector)
+                        total_vector = map(self.trun_to_vector, zip_vector)
+                        copy_total_vec = copy.copy(total_vector)
+                        Res_Geo = self.iter_offset(Geo, total_vector, [])
+                        Transform = copy_total_vec
+                    else:
+                        self.message2('G端数据为空！')
+                    sc.doc.Views.Redraw()
+                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                    sc.doc = ghdoc
+                    return Res_Geo, Transform
+                finally:
+                    self.Message = '多向量位移（叠加态）'
+
+
+        # 通过点移动物体
+        class MoveByPoint(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP-通过点移动物体", "RPP_MoveByPoint", """两点之间移动物体""", "Scavenger", "Geometry")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("b3a40dca-116a-4bb8-a3fa-19a3add0b528")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.tertiary
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Geometry", "G", "几何物体")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Point()
+                self.SetUpParam(p, "Point A", "A", "初始的点")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Point()
+                self.SetUpParam(p, "Point B", "B", "移动到的点")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Moved", "M", "移动之后的物体")
+                self.Params.Output.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Vector()
+                self.SetUpParam(p, "Vector", "V", "移动的向量")
+                self.Params.Output.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Transform()
+                self.SetUpParam(p, "Transform", "X", "转换数据")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                p1 = self.marshal.GetInput(DA, 1)
+                p2 = self.marshal.GetInput(DA, 2)
+                result = self.RunScript(p0, p1, p2)
+
+                if result is not None:
+                    if not hasattr(result, '__getitem__'):
+                        self.marshal.SetOutput(result, DA, 0, True)
+                    else:
+                        self.marshal.SetOutput(result[0], DA, 0, True)
+                        self.marshal.SetOutput(result[1], DA, 1, True)
+                        self.marshal.SetOutput(result[2], DA, 2, True)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAANrSURBVEhLrZVnTBNhGIDRxB+uGEckJMbtn/Z6o2epNcCp9NrruPaKgAOrkUSjUSMNgpSCA3AngIiDIEuJO+BAhj/8pdGCI0aJMa4Eg8EoQzREFPv6Xf3EGMRR+iRv2rzve99z37i7kMFg2bUj8N/gk5qaqszO3vnI4/Fswang4Xa7Fdu2Zb7etSsHcnKyIdPjOVlUVDQOl4eGfOc7dmx/nZW1E9zuNEh3u2Hf3j2QnJx8l2XZUbgtcGJipLQtyS7IzMgAT3q6/zc1JQXsdukTx3GTcFvgWM2CK0YSYdVKJ2R4PP7BbTY76PV8pyRJE3Fb4NhFS1LcYgdYTEZYuiTOPzjPG8FoFLqsVuvQZyDZLJtlARKB1WICA28AQTAHT2AxGTb+ENhQCEYhuAKnMyEpPjZmgMBgEHp5np+M2wIDAIa/amlp3rB+HVjNxn6BKNqQxOSNjY0diVsDAwmG1dfWZDlXLD/lsIvvHZINRKsIJrP5gcPh+Ovdd3cLXGur9c/PypSwMImiqGaLybQX7cVzs9nyWBTFUFwelJ4PhgQAAfq+8Le63gizcHogc1mmjKFpIAjiHRfFHXO5XBNwaVB6eozxPh+PFkCPwgB9ffxbn09wyCuCW36iVqsjSZXqJUWSoCII0LBsSWJi4lhcHsBT73ydz6f/CoAEvkXfA4zQ/ioKKrayU3Hbr2i12lAkuEqRKpBFrFr9IDo6WoXLv3DzsGL1mxsa6P24AM9AD52tkVBzkPAVpzGzcdvvYShqN5oNyEFT1IeIiIhluNSP97giobmCgHuVKvjYFgldbVHQUEhA9X7Flwu5c2fitsFBb9A4tFRdWAJajWb/Qo7bhPL+j5EseHKGhNtFCmgqU8K1IwRcyVXClXzl57MHwmf4B/kb4TStQEt1V5ZQKNQMAzqdLlqu/RA0lijBW6yE2nwUBUiS9x8CGfSaGIWOb7m88SQKmqQb5Lz3aGj8k9OEXyBHXQEW5BO9p/O00/0X/w8MTVar0TFmaAZGjyeJjsZNzhdVGkAz6RfUIUFdgQouHNBNw5f9O/M0mnh0lLPVFLVmyizF7PaOzttPa5fAwxNzkEQJ9Uhwo4SCy3kk+sp+36chcfHidUtD6dJFd0qV95+dp8BbTsGlPLISl4PHuUJuTFMZWdVwiKzBKUxIyDdi67dgKGEw7gAAAABJRU5ErkJggg=="
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def __init__(self):
+                self.diff_vector = None
+                self.xform = None
+
+            def message1(self, msg1):  # 报错红
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
+
+            def message2(self, msg2):  # 警告黄
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
+
+            def message3(self, msg3):  # 提示白
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
+
+            def mes_box(self, info, button, title):
+                return rs.MessageBox(info, button, title)
+
+            def Branch_Route(self, Tree):
+                """分解Tree操作，树形以及多进程框架代码"""
+                Tree_list = [list(_) for _ in Tree.Branches]
+                Tree_Path = [list(_) for _ in Tree.Paths]
+                return Tree_list, Tree_Path
+
+            def split_tree(self, tree_data, tree_path):
+                """操作树单枝的代码"""
+                new_tree = ght.list_to_tree(tree_data, True, tree_path)  # 此处可替换复写的Tree_To_List（源码参照Vector组-点集根据与曲线距离分组）
+                result_data, result_path = self.Branch_Route(new_tree)
+                if list(chain(*result_data)):
+                    return result_data, result_path
+                else:
+                    return [[]], result_path
+
+            def format_tree(self, result_tree):
+                """匹配树路径的代码，利用空树创造与源树路径匹配的树形结构分支"""
+                stock_tree = gd[object]()
+                for sub_tree in result_tree:
+                    fruit, branch = sub_tree
+                    for index, item in enumerate(fruit):
+                        path = gk.Data.GH_Path(System.Array[int](branch[index]))
+                        if hasattr(item, '__iter__'):
+                            if item:
+                                for sub_index in range(len(item)):
+                                    stock_tree.Insert(item[sub_index], path, sub_index)
+                            else:
+                                stock_tree.AddRange(item, path)
+                        else:
+                            stock_tree.Insert(item, path, index)
+                return stock_tree
+
+            def convert_goo(self, geo):
+                if 'List[object]' in str(geo):
+                    return True, [list(_) for _ in geo]
+                else:
+                    return False, geo
+
+            def goo_object_move(self, goo_object):
+                s_new_obj_list, s_vector_list, s_xform_list = ([] for _ in range(3))
+                for obj in goo_object:
+                    obj.Transform(self.xform)
+                    s_new_obj_list.append(obj)
+                gh_Geos = [gk.GH_Convert.ToGeometricGoo(_) for _ in s_new_obj_list]
+                ghGroup = gk.Types.GH_GeometryGroup()
+                ghGroup.Objects.AddRange(gh_Geos)
+                s_vector_list = self.diff_vector
+                s_xform_list = self.xform
+                return ghGroup, s_vector_list, s_xform_list
+
+            def list_object_move(self, list_object):
+                s_new_obj_list, s_vector_list, s_xform_list = ([] for _ in range(3))
+                for obj in list_object:
+                    obj.Transform(self.xform)
+                    s_new_obj_list.append(obj)
+                    s_vector_list.append(self.diff_vector)
+                    s_xform_list.append(self.xform)
+                return s_new_obj_list, s_vector_list, s_xform_list
+
+            def is_goo_list(self, turn_bool, turn_obj_list):
+                if turn_bool:
+                    return map(self.goo_object_move, turn_obj_list)
+                else:
+                    return self.list_object_move(turn_obj_list)
+
+            def object_move(self, tuple_data):
+                obj_list, origin_path = tuple_data
+
+                bool_reslut, turn_to_object_list = self.convert_goo(obj_list)
+                if bool_reslut:
+                    new_obj_list, vector_list, xform_list = zip(*self.is_goo_list(bool_reslut, turn_to_object_list))
+                else:
+                    new_obj_list, vector_list, xform_list = self.is_goo_list(bool_reslut, turn_to_object_list)
+
+                ungroup_data = map(lambda x: self.split_tree(x, origin_path), [new_obj_list, vector_list, xform_list])
+                Rhino.RhinoApp.Wait()
+                return ungroup_data
+
+            def RunScript(self, Geometry, Point_A, Point_B):
+                try:
+                    sc.doc = Rhino.RhinoDoc.ActiveDoc
+                    Moved, Vector, Transform = (gd[object]() for _ in range(3))
+                    trunk_geo, trunk_path = self.Branch_Route(Geometry)
+
+                    re_mes = Message.RE_MES([Geometry, Point_A, Point_B], ['G', 'A', 'B'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                    else:
+                        init_pt = Point_A
+                        move_pt = Point_B
+                        self.diff_vector = rg.Vector3d(move_pt) - rg.Vector3d(init_pt)
+                        self.xform = rg.Transform.Translation(self.diff_vector)
+                        zip_list = zip(trunk_geo, trunk_path)
+                        ghp.run(self.object_move, zip_list)
+                        iter_ungroup_data = zip(*ghp.run(self.object_move, zip_list))
+                        Moved, Vector, Transform = ghp.run(lambda single_tree: self.format_tree(single_tree), iter_ungroup_data)
+
+                    sc.doc.Views.Redraw()
+                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                    sc.doc = ghdoc
+
+                    return Moved, Vector, Transform
+                finally:
+                    self.Message = 'Moved By Pt'
 
     else:
         pass
