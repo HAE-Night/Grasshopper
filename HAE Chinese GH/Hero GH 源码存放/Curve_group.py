@@ -4,7 +4,7 @@
 # @Time: 2022/7/8 11:04
 # coding=utf-8
 
-import init__
+import initialization
 
 from ghpythonlib.componentbase import dotnetcompiledcomponent as component
 import Grasshopper, GhPython
@@ -18,9 +18,6 @@ import Grasshopper.DataTree as gd
 import Grasshopper.Kernel as gk
 import ghpythonlib.treehelpers as ght
 import re
-import time
-import getpass
-import base64
 import clr
 
 clr.AddReference("System.Management")
@@ -28,63 +25,11 @@ import System.Management
 from itertools import chain
 import math
 
-Mac_Array = []
+Result = initialization.Result
+Message = initialization.message()
 
-
-def _get_macaddress(data):
-    ipconfig_list = {}
-    for _ in data:
-        ipconfig_list[_.Name] = _.Value
-    Mac_Array.append(ipconfig_list['MACAddress'])
-
-
-def decryption():
-    select = "SELECT * FROM WIN32_NetworkAdapterConfiguration"
-    arrInfo = System.Management.ManagementObjectSearcher(select)
-    prop_list = [strInfo.Properties for strInfo in arrInfo.Get()]
-    map(_get_macaddress, prop_list)
-    Mac_Address = filter(None, Mac_Array)
-
-    designer_names = init__.designer_database
-    origin_data_list = []
-    now_time = int(time.time())
-    for name in designer_names:
-        try:
-            with open(r'C:\Users\%s\AppData\Roaming\Grasshopper\Libraries\{0}-KEY.licence'.format(
-                    name) % getpass.getuser(), 'r') as f:
-                data = f.read()
-                origin_data_list.append(data)
-        except:
-            pass
-    if len(origin_data_list) == 1:
-        data_list = [i for i in origin_data_list[0]]
-        re_reversed_list1 = data_list[0:10]
-        re_reversed_list1.reverse()
-        re_reversed_list2 = data_list[10:]
-        re_reversed_list2.reverse()
-        result_list = re_reversed_list1 + re_reversed_list2
-        result = ''.join(result_list)
-        try:
-            origin_data = str(base64.b64decode(result))
-            origin_list = origin_data.split('-')
-        except TypeError:
-            return False
-        if origin_list[1] in Mac_Address and int(origin_list[-1]) > now_time:
-            return True
-        else:
-            return False
-    elif len(origin_data_list) > 1 or len(origin_data_list) == 0:
-        return False
-
-
-Result = decryption()
 try:
     if Result is True:
-        """
-            切割 -- primary
-        """
-
-
         # 点向式绘制直线
         class VectorLineTaking(component):
             def __new__(cls):
@@ -113,12 +58,14 @@ try:
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Vector()
-                self.SetUpParam(p, "Direction", "D", "直线大小和方向")
+                self.SetUpParam(p, "Direction", "D", "直线大小和方向\n默认Z方向长度为10的向量")
+                p.PersistentData.Append(Grasshopper.Kernel.Types.GH_Vector(rg.Vector3d(0, 0, 10)))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
-                p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Whole", "W", "双端方向（默认开启，t），关闭输入f")
+                p = Grasshopper.Kernel.Parameters.Param_Boolean()
+                self.SetUpParam(p, "Whole", "W", "双端方向（默认开启，True），关闭输入False")
+                p.SetPersistentData(Grasshopper.Kernel.Types.GH_Boolean(True))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
@@ -151,14 +98,18 @@ try:
                 return line
 
             def RunScript(self, Point, Direction, Whole):
-                Direction = rg.Vector3d(0, 0, 1) if Direction is None else Direction
-                Whole = 't' if Whole is None or 'T' == Whole.upper() else 'f'
-                if Point:
-                    self.factor = True if Whole == 't' else False
-                    Line = self.create_line(Point, Direction)
-                    return Line
-                else:
-                    pass
+                try:
+                    re_mes = Message.RE_MES([Point], ['Point'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                        return gd[object]()
+                    else:
+                        self.factor = Whole
+                        Line = self.create_line(Point, Direction)
+                        return Line
+                finally:
+                    self.Message = 'P+V=L'
 
 
         # 曲线修剪（简化控制点）
@@ -186,21 +137,27 @@ try:
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Curve()
                 self.SetUpParam(p, "Curve", "C", "一条曲线")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
-                self.SetUpParam(p, "Type", "T", "曲线延伸类型，默认为Line")
+                self.SetUpParam(p, "Type", "T", "曲线延伸类型，0=Line，1=Arc，2=Smooth")
+                LINE_TYPE = 0
+                p.SetPersistentData(gk.Types.GH_Integer(LINE_TYPE))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
                 self.SetUpParam(p, "L0", "L0", "起点延长的长度，默认为延长10")
+                START_DISTANCE = 10
+                p.SetPersistentData(gk.Types.GH_Number(START_DISTANCE))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
                 self.SetUpParam(p, "L1", "L1", "终点延长的长度，默认为延长10")
+                END_DISTANCE = 10
+                p.SetPersistentData(gk.Types.GH_Number(END_DISTANCE))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
@@ -224,47 +181,140 @@ try:
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
-                self.curve_type = {0: "Line", 1: "Arc", 2: "Smooth"}
+                self.dict_factor = {'-': ['Trim', None], '+': ['Extend', 'rg.CurveExtensionStyle.{}']}
+                self._style = {0: 'Line', 1: 'Arc', 2: 'Smooth'}
+                self.first_factor, self.first_line_length, self.first_type_of_line = (None for _ in range(3))
+                self.second_factor, self.second_line_length, self.second_type_of_line = (None for _ in range(3))
+                self._curve_style = None
+                self.curves, self.pts = None, None
 
-            def message1(self, msg1):
+            def message1(self, msg1):  # 报错红
                 return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
 
-            def message2(self, msg2):
+            def message2(self, msg2):  # 警告黄
                 return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
 
-            def message3(self, msg3):
+            def message3(self, msg3):  # 提示白
                 return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
+
+            def mes_box(self, info, button, title):
+                return rs.MessageBox(info, button, title)
+
+            def Branch_Route(self, Tree):
+                """分解Tree操作，树形以及多进程框架代码"""
+                Tree_list = [list(_) for _ in Tree.Branches]
+                Tree_Path = [list(_) for _ in Tree.Paths]
+                return Tree_list, Tree_Path
+
+            def split_tree(self, tree_data, tree_path):
+                """操作树单枝的代码"""
+                new_tree = ght.list_to_tree(tree_data, True, tree_path)  # 此处可替换复写的Tree_To_List（源码参照Vector组-点集根据与曲线距离分组）
+                result_data, result_path = self.Branch_Route(new_tree)
+                if list(chain(*result_data)):
+                    return result_data, result_path
+                else:
+                    return [[]], result_path
+
+            def format_tree(self, result_tree):
+                """匹配树路径的代码，利用空树创造与源树路径匹配的树形结构分支"""
+                stock_tree = gd[object]()
+                for sub_tree in result_tree:
+                    fruit, branch = sub_tree
+                    for index, item in enumerate(fruit):
+                        path = gk.Data.GH_Path(System.Array[int](branch[index]))
+                        if hasattr(item, '__iter__'):
+                            if item:
+                                for sub_index in range(len(item)):
+                                    stock_tree.Insert(item[sub_index], path, sub_index)
+                            else:
+                                stock_tree.AddRange(item, path)
+                        else:
+                            stock_tree.Insert(item, path, index)
+                return stock_tree
+
+            def trim_extension_curve(self, curve):
+                sim_curve = curve.Simplify(rg.CurveSimplifyOptions.All, sc.doc.ModelAbsoluteTolerance, sc.doc.ModelAngleToleranceDegrees)
+                curve = sim_curve if sim_curve else curve
+                after_shear = eval('curve.{}(rg.CurveEnd.Start,self.first_line_length)'.format(self.first_factor[0])) if self.first_type_of_line is None else eval('curve.{}(rg.CurveEnd.Start,self.first_line_length,{})'.format(self.first_factor[0], self.first_type_of_line))
+                result_line = eval('after_shear.{}(rg.CurveEnd.End,self.second_line_length)'.format(self.second_factor[0])) if self.second_type_of_line is None else eval('after_shear.{}(rg.CurveEnd.End,self.second_line_length,{})'.format(self.second_factor[0], self.second_type_of_line))
+                return result_line
+
+            def temp(self, tuple_data):
+                curve_list, origin_path = tuple_data
+                new_line_list = map(self.trim_extension_curve, curve_list)
+                ungroup_data = self.split_tree(new_line_list, origin_path)
+                Rhino.RhinoApp.Wait()
+                return ungroup_data
+
+            def str_handle(self, str_data):
+                if str_data is not None:
+                    symbol = '+' if str_data[0].isdigit() is True else '-'
+                    num = abs(float(str_data))
+                else:
+                    symbol = '+'
+                    num = 0
+                return symbol, num
+
+            def parameter_handling(self, par):
+                par_factor = self.dict_factor[par[0]]
+                line_length = par[1]
+                type_of_line = par_factor[1].format(self._curve_style) if par_factor[1] is not None else None
+                return par_factor, line_length, type_of_line
+
+            def get_se_pt(self, no_red_line):
+                render_points = []
+                for single_line in no_red_line:
+                    start_pt = single_line.PointAtStart
+                    end_pt = single_line.PointAtEnd
+                    sub_pt_list = [start_pt, end_pt]
+                    render_points.append(sub_pt_list)
+                return render_points
 
             def RunScript(self, Curve, Type, L0, L1):
                 try:
-                    if Curve:
-                        L0 = 10 if L0 is None else L0
-                        L1 = 10 if L1 is None else L1
-                        Type = 0 if Type is None else Type
+                    sc.doc = Rhino.RhinoDoc.ActiveDoc
+                    Result_Curve = gd[object]()
+                    self._curve_style = self._style[Type]
 
-                        curve_l = eval("rg.CurveExtensionStyle.{}".format(self.curve_type[Type]))
-                        if L0 * -1 > Curve.GetLength() and L1 > 0:
-                            Curve = Curve.Extend(rg.CurveEnd.End, L1, curve_l)
-                            Curve = Curve.Trim(rg.CurveEnd.Start, -L0)
-                            Result_Curve = Curve.Simplify(rg.CurveSimplifyOptions.All, 0.1, 0.1)
-                            return Result_Curve
+                    trunk_curve, trunk_path = self.Branch_Route(Curve)
+                    len_c = len(trunk_curve)
+                    first = self.str_handle(str(L0))
+                    second = self.str_handle(str(L1))
 
-                        if L0 > 0:
-                            Curve = Curve.Extend(rg.CurveEnd.Start, L0, curve_l)
-                        elif L0 < 0:
-                            L0 = -L0
-                            Curve = Curve.Trim(rg.CurveEnd.Start, L0)
-                        if L1 > 0:
-                            Curve = Curve.Extend(rg.CurveEnd.End, L1, curve_l)
-                        elif L1 < 0:
-                            L1 = -L1
-                            Curve = Curve.Trim(rg.CurveEnd.End, L1)
-                        Result_Curve = Curve.Simplify(rg.CurveSimplifyOptions.All, 0.1, 0.1)
-                        return Result_Curve
+                    self.first_factor, self.first_line_length, self.first_type_of_line = self.parameter_handling(first)
+                    self.second_factor, self.second_line_length, self.second_type_of_line = self.parameter_handling(second)
+
+                    if len_c:
+                        zip_list = zip(trunk_curve, trunk_path)
+                        iter_ungroup_data = ghp.run(self.temp, zip_list)
+                        Result_Curve = self.format_tree(iter_ungroup_data)
                     else:
                         self.message2("C端不能为空！")
+                    no_rendering_line = self.Branch_Route(Result_Curve)[0]
+                    pt_array = map(self.get_se_pt, no_rendering_line)
+
+                    self.curves = no_rendering_line
+                    self.pts = pt_array
+
+                    sc.doc.Views.Redraw()
+                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                    sc.doc = ghdoc
+
+                    return Result_Curve
                 finally:
-                    self.Message = '曲线修剪（S）'
+                    self.Message = '曲线修剪'
+
+            def DrawViewportWires(self, args):
+                try:
+                    for _f in self.curves:
+                        for _s in _f:
+                            args.Display.DrawCurve(_s, System.Drawing.Color.Green, 2)
+                    for sub_pts in self.pts:
+                        for _pf in sub_pts:
+                            for _ps_index in range(len(_pf)):
+                                args.Display.DrawDot(_pf[_ps_index], str(_ps_index), System.Drawing.Color.FromArgb(248, 141, 30), System.Drawing.Color.FromArgb(255, 255, 255))
+                except:
+                    pass
 
 
         # 多折线按线段序号偏移
@@ -301,6 +351,7 @@ try:
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
                 self.SetUpParam(p, "Distance", "D", "偏移距离，默认偏移10")
+                p.SetPersistentData(Grasshopper.Kernel.Types.GH_Number(10))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
@@ -324,15 +375,6 @@ try:
 
             def __init__(self):
                 self.curves, self.pts = None, None
-
-            def message1(self, msg1):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
 
             def mes_box(self, info, button, title):
                 return rs.MessageBox(info, button, title)
@@ -366,15 +408,15 @@ try:
                     count = 0
                     for c_index, c_item in enumerate(line_list):
                         if c_index in sub_index_list:
-                            if sub_dis_list[count]:
-                                new_item = c_item.Offset(curve_planar, sub_dis_list[count], sc.doc.ModelAbsoluteTolerance, rg.CurveOffsetCornerStyle.
+                            count += 1
+                            if sub_dis_list[count - 1]:
+                                new_item = c_item.Offset(curve_planar, sub_dis_list[count - 1], sc.doc.ModelAbsoluteTolerance, rg.CurveOffsetCornerStyle.
                                 None)[0]
                             else:
                                 new_item = c_item
                             offset_line_list.append(new_item)
                         else:
                             offset_line_list.append(c_item)
-                        count += 1
                     return self._find_closest_pt(offset_line_list, colse_factor)
 
             def _find_closest_pt(self, lines, res_bool):
@@ -424,12 +466,10 @@ try:
 
                     trunk_list_curve, trunk_list_index, trunk_list_dis = self.Branch_Route(Curve)[0], self.Branch_Route(Indexs)[0], self.Branch_Route(Distance)[0]
                     curve_len, index_len, dis_len = len(trunk_list_curve), len(trunk_list_index), len(trunk_list_dis)
-                    if not (curve_len and index_len):
-                        self.message2("C端、I端不能为空！")
-                    elif not curve_len:
-                        self.message2("C端不能为空！")
-                    elif not index_len:
-                        self.message2("I端不能为空！")
+                    re_mes = Message.RE_MES([Curve, Indexs], ['Curve', 'Indexs'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
                     else:
                         new_trunk_dis = trunk_list_dis if trunk_list_dis else [[10]]
 
@@ -441,7 +481,7 @@ try:
                         zip_list = []
                         for _ in range(len(z_zip_list)):
                             if len(z_zip_list[_][1]) != len(z_zip_list[_][2]):
-                                self.message1("第{}组折线偏移失败；原因：下标与偏移距离列表不相等！".format(_ + 1))
+                                Message.message1(self, "第{}组折线偏移失败；原因：下标与偏移距离列表不相等！".format(_ + 1))
                                 zip_list.append(None)
                             else:
                                 zip_list.append(z_zip_list[_])
@@ -453,12 +493,12 @@ try:
                                 sub_res_line = []
                                 for sub_index in range(len(temp_res_lines[_])):
                                     if temp_res_lines[_][sub_index] is False:
-                                        self.message2(
-                                            "第{}组第{}根折线偏移失败；原因：被偏移的折线必须为直线！".format(_ + 1, sub_index + 1))
+                                        Message.message2(self,
+                                                         "第{}组第{}根折线偏移失败；原因：被偏移的折线必须为直线！".format(_ + 1, sub_index + 1))
                                         sub_res_line.append(trunk_list_curve[_][sub_index])
                                     elif temp_res_lines[_][sub_index] is 1:
-                                        self.message2(
-                                            "第{}组第{}根折线偏移失败；原因：输入下标大于折线段数！".format(_ + 1, sub_index + 1))
+                                        Message.message2(self,
+                                                         "第{}组第{}根折线偏移失败；原因：输入下标大于折线段数！".format(_ + 1, sub_index + 1))
                                         sub_res_line.append(trunk_list_curve[_][sub_index])
                                     else:
                                         sub_res_line.append(temp_res_lines[_][sub_index])
@@ -524,13 +564,15 @@ try:
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
-                p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Simply", "S", "端口默认关闭，开启（t）后是普通的偏移")
+                p = Grasshopper.Kernel.Parameters.Param_Boolean()
+                self.SetUpParam(p, "Simply", "S", "端口默认关闭，开启（True）后是普通的偏移")
+                p.PersistentData.Append(Grasshopper.Kernel.Types.GH_Boolean(False))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
-                p = Grasshopper.Kernel.Parameters.Param_String()
+                p = Grasshopper.Kernel.Parameters.Param_Boolean()
                 self.SetUpParam(p, "Double", "DU", "端口默认关闭，开启（t）后将偏移前以及偏移后的折线首尾连线")
+                p.PersistentData.Append(Grasshopper.Kernel.Types.GH_Boolean(False))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
@@ -597,13 +639,14 @@ try:
             def RunScript(self, Curve, Distance, Simply, Double):
                 try:
                     res_poly_line = None
-                    if Curve is not None:
-                        Simply = 'F' if Simply is None else Simply.upper()
+                    re_mes = Message.RE_MES([Curve, Distance], ['Curve', 'Distance'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                        return gd[object]()
+                    else:
                         self.factor = Curve.IsClosed
-                        if Simply not in ['T', 'F']:
-                            self.message1("请在S端输入正确的字母！！")
-
-                        if Simply == 'F':
+                        if Simply == False:
                             explode_curves = ghc.Explode(Curve, True)["segments"]
                             explode_curves = explode_curves if isinstance(explode_curves, (list)) is True else [
                                 explode_curves]
@@ -616,14 +659,12 @@ try:
                                     closest_pt.append(offset_list[-1].PointAtEnd)
                                 res_poly_line = ghc.PolyLine(closest_pt, self.factor)
                             else:
-                                self.message1("距离数据列表必须和多线段数目相等！")
+                                Message.message1(self, "距离数据列表必须和多线段数目相等！")
                         else:
                             res_poly_line = ghc.OffsetCurve(Curve, Distance[0], None, 1)
-                        Double = 'F' if Double is None else Double.upper()
+                        Double = False
                         Rescur_list = self.double_line(Curve, res_poly_line) if Double == 'T' else res_poly_line
                         return Rescur_list
-                    else:
-                        self.message2("请输入一个折边")
                 finally:
                     self.Message = '折线段偏移'
 
@@ -658,11 +699,13 @@ try:
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
                 self.SetUpParam(p, "Tolerance", "T", "筛选曲率的精度")
+                p.SetPersistentData(Grasshopper.Kernel.Types.GH_Number(0.1))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
                 self.SetUpParam(p, "Radius", "R", "指定该圆弧的规范半径（通过半径筛选圆）")
+                p.SetPersistentData(Grasshopper.Kernel.Types.GH_Number(2.5))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
@@ -686,15 +729,6 @@ try:
 
             def __init__(self):
                 self.tol = None
-
-            def message1(self, msg1):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
 
             def _judge_curve(self, index_curve, curves):
                 for _ in curves:
@@ -740,18 +774,21 @@ try:
 
             def RunScript(self, Curve, Tolerance, Radius):
                 try:
-                    self.tol = 0.001 if Tolerance is None else Tolerance
-                    self.r = 5 if Radius is None else Radius
+                    self.tol = Tolerance
+                    self.r = Radius
                     tree_leaf = [list(_) for _ in Curve.Branches]
-                    if len(tree_leaf) == 0:
-                        self.message2("曲线数据不能为空！")
+                    re_mes = Message.RE_MES([Curve], ['C端'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                        return gd[object]()
                     else:
                         filter_list = []
                         for _ in range(len(tree_leaf)):
                             if len(tree_leaf[_]) == 0:
-                                self.message2("第{}个曲线数据为空".format(_ + 1))
+                                Message.message2(self, "第{}个曲线数据为空".format(_ + 1))
                             elif self._judge_curve(_, tree_leaf[_]) is not None:
-                                self.message1("第{}个曲线数据模块有错误数据！！".format(_ + 1))
+                                Message.message1(self, "第{}个曲线数据模块有错误数据！！".format(_ + 1))
                             else:
                                 filter_list.append(tree_leaf[_])
                         join_curve = [_ for _ in ghp.run(self._join_handle, filter_list)]
@@ -840,11 +877,17 @@ try:
                 return start_lines, end_lines, all_lines, tree
 
             def RunScript(self, Curves):
-                if Curves:
-                    Start_Curve, End_Curve, Result_Curve, Tree_Result = self.get_points(Curves)
-                    return Start_Curve, End_Curve, Result_Curve, Tree_Result
-                else:
-                    pass
+                try:
+                    re_mes = Message.RE_MES([Curves], ['Curves'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                        return gd[object](), gd[object](), gd[object](), gd[object]()
+                    else:
+                        Start_Curve, End_Curve, Result_Curve, Tree_Result = self.get_points(Curves)
+                        return Start_Curve, End_Curve, Result_Curve, Tree_Result
+                finally:
+                    self.Message = '点线转换'
 
 
         # 合并曲线
@@ -901,15 +944,6 @@ try:
             def __init__(self):
                 self.tol = None
 
-            def message1(self, msg1):  # 报错红
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):  # 警告黄
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):  # 提示白
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
-
             def mes_box(self, info, button, title):
                 return rs.MessageBox(info, button, title)
 
@@ -958,12 +992,14 @@ try:
                     New_Curve = gd[object]()
 
                     curve_tree, curve_path = self.Branch_Route(Curve)
-                    if curve_tree:
+                    re_mes = Message.RE_MES([Curve], ['C'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                    else:
                         zip_list = zip(curve_tree, curve_path)
                         bole = ghp.run(self._join_curve, zip_list)
                         New_Curve = self.format_tree(bole)
-                    else:
-                        self.message2('C端数据不能为空！')
 
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
@@ -1002,7 +1038,7 @@ try:
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
-                p = Grasshopper.Kernel.Parameters.Param_Geometry()
+                p = Grasshopper.Kernel.Parameters.Param_Curve()
                 self.SetUpParam(p, "RefCurve", "C", "曲线")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
@@ -1035,15 +1071,6 @@ try:
             def __init__(self):
                 self._switch = None
 
-            def message1(self, msg1):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
-
             def __get_line_point(self, curve, point):
                 self._switch = False
                 recent_par = curve.ClosestPoint(point)[1]
@@ -1057,7 +1084,12 @@ try:
 
             def RunScript(self, Geo, RefCurve):
                 try:
-                    if Geo and RefCurve:
+                    re_mes = Message.RE_MES([Geo, RefCurve], ['Geo', 'RefCurve'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                        return gd[object](), gd[object]()
+                    else:
                         new_point = None
                         if isinstance(Geo, (
                                 rg.Line, rg.Curve, rg.PolyCurve, rg.Polyline, rg.PolylineCurve, rg.NurbsCurve)) is True:
@@ -1065,21 +1097,14 @@ try:
                         elif isinstance(Geo, (rg.Point3d)) is True:
                             new_point = self.__get_line_point(RefCurve, rg.Point(Geo).Location)
                         else:
-                            self.message1('电池不支持此几何类型！')
+                            Message.message1(self, '电池不支持此几何类型！')
                         Line = rg.Line(new_point[0], new_point[1]) if self._switch is True else rg.Line(new_point,
                                                                                                         rg.Point(
                                                                                                             Geo).Location)
                         Point = new_point
                         return Line, Point
-                    else:
-                        self.message2('请确保参数正确连接！')
                 finally:
                     self.Message = '最近点连线'
-
-
-        """
-            切割 -- secondary
-        """
 
 
         # 求线长度
@@ -1200,17 +1225,18 @@ try:
 
             def RunScript(self, Curve):
                 try:
-                    Curve, Length = self.CurveLen(Curve)
-                    return Curve, Length
+                    re_mes = Message.RE_MES([Curve], ['Curve'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                        return gd[object](), gd[object]()
+                    else:
+                        Curve, Length = self.CurveLen(Curve)
+                        return Curve, Length
                 except Exception as e:
-                    self.message1("运行报错：\n{}".format(str(e)))
+                    Message.message1(self, "运行报错：\n{}".format(str(e)))
                 finally:
-                    self.Message = 'HAE 长度排序'
-
-
-        """
-            切割 -- tertiary
-        """
+                    self.Message = '长度排序'
 
 
         # 曲线取值
@@ -1236,7 +1262,7 @@ try:
                 p.Optional = True
 
             def RegisterInputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_Geometry()
+                p = Grasshopper.Kernel.Parameters.Param_Curve()
                 self.SetUpParam(p, "Curve", "C", "将要分解的曲线")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
@@ -1252,23 +1278,23 @@ try:
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                p = Grasshopper.Kernel.Parameters.Param_Geometry()
                 self.SetUpParam(p, "data1", "D1", "第一组数据")
                 self.Params.Output.Add(p)
 
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                p = Grasshopper.Kernel.Parameters.Param_Geometry()
                 self.SetUpParam(p, "data2", "D2", "第二组数据")
                 self.Params.Output.Add(p)
 
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                p = Grasshopper.Kernel.Parameters.Param_Geometry()
                 self.SetUpParam(p, "data3", "D3", "第三组数据")
                 self.Params.Output.Add(p)
 
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                p = Grasshopper.Kernel.Parameters.Param_Geometry()
                 self.SetUpParam(p, "data4", "D4", "第四组数据")
                 self.Params.Output.Add(p)
 
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                p = Grasshopper.Kernel.Parameters.Param_Geometry()
                 self.SetUpParam(p, "data5", "D5", "第五组数据")
                 self.Params.Output.Add(p)
 
@@ -1323,24 +1349,27 @@ try:
                     return P_Slist
 
             def RunScript(self, Curve, index, S_V):
-                if Curve:
-                    curve = Curve.DuplicateSegments()
-                    C_List, P_List = self.get_v_s(curve)
-                    I_List = [list(map(int, re.split(r"[.。!！?？；;，,\s+]", i))) for i in index]
-                    New_C_List = self.index_erreor(
-                        [self.subscript_value(C_List, I_List[i]) for i in range(len(I_List))])
-                    New_P_List = self.index_erreor(
-                        [self.subscript_value(P_List, I_List[i]) for i in range(len(I_List))])
-                    if S_V == 'S' or S_V == 's' or S_V is None:
-                        data1, data2, data3, data4, data5 = New_C_List
-                        return data1, data2, data3, data4, data5
-                    elif S_V == 'V' or S_V == 'v':
-                        data1, data2, data3, data4, data5 = New_P_List
-                        return data1, data2, data3, data4, data5
+                try:
+                    data1, data2, data3, data4, data5 = (gd[object]() for _ in range(5))
+                    re_mes = Message.RE_MES([Curve], ['Curve'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
                     else:
-                        pass
-                else:
-                    pass
+                        curve = Curve.DuplicateSegments()
+                        C_List, P_List = self.get_v_s(curve)
+                        I_List = [list(map(int, re.split(r"[.。!！?？；;，,\s+]", i))) for i in index]
+                        New_C_List = self.index_erreor(
+                            [self.subscript_value(C_List, I_List[i]) for i in range(len(I_List))])
+                        New_P_List = self.index_erreor(
+                            [self.subscript_value(P_List, I_List[i]) for i in range(len(I_List))])
+                        if S_V == 'S' or S_V == 's' or S_V is None:
+                            data1, data2, data3, data4, data5 = New_C_List
+                        elif S_V == 'V' or S_V == 'v':
+                            data1, data2, data3, data4, data5 = New_P_List
+                    return data1, data2, data3, data4, data5
+                finally:
+                    self.Message = '曲线拆分'
 
 
         # 曲线筛选
@@ -1372,6 +1401,7 @@ try:
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
                 self.SetUpParam(p, "Tolerance", "T", "曲率容差度")
+                p.SetPersistentData(Grasshopper.Kernel.Types.GH_Number(0.01))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
@@ -1403,15 +1433,6 @@ try:
             def __init__(self):
                 self.tol = None
 
-            def message1(self, msg1):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
-
             def find_curvature(self, o_curve):
                 start_pt, end_pt, mid_pt = o_curve.PointAtStart, o_curve.PointAtEnd, ghc.CurveMiddle(o_curve)
                 ref_line = rg.Line(start_pt, end_pt)
@@ -1421,20 +1442,24 @@ try:
 
             def RunScript(self, Curve, Tolerance):
                 try:
-                    self.tol = 0.001 if Tolerance is None else Tolerance
-                    if len(Curve) > 0:
-                        result_cur = ghp.run(self.find_curvature, Curve)
-                        index_fit_cur = []
-                        index_line_cur = []
-                        for index_c in range(len(result_cur)):
-                            if result_cur[index_c] is None:
-                                index_line_cur.append(Curve[index_c])
-                            else:
-                                index_fit_cur.append(Curve[index_c])
-                        Curve_Result, Line_Result = index_fit_cur, index_line_cur
-                        return Curve_Result, Line_Result
+                    re_mes = Message.RE_MES([Curve], ['Curve'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                        return gd[object](), gd[object]()
                     else:
-                        self.message2("曲线列表为空！")
+                        self.tol = Tolerance
+                        if len(Curve) > 0:
+                            result_cur = ghp.run(self.find_curvature, Curve)
+                            index_fit_cur = []
+                            index_line_cur = []
+                            for index_c in range(len(result_cur)):
+                                if result_cur[index_c] is None:
+                                    index_line_cur.append(Curve[index_c])
+                                else:
+                                    index_fit_cur.append(Curve[index_c])
+                            Curve_Result, Line_Result = index_fit_cur, index_line_cur
+                            return Curve_Result, Line_Result
                 finally:
                     self.Message = '筛选曲线（曲率）'
 
@@ -1474,6 +1499,7 @@ try:
 
                 p = Grasshopper.Kernel.Parameters.Param_Plane()
                 self.SetUpParam(p, "CP", "CP", "按坐标轴XYZ排序，默认为世界XY")
+                p.SetPersistentData(Grasshopper.Kernel.Types.GH_Plane(rg.Plane.WorldXY))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
@@ -1498,15 +1524,6 @@ try:
             def __init__(self):
                 self.dict_axis = {'X': 'x_coordinate', 'Y': 'y_coordinate', 'Z': 'z_coordinate'}
 
-            def message1(self, msg1):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
-
             def _sort_by_length(self, list_data):
                 for f in range(len(list_data)):
                     for s in range(len(list_data) - 1 - f):
@@ -1530,10 +1547,14 @@ try:
 
             def RunScript(self, Curve, Axis, CP):
                 try:
-                    CP = ghc.XYPlane(rg.Point3d(0, 0, 0)) if CP is None else CP
-                    if Curve:
+                    re_mes = Message.RE_MES([Curve], ['Curve'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                        return gd[object]()
+                    else:
                         if Axis is None:
-                            self.message3("轴坐标未输入，将按长度排序！")
+                            Message.message3(self, "轴坐标未输入，将按长度排序！")
                             Sort_Curve = self._sort_by_length(Curve)
                             return Sort_Curve
                         else:
@@ -1542,9 +1563,7 @@ try:
                                 Sort_Curve = self._other_by_xyz(Curve, Axis, CP)
                                 return Sort_Curve
                             else:
-                                self.message2("请输入正确的轴坐标！")
-                    else:
-                        self.message2("曲线列表为空！！")
+                                Message.message2(self, "请输入正确的轴坐标！")
                 finally:
                     self.Message = "曲线排序"
 
@@ -1579,30 +1598,34 @@ try:
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
                 self.SetUpParam(p, "Espacement", "E", "间距（默认300）")
+                p.SetPersistentData(Grasshopper.Kernel.Types.GH_Number(300))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
                 self.SetUpParam(p, "HT_Length", "HT", "最后距离曲线的点至少大于（默认20）")
+                p.SetPersistentData(Grasshopper.Kernel.Types.GH_Number(20))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
                 self.SetUpParam(p, "Offset", "O", "偏移起始点在曲线上的位置（默认偏移0）")
+                p.SetPersistentData(Grasshopper.Kernel.Types.GH_Number(0))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
                 self.SetUpParam(p, "Style", "S", "均分样式 默认为：2（0：从起始点开始，1：从结束点开始，2：从中心点开始）")
+                p.SetPersistentData(Grasshopper.Kernel.Types.GH_Number(2))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                p = Grasshopper.Kernel.Parameters.Param_Point()
                 self.SetUpParam(p, "PointAtCurve", "P", "在曲线上的点")
                 self.Params.Output.Add(p)
 
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                p = Grasshopper.Kernel.Parameters.Param_Number()
                 self.SetUpParam(p, "Parameter", "t", "在曲线上的长度")
                 self.Params.Output.Add(p)
 
@@ -1627,15 +1650,6 @@ try:
 
             def __init__(self):
                 pass
-
-            def message1(self, msg1):  # 报错红
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):  # 警告黄
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):  # 提示白
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
 
             def mes_box(self, info, button, title):
                 return rs.MessageBox(info, button, title)
@@ -1731,17 +1745,10 @@ try:
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
                     sc.doc = ghdoc
 
-                    # 参数定义
-                    if Espacement == None:
-                        Espacement = 300
-                    if HT_Length == None:
-                        HT_Length = 100
-                    if Offset == None:
-                        Offset = 0
-                    if Style == None:
-                        Style = 2
-                    if 'empty tree' in str(Curve):
-                        self.message2('请输入曲线')
+                    re_mes = Message.RE_MES([Curve], ['Curve'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
                         return gd[object](), gd[object]()
                     else:
                         return self.Processing_Operations(Curve, Espacement, HT_Length, Offset, Style)
@@ -1754,9 +1761,9 @@ try:
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
                                                                    "RPP-统一曲线方向", "RPP_Filp Curve", """统一该曲线的方向。
-                   传入曲线则所有曲线跟曲线方向保持一致
-                   传入真值则为一组数据中曲线中心点最高的曲线为统一方向
-                   反之中心点最低的曲线""", "Scavenger", "Curve")
+                           传入曲线则所有曲线跟曲线方向保持一致
+                           传入真值则为一组数据中曲线中心点最高的曲线为统一方向
+                           反之中心点最低的曲线""", "Scavenger", "Curve")
                 return instance
 
             def get_ComponentGuid(self):
@@ -1778,10 +1785,11 @@ try:
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                p = Grasshopper.Kernel.Parameters.Param_Boolean()
                 self.SetUpParam(p, "Direction", "G", "真值则为曲线中中心点最高的曲线、假值则相反（默认真值）\
-                           如果为曲线则使用该曲线统一方向\
-                           ")
+                                   如果为曲线则使用该曲线统一方向\
+                                   ")
+                p.SetPersistentData(Grasshopper.Kernel.Types.GH_Boolean(True))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
@@ -1812,15 +1820,6 @@ try:
 
             def __init__(self):
                 pass
-
-            def message1(self, msg1):  # 报错红
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):  # 警告黄
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):  # 提示白
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
 
             def mes_box(self, info, button, title):
                 return rs.MessageBox(info, button, title)
@@ -1887,19 +1886,18 @@ try:
 
             def RunScript(self, Curve, Guide):
                 try:
-                    sc.doc = Rhino.RhinoDoc.ActiveDoc
-                    sc.doc.Views.Redraw()
-                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
-                    sc.doc = ghdoc
-
-                    Curve_Tree, Flag_Tree = gd[object](), gd[object]()
-                    if 'empty tree' in str(Curve):
-                        self.message2('请输入曲线')
+                    re_mes = Message.RE_MES([Curve], ['Curve'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                        return gd[object](), gd[object]()
                     else:
+                        sc.doc = Rhino.RhinoDoc.ActiveDoc
+                        sc.doc.Views.Redraw()
                         # 默认有值都为真
                         Value = True
                         # 传入 假值
-                        if Guide == 'False' or Guide == 'false' or Guide == False:
+                        if Guide == False:
                             Value = False
                         # 传入曲线
                         elif 'Curve' in str(type(Guide)):
@@ -1907,6 +1905,8 @@ try:
                         Guide = Value
 
                         Curve_Tree, Flag_Tree = self.Curve_Multiprocess(Curve, Guide)
+                        ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                        sc.doc = ghdoc
                     return Curve_Tree, Flag_Tree
                 finally:
                     self.Message = '统一曲线方向'
@@ -1942,11 +1942,12 @@ try:
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
                 self.SetUpParam(p, "Count", "C", "需要的角平分线段数；个数为（Count - 1）")
+                p.SetPersistentData(Grasshopper.Kernel.Types.GH_Integer(2))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                p = Grasshopper.Kernel.Parameters.Param_Curve()
                 self.SetUpParam(p, "Angular_Bisector", "BC", "输出的角平分线段")
                 self.Params.Output.Add(p)
 
@@ -1965,15 +1966,6 @@ try:
             def __init__(self):
                 self.eq_part_num = None
                 self.tol = sc.doc.ModelAbsoluteTolerance
-
-            def message1(self, msg1):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
 
             def mes_box(self, info, button, title):
                 return rs.MessageBox(info, button, title)
@@ -2064,17 +2056,15 @@ try:
                 try:
                     sc.doc = Rhino.RhinoDoc.ActiveDoc
                     Angular_Bisector = gd[object]()
-
-                    self.eq_part_num = Count if Count else 2
-
+                    self.eq_part_num = Count
                     poly_trunk_list, poly_trunk_path = self.Branch_Route(Polyline)
-                    plly_trunk_length = len(filter(None, list(chain(*poly_trunk_list))))
-
-                    if plly_trunk_length:
+                    re_mes = Message.RE_MES([Polyline], ['Polyline'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                    else:
                         iter_ungroup_data = ghp.run(self._get_result, zip(poly_trunk_list, poly_trunk_path))
                         Angular_Bisector = self.format_tree(iter_ungroup_data)
-                    else:
-                        self.message2('P端数据为空！')
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
                     sc.doc = ghdoc
@@ -2126,15 +2116,15 @@ try:
                 self.SetUpParam(p, "Relationship", "R", "点与封闭曲线的关系（0 = 外部，1=在曲线上，2=内部）")
                 self.Params.Output.Add(p)
 
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                p = Grasshopper.Kernel.Parameters.Param_Integer()
                 self.SetUpParam(p, "In_Curve_Index", "ICI", "封闭曲线上的点在原列表中的下标")
                 self.Params.Output.Add(p)
 
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                p = Grasshopper.Kernel.Parameters.Param_Integer()
                 self.SetUpParam(p, "Outside_Curve_Index", "OCI", "封闭曲线外的点在原列表中的下标")
                 self.Params.Output.Add(p)
 
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                p = Grasshopper.Kernel.Parameters.Param_Integer()
                 self.SetUpParam(p, "Inside_Curve_Index", "ISCI", "封闭曲线内的点在原列表中的下标")
                 self.Params.Output.Add(p)
 
@@ -2159,15 +2149,6 @@ try:
 
             def __init__(self):
                 self.tol = None
-
-            def message1(self, msg1):  # 报错红
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):  # 警告黄
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):  # 提示白
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
 
             def mes_box(self, info, button, title):
                 return rs.MessageBox(info, button, title)
@@ -2228,13 +2209,11 @@ try:
                     Relationship, In_Curve_Index, Outside_Curve_Index, Inside_Curve_Index = (gd[object]() for _ in range(4))
                     self.tol = Tol
 
-                    if not (Points or Curve):
-                        self.message2('P端不能为空！')
-                        self.message2('C端不能为空！')
-                    elif not Points:
-                        self.message2('P端不能为空！')
-                    elif not Curve:
-                        self.message2('C端不能为空！')
+                    re_mes = Message.RE_MES([Points, Curve], ['Points', 'Curve'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                        return gd[object](), gd[object](), gd[object](), gd[object]()
                     else:
                         Relationship, In_Curve_Index, Outside_Curve_Index, Inside_Curve_Index = self.relationship_point_curve(Points, Curve)
 
@@ -2286,19 +2265,19 @@ try:
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                p = Grasshopper.Kernel.Parameters.Param_Curve()
                 self.SetUpParam(p, "Curve1", "C1", "与向量平行的线段集合")
                 self.Params.Output.Add(p)
 
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                p = Grasshopper.Kernel.Parameters.Param_Curve()
                 self.SetUpParam(p, "Curve2", "C2", "与向量不平行的线段集合")
                 self.Params.Output.Add(p)
 
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                p = Grasshopper.Kernel.Parameters.Param_Integer()
                 self.SetUpParam(p, "Index1", "I1", "与向量平行的线段在原线段集合中的下标")
                 self.Params.Output.Add(p)
 
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                p = Grasshopper.Kernel.Parameters.Param_Integer()
                 self.SetUpParam(p, "Index2", "I2", "与向量不平行的线段在原线段集合中的下标")
                 self.Params.Output.Add(p)
 
@@ -2323,15 +2302,6 @@ try:
 
             def __init__(self):
                 self.angle = None
-
-            def message1(self, msg1):  # 报错红
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):  # 警告黄
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):  # 提示白
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
 
             def mes_box(self, info, button, title):
                 return rs.MessageBox(info, button, title)
@@ -2399,13 +2369,10 @@ try:
 
                     tree_of_curve, curve_tree_path = self.Branch_Route(Curve)
                     tree_of_vector = self.Branch_Route(Vector)[0]
-                    if not (tree_of_curve or tree_of_vector):
-                        self.message2('C端不能为空！')
-                        self.message2('V端不能为空！')
-                    elif not tree_of_curve:
-                        self.message2('C端不能为空！')
-                    elif not tree_of_vector:
-                        self.message2('V端不能为空！')
+                    re_mes = Message.RE_MES([Curve, Vector, Angle], ['Curve', 'Vector', 'Angle'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
                     else:
                         c_len, v_len = len(tree_of_curve), len(tree_of_vector)
                         if c_len > v_len:
@@ -2481,15 +2448,6 @@ try:
             def __init__(self):
                 pass
 
-            def message1(self, msg1):  # 报错红
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):  # 警告黄
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):  # 提示白
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
-
             def mes_box(self, info, button, title):
                 return rs.MessageBox(info, button, title)
 
@@ -2532,18 +2490,14 @@ try:
             def RunScript(self, C1, C2, n):
                 try:
                     sc.doc = Rhino.RhinoDoc.ActiveDoc
-                    if C1 and C2:
-                        return self.Tween_Cruve(C1, C2, n)
-                    elif C1 is None and C2 is None:
-                        self.message2("C1为空!")
-                        self.message2("C2为空!")
-                    elif C1 is None:
-                        self.message2("C1为空!")
-                    elif C2 is None:
-                        self.message2("C2为空!")
-                    else:
-                        pass
 
+                    re_mes = Message.RE_MES([C1, C2], ['C1', 'C2'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                        return gd[object](), gd[object]()
+                    else:
+                        return self.Tween_Cruve(C1, C2, n)
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
                     sc.doc = ghdoc
@@ -2584,6 +2538,7 @@ try:
 
                 p = Grasshopper.Kernel.Parameters.Param_Boolean()
                 self.SetUpParam(p, "Flip", "F", "是否反转曲线")
+                p.PersistentData.Append(Grasshopper.Kernel.Types.GH_Boolean(True))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
@@ -2621,15 +2576,6 @@ try:
             def __init__(self):
                 self.flip = None
                 self.factor = None
-
-            def message1(self, msg1):  # 报错红
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):  # 警告黄
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):  # 提示白
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
 
             def mes_box(self, info, button, title):
                 return rs.MessageBox(info, button, title)
@@ -2670,22 +2616,20 @@ try:
                 try:
                     sc.doc = Rhino.RhinoDoc.ActiveDoc
                     Trim_List, Parameters, Intersected = (gd[object]() for _ in range(3))
-                    self.flip = True if Flip else False
+                    self.flip = Flip
                     self.factor = sc.doc.ModelAbsoluteTolerance
 
-                    if not (Curve or Plane):
-                        self.message2('C端数据为空！')
-                        self.message2('P端数据为空！')
-                    elif not Curve:
-                        self.message2('C端数据为空！')
-                    elif not Plane:
-                        self.message2('P端数据为空！')
+                    re_mes = Message.RE_MES([Curve, Plane], ['Curve', 'Plane'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                        return gd[object](), gd[object](), gd[object]()
                     else:
                         curve_event = rg.Intersect.Intersection.CurvePlane(Curve, Plane, self.factor)
                         if not curve_event:
                             Intersected = False
                             Trim_List = Curve
-                            self.message2('平面未与曲线相交！')
+                            Message.message2('平面未与曲线相交！')
                         else:
                             if self.flip:
                                 Curve.Reverse
@@ -2740,11 +2684,11 @@ try:
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                p = Grasshopper.Kernel.Parameters.Param_Curve()
                 self.SetUpParam(p, "Curve", "C", "曲线")
                 self.Params.Output.Add(p)
 
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                p = Grasshopper.Kernel.Parameters.Param_Boolean()
                 self.SetUpParam(p, "Bool", "B", "True反转，False未反转")
                 self.Params.Output.Add(p)
 
@@ -2766,15 +2710,6 @@ try:
 
             def __init__(self):
                 self.plane = rg.Plane.WorldXY
-
-            def message1(self, msg1):  # 报错红
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):  # 警告黄
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):  # 提示白
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
 
             def mes_box(self, info, button, title):
                 return rs.MessageBox(info, button, title)
@@ -2832,14 +2767,15 @@ try:
                     sc.doc = Rhino.RhinoDoc.ActiveDoc
                     Curve, Bool = (gd[object]() for _ in range(2))
 
-                    if curve is None or curve == None:
-                        self.message2("curve为空!")
-                        return Curve, Bool
+                    re_mes = Message.RE_MES([curve, plane], ['curve', 'plane'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
 
                     if self.is_curve_closed(curve):
                         Curve, Bool = self.unify_curve(curve, plane)
                     else:
-                        self.message1("要求闭合的Curve!")
+                        Message.message1(self, "要求闭合的Curve!")
 
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
@@ -2900,16 +2836,7 @@ try:
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
-                self.tol = sc.doc.ModelAbsoluteTolerance
-
-            def message1(self, msg1):  # 报错红
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):  # 警告黄
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):  # 提示白
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
+                pass
 
             def mes_box(self, info, button, title):
                 return rs.MessageBox(info, button, title)
@@ -2946,6 +2873,36 @@ try:
                             stock_tree.Insert(item, path, index)
                 return stock_tree
 
+            def unify_curve_direction(self, reference_curve, curve_list):  # 统一曲线方向
+                reference_start_point = reference_curve.PointAtStart
+                reference_end_point = reference_curve.PointAtEnd
+
+                # 计算参考曲线的方向向量
+                reference_curve_vector = rg.Vector3d(reference_end_point - reference_start_point)
+
+                # 创建一个存储处理后的曲线的列表
+                unified_curves = []
+
+                for curve in curve_list:
+                    # 判断曲线是否闭合
+                    if curve.IsClosed:
+                        unified_curves.append(curve)
+                    else:
+                        # 获取曲线的起点和终点
+                        start_point = curve.PointAtStart
+                        end_point = curve.PointAtEnd
+
+                        # 计算曲线的方向向量
+                        curve_vector = rg.Vector3d(end_point - start_point)
+
+                        # 判断曲线方向是否需要反转
+                        if not curve_vector.IsTiny() and curve_vector * reference_curve_vector < 0:
+                            curve.Reverse()
+
+                        unified_curves.append(curve)
+
+                return unified_curves
+
             def remove_duplicate_lines(self, lines, tolerance):
                 unique_lines = []
                 for line in lines:
@@ -2964,11 +2921,13 @@ try:
                     sc.doc = Rhino.RhinoDoc.ActiveDoc
                     Res_Curve = gd[object]()
 
-                    tol = tol if tol else self.tol
-                    if len(curves) != 0:
-                        Res_Curve = self.remove_duplicate_lines(curves, tol)
+                    re_mes = Message.RE_MES([curves], ['curves'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
                     else:
-                        self.message2("Curve为空!")
+                        curve_list = self.unify_curve_direction(curves[0], curves)
+                        Res_Curve = self.remove_duplicate_lines(curve_list, tol)
 
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
@@ -3002,7 +2961,7 @@ try:
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Curve()
                 self.SetUpParam(p, "Curve", "C", "一组相交曲线")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
@@ -3013,7 +2972,7 @@ try:
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                p = Grasshopper.Kernel.Parameters.Param_Curve()
                 self.SetUpParam(p, "Res_Curve", "C", "在交点位置打断的曲线")
                 self.Params.Output.Add(p)
 
@@ -3077,11 +3036,15 @@ try:
                 return stock_tree
 
             def temp(self, tuple):
-                curve, points = tuple
-                curves = self.split_curve(curve, points)
-                return curves
+                curve, points, origin_path = tuple
+                sub_zip_list = zip(curve, points)
+                res_list = map(self.split_curve, sub_zip_list)
+                ungroup_data = self.split_tree(res_list, origin_path)
+                Rhino.RhinoApp.Wait()
+                return ungroup_data
 
-            def split_curve(self, curve, points):
+            def split_curve(self, tuple_data):
+                curve, points = tuple_data
                 t = []
                 for p in points:
                     t.append(curve.ClosestPoint(p)[1])
@@ -3100,23 +3063,27 @@ try:
                             if i.IsPoint:
                                 pts.append(i.PointA)
                     intersection_points_list.append(pts)  # 将交点添加到列表中
+
+                Rhino.RhinoApp.Wait()
                 return intersection_points_list
 
             def RunScript(self, curve, tol):
                 try:
                     sc.doc = Rhino.RhinoDoc.ActiveDoc
-                    Broken_curve = gd[object]()
                     self.tol = tol if tol else self.tol
+                    Broken_curve = gd[object]()
 
-                    if curve:
-                        self.tol = tol if tol else self.tol
-                        intersection_points_list = self.Find_Intersections(curve)
+                    curve_trunk_list, trunk_path = self.Branch_Route(curve)
+                    c_len = len(curve_trunk_list)
 
-                        zip_list = list(zip(curve, intersection_points_list))
-                        Broken_curve = ghp.run(self.temp, zip_list)
-                        Broken_curve = ght.list_to_tree(Broken_curve)
+                    if c_len:
+                        intersection_points_list = ghp.run(self.Find_Intersections, curve_trunk_list)
+
+                        zip_list = zip(curve_trunk_list, intersection_points_list, trunk_path)
+                        iter_ungroup_data = ghp.run(self.temp, zip_list)
+                        Broken_curve = self.format_tree(iter_ungroup_data)
                     else:
-                        self.message2('C端不能为空！')
+                        self.message2('C端数据为空！')
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
                     sc.doc = ghdoc
@@ -3164,11 +3131,11 @@ try:
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                p = Grasshopper.Kernel.Parameters.Param_Curve()
                 self.SetUpParam(p, "Res_Curve", "C", "延伸后的曲线")
                 self.Params.Output.Add(p)
 
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                p = Grasshopper.Kernel.Parameters.Param_Boolean()
                 self.SetUpParam(p, "Res_Bool", "B", "原始曲线能延伸至目标曲线则为True、否则为False")
                 self.Params.Output.Add(p)
 
@@ -3197,15 +3164,6 @@ try:
             def __init__(self):
                 self.tol = sc.doc.ModelAbsoluteTolerance
                 self.type_dict = {0: 'Line', 1: 'Arc', 2: 'Smooth'}
-
-            def message1(self, msg1):  # 报错红
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):  # 警告黄
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):  # 提示白
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
 
             def mes_box(self, info, button, title):
                 return rs.MessageBox(info, button, title)
@@ -3264,13 +3222,10 @@ try:
                     sc.doc = Rhino.RhinoDoc.ActiveDoc
                     Res_Curve, Res_Bool, Extend_Type = (gd[object]() for _ in range(3))
 
-                    if not (Curve or Target_Curve):
-                        self.message2('C端不能为空！')
-                        self.message2('T端不能为空！')
-                    elif not Curve:
-                        self.message2('C端不能为空！')
-                    elif not Target_Curve:
-                        self.message2('T端不能为空！')
+                    re_mes = Message.RE_MES([Curve, Target_Curve], ['Curve', Target_Curve])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
                     else:
                         start_curve = Curve.Extend(rg.CurveEnd.Start, 100000, eval('rg.CurveExtensionStyle.{}'.format(self.type_dict[Type])))
                         end_curve = Curve.Extend(rg.CurveEnd.End, 100000, eval('rg.CurveExtensionStyle.{}'.format(self.type_dict[Type])))
@@ -3360,7 +3315,7 @@ try:
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                p = Grasshopper.Kernel.Parameters.Param_Curve()
                 self.SetUpParam(p, "Curve", "C", "确定方向后的曲线")
                 self.Params.Output.Add(p)
 
@@ -3379,15 +3334,6 @@ try:
 
             def __init__(self):
                 pass
-
-            def message1(self, msg1):  # 报错红
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):  # 警告黄
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):  # 提示白
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
 
             def mes_box(self, info, button, title):
                 return rs.MessageBox(info, button, title)
@@ -3458,13 +3404,10 @@ try:
                     rcurve = gd[object]()
                     sc.doc = Rhino.RhinoDoc.ActiveDoc
 
-                    if Curve == None:
-                        self.message2("C端为空！")
-                        return rcurve
-
-                    elif Geomertry == None or len(Geomertry) == 0:
-                        self.message2("G端为空！")
-                        return rcurve
+                    re_mes = Message.RE_MES([Curve, Geomertry], ['Curve', 'Geomertry'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
                     else:
                         curve_point = self.compare_distance(Curve, Geomertry)
                         if Reverse:
@@ -3479,6 +3422,195 @@ try:
 
                 finally:
                     self.Message = '物件确定曲线方向'
+
+
+        # 边界矩形
+        class BoundingRectangle(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP_边界矩形", "RPP-BoundingRectangle", """为一组几何物体创建边界矩形""", "Scavenger", "Curve")
+                return instance
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.quarternary
+
+            def get_ComponentGuid(self):
+                return System.Guid("ce6e9b19-3d20-4985-b63e-645dae646330")
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Object", "O", "一组几何物体")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Plane()
+                self.SetUpParam(p, "Plane", "Pl", "原始的平面")
+                ORIGIN_PLANE = rg.Plane.WorldXY
+                p.SetPersistentData(gk.Types.GH_Plane(ORIGIN_PLANE))
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Rectangle()
+                self.SetUpParam(p, "Bounding", "B", "生成的边界矩形")
+                self.Params.Output.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Number()
+                self.SetUpParam(p, "Dim-X", "X", "矩形平面的X方向尺寸")
+                self.Params.Output.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Number()
+                self.SetUpParam(p, "Dim-Y", "Y", "矩形平面的Y方向尺寸")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                p1 = self.marshal.GetInput(DA, 1)
+                result = self.RunScript(p0, p1)
+
+                if result is not None:
+                    if not hasattr(result, '__getitem__'):
+                        self.marshal.SetOutput(result, DA, 0, True)
+                    else:
+                        self.marshal.SetOutput(result[0], DA, 0, True)
+                        self.marshal.SetOutput(result[1], DA, 1, True)
+                        self.marshal.SetOutput(result[2], DA, 2, True)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAADPSURBVEhLvY3RDQMhDEOZpN+dsut0hy7ScTiSJuAEJAh3V0sPhdjgVJRvJuXX95F2magVvD/PPKPkmJHn4e/vLCiyBfpY5mXoI6Ts+B+aawEdaMyQN7/BedsFkkNYPhcuEF/p5HLrBbJXhnI5VrSgk/O7TKTACPZ0KEbkhwv0Ljs6minCzHIBIhkevMDnOVQgnmLkfBbtdgqMnGd82kcLjOCRUqVvtgrgTkczRPgmVIBIjgeUz50tqBpliDMFVSNfmRZcxf8LaHE19e/7SPkAfwbyenorel0AAAAASUVORK5CYII="
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def __init__(self):
+                self.ref_plane = None
+
+            def message1(self, msg1):  # 报错红
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
+
+            def message2(self, msg2):  # 警告黄
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
+
+            def message3(self, msg3):  # 提示白
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
+
+            def mes_box(self, info, button, title):
+                return rs.MessageBox(info, button, title)
+
+            def Branch_Route(self, Tree):
+                """分解Tree操作，树形以及多进程框架代码"""
+                Tree_list = [list(_) for _ in Tree.Branches]
+                Tree_Path = [list(_) for _ in Tree.Paths]
+                return Tree_list, Tree_Path
+
+            def split_tree(self, tree_data, tree_path):
+                """操作树单枝的代码"""
+                new_tree = ght.list_to_tree(tree_data, True, tree_path)  # 此处可替换复写的Tree_To_List（源码参照Vector组-点集根据与曲线距离分组）
+                result_data, result_path = self.Branch_Route(new_tree)
+                if list(chain(*result_data)):
+                    return result_data, result_path
+                else:
+                    return [[]], result_path
+
+            def format_tree(self, result_tree):
+                """匹配树路径的代码，利用空树创造与源树路径匹配的树形结构分支"""
+                stock_tree = gd[object]()
+                for sub_tree in result_tree:
+                    fruit, branch = sub_tree
+                    for index, item in enumerate(fruit):
+                        path = gk.Data.GH_Path(System.Array[int](branch[index]))
+                        if hasattr(item, '__iter__'):
+                            if item:
+                                for sub_index in range(len(item)):
+                                    stock_tree.Insert(item[sub_index], path, sub_index)
+                            else:
+                                stock_tree.AddRange(item, path)
+                        else:
+                            stock_tree.Insert(item, path, index)
+                return stock_tree
+
+            def get_boxegde(self, obj):
+                origin_boundingbox = rg.BoundingBox.Empty
+                pts_list = [[_] if type(_) is rg.Point3d else rg.Box(self.ref_plane, _).GetCorners() for _ in obj]
+                box_egde = rg.Box(self.ref_plane, list(chain(*pts_list)))
+                return box_egde
+
+            def get_sub_box(self, box, pln):
+                turn_box = box.ToBrep()
+                if turn_box:
+                    face_list = [_ for _ in box.ToBrep().Faces]
+                    face_pln_list = []
+                    for face in face_list:
+                        set_data = face.TryGetPlane()
+                        if set_data[0]:
+                            face_pln_list.append(set_data[1])
+                        else:
+                            face_pln_list.append(rg.Plane.WorldXY)
+
+                    ref_vector = pln.Normal
+                    vector_is_parallel = [_.Normal.IsParallelTo(ref_vector) for _ in face_pln_list]
+                    sub_index = vector_is_parallel.index(-1)
+                    sub_suface = face_list[sub_index]
+
+                    new_sub_box = rg.Box(pln, sub_suface)
+                    work_pln = face_pln_list[sub_index]
+                    work_pln.Flip()
+                else:
+                    new_sub_box = box
+                    work_pln = pln
+                corners = list(set(new_sub_box.GetCorners()))
+                pt_1, pt_2 = self.get_two_pt(corners)
+                sub_box = rg.Rectangle3d(work_pln, pt_1, pt_2)
+                return sub_box
+
+            def get_two_pt(self, pts):
+                pt_one = pts[0]
+                max_values = []
+                for pt in pts:
+                    max_values.append(pt_one.DistanceTo(pt))
+                pt_two = pts[max_values.index(max(max_values))]
+                return pt_one, pt_two
+
+            def do_main(self, tuple_data):
+                objs, origin_path = tuple_data
+                objs = list(objs[0]) if 'List[object]' in str(objs) else objs
+                new_box = self.get_boxegde(objs)
+
+                New_BoundingBox = self.get_sub_box(new_box, self.ref_plane)
+                X_Dir = New_BoundingBox.Width
+                Y_Dir = New_BoundingBox.Height
+                ungroup_data = map(lambda x: self.split_tree(x, origin_path), [[New_BoundingBox], [X_Dir], [Y_Dir]])
+                Rhino.RhinoApp.Wait()
+                return ungroup_data
+
+            def RunScript(self, Object, Plane):
+                try:
+                    sc.doc = Rhino.RhinoDoc.ActiveDoc
+                    Bounding, X, Y = (gd[object]() for _ in range(3))
+                    self.ref_plane = Plane
+
+                    trunk_object, trunk_path = self.Branch_Route(Object)
+                    o_len = len(trunk_object)
+
+                    if o_len:
+                        iter_ungroup_data = zip(*ghp.run(self.do_main, zip(trunk_object, trunk_path)))
+                        Bounding, X, Y = ghp.run(lambda single_tree: self.format_tree(single_tree), iter_ungroup_data)
+                    else:
+                        self.message2("O端为空！")
+
+                    sc.doc.Views.Redraw()
+                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                    sc.doc = ghdoc
+
+                    return Bounding, X, Y
+                finally:
+                    self.Message = '边界矩形'
+
 
     else:
         pass
