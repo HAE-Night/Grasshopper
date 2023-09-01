@@ -11,13 +11,14 @@ import Grasshopper, GhPython
 import Rhino
 import rhinoscriptsyntax as rs
 import ghpythonlib.parallel as ghp
+from Grasshopper import DataTree as gd
 import urllib
 import random
 import json
 from hashlib import md5
 import re
 import sys
-import Curve_group
+import initialization
 import csv
 from itertools import chain
 import getpass
@@ -26,13 +27,10 @@ import time
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
-Result = Curve_group.Result
-Message = Curve_group.message()
+Result = initialization.Result
+Message = initialization.message()
 try:
     if Result is True:
-        """
-            切割 -- primary
-        """
         # 新建视图
         class CreateView(component):
             def __new__(cls):
@@ -150,6 +148,8 @@ try:
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
                 self.SetUpParam(p, "Index", "I", "选取列表中指定下标的字符串")
+                TARGET_INDEX = -1
+                p.SetPersistentData(Grasshopper.Kernel.Types.GH_Integer(TARGET_INDEX))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
@@ -204,14 +204,12 @@ try:
                 return result_str
 
             def RunScript(self, Text, Symbol, Index):
-                Index = -1 if Index is None else Index
+                All, Start, End, Result, Rest_list = (gd[object]() for _ in range(5))
                 if Text:
                     text_list = self._regular(Text) if Symbol is None else self._division(Text, Symbol)
                     All, Start, End, Result = text_list, text_list[0], text_list[-1], text_list[Index]
                     Rest_list = [_ for _ in text_list if _ != Result]
-                    return All, Start, End, Result, Rest_list
-                else:
-                    pass
+                return All, Start, End, Result, Rest_list
 
 
         # 字符处理2
@@ -265,17 +263,13 @@ try:
             punc = r'-_#@$%~&:'
 
             def RunScript(self, String, Symbol):
+                Result = gd[object]()
                 if String:
                     self.punc = r'-_#@$%~&' if Symbol is None else Symbol
                     Result = re.split(r"[%s]+" % self.punc, String)
-                    return Result
                 else:
                     pass
-
-
-        """
-            切割 -- secondary
-        """
+                return Result
 
 
         # 某度翻译
@@ -583,6 +577,5 @@ try:
 except:
     pass
 
-import GhPython
 import System
 
