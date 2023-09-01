@@ -10,21 +10,17 @@ import rhinoscriptsyntax as rs
 from functools import reduce
 import Rhino.Geometry as rg
 import ghpythonlib.components as ghc
-import Curve_group
+import initialization
 import math
 import scriptcontext as sc
 import Grasshopper.DataTree as gd
 import System.Collections.Generic.IEnumerable as IEnumerable
 
-Result = Curve_group.Result
-Message = Curve_group.message()
+Result = initialization.Result
+Message = initialization.message()
+
 try:
     if Result is True:
-        """
-            切割 -- primary
-        """
-
-
         # 曲面收边
         class ShrinkSurface(component):
             def __new__(cls):
@@ -53,7 +49,8 @@ try:
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
                 self.SetUpParam(p, "Type", "T", "{0: \"不收东边\", 1: \"不收北边\", 2: \"不收南边\", 3: \"不收西边\", 4: \"收至最小\"}")
-                p.SetPersistentData(Grasshopper.Kernel.Types.GH_Integer(4))
+                EDGECODE = 4
+                p.SetPersistentData(Grasshopper.Kernel.Types.GH_Integer(EDGECODE))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
@@ -217,14 +214,12 @@ try:
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Divisor", "D1", "除数，默认1000000")
-                p.SetPersistentData(Grasshopper.Kernel.Types.GH_Number(1000000))
+                self.SetUpParam(p, "Divisor", "D1", "除数，默认百万1000000")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
                 self.SetUpParam(p, "Decimals", "D2", "保留小数位，默认三位")
-                p.SetPersistentData(Grasshopper.Kernel.Types.GH_Number(3))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
@@ -247,20 +242,13 @@ try:
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def RunScript(self, Breps, Divisor, Decimals):
-                try:
-                    re_mes = Message.RE_MES([Breps], ['Breps'])
-                    if len(re_mes) > 0:
-                        for mes_i in re_mes:
-                            Message.message2(self, mes_i)
-                        return gd[object]()
-                    else:
-                        divisor = Divisor
-                        digit = ".%uF" % Decimals
-                        # 计算
-                        Area = [format(rs.SurfaceArea(i)[0] / divisor, digit) for i in Breps]
-                        return Area
-                finally:
-                    self.Message = 'Sur面积'
+                # 初始化参数
+                divisor = Divisor if Divisor else 1000000
+                digit = ".%uF" % Decimals if Decimals else ".3F"
+
+                # 计算
+                Area = [format(rs.SurfaceArea(i)[0] / divisor, digit) for i in Breps]
+                return Area
 
 
         # 曲面或者Brep反转
@@ -350,11 +338,6 @@ try:
                     self.Message = "Brep反转"
 
 
-        """
-            切割 -- secondary
-        """
-
-
         # 扫出曲面
         class SweepOutFitting(component):
             def __new__(cls):
@@ -407,14 +390,14 @@ try:
 
             def RunScript(self, Sweep_Curve, Shape_Curve):
                 try:
+                    Brep = gd[object]()
                     re_mes = Message.RE_MES([Sweep_Curve, Shape_Curve], ['Sweep_Curve', Shape_Curve])
                     if len(re_mes) > 0:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
-                        return gd[object]()
                     else:
                         Brep = rg.Brep.CreateFromSweep(Sweep_Curve, Shape_Curve, 1, 1.0)
-                        return Brep
+                    return Brep
                 finally:
                     self.Message = '扫出曲面'
 
@@ -449,7 +432,8 @@ try:
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
                 self.SetUpParam(p, "Type", "T", "挤出的类型，{0： Line， 1： Arc， 2： Smooth}")
-                p.SetPersistentData(Grasshopper.Kernel.Types.GH_String('0'))
+                DEFAULT_TYPE = '0'
+                p.SetPersistentData(Grasshopper.Kernel.Types.GH_String(DEFAULT_TYPE))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
@@ -578,22 +562,22 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Brep()
-                self.SetUpParam(p, "G1", "G1", "The x script variable")
+                self.SetUpParam(p, "G1", "G1", "第一个面")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Brep()
-                self.SetUpParam(p, "G2", "G2", "Script input Geo2.")
+                self.SetUpParam(p, "G2", "G2", "第二个面")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "angle", "A1", "Script output angle.")
+                self.SetUpParam(p, "Angle1", "A1", "面之间的夹角")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "a", "A2", "Script output angle2.")
+                self.SetUpParam(p, "Angle2", "A2", "面之间的补角")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -648,7 +632,7 @@ try:
                         cpty, cpay = self.CP(ptsy)
                         angle = math.degrees(self.Angle(cpax, cpay))
                         angle2 = 180 - angle
-                        return (angle, angle2)
+                        return angle, angle2
                 finally:
                     self.Message = '两曲面间夹角'
 
@@ -686,6 +670,8 @@ try:
 
                 p = Grasshopper.Kernel.Parameters.Param_Plane()
                 self.SetUpParam(p, "CP", "CP", "参照平面")
+                REF_PLANE = rg.Plane.WorldXY
+                p.SetPersistentData(Grasshopper.Kernel.Types.GH_Plane(REF_PLANE))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
@@ -709,7 +695,6 @@ try:
 
             def __init__(self):
                 self.dict_axis = {'X': 'x_coordinate', 'Y': 'y_coordinate', 'Z': 'z_coordinate'}
-
 
             def _normal_fun(self, geo_list):
                 for f_index in range(len(geo_list)):
@@ -736,11 +721,11 @@ try:
 
             def RunScript(self, Geo, Axis, CP):
                 try:
+                    Sort_Geo = gd[object]()
                     re_mes = Message.RE_MES([Geo], ['Geo'])
                     if len(re_mes) > 0:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
-                        return gd[object]()
                     else:
                         if Axis:
                             Axis = Axis.upper()
@@ -752,14 +737,9 @@ try:
                         else:
                             Message.message3(self, "轴坐标未输入，将按照面积排序！")
                             Sort_Geo = self._normal_fun(Geo)
-                            return Sort_Geo
+                    return Sort_Geo
                 finally:
                     self.Message = '曲面排序'
-
-
-        """
-            切割 -- tertiary
-        """
 
 
         # 延伸曲面（不含非规整曲面）
@@ -904,12 +884,13 @@ try:
                 finally:
                     self.Message = '曲面延伸'
 
+
         # 曲线切割曲面
         class BrepSplitByCurve(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
                                                                    "RPP-曲线分割曲面", "RPP_BrepSplitByCurve", """利用曲线对曲面进行切割；
-        注：需要两者相交""", "Scavenger", "Surface")
+                注：需要两者相交""", "Scavenger", "Surface")
                 return instance
 
             def get_ComponentGuid(self):
@@ -989,6 +970,7 @@ try:
                         return res_surfaces
                 finally:
                     self.Message = '曲线分割曲面'
+
     else:
         pass
 except:
