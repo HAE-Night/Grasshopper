@@ -23,16 +23,13 @@ from Grasshopper.Kernel.Types import GH_GeometryGroup
 from Grasshopper.Kernel import GH_Convert
 from itertools import chain
 import re
-import Curve_group
+import initialization
 from operator import *
 
-Result = Curve_group.Result
+Result = initialization.Result
+Message = initialization.message()
 try:
     if Result is True:
-        """
-            切割 -- primary
-        """
-
 
         # 列表取值
         class list_values(component):
@@ -62,7 +59,7 @@ try:
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                p = Grasshopper.Kernel.Parameters.Param_String()
                 self.SetUpParam(p, "Index", "I", "取值下标")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
@@ -85,12 +82,20 @@ try:
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def RunScript(self, Lists, Index):
-                if Lists:
-                    indexlist = Index.split(" ")
-                    List = []
-                    for i in indexlist:
-                        List.append(Lists[int(i)])
+                try:
+                    List = gd[object]()
+                    re_mes = Message.RE_MES([Lists, Index], ['Lists', 'Index'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                    else:
+                        index_list = Index.split(" ")
+                        List = []
+                        for i in index_list:
+                            List.append(Lists[int(i)])
                     return List
+                finally:
+                    self.Message = '多下标取值'
 
 
         # 列表多下标取值
@@ -181,14 +186,13 @@ try:
                 return [None if index == '' else list_data[int(index)] for index in index_list]
 
             def RunScript(self, List, Index):
+                D1, D2, D3, D4, D5, D6 = (gd[object]() for _ in range(6))
                 if List:
                     index_array = self.handling(Index)
                     origin_data = [self.get_value(List, _) for _ in index_array]
                     output_tuple = tuple(origin_data)
                     D1, D2, D3, D4, D5, D6 = output_tuple
-                    return D1, D2, D3, D4, D5, D6
-                else:
-                    pass
+                return D1, D2, D3, D4, D5, D6
 
 
         # 列表切割
@@ -196,7 +200,7 @@ try:
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
                                                                    "RPP-列表切割", "RPP_List_Cut", """在列表指定下标处切割列表，树形结构输出；
-        （原电池最后一个下标不做参考，已改）""", "Scavenger", "Data")
+                （原电池最后一个下标不做参考，已改）""", "Scavenger", "Data")
                 return instance
 
             def get_ComponentGuid(self):
@@ -265,9 +269,17 @@ try:
                 return DataTree
 
             def RunScript(self, List, Index):
-                if List:
-                    DataTree = self.ListToTree(List, Index)
-                    return DataTree
+                try:
+                    re_mes = Message.RE_MES([List, Index], ['List', 'Index'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                        return gd[object]()
+                    else:
+                        DataTree = self.ListToTree(List, Index)
+                        return DataTree
+                finally:
+                    self.Message = '列表切割'
 
 
         # 求列表极值
@@ -298,6 +310,7 @@ try:
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
                 self.SetUpParam(p, "Extremum", "E", "极值的类型")
+                p.SetPersistentData(Grasshopper.Kernel.Types.GH_Integer(1))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
@@ -345,11 +358,18 @@ try:
                 return multiplier
 
             def RunScript(self, List, Extremum):
-                Extremum = 1 if Extremum is None else Extremum
-                if List:
-                    instruct = self.factor[Extremum]
-                    command = eval('self.{}(List)'.format(instruct))
-                    return command
+                try:
+                    re_mes = Message.RE_MES([List], ['List'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                        return gd[object]()
+                    else:
+                        instruct = self.factor[Extremum]
+                        command = eval('self.{}(List)'.format(instruct))
+                        return command
+                finally:
+                    self.Message = '列表极值'
 
 
         # 列表数据删除
@@ -357,11 +377,11 @@ try:
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
                                                                    "RPP-删除列表首尾值", "RPP_删除列表首尾值", """删除列表第一个值
-        删除列表最后值
-        删除列表第一个和最后的值
-        列表的第一个值
-        列表的最后值
-        """, "Scavenger", "Data")
+                删除列表最后值
+                删除列表第一个和最后的值
+                列表的第一个值
+                列表的最后值
+                """, "Scavenger", "Data")
                 return instance
 
             def get_ComponentGuid(self):
@@ -425,31 +445,20 @@ try:
             def __init__(self):
                 pass
 
-            def message1(self, msg1):  # 报错红
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):  # 警告黄
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):  # 提示白
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
-
             def mes_box(self, info, button, title):
                 return rs.MessageBox(info, button, title)
 
             def RunScript(self, List):
                 try:
-                    if not List:
-                        self.message2('请输入List参数')
+                    re_mes = Message.RE_MES([List], ['List'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
                         return gd[list](), gd[list](), gd[list](), gd[list](), gd[list]()
-                    return List[1:], List[:-1], List[1:-1], List[0], List[-1]
+                    else:
+                        return List[1:], List[:-1], List[1:-1], List[0], List[-1]
                 finally:
                     self.Message = '列表首尾删除'
-
-
-        """
-            切割 -- secondary
-        """
 
 
         # 树形取值
@@ -693,15 +702,6 @@ try:
             def __init__(self):
                 pass
 
-            def message1(self, msg1):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
-
             def handle_list_data(self, data):
                 for single in data:
                     if isinstance(single, (list)) is True:
@@ -710,8 +710,11 @@ try:
 
             def RunScript(self, Data_Tree):
                 try:
-                    is_judge = [list(_) for _ in Data_Tree.Branches]
-                    if len(is_judge) != 0:
+                    re_mes = Message.RE_MES([Data_Tree], ['Data_Tree'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                    else:
                         Data_Tree.SimplifyPaths()
                         origin_data = [list(_) for _ in Data_Tree.Branches]
                         path_list = [list(d.Indices) for d in Data_Tree.Paths]
@@ -726,8 +729,6 @@ try:
                         result = ght.list_to_tree(ghp.run(self.handle_list_data, depest_list))
                         result.SimplifyPaths()
                         return result
-                    else:
-                        self.message2("树形数据为空！")
                 finally:
                     self.Message = 'Simplify'
 
@@ -782,15 +783,6 @@ try:
 
             def __init__(self):
                 self.origin_data = None
-
-            def message1(self, msg1):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
 
             def mes_box(self, info, button, title):
                 return rs.MessageBox(info, button, title)
@@ -849,51 +841,53 @@ try:
                     Depth = 1 if Depth is None else Depth
                     Result = gd[object]()
                     Data_Tree.SimplifyPaths()
-
-                    temp_data = [list(_) for _ in Data_Tree.Branches]
-                    if Depth == 0:
-                        Result = [list(chain(*_)) for _ in temp_data]
-                        Result = ght.list_to_tree(Result)
-                        path_list = [_ for _ in Data_Tree.Paths]
-                        [Result.Paths[_].FromString(str(path_list[_])) for _ in range(len(Result.Paths))]
+                    re_mes = Message.RE_MES([Data_Tree], ['Data_Tree'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
                     else:
-                        self.origin_data = []
-                        for _ in temp_data:
-                            if len(_) == 1 and 'List[object]' in str(type(_[0])):
-                                gh_Geos = [gk.GH_Convert.ToGeometricGoo(g) for g in list(chain(*_[0]))]
-                                ghGroup = gk.Types.GH_GeometryGroup()
-                                ghGroup.Objects.AddRange(gh_Geos)
-                                self.origin_data.append([ghGroup])
-                            else:
-                                self.origin_data.append(self.flatten(_, []))
-
-                        if self.origin_data and len(self.origin_data) > 1:
-                            result_boolean = self._deepest_length(Data_Tree, Depth)
-                            if result_boolean is False:
-                                self.message3("修剪已达最深！")
-
-                            new_depth = Data_Tree.Paths[0].Length - 1 if result_boolean is False or result_boolean == -1 else Depth
-                            depth_cull = ['.CullElement()' for _ in range(new_depth)]
-                            origin_path = self._trim_tree([_ for _ in Data_Tree.Paths], depth_cull)
-                            index_list, new_paths = zip(*self._handle_path(origin_path))
-
-                            trunk_list = map(lambda x: list(chain(*[self.origin_data[_] for _ in x])), index_list)
-                            result_list = []
-                            for _ in trunk_list:
+                        temp_data = [list(_) for _ in Data_Tree.Branches]
+                        if Depth == 0:
+                            Result = [list(chain(*_)) for _ in temp_data]
+                            Result = ght.list_to_tree(Result)
+                            path_list = [_ for _ in Data_Tree.Paths]
+                            [Result.Paths[_].FromString(str(path_list[_])) for _ in range(len(Result.Paths))]
+                        else:
+                            self.origin_data = []
+                            for _ in temp_data:
                                 if len(_) == 1 and 'List[object]' in str(type(_[0])):
                                     gh_Geos = [gk.GH_Convert.ToGeometricGoo(g) for g in list(chain(*_[0]))]
                                     ghGroup = gk.Types.GH_GeometryGroup()
                                     ghGroup.Objects.AddRange(gh_Geos)
-                                    result_list.append([ghGroup])
+                                    self.origin_data.append([ghGroup])
                                 else:
-                                    result_list.append(self.flatten(_, []))
-                            Result = ght.list_to_tree(result_list)
-                            [Result.Paths[_].FromString(str(new_paths[_])) for _ in range(len(Result.Paths))]
+                                    self.origin_data.append(self.flatten(_, []))
 
-                        elif len(self.origin_data) == 1:
-                            Result = Data_Tree
-                        else:
-                            self.message2("树形数据为空！")
+                            if self.origin_data and len(self.origin_data) > 1:
+                                result_boolean = self._deepest_length(Data_Tree, Depth)
+                                if result_boolean is False:
+                                    Message.message3(self, "修剪已达最深！")
+
+                                new_depth = Data_Tree.Paths[0].Length - 1 if result_boolean is False or result_boolean == -1 else Depth
+                                depth_cull = ['.CullElement()' for _ in range(new_depth)]
+                                origin_path = self._trim_tree([_ for _ in Data_Tree.Paths], depth_cull)
+                                index_list, new_paths = zip(*self._handle_path(origin_path))
+
+                                trunk_list = map(lambda x: list(chain(*[self.origin_data[_] for _ in x])), index_list)
+                                result_list = []
+                                for _ in trunk_list:
+                                    if len(_) == 1 and 'List[object]' in str(type(_[0])):
+                                        gh_Geos = [gk.GH_Convert.ToGeometricGoo(g) for g in list(chain(*_[0]))]
+                                        ghGroup = gk.Types.GH_GeometryGroup()
+                                        ghGroup.Objects.AddRange(gh_Geos)
+                                        result_list.append([ghGroup])
+                                    else:
+                                        result_list.append(self.flatten(_, []))
+                                Result = ght.list_to_tree(result_list)
+                                [Result.Paths[_].FromString(str(new_paths[_])) for _ in range(len(Result.Paths))]
+
+                            elif len(self.origin_data) == 1:
+                                Result = Data_Tree
                     return Result
                 finally:
                     sc.doc.Views.Redraw()
@@ -958,15 +952,6 @@ try:
             def __init__(self):
                 pass
 
-            def message1(self, msg1):  # 报错红
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):  # 警告黄
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):  # 提示白
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
-
             def mes_box(self, info, button, title):
                 return rs.MessageBox(info, button, title)
 
@@ -994,8 +979,14 @@ try:
 
             def RunScript(self, DataTree_A, DataTree_B):
                 try:
-                    Data_ = map(self.Lindex, [DataTree_A, DataTree_B])
-                    Boolean_tree = self.Compare(Data_[0], Data_[1])
+                    Boolean_tree = gd[object]()
+                    re_mes = Message.RE_MES([DataTree_A, DataTree_B], ['DataTree_A', 'DataTree_B'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                    else:
+                        Data_ = map(self.Lindex, [DataTree_A, DataTree_B])
+                        Boolean_tree = self.Compare(Data_[0], Data_[1])
                     return Boolean_tree
                 finally:
                     self.Message = 'HAE 结构对比'
@@ -1047,18 +1038,6 @@ try:
                 o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAGpSURBVEhL7dIxSAJhFAdwHYSSC3ELbfOGSAfdDAfFQUKhJbEbWhLEwaDFJg2kQRwc6xzEa3VqklYlEKHpBEXEEAXDDEflhtNe3/U9ELfsbqp+cNzd/717H3z36f79Hkaj8SiXyz2FQqFrjDRjiEQit51OB4bDIbjd7ivMNbGXyWTqQPT7ffD7/VWSbdGSevuCIIyU4ZVKRXa5XHck26Yl9ezlcvm11WpBNBrlyfsBjbXhSSaT79PpFMxmM4eZNkwm0wnZDkn5mYFAoI+xNhwOx0WtVlO2/Eu9XpdYlj3HsjrkdGTb7TaOXmk0GkAWPiMtetq5OT3Hcffj8RhHrpMkCeLxuET6zLR9M0wikXicz+c4bp2yaLFYBK/XG8b+jeym0+lnnLVmuVzCaDSCUqn0YbfbT7H/+ywWi5Pn+Rect0aWZRgMBlAoFCSbzXaMn2zGarWGRVHEkSvKfvd6Pcjn828Mw3iw/WecTudlt9vF0QCz2QyazSakUimRlFnapZLP58tOJhNYLBZQrVYhFos9kHiHVjUSDAYF5aSQ+w1GmjOQ65A+/k063SdJvTL9DOGD2gAAAABJRU5ErkJggg=="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
-            def message1(self, msg1):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
-
-            def mes_box(self, info, button, title):
-                return rs.MessageBox(info, button, title)
-
             def fit_main(self, data):
                 if 'str' in str(type(data)):
                     if " " != data:
@@ -1067,17 +1046,21 @@ try:
                     return data
 
             def Data_cut(self, datalist):
-                # filter 过滤空值，并保留整数类型的0值
-                dalist = [data for data in datalist if self.fit_main(data) is not None or data == 0]
+                # filter 过滤空值
+                dalist = list(filter(self.fit_main, datalist))
                 return dalist
 
             def RunScript(self, Data):
                 try:
-                    tree_Data = [list(data_) for data_ in Data.Branches]
-                    tree_path = [path_ for path_ in Data.Paths]
-                    tree_data_len = len(tree_Data)
+                    re_mes = Message.RE_MES([Data], ['Data'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                        return gd[object]()
+                    else:
+                        tree_Data = [list(data_) for data_ in Data.Branches]
+                        tree_path = [path_ for path_ in Data.Paths]
 
-                    if tree_data_len:
                         Datas = ghp.run(self.Data_cut, tree_Data)
                         New_Tree = gd[object]()
                         for tr_ in range(Data.BranchCount):
@@ -1086,10 +1069,8 @@ try:
                             else:
                                 continue
                         return New_Tree
-                    else:
-                        self.message2('数据列表为空！')
                 finally:
-                    self.Message = 'HAE 数据清洗'
+                    self.Message = '数据清洗'
 
 
         # 数据对比
@@ -1200,30 +1181,36 @@ try:
                     return gbdatatree, datatree
 
             def RunScript(self, GroupByData, GroupData):
-                if GroupByData.BranchCount > 0:
-                    if GroupData.BranchCount < 1:
-                        GroupData2 = 0
-                    elif GroupData.BranchCount == GroupByData.BranchCount:
-                        GroupData2 = GroupData
-                    elif GroupData.BranchCount == 1 and GroupByData.BranchCount > 1:
-                        btype = type((th.tree_to_list(GroupData))[0])
-                        ggdata, GroupData2 = th.tree_to_list(GroupData), DataTree[btype]()
-                        for i in range(GroupByData.BranchCount):
-                            for j in range(len(ggdata)):
-                                GroupData2.Add(ggdata[j], GH_Path(i))
-                    elif GroupData.BranchCount % GroupByData.BranchCount == 0:
-                        btype = type((th.tree_to_list(GroupData))[0])
-                        GroupData2 = DataTree[btype]()
-                        for i in range(GroupByData.BranchCount / GroupData.BranchCount):
-                            for j in range(GroupData.BranchCount):
-                                ggdata = GroupData.Branch(j)
+                try:
+                    re_mes = Message.RE_MES([GroupByData, GroupData], ['GroupByData', 'GroupData'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                        return gd[object](), gd[object]()
+                    else:
+                        if GroupData.BranchCount < 1:
+                            GroupData2 = 0
+                        elif GroupData.BranchCount == GroupByData.BranchCount:
+                            GroupData2 = GroupData
+                        elif GroupData.BranchCount == 1 and GroupByData.BranchCount > 1:
+                            btype = type((th.tree_to_list(GroupData))[0])
+                            ggdata, GroupData2 = th.tree_to_list(GroupData), DataTree[btype]()
+                            for i in range(GroupByData.BranchCount):
                                 for j in range(len(ggdata)):
                                     GroupData2.Add(ggdata[j], GH_Path(i))
-                    gbdata, data = self.indextree(GroupByData, GroupData2)
-                    # return outputs if you have them; here I try it for you:
-                    return gbdata, data
-                else:
-                    pass
+                        elif GroupData.BranchCount % GroupByData.BranchCount == 0:
+                            btype = type((th.tree_to_list(GroupData))[0])
+                            GroupData2 = DataTree[btype]()
+                            for i in range(GroupByData.BranchCount / GroupData.BranchCount):
+                                for j in range(GroupData.BranchCount):
+                                    ggdata = GroupData.Branch(j)
+                                    for j in range(len(ggdata)):
+                                        GroupData2.Add(ggdata[j], GH_Path(i))
+                        gbdata, data = self.indextree(GroupByData, GroupData2)
+                        # return outputs if you have them; here I try it for you:
+                        return gbdata, data
+                finally:
+                    self.Message = '数据对比'
 
 
         # 数据比较
@@ -1259,6 +1246,7 @@ try:
 
                 p = Grasshopper.Kernel.Parameters.Param_Boolean()
                 self.SetUpParam(p, "Closed", "C", "是否闭合区间，默认闭合")
+                p.SetPersistentData(Grasshopper.Kernel.Types.GH_Boolean(True))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
@@ -1308,18 +1296,26 @@ try:
                 return data_list, self.type_dict[self.factor]
 
             def RunScript(self, Geometry, Specifylen, Close, Compare):
-                Close = True if Close is None else False
-                Compare = {True: ['>=', '<'], False: ['>', '<=']} if Compare is None else {True: ['<=', '>'], False: ['<', '>=']}
-                compare_symbols = Compare[Close]
-                if Geometry:
-                    data_stream = Geometry if all([isinstance(_, (int, float)) for _ in Geometry]) is True else self.choice(Geometry)
-                    try:
-                        Result = eval('[r for r in data_stream[0] if r.{}() {} Specifylen]'.format(data_stream[1], compare_symbols[0]))
-                        Excluded_Data = eval('[e for e in data_stream[0] if e.{}() {} Specifylen]'.format(data_stream[1], compare_symbols[1]))
-                    except:
-                        Result = eval('[r for r in Geometry if r {} Specifylen]'.format(compare_symbols[0]))
-                        Excluded_Data = eval('[e for e in Geometry if e {} Specifylen]'.format(compare_symbols[1]))
-                    return Result, Excluded_Data
+                try:
+                    re_mes = Message.RE_MES([Geometry], ['Geometry'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                        return gd[object](), gd[object]()
+                    else:
+                        Compare = {True: ['>=', '<'], False: ['>', '<=']} if Compare is None else {True: ['<=', '>'], False: ['<', '>=']}
+                        compare_symbols = Compare[Close]
+                        if Geometry:
+                            data_stream = Geometry if all([isinstance(_, (int, float)) for _ in Geometry]) is True else self.choice(Geometry)
+                            try:
+                                Result = eval('[r for r in data_stream[0] if r.{}() {} Specifylen]'.format(data_stream[1], compare_symbols[0]))
+                                Excluded_Data = eval('[e for e in data_stream[0] if e.{}() {} Specifylen]'.format(data_stream[1], compare_symbols[1]))
+                            except:
+                                Result = eval('[r for r in Geometry if r {} Specifylen]'.format(compare_symbols[0]))
+                                Excluded_Data = eval('[e for e in Geometry if e {} Specifylen]'.format(compare_symbols[1]))
+                            return Result, Excluded_Data
+                finally:
+                    self.Message = '数据比较'
 
 
         # Python列表数据转
@@ -1369,19 +1365,16 @@ try:
             def __init__(self):
                 pass
 
-            def message1(self, msg1):  # 报错红
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):  # 警告黄
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):  # 提示白
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
-
             def RunScript(self, Data):
                 try:
-                    tree_Data = [list(data_) for data_ in Data.Branches]
-                    return ght.list_to_tree(tree_Data)
+                    re_mes = Message.RE_MES([Data], ['Data'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                        return gd[object]()
+                    else:
+                        tree_Data = [list(data_) for data_ in Data.Branches]
+                        return ght.list_to_tree(tree_Data)
                 finally:
                     self.Message = 'PyList转Tree'
 
@@ -1444,15 +1437,6 @@ try:
             def __init__(self):
                 pass
 
-            def message1(self, msg1):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
-
             def mes_box(self, info, button, title):
                 return rs.MessageBox(info, button, title)
 
@@ -1500,20 +1484,17 @@ try:
                     sc.doc = Rhino.RhinoDoc.ActiveDoc
                     Result = gd[object]()
                     factor_trunk_list, t_trunk_list, f_trunk_list = self.Branch_Route(Factor)[0], self.Branch_Route(T_Factor)[0], self.Branch_Route(F_Factor)[0]
-                    if not (t_trunk_list or f_trunk_list):
-                        self.message2("T端数据为空！")
-                        self.message2("F端数据为空！")
-                    elif not t_trunk_list:
-                        self.message2("T端数据为空！")
-                    elif not f_trunk_list:
-                        self.message2("F端数据为空！")
+                    re_mes = Message.RE_MES([Factor, T_Factor, F_Factor], ['Factor', 'T_Factor', 'F_Factor'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
                     else:
                         len_factor, len_t, len_f = len(factor_trunk_list), len(t_trunk_list), len(f_trunk_list)
                         if len_t != len_f:
-                            self.message1("筛选数据不一致！")
+                            Message.message1(self, "筛选数据不一致！")
                         else:
                             if len_factor < len_t:
-                                self.message2("筛选因子与数据树不匹配！")
+                                Message.message2(self, "筛选因子与数据树不匹配！")
                                 place_char = [[None]] * (len_t - len_factor)
                                 new_factor = factor_trunk_list + place_char
                             elif len_factor > len_t:
@@ -1523,7 +1504,6 @@ try:
                             zip_list = zip(new_factor, t_trunk_list, f_trunk_list)
                             no_format_tree = ghp.run(self.pick_data, zip_list)
                             Result = self.Restore_Tree(no_format_tree, T_Factor)
-
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
                     sc.doc = ghdoc
@@ -1583,15 +1563,6 @@ try:
             def __init__(self):
                 pass
 
-            def message1(self, msg1):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
-
             def mes_box(self, info, button, title):
                 return rs.MessageBox(info, button, title)
 
@@ -1604,23 +1575,18 @@ try:
 
             def RunScript(self, A_Tree, B_Tree):
                 try:
-                    sc.doc = Rhino.RhinoDoc.ActiveDoc
-                    Result_Tree = gd[object]()
                     A_Tree.SimplifyPaths()
                     B_Tree.SimplifyPaths()
-
                     a_trunk_list = [list(_) for _ in A_Tree.Branches]
                     b_trunk_list = [list(_) for _ in B_Tree.Branches]
-                    a_list_len, b_list_len = len(a_trunk_list), len(b_trunk_list)
 
-                    if not (a_list_len or b_list_len):
-                        self.message2("A、B端口数据为空！")
-                    elif not a_list_len:
-                        self.message2("A端口数据为空！")
-                    elif not b_list_len:
-                        self.message2("B端口数据为空！")
+                    re_mes = Message.RE_MES([A_Tree, B_Tree], ['A_Tree', 'B_Tree'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                        return gd[object]()
                     else:
-
+                        sc.doc = Rhino.RhinoDoc.ActiveDoc
                         if A_Tree.BranchCount > B_Tree.BranchCount:
                             target_paths = [_ for _ in A_Tree.Paths]
                             synchro_paths = [_ for _ in B_Tree.Paths]
@@ -1630,16 +1596,14 @@ try:
                             synchro_paths = [_ for _ in A_Tree.Paths]
                             target_tree = A_Tree
                         _out_data = self.synchronism(target_paths, synchro_paths)
-
                         for single_data in _out_data:
                             if single_data not in synchro_paths:
                                 target_tree.AddRange([], single_data)
                         Result_Tree = target_tree
-
-                    sc.doc.Views.Redraw()
-                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
-                    sc.doc = ghdoc
-                    return Result_Tree
+                        sc.doc.Views.Redraw()
+                        ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                        sc.doc = ghdoc
+                        return Result_Tree
                 finally:
                     self.Message = '树形数据同步'
 
@@ -1703,15 +1667,6 @@ try:
             def __init__(self):
                 pass
 
-            def message1(self, msg1):  # 报错红
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):  # 警告黄
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):  # 提示白
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
-
             def mes_box(self, info, button, title):
                 return rs.MessageBox(info, button, title)
 
@@ -1740,7 +1695,7 @@ try:
                                 else:
                                     DataTree.Add(_j, paths[_i])
                     else:
-                        self.message2("添加的数据和路径数据不匹配，请检查")
+                        Message.message2(self, "添加的数据和路径数据不匹配，请检查")
                     return DataTree
                 finally:
                     self.Message = '树性数据插入'
@@ -1770,6 +1725,8 @@ try:
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
                 self.SetUpParam(p, "Shift", "S", "需要偏移的量，不输入默认为1")
+                shift_data = 1
+                p.SetPersistentData(gk.Types.GH_Number(shift_data))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
@@ -1811,15 +1768,6 @@ try:
 
             def __init__(self):
                 self.shift, self.cull_list = None, None
-
-            def message1(self, msg1):  # 报错红
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):  # 警告黄
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):  # 提示白
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
 
             def mes_box(self, info, button, title):
                 return rs.MessageBox(info, button, title)
@@ -1872,22 +1820,22 @@ try:
 
             def RunScript(self, Data_List, Shift, Eliminate):
                 try:
-                    sc.doc = Rhino.RhinoDoc.ActiveDoc
-                    Result_List, Right_Scissor, Left_Scissor = (gd[object]() for _ in range(3))
-                    self.shift = Shift if Shift else 1
-                    self.cull_list = Eliminate
-
-                    origin_data, data_path = self.Branch_Route(Data_List)
-                    if origin_data:
+                    re_mes = Message.RE_MES([Data_List], ['Data_List'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                        return gd[object](), gd[object](), gd[object]()
+                    else:
+                        sc.doc = Rhino.RhinoDoc.ActiveDoc
+                        self.shift = Shift
+                        self.cull_list = Eliminate
+                        origin_data, data_path = self.Branch_Route(Data_List)
                         iter_ungroup_data = zip(*ghp.run(self.OneByOne, zip(origin_data, data_path)))  # 多输出端使用zip解组
                         Result_List, Right_Scissor, Left_Scissor = ghp.run(lambda single_tree: self.format_tree(single_tree), iter_ungroup_data)  # 多输出端利用多进程或者map将数据输出
-                    else:
-                        self.message2('L端不能为空！')
-                    sc.doc.Views.Redraw()
-                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
-                    sc.doc = ghdoc
-
-                    return Result_List, Right_Scissor, Left_Scissor
+                        sc.doc.Views.Redraw()
+                        ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                        sc.doc = ghdoc
+                        return Result_List, Right_Scissor, Left_Scissor
                 finally:
                     self.Message = '数据偏移'
 
@@ -1943,24 +1891,18 @@ try:
             def __init__(self):
                 pass
 
-            def message1(self, msg1):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
-
             def RunScript(self, Tree_Data, Index):
                 try:
-                    new_index_list = []
-                    for single_str in Index:
-                        new_index_list.append([int(_) for _ in single_str.split(',')])
-                    leaf_result = [list(_) for _ in Tree_Data.Branches]
-                    if len(leaf_result) == 0:
-                        self.message2('原数据树为空')
+                    re_mes = Message.RE_MES([Tree_Data, Index], ['Tree_Data', 'Index'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                        return gd[object]()
                     else:
+                        new_index_list = []
+                        for single_str in Index:
+                            new_index_list.append([int(_) for _ in single_str.split(',')])
+                        leaf_result = [list(_) for _ in Tree_Data.Branches]
                         Result = []
                         for single_index in range(len(new_index_list)):
                             try:
@@ -2025,13 +1967,19 @@ try:
                 self.num = None
 
             def RunScript(self, List, Split):
-                if List:
-                    self.num = len(List) if Split is None else Split
-                    New_list = [List[_: _ + self.num] for _ in range(0, len(List), self.num)]
-                    Tree = ght.list_to_tree(New_list)
-                    return Tree
-                else:
-                    self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, '列表数据为空！')
+                try:
+                    re_mes = Message.RE_MES([List, Split], ['List', 'Split'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                        return gd[object]()
+                    else:
+                        self.num = len(List) if Split is None else Split
+                        New_list = [List[_: _ + self.num] for _ in range(0, len(List), self.num)]
+                        Tree = ght.list_to_tree(New_list)
+                        return Tree
+                finally:
+                    self.Message = '定义长度树'
 
     else:
         pass
