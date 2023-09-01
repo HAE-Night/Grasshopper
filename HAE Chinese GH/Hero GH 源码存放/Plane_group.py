@@ -16,16 +16,12 @@ import math
 import re
 import copy
 from itertools import chain
-import Curve_group
+import initialization
 
-Result = Curve_group.Result
+Result = initialization.Result
+Message = initialization.message()
 try:
     if Result is True:
-        """
-            切割 -- primary
-        """
-
-
         # 平面旋转
         class RotatePlane(component):
             def __new__(cls):
@@ -54,6 +50,7 @@ try:
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
                 self.SetUpParam(p, "Angle", "A", "旋转的角度，不输入默认为0.5*pi")
+                p.SetPersistentData(Grasshopper.Kernel.Types.GH_Number(math.radians(90)))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
@@ -143,13 +140,20 @@ try:
                 return alphabet_list, None
 
             def RunScript(self, Rotated_Plane, Angle, Direction, Follow_rotation1, Follow_rotation2):
-                if Rotated_Plane:
-                    Angle = math.radians(90) if Angle is None else float(Angle)
-                    center_point = Rotated_Plane.Origin
-                    New_Plane, Rotated_object1, Rotated_object2 = self.get_new_plane(Rotated_Plane, Follow_rotation1,
-                                                                                     Follow_rotation2, Angle, Direction,
-                                                                                     center_point)
-                    return New_Plane, Rotated_object1, Rotated_object2
+                try:
+                    re_mes = Message.RE_MES([Rotated_Plane], ['Rotated_Plane'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                        return gd[object](), gd[object](), gd[object]()
+                    else:
+                        center_point = Rotated_Plane.Origin
+                        New_Plane, Rotated_object1, Rotated_object2 = self.get_new_plane(Rotated_Plane, Follow_rotation1,
+                                                                                         Follow_rotation2, Angle, Direction,
+                                                                                         center_point)
+                        return New_Plane, Rotated_object1, Rotated_object2
+                finally:
+                    self.Message = '平面旋转'
 
 
         # 重构XY轴平面
@@ -608,7 +612,7 @@ try:
                         plane = self.get_two_Axis(x, y_vector)
 
                     if y != None and z != None:
-                        x_vector = self.get_x_y_vector(y, z)
+                        x_vector = self.get_x_y_vector(z, y)
                         plane = self.get_two_Axis(x_vector, y)
 
                 else:
@@ -636,15 +640,6 @@ try:
                     return plane
                 finally:
                     self.Message = '构建工作平面'
-
-
-        """
-            切割 -- secondary
-        """
-
-        """
-            切割 -- tertiary
-        """
 
     else:
         pass
