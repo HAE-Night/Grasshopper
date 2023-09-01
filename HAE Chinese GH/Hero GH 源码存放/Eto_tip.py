@@ -6,12 +6,13 @@
 # @File : Eto_tip
 # @Time : 2022/8/3 11:32
 
-import init__
+import initialization
 
 import Rhino
 import Rhino.UI
 import Eto.Drawing as drawing
 import Eto.Forms as forms
+import os
 
 import time
 import getpass
@@ -19,12 +20,12 @@ import base64
 
 
 def eto_decryption():
-    designer_names = init__.designer_database
+    designer_names = initialization.designer_database
     origin_data_list = []
     now_time = int(time.time())
     for name in designer_names:
         try:
-            with open(r'C:\Users\%s\AppData\Roaming\Grasshopper\Libraries\{0}-KEY.licence'.format(name) % getpass.getuser(), 'r') as f:
+            with open(os.environ['userprofile'] + r'\AppData\Roaming\Grasshopper\Libraries\{0}-KEY.licence'.format(name) % getpass.getuser(), 'r') as f:
                 data = f.read()
                 origin_data_list.append(data)
         except:
