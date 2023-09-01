@@ -23,18 +23,14 @@ from Grasshopper.Kernel.Types import GH_GeometryGroup
 from Grasshopper.Kernel import GH_Convert
 from itertools import chain
 import re
-import Curve_group
+import initialization
 from operator import *
 
-
-
-Result = Curve_group.Result
-Message = Curve_group.message()
+Result = initialization.Result
+Message = initialization.message()
 try:
     if Result is True:
-        """
-            切割 -- primary
-        """
+
         # 列表取值
         class list_values(component):
             def __new__(cls):
@@ -87,17 +83,17 @@ try:
 
             def RunScript(self, Lists, Index):
                 try:
+                    List = gd[object]()
                     re_mes = Message.RE_MES([Lists, Index], ['Lists', 'Index'])
                     if len(re_mes) > 0:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
-                        return gd[object](), gd[object]()
                     else:
                         index_list = Index.split(" ")
                         List = []
                         for i in index_list:
                             List.append(Lists[int(i)])
-                        return List
+                    return List
                 finally:
                     self.Message = '多下标取值'
 
@@ -129,7 +125,7 @@ try:
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
-                p = Grasshopper.Kernel.Parameters.Param_Integer()
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
                 self.SetUpParam(p, "Index", "I", "将要取值的下标")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
@@ -190,20 +186,13 @@ try:
                 return [None if index == '' else list_data[int(index)] for index in index_list]
 
             def RunScript(self, List, Index):
-                try:
-                    re_mes = Message.RE_MES([List, Index], ['List', 'Index'])
-                    if len(re_mes) > 0:
-                        for mes_i in re_mes:
-                            Message.message2(self, mes_i)
-                        return gd[object](), gd[object](), gd[object](), gd[object](), gd[object](), gd[object]()
-                    else:
-                        index_array = self.handling(Index)
-                        origin_data = [self.get_value(List, _) for _ in index_array]
-                        output_tuple = tuple(origin_data)
-                        D1, D2, D3, D4, D5, D6 = output_tuple
-                        return D1, D2, D3, D4, D5, D6
-                finally:
-                    self.Message = '多下标-分组输出'
+                D1, D2, D3, D4, D5, D6 = (gd[object]() for _ in range(6))
+                if List:
+                    index_array = self.handling(Index)
+                    origin_data = [self.get_value(List, _) for _ in index_array]
+                    output_tuple = tuple(origin_data)
+                    D1, D2, D3, D4, D5, D6 = output_tuple
+                return D1, D2, D3, D4, D5, D6
 
 
         # 列表切割
@@ -211,7 +200,7 @@ try:
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
                                                                    "RPP-列表切割", "RPP_List_Cut", """在列表指定下标处切割列表，树形结构输出；
-        （原电池最后一个下标不做参考，已改）""", "Scavenger", "Data")
+                （原电池最后一个下标不做参考，已改）""", "Scavenger", "Data")
                 return instance
 
             def get_ComponentGuid(self):
@@ -291,6 +280,7 @@ try:
                         return DataTree
                 finally:
                     self.Message = '列表切割'
+
 
         # 求列表极值
         class ListExtremum(component):
@@ -387,11 +377,11 @@ try:
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
                                                                    "RPP-删除列表首尾值", "RPP_删除列表首尾值", """删除列表第一个值
-        删除列表最后值
-        删除列表第一个和最后的值
-        列表的第一个值
-        列表的最后值
-        """, "Scavenger", "Data")
+                删除列表最后值
+                删除列表第一个和最后的值
+                列表的第一个值
+                列表的最后值
+                """, "Scavenger", "Data")
                 return instance
 
             def get_ComponentGuid(self):
@@ -469,11 +459,6 @@ try:
                         return List[1:], List[:-1], List[1:-1], List[0], List[-1]
                 finally:
                     self.Message = '列表首尾删除'
-
-
-        """
-            切割 -- secondary
-        """
 
 
         # 树形取值
@@ -729,7 +714,6 @@ try:
                     if len(re_mes) > 0:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
-                        return gd[object](), gd[object]()
                     else:
                         Data_Tree.SimplifyPaths()
                         origin_data = [list(_) for _ in Data_Tree.Branches]
@@ -861,7 +845,6 @@ try:
                     if len(re_mes) > 0:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
-                        return gd[object](), gd[object]()
                     else:
                         temp_data = [list(_) for _ in Data_Tree.Branches]
                         if Depth == 0:
@@ -905,7 +888,7 @@ try:
 
                             elif len(self.origin_data) == 1:
                                 Result = Data_Tree
-                            return Result
+                    return Result
                 finally:
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
@@ -996,15 +979,15 @@ try:
 
             def RunScript(self, DataTree_A, DataTree_B):
                 try:
+                    Boolean_tree = gd[object]()
                     re_mes = Message.RE_MES([DataTree_A, DataTree_B], ['DataTree_A', 'DataTree_B'])
                     if len(re_mes) > 0:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
-                        return gd[object](), gd[object]()
                     else:
                         Data_ = map(self.Lindex, [DataTree_A, DataTree_B])
                         Boolean_tree = self.Compare(Data_[0], Data_[1])
-                        return Boolean_tree
+                    return Boolean_tree
                 finally:
                     self.Message = 'HAE 结构对比'
 
@@ -1407,6 +1390,10 @@ try:
             def get_ComponentGuid(self):
                 return System.Guid("d08f954e-5ce0-47ee-8c7f-bd28c8479e31")
 
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.secondary
+
             def SetUpParam(self, p, name, nickname, description):
                 p.Name = name
                 p.NickName = nickname
@@ -1494,15 +1481,14 @@ try:
 
             def RunScript(self, Factor, T_Factor, F_Factor):
                 try:
+                    sc.doc = Rhino.RhinoDoc.ActiveDoc
                     Result = gd[object]()
                     factor_trunk_list, t_trunk_list, f_trunk_list = self.Branch_Route(Factor)[0], self.Branch_Route(T_Factor)[0], self.Branch_Route(F_Factor)[0]
                     re_mes = Message.RE_MES([Factor, T_Factor, F_Factor], ['Factor', 'T_Factor', 'F_Factor'])
                     if len(re_mes) > 0:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
-                        return gd[object]()
                     else:
-                        sc.doc = Rhino.RhinoDoc.ActiveDoc
                         len_factor, len_t, len_f = len(factor_trunk_list), len(t_trunk_list), len(f_trunk_list)
                         if len_t != len_f:
                             Message.message1(self, "筛选数据不一致！")
@@ -1518,10 +1504,10 @@ try:
                             zip_list = zip(new_factor, t_trunk_list, f_trunk_list)
                             no_format_tree = ghp.run(self.pick_data, zip_list)
                             Result = self.Restore_Tree(no_format_tree, T_Factor)
-                        sc.doc.Views.Redraw()
-                        ghdoc = GhPython.DocReplacement.GrasshopperDocument()
-                        sc.doc = ghdoc
-                        return Result
+                    sc.doc.Views.Redraw()
+                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                    sc.doc = ghdoc
+                    return Result
                 finally:
                     self.Message = '树形数据批量筛选'
 
@@ -1535,6 +1521,10 @@ try:
 
             def get_ComponentGuid(self):
                 return System.Guid("d8f4e8f5-56ce-4464-96bc-7469c0374158")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.secondary
 
             def SetUpParam(self, p, name, nickname, description):
                 p.Name = name
@@ -1735,7 +1725,8 @@ try:
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
                 self.SetUpParam(p, "Shift", "S", "需要偏移的量，不输入默认为1")
-                p.SetPersistentData(Grasshopper.Kernel.Types.GH_Integer(1))
+                shift_data = 1
+                p.SetPersistentData(gk.Types.GH_Number(shift_data))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
