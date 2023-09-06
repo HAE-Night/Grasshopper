@@ -477,9 +477,14 @@ try:
                 try:
                     sc.doc = Rhino.RhinoDoc.ActiveDoc
                     Alum_Material, Iron_Material = (gd[object]() for _ in range(2))
-                    self.deep1 = Deep1
-                    self.deep2 = Deep2
-                    if Code:
+
+                    re_mes = Message.RE_MES([Code], ['Code'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                    else:
+                        self.deep1 = Deep1
+                        self.deep2 = Deep2
                         if Code in self.al_specifications.keys():
                             order_sp_al = self.al_specifications[Code]
                             order_sp_fe = self.fe_specifications[Code]
@@ -487,9 +492,7 @@ try:
                             Alum_Material = self.counter_bore(order_sp_al)
                             Iron_Material = self.counter_bore(order_sp_fe)
                         else:
-                            self.message1('未包含此螺丝规格！')
-                    else:
-                        self.message2('螺丝规格未输入！')
+                            Message.message1(self, '未包含此螺丝规格！')
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
                     sc.doc = ghdoc

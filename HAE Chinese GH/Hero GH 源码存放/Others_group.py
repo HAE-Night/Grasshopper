@@ -204,12 +204,19 @@ try:
                 return result_str
 
             def RunScript(self, Text, Symbol, Index):
-                All, Start, End, Result, Rest_list = (gd[object]() for _ in range(5))
-                if Text:
-                    text_list = self._regular(Text) if Symbol is None else self._division(Text, Symbol)
-                    All, Start, End, Result = text_list, text_list[0], text_list[-1], text_list[Index]
-                    Rest_list = [_ for _ in text_list if _ != Result]
-                return All, Start, End, Result, Rest_list
+                try:
+                    All, Start, End, Result, Rest_list = (gd[object]() for _ in range(5))
+                    re_mes = Message.RE_MES([Text], ['Text'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                    else:
+                        text_list = self._regular(Text) if Symbol is None else self._division(Text, Symbol)
+                        All, Start, End, Result = text_list, text_list[0], text_list[-1], text_list[Index]
+                        Rest_list = [_ for _ in text_list if _ != Result]
+                    return All, Start, End, Result, Rest_list
+                finally:
+                    self.Message = '字符串处理'
 
 
         # 字符处理2
@@ -263,13 +270,19 @@ try:
             punc = r'-_#@$%~&:'
 
             def RunScript(self, String, Symbol):
-                Result = gd[object]()
-                if String:
-                    self.punc = r'-_#@$%~&' if Symbol is None else Symbol
-                    Result = re.split(r"[%s]+" % self.punc, String)
-                else:
-                    pass
-                return Result
+                try:
+                    Result = gd[object]()
+                    re_mes = Message.RE_MES([String], ['String'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                        return gd[object]()
+                    else:
+                        self.punc = r'-_#@$%~&' if Symbol is None else Symbol
+                        Result = re.split(r"[%s]+" % self.punc, String)
+                    return Result
+                finally:
+                    self.Message = '字符串处理2'
 
 
         # 某度翻译

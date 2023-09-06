@@ -1114,15 +1114,6 @@ try:
             def __init__(self):
                 dict_data = None
 
-            def message1(self, msg1):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
-
             def judgment_type(self, obj):
                 return False if type(obj) is rg.LinearDimension else True
 
@@ -1143,7 +1134,11 @@ try:
                     zip_vector = (total_offset_x, total_offset_y, total_offset_z)
                     Transform = self.normal_move(Ref_Plane, zip_vector)
 
-                    if Object:
+                    re_mes = Message.RE_MES([Object], ['Object'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                    else:
                         if isinstance(Object, (rg.Point3d, rg.Point)) is True:
                             Object = rg.Point(Object)
                         elif isinstance(Object, (rg.Line, rg.LineCurve)) is True:
@@ -1153,8 +1148,7 @@ try:
                             Object.Translate(Transform)
                             New_Objcet = Object
                             return New_Objcet, Transform
-                    else:
-                        self.message2("物体为空！！")
+
                     return New_Objcet, Transform
                 finally:
                     self.Message = "多向量位移"
@@ -1236,15 +1230,6 @@ try:
 
             def __init__(self):
                 pass
-
-            def message1(self, msg1):  # 报错红
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):  # 警告黄
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):  # 提示白
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
 
             def mes_box(self, info, button, title):
                 return rs.MessageBox(info, button, title)
@@ -1332,7 +1317,7 @@ try:
                         Res_Geo = self.iter_offset(Geo, total_vector, [])
                         Transform = copy_total_vec
                     else:
-                        self.message2('G端数据为空！')
+                        Message.message2(self, 'G端数据为空！')
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
                     sc.doc = ghdoc
@@ -1411,15 +1396,6 @@ try:
             def __init__(self):
                 self.diff_vector = None
                 self.xform = None
-
-            def message1(self, msg1):  # 报错红
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):  # 警告黄
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):  # 提示白
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
 
             def mes_box(self, info, button, title):
                 return rs.MessageBox(info, button, title)

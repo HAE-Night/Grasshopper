@@ -214,12 +214,14 @@ try:
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Divisor", "D1", "除数，默认百万1000000")
+                self.SetUpParam(p, "Divisor", "D1", "除数，默认1000000")
+                p.SetPersistentData(Grasshopper.Kernel.Types.GH_Number(1000000))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
                 self.SetUpParam(p, "Decimals", "D2", "保留小数位，默认三位")
+                p.SetPersistentData(Grasshopper.Kernel.Types.GH_Number(3))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
@@ -242,13 +244,20 @@ try:
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def RunScript(self, Breps, Divisor, Decimals):
-                # 初始化参数
-                divisor = Divisor if Divisor else 1000000
-                digit = ".%uF" % Decimals if Decimals else ".3F"
-
-                # 计算
-                Area = [format(rs.SurfaceArea(i)[0] / divisor, digit) for i in Breps]
-                return Area
+                try:
+                    re_mes = Message.RE_MES([Breps], ['Breps'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                        return gd[object]()
+                    else:
+                        divisor = Divisor
+                        digit = ".%uF" % Decimals
+                        # 计算
+                        Area = [format(rs.SurfaceArea(i)[0] / divisor, digit) for i in Breps]
+                        return Area
+                finally:
+                    self.Message = 'Sur面积'
 
 
         # 曲面或者Brep反转
@@ -658,7 +667,7 @@ try:
                 p.Optional = True
 
             def RegisterInputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_Brep()
+                p = Grasshopper.Kernel.Parameters.Param_Geometry()
                 self.SetUpParam(p, "Geo", "G", "曲面列表数据")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)

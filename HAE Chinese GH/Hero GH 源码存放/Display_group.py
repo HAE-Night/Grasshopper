@@ -79,15 +79,6 @@ try:
             def __init__(self):
                 self.pts, self.lines, self.bbox, self.factor = (None for _ in range(4))
 
-            def message1(self, msg1):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
-
             def mes_box(self, info, button, title):
                 return rs.MessageBox(info, button, title)
 
@@ -149,7 +140,7 @@ try:
                     if origin_data:
                         list_pts, list_line, cen_pts = zip(*ghp.run(self._do_main, origin_data))
                     else:
-                        self.message2("待解析的点序列为空！")
+                        Message.message2(self, "待解析的点序列为空！")
                         list_pts, list_line, cen_pts = (None for _ in range(3))
 
                     self.pts = list_pts

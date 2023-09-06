@@ -287,21 +287,24 @@ try:
                     return string_list
 
             def RunScript(self, Plane, New_Axis, Switch):
-                if Plane:
-                    Axis_list = self.str_handing(New_Axis)
-                    if Switch is None:
-                        self.factor = False
+                try:
+                    if Plane:
+                        Axis_list = self.str_handing(New_Axis)
+                        if Switch is None:
+                            self.factor = False
+                        else:
+                            self.factor = Switch
+                        Origin_Point = Plane.Origin
+                        self.get_new_plane(Plane, Axis_list)
+                        origin_redirect, Origin_XAxis, Origin_YAxis, Origin_ZAxis = self.get_new_plane(Plane, Axis_list)
+                        Symmetry_Plane = rg.Plane(Origin_Point, origin_redirect[0], origin_redirect[1])
+                        # 重构后的xyz轴向量
+                        New_XAxis, New_YAxis, New_ZAxis = Symmetry_Plane.XAxis, Symmetry_Plane.YAxis, Symmetry_Plane.ZAxis
+                        return Symmetry_Plane, Origin_Point, Origin_XAxis, Origin_YAxis, Origin_ZAxis, New_XAxis, New_YAxis, New_ZAxis
                     else:
-                        self.factor = Switch
-                    Origin_Point = Plane.Origin
-                    self.get_new_plane(Plane, Axis_list)
-                    origin_redirect, Origin_XAxis, Origin_YAxis, Origin_ZAxis = self.get_new_plane(Plane, Axis_list)
-                    Symmetry_Plane = rg.Plane(Origin_Point, origin_redirect[0], origin_redirect[1])
-                    # 重构后的xyz轴向量
-                    New_XAxis, New_YAxis, New_ZAxis = Symmetry_Plane.XAxis, Symmetry_Plane.YAxis, Symmetry_Plane.ZAxis
-                    return Symmetry_Plane, Origin_Point, Origin_XAxis, Origin_YAxis, Origin_ZAxis, New_XAxis, New_YAxis, New_ZAxis
-                else:
-                    pass
+                        pass
+                finally:
+                    self.Message = '重构Plane'
 
 
         # 偏移平面
@@ -377,15 +380,6 @@ try:
             def __init__(self):
                 pass
 
-            def message1(self, msg1):  # 报错红
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):  # 警告黄
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):  # 提示白
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
-
             def mes_box(self, info, button, title):
                 return rs.MessageBox(info, button, title)
 
@@ -429,13 +423,14 @@ try:
 
             def RunScript(self, Plane, distance, X, Y, Z):
                 try:
-                    sc.doc = Rhino.RhinoDoc.ActiveDoc
-                    sc.doc.Views.Redraw()
-                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
-                    sc.doc = ghdoc
-                    Offset = []
-
-                    if Plane != None:
+                    re_mes = Message.RE_MES([Plane], ['Plane'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                        return gd[object]()
+                    else:
+                        sc.doc = Rhino.RhinoDoc.ActiveDoc
+                        Offset = []
                         if X or Y or Z:
                             if X:
                                 Axis = Plane.XAxis
@@ -448,10 +443,10 @@ try:
                                 Offset.append(self.Offset(Plane, distance, Axis))
                         else:
                             Offset.append(Plane)
-                    else:
-                        self.message2("平面为空！")
-                    return Offset
-
+                        sc.doc.Views.Redraw()
+                        ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                        sc.doc = ghdoc
+                        return Offset
                 finally:
                     self.Message = 'Offset Plane'
 
@@ -518,15 +513,6 @@ try:
 
             def __init__(self):
                 self.origin = rg.Point3d(0, 0, 0)
-
-            def message1(self, msg1):  # 报错红
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):  # 警告黄
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):  # 提示白
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
 
             def mes_box(self, info, button, title):
                 return rs.MessageBox(info, button, title)
@@ -627,7 +613,7 @@ try:
                     self.origin = origin if origin else self.origin
                     if x == None and y == None and z == None:
                         plane = rg.Plane.WorldXY
-                        self.message2("你不给轴，我就输出XY平面喽!")
+                        Message.message2(self, "你不给轴，我就输出XY平面喽!")
                         plane.Origin = self.origin
                         return plane
                     else:

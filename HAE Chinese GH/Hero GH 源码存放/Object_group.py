@@ -676,15 +676,6 @@ try:
             def __init__(self):
                 pass
 
-            def message1(self, msg1):  # 报错红
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):  # 警告黄
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):  # 提示白
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
-
             def mes_box(self, info, button, title):
                 return rs.MessageBox(info, button, title)
 
@@ -740,15 +731,15 @@ try:
                     attr_str = [str(_) for _ in attr]
 
                     if len(attr) == 0:
-                        self.message2("A端为空!")
+                        Message.message2(self, "A端为空!")
                         return Obj, Keys, Value
 
                     if key == None:
-                        self.message2("K端为空!")
+                        Message.message2(self, "K端为空!")
                         return Obj, Keys, Value
 
                     if len(val.AllData()) == 0:  # 判断是否为空树
-                        self.message2("V端为空!")
+                        Message.message2(self, "V端为空!")
                         return Obj, Keys, Value
 
                     value, value_path = self.Branch_Route(val)  # 得到输入的value和path
@@ -841,15 +832,6 @@ try:
             def __init__(self):
                 self.dict_data = {1: "Continuous", 2: "Border", 3: "Center", 4: "DashDot", 5: "Dashed", 6: "Dots", 7: "Hidden"}
 
-            def message1(self, msg1):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
-
             def create_layer(self, tuple_data):
                 name, color = tuple_data
                 if not rs.IsLayer(name):
@@ -864,8 +846,12 @@ try:
             def RunScript(self, Full_Name, Color, LineType, Switch):
                 try:
                     sc.doc = Rhino.RhinoDoc.ActiveDoc
-                    if Full_Name:
-
+                    re_mes = Message.RE_MES([Full_Name], ['Full_Name'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                        return gd[object]()
+                    else:
                         if Switch:
                             diff_values_one = len(Full_Name) - len(Color)
                             diff_values_two = len(Full_Name) - len(LineType)
@@ -883,8 +869,6 @@ try:
                             else:
                                 zip_list_two = zip(Full_Name, LineType)
                             map(self.change_line_type, zip_list_two)
-                    else:
-                        self.message2("图层名为空！")
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
                     Rhino.RhinoApp.Wait()

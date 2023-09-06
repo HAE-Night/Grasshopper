@@ -186,13 +186,20 @@ try:
                 return [None if index == '' else list_data[int(index)] for index in index_list]
 
             def RunScript(self, List, Index):
-                D1, D2, D3, D4, D5, D6 = (gd[object]() for _ in range(6))
-                if List:
-                    index_array = self.handling(Index)
-                    origin_data = [self.get_value(List, _) for _ in index_array]
-                    output_tuple = tuple(origin_data)
-                    D1, D2, D3, D4, D5, D6 = output_tuple
-                return D1, D2, D3, D4, D5, D6
+                try:
+                    D1, D2, D3, D4, D5, D6 = (gd[object]() for _ in range(6))
+                    re_mes = Message.RE_MES([List], ['List'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                    else:
+                        index_array = self.handling(Index)
+                        origin_data = [self.get_value(List, _) for _ in index_array]
+                        output_tuple = tuple(origin_data)
+                        D1, D2, D3, D4, D5, D6 = output_tuple
+                    return D1, D2, D3, D4, D5, D6
+                finally:
+                    self.Message = '多下标-分组输出'
 
 
         # 列表切割
@@ -581,15 +588,24 @@ try:
                 return fruit
 
             def RunScript(self, Index, D1, D2, D3, D4, D5, D6):
-                Index = 0 if Index is None else Index
-                origin_data = [D1, D2, D3, D4, D5, D6]
-                available_trees = [_ for _ in origin_data if _.BranchCount != 0]
+                try:
+                    re_mes = Message.RE_MES([Index], ['Index'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                        return gd[object](), gd[object](), gd[object](), gd[object](), gd[object](), gd[object]()
+                    else:
+                        Index = 0 if Index is None else Index
+                        origin_data = [D1, D2, D3, D4, D5, D6]
+                        available_trees = [_ for _ in origin_data if _.BranchCount != 0]
 
-                single_data = self.Picking_Fruit(available_trees, Index)
-                result_list = single_data if len(single_data) == len(origin_data) else single_data + [None] * abs(len(single_data) - len(origin_data))
+                        single_data = self.Picking_Fruit(available_trees, Index)
+                        result_list = single_data if len(single_data) == len(origin_data) else single_data + [None] * abs(len(single_data) - len(origin_data))
 
-                R1, R2, R3, R4, R5, R6 = result_list
-                return R1, R2, R3, R4, R5, R6
+                        R1, R2, R3, R4, R5, R6 = result_list
+                        return R1, R2, R3, R4, R5, R6
+                finally:
+                    self.Message = '树形取值'
 
 
         # 树形数据处理
@@ -643,18 +659,24 @@ try:
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def RunScript(self, A_Brep, B_Brep):
-                if A_Brep:
-                    if len(B_Brep) > len(A_Brep):
-                        Result_list = A_Brep * len(B_Brep)
-                        return Result_list
-                    elif len(B_Brep) == len(A_Brep):
-                        Result_list = A_Brep * len(B_Brep)
-                        return Result_list
-                    elif len(B_Brep) == 0:
-                        Result_list = A_Brep * 1
-                        return Result_list
-                else:
-                    pass
+                try:
+                    re_mes = Message.RE_MES([A_Brep], ['A'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                        return gd[object]()
+                    else:
+                        if len(B_Brep) > len(A_Brep):
+                            Result_list = A_Brep * len(B_Brep)
+                            return Result_list
+                        elif len(B_Brep) == len(A_Brep):
+                            Result_list = A_Brep * len(B_Brep)
+                            return Result_list
+                        elif len(B_Brep) == 0:
+                            Result_list = A_Brep * 1
+                            return Result_list
+                finally:
+                    self.Message = '树形数据处理'
 
 
         # 简化树形数据
@@ -1673,29 +1695,32 @@ try:
             def RunScript(self, Data_a, Data_b, in_path):
                 try:
                     DataTree = gd[object]()
-                    if not in_path: return gd[object]()
-
-                    if len(in_path) == Data_b.BranchCount:
-                        if len(in_path) == 1:
-                            Data_a.AddRange(list(Data_b.Branch(0)), in_path[0])
-                        else:
-                            for path_ in range(len(in_path)):
-                                Data_a.AddRange(Data_b.Branch(path_), in_path[path_])
-
-                        paths = Data_a.Paths
-                        Branch = [list(_br) for _br in Data_a.Branches]
-
-                        for _i in range(len(paths)):
-                            for _j in Branch[_i]:
-                                if 'List[object]' in str(type(_j)):
-                                    gh_Geos = [GH_Convert.ToGeometricGoo(_n) for _n in _j]
-                                    ghGroup = GH_GeometryGroup()
-                                    ghGroup.Objects.AddRange(gh_Geos)
-                                    DataTree.Add(ghGroup, paths[_i])
-                                else:
-                                    DataTree.Add(_j, paths[_i])
+                    re_mes = Message.RE_MES([in_path], [in_path])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
                     else:
-                        Message.message2(self, "添加的数据和路径数据不匹配，请检查")
+                        if len(in_path) == Data_b.BranchCount:
+                            if len(in_path) == 1:
+                                Data_a.AddRange(list(Data_b.Branch(0)), in_path[0])
+                            else:
+                                for path_ in range(len(in_path)):
+                                    Data_a.AddRange(Data_b.Branch(path_), in_path[path_])
+
+                            paths = Data_a.Paths
+                            Branch = [list(_br) for _br in Data_a.Branches]
+
+                            for _i in range(len(paths)):
+                                for _j in Branch[_i]:
+                                    if 'List[object]' in str(type(_j)):
+                                        gh_Geos = [GH_Convert.ToGeometricGoo(_n) for _n in _j]
+                                        ghGroup = GH_GeometryGroup()
+                                        ghGroup.Objects.AddRange(gh_Geos)
+                                        DataTree.Add(ghGroup, paths[_i])
+                                    else:
+                                        DataTree.Add(_j, paths[_i])
+                        else:
+                            Message.message2(self, "添加的数据和路径数据不匹配，请检查")
                     return DataTree
                 finally:
                     self.Message = '树性数据插入'
@@ -1908,7 +1933,7 @@ try:
                             try:
                                 Result.append([leaf_result[_] for _ in new_index_list[single_index]])
                             except IndexError:
-                                self.message1('超出索引范围！第{}列表数据错误,原数据列表从0开始到{}结束'.format(single_index + 1, len(leaf_result) - 1))
+                                Message.message1(self, '超出索引范围！第{}列表数据错误,原数据列表从0开始到{}结束'.format(single_index + 1, len(leaf_result) - 1))
                                 Result.append(None)
                         return ght.list_to_tree(Result)
                 finally:

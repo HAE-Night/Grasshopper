@@ -547,15 +547,6 @@ try:
             def __init__(self):
                 pass
 
-            def message1(self, msg1):  # 报错红
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):  # 警告黄
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):  # 提示白
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
-
             def mes_box(self, info, button, title):
                 return rs.MessageBox(info, button, title)
 
@@ -597,12 +588,14 @@ try:
                     Precision = 0 if Precision is None else Precision
                     Result, Floor, Ceil = (gd[object]() for _ in range(3))
 
-                    if Decimal is not None:
+                    re_mes = Message.RE_MES([Decimal], ['Decimal'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                    else:
                         Result = str(dd(Decimal).quantize(dd("1e-{}".format(Precision)), rounding="ROUND_HALF_UP")) if "e" in str(Decimal) else NewRound().handle_str(Decimal, Precision)
                         Floor = math.floor(Decimal)
                         Ceil = math.ceil(Decimal)
-                    else:
-                        self.message2('D端未输入数据！')
                     return Result, Floor, Ceil
                 finally:
                     self.Message = '四舍五入'
@@ -673,15 +666,6 @@ try:
             def __init__(self):
                 pass
 
-            def message1(self, msg1):  # 报错红
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):  # 警告黄
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):  # 提示白
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
-
             def mes_box(self, info, button, title):
                 return rs.MessageBox(info, button, title)
 
@@ -730,7 +714,11 @@ try:
                     pre_str = Prefix if Prefix else ''
                     suf_str = Suffix if Suffix else ''
 
-                    if Number is not None:
+                    re_mes = Message.RE_MES([Number], ['Number'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                    else:
                         last_byte = int(round(Number, 0))
                         replace_list = [_ for _ in str(last_byte)][::-1]
 
@@ -749,8 +737,6 @@ try:
                             new_character_string = ''.join(char_list)
 
                         FormattedNumber = pre_str + new_character_string + B_Part + suf_str
-                    else:
-                        self.message2('N端为空！')
                     return FormattedNumber
                 finally:
                     self.Message = '数字格式化'
@@ -820,15 +806,6 @@ try:
             def __init__(self):
                 pass
 
-            def message1(self, msg1):  # 报错红
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):  # 警告黄
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):  # 提示白
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
-
             def mes_box(self, info, button, title):
                 return rs.MessageBox(info, button, title)
 
@@ -893,7 +870,7 @@ try:
                                     for i in self.circulate(ord(Start), ord(End), Step):
                                         List.append(chr(i))
                             else:
-                                self.message1("字符列表步进必须为整数!")
+                                Message.message1(self, "字符列表步进必须为整数!")
                         else:  # 两个值都为数值
                             Start, End = float(Start), float(End)
                             List = self.circulate(Start, End, Step)
@@ -972,15 +949,6 @@ try:
 
             def __init__(self):
                 self.Tree = gd[object]()
-
-            def message1(self, msg1):  # 报错红
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):  # 警告黄
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):  # 提示白
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
 
             def mes_box(self, info, button, title):
                 return rs.MessageBox(info, button, title)
@@ -1081,7 +1049,11 @@ try:
                     FormatNumber = gd[object]()
 
                     sc.doc = Rhino.RhinoDoc.ActiveDoc
-                    if Object.BranchCount != 0:
+                    re_mes = Message.RE_MES([Object], ['Object'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                    else:
                         Data_Length = [[len(_l)] for _l in [_ for _ in Object.Branches]]  # 得到Object每个分支的长度和下标
                         path = self.Branch_Route(Object)[1]
                         # 根据Object将缺少的数据补齐

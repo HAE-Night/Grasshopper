@@ -1186,15 +1186,6 @@ try:
             def __init__(self):
                 pass
 
-            def message1(self, msg1):  # 报错红
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):  # 警告黄
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):  # 提示白
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
-
             def mes_box(self, info, button, title):
                 return rs.MessageBox(info, button, title)
 
@@ -1287,13 +1278,13 @@ try:
                                 index = a_temp_list + b_temp_list
                                 Points_Result = [Points[single_index] for single_index in index]
                             else:
-                                self.message1('索引下标不在区间范围内！')
+                                Message.message1(self, '索引下标不在区间范围内！')
                         else:
                             Points_Result = [Points[single_index] for single_index in temp_index]
                             index = temp_index
 
                     else:
-                        self.message2('P端不能为空！')
+                        Message.message2(self, 'P端不能为空！')
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
                     sc.doc = ghdoc
