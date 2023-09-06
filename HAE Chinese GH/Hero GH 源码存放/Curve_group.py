@@ -3584,7 +3584,6 @@ try:
                 finally:
                     self.Message = '边界矩形'
 
-
     else:
         pass
 except:

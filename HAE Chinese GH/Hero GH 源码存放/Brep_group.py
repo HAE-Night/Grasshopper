@@ -2602,7 +2602,6 @@ try:
                     self.Message = 'HAE 曲面折边'
 
 
-
     else:
         pass
 except:

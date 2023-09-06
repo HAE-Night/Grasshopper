@@ -23,6 +23,7 @@ import initialization
 
 Result = initialization.Result
 Message = initialization.message()
+
 try:
     if Result is True:
         """
@@ -880,6 +881,7 @@ try:
         pass
 except:
     pass
+
 
 import GhPython
 import System
