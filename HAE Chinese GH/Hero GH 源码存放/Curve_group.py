@@ -2763,8 +2763,7 @@ try:
                     if len(re_mes) > 0:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
-
-                    if self.is_curve_closed(curve):
+                    elif self.is_curve_closed(curve):
                         Curve, Bool = self.unify_curve(curve, plane)
                     else:
                         Message.message1(self, "要求闭合的Curve!")
