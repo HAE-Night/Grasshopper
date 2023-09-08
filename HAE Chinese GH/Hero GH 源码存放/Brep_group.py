@@ -571,7 +571,7 @@ try:
 
             def RunScript(self, Suface_Or_Brep_List):
                 try:
-                    re_mes = self.RE_MES([Suface_Or_Brep_List], ['Suface_Or_Brep_List'])
+                    re_mes = Message.RE_MES([Suface_Or_Brep_List], ['Suface_Or_Brep_List'])
                     if len(re_mes) > 0:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
