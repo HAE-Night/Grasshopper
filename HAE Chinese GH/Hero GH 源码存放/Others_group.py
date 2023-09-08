@@ -35,7 +35,7 @@ try:
         class CreateView(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-新建视图", "RPP_CreateView", """创建新视图.""", "Scavenger", "Others")
+                                                                   "RPP_CreateView", "V3", """创建新视图.""", "Scavenger", "L-Others")
                 return instance
 
             def get_ComponentGuid(self):
@@ -119,7 +119,7 @@ try:
         class StrHandle(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-字符串处理", "RPP_StrHandle", """字符串处理插件,处理存在的符号信息""", "Scavenger", "Others")
+                                                                   "RPP_StrHandle", "V1", """字符串处理插件,处理存在的符号信息""", "Scavenger", "L-Others")
                 return instance
 
             def get_ComponentGuid(self):
@@ -216,7 +216,7 @@ try:
         class StrHandle_02(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-字符处理", "RPP_StrHandle_02", """字符集的拆分""", "Scavenger", "Others")
+                                                                   "RPP_StrHandle_02", "V2", """字符集的拆分""", "Scavenger", "L-Others")
                 return instance
 
             def get_ComponentGuid(self):
@@ -276,9 +276,9 @@ try:
         class TranslateByBAIDU(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-某度翻译", "RPP_TranslateByMODU",
+                                                                   "RPP_TranslateByMODU", "V5",
                                                                    """通过某度API接口进行翻译，需要ID和密钥""",
-                                                                   "Scavenger", "Others")
+                                                                   "Scavenger", "L-Others")
                 return instance
 
             def get_ComponentGuid(self):
@@ -373,9 +373,9 @@ try:
         class LayerRename(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-图层重命名", "RPP_LayerRename",
+                                                                   "RPP_LayerRename", "V4",
                                                                    """重命名图层，需要csv文件数据导入，会自动重命名图层""",
-                                                                   "Scavenger", "Others")
+                                                                   "Scavenger", "L-Others")
                 return instance
 
             def get_ComponentGuid(self):
@@ -489,9 +489,9 @@ try:
         class ActiveFile(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-获取某些数据", "RPP_ActiveFile",
+                                                                   "RPP_ActiveFile", "V11",
                                                                    """获取犀牛，Gh文件路径以及当前时间""", "Scavenger",
-                                                                   "Others")
+                                                                   "L-Others")
                 return instance
 
             def get_ComponentGuid(self):
@@ -577,5 +577,6 @@ try:
 except:
     pass
 
+import GhPython
 import System
 

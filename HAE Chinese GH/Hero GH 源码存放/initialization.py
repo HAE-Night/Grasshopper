@@ -52,6 +52,7 @@ def decryption():
     prop_list = [strInfo.Properties for strInfo in arrInfo.Get()]
     map(_get_macaddress, prop_list)
     Mac_Address = filter(None, Mac_Array)
+    print(Mac_Address)
 
     origin_data_list = []
     now_time = int(time.time())

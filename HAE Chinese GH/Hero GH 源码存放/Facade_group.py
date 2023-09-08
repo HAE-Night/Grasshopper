@@ -32,7 +32,7 @@ try:
         class SurfaceKeyPoints(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-曲面关键点", "RPP_SurfaceKeyPoints", """获取曲面板关键点，角点、中心点、线中心点""", "Scavenger", "Facade")
+                                                                   "RPP_SurfaceKeyPoints", "F1", """获取曲面板关键点，角点、中心点、线中心点""", "Scavenger", "H-Facade")
                 return instance
 
             def get_ComponentGuid(self):
@@ -196,7 +196,7 @@ try:
         class SmallestRegion(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-物件粗略范围", "RPP_SmallestRegion", """以中心物件为中心，寻找一组物件中粗略最小范围""", "Scavenger", "Facade")
+                                                                   "RPP_SmallestRegion", "F3", """以中心物件为中心，寻找一组物件中粗略最小范围""", "Scavenger", "H-Facade")
                 return instance
 
             def get_ComponentGuid(self):
@@ -352,7 +352,7 @@ try:
         class CounterBore(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-沉头孔", "RPP_CounterBore", """输入规格自动生成沉头螺钉（包含M4、M5、M6、M8、M10、M12、M16、M20）""", "Scavenger", "Facade")
+                                                                   "RPP_CounterBore", "F2", """输入规格自动生成沉头螺钉（包含M4、M5、M6、M8、M10、M12、M16、M20）""", "Scavenger", "H-Facade")
                 return instance
 
             def get_ComponentGuid(self):
@@ -487,9 +487,9 @@ try:
                             Alum_Material = self.counter_bore(order_sp_al)
                             Iron_Material = self.counter_bore(order_sp_fe)
                         else:
-                            self.message1('未包含此螺丝规格！')
+                            Message.message1(self, '未包含此螺丝规格！')
                     else:
-                        self.message2('螺丝规格未输入！')
+                        Message.message2(self, '螺丝规格未输入！')
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
                     sc.doc = ghdoc

@@ -31,7 +31,7 @@ try:
         class GetSectionValue(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-区间取值", "RPP_GetValue(Section)", """列表区间取值""", "Scavenger", "Math")
+                                                                   "RPP_GetValue(Section)", "X1", """Get the range of the list""", "Scavenger", "J-Math")
                 return instance
 
             def get_ComponentGuid(self):
@@ -49,24 +49,24 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "List_Data", "D", "一组数据")
+                self.SetUpParam(p, "List_Data", "D", "List Data")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
-                self.SetUpParam(p, "Start", "S", "开始的区间")
+                self.SetUpParam(p, "Start", "S", "Start of Range")
                 p.SetPersistentData(Grasshopper.Kernel.Types.GH_Integer(0))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
-                self.SetUpParam(p, "End", "E", "结束的区间")
+                self.SetUpParam(p, "End", "E", "End of Range")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Result", "R", "返回的区间数据")
+                self.SetUpParam(p, "Result", "R", "Return Data Range")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -93,14 +93,14 @@ try:
                         Result = List_Data[Start: End + 1] if End is not None else List_Data[Start:]
                         return Result
                 finally:
-                    self.Message = '区间取值'
+                    self.Message = 'Get Date of Range'
 
 
         # 根据长度得树形数据
         class GetTreeLen(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-根据长度取树形值", "RPP_GetTreeOfLen", """取指定长度的树形数据""", "Scavenger", "Math")
+                                                                   "RPP_GetTreeOfLen", "X2", """Get Specific Length of Tree Data""", "Scavenger", "J-Math")
                 return instance
 
             def get_ComponentGuid(self):
@@ -118,19 +118,19 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Tree", "T", "树形数据")
+                self.SetUpParam(p, "Tree", "T", "Data Tree")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
-                self.SetUpParam(p, "Length", "L", "长度，默认为1")
+                self.SetUpParam(p, "Length", "L", "Length,Default is 1")
                 p.SetPersistentData(Grasshopper.Kernel.Types.GH_Integer(1))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Result", "R", "提取指定长度的树")
+                self.SetUpParam(p, "Result", "R", "Get Specific Length of Data")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -165,17 +165,17 @@ try:
 
                         length_list = map(lambda x: len(x), leaf_list)
                         res_index = self.get_tree(length_list)
-                        Result = Message.message2(self, '没有指定长度的树形数据！') if len(res_index) == 0 else ght.list_to_tree([leaf_list[_] for _ in res_index])
+                        Result = Message.message2(self, 'No Specific Length of Data Tree！') if len(res_index) == 0 else ght.list_to_tree([leaf_list[_] for _ in res_index])
                         return Result
                 finally:
-                    self.Message = '根据长度取树形值'
+                    self.Message = 'Get Tree Data as per Specific Length'
 
 
         # 输出列表前N项的和
         class GeometricSeries(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-输出列表前N项的和", "RPP_GeometricSeries", """列表前n项之和""", "Scavenger", "Math")
+                                                                   "RPP_GeometricSeries", "X13", """the summary of the first n number""", "Scavenger", "J-Math")
                 return instance
 
             def get_ComponentGuid(self):
@@ -193,13 +193,13 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "List_Num", "L", "数字列表")
+                self.SetUpParam(p, "List_Num", "L", "list data")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Final_data", "F", "输出结果")
+                self.SetUpParam(p, "Final_data", "F", "Output Result")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -220,7 +220,7 @@ try:
                 return rs.MessageBox(info, button, title)
 
             def Branch_Route(self, Tree):
-                """分解Tree操作，树形以及多进程框架代码"""
+                """disassemble Tree 操作，树形以及多进程框架代码"""
                 Tree_list = [list(_) for _ in Tree.Branches]
                 Tree_Path = [list(_) for _ in Tree.Paths]
                 return Tree_list, Tree_Path
@@ -264,14 +264,14 @@ try:
                             Final_data.append(sum(List_Num[:index]))
                     return Final_data
                 finally:
-                    self.Message = '列表前n项之和'
+                    self.Message = 'sum n in the list'
 
 
         # 随机数据
         class RandomData(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-随机数据", "RPP_RandomData", """随机数据组""", "Scavenger", "Math")
+                                                                   "RPP_RandomData", "X14", """random data group""", "Scavenger", "J-Math")
                 return instance
 
             def get_ComponentGuid(self):
@@ -289,18 +289,18 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Data", "D", "原始数据")
+                self.SetUpParam(p, "Data", "D", "original data")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
-                self.SetUpParam(p, "Random", "R", "随机列表，可不填（自动随机）")
+                self.SetUpParam(p, "Random", "R", "Random List，if no input,automatically random input")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Result", "R", "随机后的数据")
+                self.SetUpParam(p, "Result", "R", "data after random")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -338,18 +338,18 @@ try:
                                 Result = [Data[_] for _ in Random]
                                 return Result
                             else:
-                                Message.message3(self, "随机列表的数量要与原始列表一致！请检查")
+                                Message.message3(self, "number in Random list should be same with original list!please check")
                                 Result = Data
                                 return Result
                 finally:
-                    self.Message = "随机数据"
+                    self.Message = "random data"
 
 
         # 小数点的精度分析
         class NewRound(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-数据精度提取", "RPP_NewRound", """数据精度的重定义，优化数据（四舍五入）""", "Scavenger", "Math")
+                                                                   "RPP_NewRound", "X5", """Redefine the data accuracy, data optimization (rounding off)""", "Scavenger", "J-Math")
                 return instance
 
             def get_ComponentGuid(self):
@@ -367,27 +367,27 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Decimal ", "D ", "小数（浮点数）")
+                self.SetUpParam(p, "Decimal ", "D ", "decimals（floating number）")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
-                self.SetUpParam(p, "Precision", "P", "保留的位数")
+                self.SetUpParam(p, "Precision", "P", "remaining numeriacal digit")
                 p.SetPersistentData(Grasshopper.Kernel.Types.GH_Integer(0))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Result", "R", "输出结果")
+                self.SetUpParam(p, "Result", "R", "Output Result")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Percentage", "%", "输出结果的百分数")
+                self.SetUpParam(p, "Percentage", "%", "per cent in output result")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Per_thousand", "‰", "输出结果的千分数")
+                self.SetUpParam(p, "Per_thousand", "‰", "thousandth in output result")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -475,17 +475,17 @@ try:
                         Percentage = str(dd(per).quantize(dd("1e-{}".format(Precision)), rounding="ROUND_HALF_UP")) + '%' if "e" in str(per) else self.handle_str(per, Precision) + "%"
                         Per_thousand = str(dd(per_th).quantize(dd("1e-{}".format(Precision)), rounding="ROUND_HALF_UP")) + '‰' if "e" in str(per) else self.handle_str(per_th, Precision) + '‰'
                     else:
-                        Message.message2(self, 'D端未输入数据！')
+                        Message.message2(self, 'D terminal input data！')
                     return Result, Percentage, Per_thousand
                 finally:
-                    self.Message = "科学计数（精度提取）"
+                    self.Message = "Scientific Notation（extract precision）"
 
 
         # 四舍五入
         class GHRound(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-四舍五入", "RPP_GHRound", """小数点（浮点数）四舍五入以及上下取整""", "Scavenger", "Math")
+                                                                   "RPP_GHRound", "X4", """the decimal point (float point number),rounded off up or down""", "Scavenger", "J-Math")
                 return instance
 
             def get_ComponentGuid(self):
@@ -503,12 +503,12 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Decimal", "D", "数字（小数）")
+                self.SetUpParam(p, "Decimal", "D", "number（decimal）")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
-                self.SetUpParam(p, "Precision", "P", "保留位数")
+                self.SetUpParam(p, "Precision", "P", "remain the number of figures")
                 accuracy = 1
                 p.SetPersistentData(gk.Types.GH_Boolean(accuracy))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
@@ -516,15 +516,15 @@ try:
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Result", "R", "四舍五入后结果")
+                self.SetUpParam(p, "Result", "R", "result after rounded to the nearest")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Floor", "F", "下取整")
+                self.SetUpParam(p, "Floor", "F", "rounded down")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Ceil", "C", "上取整")
+                self.SetUpParam(p, "Ceil", "C", "rounded up")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -612,7 +612,7 @@ try:
         class FormatNumber(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-格式化数字", "RPP_FormatNumber", """格式化一组数字""", "Scavenger", "Math")
+                                                                   "RPP_FormatNumber", "X11", """format a set of number""", "Scavenger", "J-Math")
                 return instance
 
             def get_ComponentGuid(self):
@@ -630,30 +630,30 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Number", "N", "数字")
+                self.SetUpParam(p, "Number", "N", "number")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Format", "F", "格式化字符串（00，00）")
+                self.SetUpParam(p, "Format", "F", "format character string（00，00）")
                 DEFAULT_FORMAT = "00"
                 p.SetPersistentData(gk.Types.GH_String(DEFAULT_FORMAT))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Prefix", "P", "数字的前缀")
+                self.SetUpParam(p, "Prefix", "P", "prefixion of the number")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Suffix", "S", "数字的后缀")
+                self.SetUpParam(p, "Suffix", "S", "suffix of the number")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "FormattedNumber", "FN", "格式化后的数据")
+                self.SetUpParam(p, "FormattedNumber", "FN", "data after formatting")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -750,18 +750,18 @@ try:
 
                         FormattedNumber = pre_str + new_character_string + B_Part + suf_str
                     else:
-                        self.message2('N端为空！')
+                        self.message2('N terminal is null！')
                     return FormattedNumber
                 finally:
-                    self.Message = '数字格式化'
+                    self.Message = 'format number'
 
 
         # 列表数字或字母
         class RangeSeries(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-列表数字或字母", "RPP-RangeSeries", """列表数字或字母""",
-                                                                   "Scavenger", "Math")
+                                                                   "RPP-RangeSeries", "X3", """number or alphabet in the list""",
+                                                                   "Scavenger", "J-Math")
                 return instance
 
             def get_ComponentGuid(self):
@@ -779,21 +779,21 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Start", "S", "区间起点")
+                self.SetUpParam(p, "Start", "S", "Start of Range")
                 START_RANGE = "0"
                 p.SetPersistentData(gk.Types.GH_String(START_RANGE))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "End", "E", "区间终点")
+                self.SetUpParam(p, "End", "E", "End of Range")
                 END_RANGE = "10"
                 p.SetPersistentData(gk.Types.GH_String(END_RANGE))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Step", "S", "步长")
+                self.SetUpParam(p, "Step", "S", "Length of Step")
                 DEFAULT_STEP = 1
                 p.SetPersistentData(gk.Types.GH_Number(DEFAULT_STEP))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
@@ -801,7 +801,7 @@ try:
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "List", "L", "生成的列表")
+                self.SetUpParam(p, "List", "L", "Creating List")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -893,22 +893,22 @@ try:
                                     for i in self.circulate(ord(Start), ord(End), Step):
                                         List.append(chr(i))
                             else:
-                                self.message1("字符列表步进必须为整数!")
+                                self.message1("Character List must be integer!")
                         else:  # 两个值都为数值
                             Start, End = float(Start), float(End)
                             List = self.circulate(Start, End, Step)
 
                     return List
                 finally:
-                    self.Message = '列表数字或字母'
+                    self.Message = 'number or alphabet in list'
 
 
         # 物件快速编号
         class Number(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-物件快速编号", "RPP-Number", """物件快速编号""",
-                                                                   "Scavenger", "Math")
+                                                                   "RPP_Number", "X12", """give number to object fastly""",
+                                                                   "Scavenger", "J-Math")
                 return instance
 
             def get_ComponentGuid(self):
@@ -926,26 +926,26 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Object", "O", "需要进行编号的物件列表")
+                self.SetUpParam(p, "Object", "O", "object list need to be numbered")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Start", "S", "编号的起始值")
+                self.SetUpParam(p, "Start", "S", "start value of the number")
                 START_NUMBER = 1
                 p.SetPersistentData(gk.Types.GH_Number(START_NUMBER))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Step", "N", "步长")
+                self.SetUpParam(p, "Step", "N", "Length of the step")
                 STEP_NUMBER = 1
                 p.SetPersistentData(gk.Types.GH_Number(STEP_NUMBER))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Format", "F", "数字格式化字符串")
+                self.SetUpParam(p, "Format", "F", "number format character string")
                 DEFAULT_FORMAT = 'A{0:00}'
                 p.SetPersistentData(gk.Types.GH_String(DEFAULT_FORMAT))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
@@ -953,7 +953,7 @@ try:
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "FormatNumber", "T", "返回的格式化数字")
+                self.SetUpParam(p, "FormatNumber", "T", "returned formatted number")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -1038,7 +1038,7 @@ try:
                         print(666)
                         return
                     if len(Format) == 2:
-                        self.message1("字符串格式输入错误！")
+                        self.message1("format of the character string is wrong！")
                     else:
                         Font_str = format_str[:start] if start != 0 else ''  # 取出{}之前的字符串
                         last_str = format_str[end + 1:] if start != 0 else ''  # 取出{}之前的字符串
@@ -1051,14 +1051,14 @@ try:
                                 Format_Str = Font_str + '{}' + last_str
                                 Format_List.append(Format_Str.format(number))
                             else:
-                                self.message1("字符串格式输入错误！")
+                                self.message1("format of the character string is wrong！")
                         elif eval(Format[1: -1]) == 0:
                             number = str(number)
                             number = number.rstrip('0').rstrip('.') if '.' in number else number  # 去掉浮点数后多余的0
                             Format_Str = Font_str + '{}' + last_str
                             Format_List.append(Format_Str.format(number))
                         else:
-                            self.message1("字符串格式输入错误！")
+                            self.message1("format of the character string is wrong！")
                 return Format_List
 
             def get_number(self, Data_Length, Start_number, Step):  # 获取数值列表
@@ -1102,7 +1102,7 @@ try:
                     return FormatNumber
 
                 finally:
-                    self.Message = '物件快速编号'
+                    self.Message = 'give number to object fastly'
 
 except:
     pass
