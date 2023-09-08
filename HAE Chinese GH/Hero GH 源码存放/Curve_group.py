@@ -34,8 +34,8 @@ try:
         class VectorLineTaking(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-PDWL", "RPP_VectorLineTaking",
-                                                                   """点向式绘制直线.""", "Scavenger", "Curve")
+                                                                   "RPP_VectorLineTaking", "W1",
+                                                                   """点向式绘制直线.""", "Scavenger", "B-Curve")
                 return instance
 
             def get_ComponentGuid(self):
@@ -84,7 +84,7 @@ try:
                     self.marshal.SetOutput(result, DA, 0, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAD7SURBVEhL1ZU7SwNBFEY/gmm0CEGCTRobIf9TRRBSCAkEhLSiWSJ28RekThHxRR4QsLOxznruZALLYjd3Cw8cdu4Ul9mP2b1yoo33OI5meIs36EILz/Ear/AS82gl9HCGm1A5Y/F8or3Vi214Ys0X2AyVtI5PF6z5Eo9DJdXxe7dMp9zcqKHdpGT2sRSbu/HXyd2ovLl/LFvpjM6TQ+md0v/kd9KUbz8nl9O45Up2JL0+S51Yu/K/r2LyyW1Y2J+vjFssD2hDosgI3WJ5wu5uGXDP/BFt3BmV3BZreoF9/MAGujLEH5zjiW3AQXy6YAPapv8XvuEqOsBEpF9kxj9B98/3mgAAAABJRU5ErkJggg=="
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAF4SURBVEhLYxhywNj4DKuHxy12KJf6wNbjTLSz752dTt7X7ji6n9eGClMP2PucEbHzOLMbaMFze7czAVBh6gBn55PC9h6nj9m5n/KzczuRZu9+2gEqRTlwcTnDb+9x5iTQ0BSoEPWAq+sFbqDhR4FBkwUVoh6wt9/PAXT1QXuPs4VQIeoBUJK0cz+zB+j6CqgQ9UBo6CpmO4/T24HBUg8VogIQ3sAroXY2VkzxsCvQ8EVA3AaVoQbYz+Efcf74lp3///dO+fLfxP7EUqgEtcAa+frWh/9B4Ofv//+tnE+vhEpQB4jr7eR28z/3ePbCT//L6x7/1jE7Qb1cqhV6hQ2U/a2cTmcw8BywZWDbogmVohyAUgswne8E4lqoEHUBMKVscfA40wzlUhfYu59dZ+dxtgvKpS4AloorgXgilEtdAIxQYCY6NQPKpS6wdz8zB2jBPCiXegBYKrIADZ4OTC1LoELUBQ7uZ9yBJeNiKJf6AJSZoEwqAgYGAFDLiEMQByWiAAAAAElFTkSuQmCC"
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
@@ -116,9 +116,9 @@ try:
         class CurveTrim_S(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-Ext_Simplify", "RPP_CurveExtendTrim",
+                                                                   "RPP_CurveExtendTrim", "W5",
                                                                    """修剪曲线，输入负数时修剪曲线，输入正数时延长曲线.""",
-                                                                   "Scavenger", "Curve")
+                                                                   "Scavenger", "B-Curve")
                 return instance
 
             def get_ComponentGuid(self):
@@ -177,7 +177,7 @@ try:
                     self.marshal.SetOutput(result, DA, 0, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAOCSURBVEhLtZbvT1NXGMf7hv8A3rm37k9Qs2xZg8h0Sxa14By4jCGblbZshkJFDDHIBqyACHOim7ODroTabbgG3CjCOoHSFHS2QoOM8UNlsACh8IIfgc/OvbsYCqVGjJ/kJvc+zz3ne5/ne85pVTU1NbS0tDy9mpqawp5fNKZyu928TFSSynZYXV1V7qKzLYHW1lYyMj4h/aN0vF6vEo2MSurb86LXG6ird1BSfoHE/QdwOp1KZjPbqsB0+gy1Njv3+oLc7uji/ZQUlpaWlGw42xTIo04I/N7VTWBgkLT04/wzPq5kw3khgT88Xjy99/gwLY2FhQUlG84zBRwOB1qtFm93txKB3FyT3CLvn/f5xlJLcXHx1i2KZvL09DTHM05Qdekq7x48iNFo5MmTxxQWnuf7Hxq4HxzgRKaOD44dk3Opqam4XC5l9P9ErcDn83EqO1e0wseDwSHKLlajSUpCrY7HecuFy32H2Lg4SktK6OjyYL5Qyf633wmrNqpAb08PmbpPabvThc//gD4h0tlzV0x0kavXLBQUFmHQ6xkcGmLXnj2czi+gqMRMdVWVMsMGgYmJCebn55UnCIVmSU4+wnVrPcGhYfxixfT99TcDI2O0d3ZxUuyHBrudz7KziYuNxXGzmY+1mdjtDcoMEQSGh4eZnJxkeXlZjjU3N7Nr926KyyqoqP4KrU7P0ZRUyiuruHS5ht5AH3v3JaIznOJWq5t9iW/xrxi/RkSTJZHR0VHZZInHjx5hNpu5Ik5eqW0pQqDOdoNzRZ+L3VzBj84m7D872ZuYiNVqlcessaUH0mEWDAYZFxtorZrFxUUMhiyMuXlY6+2UiSrU6jc5qdOJqlKwWCzye+uJarKEJOT3+5mamiJd7Fjpy60NN7j87TVh6JfYbDZmZqYJzc4qI8KJKNDf34/H46FbLLe5uTk5VldbS8G5Im42/cqOV3ZwpuA8OXn54quvy/mt2CQQCoWIiYlBpVLJV2lpqVxF/tmzYvLfOCDW+c6dr9LW4UNz5D06OzuUkZHZZPLMzAxp4mxJSEiQhTQajeyBMScH+0+/cDgpmUqxsyu/vsKhw4ee+rMVmypY/0s1MjKi3EFjYyOvvf6G6P13fGEuRx0fTyAQYGxsLOy9jTzT5PW0t7eRlZWFyWRi8OFDObaysiL7JC1taZVt5LkEoiFVvr76NV7yvwr4D6Ki6GWRgrKXAAAAAElFTkSuQmCC"
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAMOSURBVEhL7ZVdSFRBFMeXepGstKcgWrb82F01SwgCRXfu3a879151bd2FogLpIQ0JCoWCwiu6UoFBVMSG9BZEUigE0UvUSybt190PDVZT+7AStSwLQ2Kmc7fpYRHBdn3sB8O9zJw5Z+bM/8zo/pMRVDHk016DebD1+I5Kp3rOKscvIhw6A+0ojyNOXg7tR0JkF8bJrWzK2qBK6WbiM18lPtMU6TaMjbfbpkX3eyp4vlLR85mKjbNUOPiB2usnKC/FqAUHFyFoEuHwEySGbyEcPY3kOGe3v85jLtMhivEO8ZUMUaW4grRtz11Sygua3I+kKiHWgoTQBYsQvAYO7yEh+Azh4Ci0eU5UqcM1STEE1xbhbHhHOSk6B0Fv2O3B9ECku1DPftdEbW1wk9MV11vlxAGE1UNIjHTCAvrB+Q/RMw87DPQx0/UDibEGTopNi41agKCfdWdHtRzbxmP1JCdG44L7I6TsDYVd3F+Ron+FFyJlvBS9Ao5nxcY5yP9bCv9DkKoGZpIZVinCw0EOWOURKnm+gKLimuMHFjHsYCaZYbG/KAZ5PnS4pkCyc+A0MoNE9RIvRE3MJHNqHMO7weGsJkNeVINIih72evs3suHs4YSAjN0zVEsLJ4bvwsprrThRmvVB/gWhpzlQWH5Ojv/E7k+pFNnrx0EtoW8cDgfgYG+DRFv4upEyNiUzbHKswColmmAHfpDiMARYsNUlWSXPp3YIBTaAXJF8NiU7qupfbbGI0XKtwOA+8kH7rl0ZCAdOMZP1AaHJHJBuFy+P/rLVjdFq/BKxoezgpZBBkypceouSd4HycmKhxjl0hA1nThGfLOTlWB84Xk4VmwzFJql9lfxzAzP5AzlfqCdKUerhIG17c6mi25AaWAV6tiCP9Oibm72DxOZZBsmqS5Cam9U4XMpM0iEdxlZoAeozNcE3pD06bCiNlN3lkijpMk+QLkOg59j1jgr7VDs8MjuZyeqkHPv3UaIUS6xrBVQxmknvHgftMZpZ19qgivkE6TQlSbf5MVFMg9SrW7/y1+l0vwFWvne7DtJTWAAAAABJRU5ErkJggg=="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
@@ -187,6 +187,15 @@ try:
                 self.second_factor, self.second_line_length, self.second_type_of_line = (None for _ in range(3))
                 self._curve_style = None
                 self.curves, self.pts = None, None
+
+            def message1(self, msg1):  # 报错红
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
+
+            def message2(self, msg2):  # 警告黄
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
+
+            def message3(self, msg3):  # 提示白
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
 
             def mes_box(self, info, button, title):
                 return rs.MessageBox(info, button, title)
@@ -263,34 +272,34 @@ try:
 
             def RunScript(self, Curve, Type, L0, L1):
                 try:
+                    sc.doc = Rhino.RhinoDoc.ActiveDoc
                     Result_Curve = gd[object]()
-                    re_mes = Message.RE_MES([Curve], ['Curve'])
-                    if len(re_mes) > 0:
-                        for mes_i in re_mes:
-                            Message.message2(self, mes_i)
-                    else:
-                        sc.doc = Rhino.RhinoDoc.ActiveDoc
-                        self._curve_style = self._style[Type]
+                    self._curve_style = self._style[Type]
 
-                        trunk_curve, trunk_path = self.Branch_Route(Curve)
-                        first = self.str_handle(str(L0))
-                        second = self.str_handle(str(L1))
+                    trunk_curve, trunk_path = self.Branch_Route(Curve)
+                    len_c = len(trunk_curve)
+                    first = self.str_handle(str(L0))
+                    second = self.str_handle(str(L1))
 
-                        self.first_factor, self.first_line_length, self.first_type_of_line = self.parameter_handling(first)
-                        self.second_factor, self.second_line_length, self.second_type_of_line = self.parameter_handling(second)
+                    self.first_factor, self.first_line_length, self.first_type_of_line = self.parameter_handling(first)
+                    self.second_factor, self.second_line_length, self.second_type_of_line = self.parameter_handling(second)
 
+                    if len_c:
                         zip_list = zip(trunk_curve, trunk_path)
                         iter_ungroup_data = ghp.run(self.temp, zip_list)
                         Result_Curve = self.format_tree(iter_ungroup_data)
-                        no_rendering_line = self.Branch_Route(Result_Curve)[0]
-                        pt_array = map(self.get_se_pt, no_rendering_line)
+                    else:
+                        self.message2("C端不能为空！")
+                    no_rendering_line = self.Branch_Route(Result_Curve)[0]
+                    pt_array = map(self.get_se_pt, no_rendering_line)
 
-                        self.curves = no_rendering_line
-                        self.pts = pt_array
+                    self.curves = no_rendering_line
+                    self.pts = pt_array
 
-                        sc.doc.Views.Redraw()
-                        ghdoc = GhPython.DocReplacement.GrasshopperDocument()
-                        sc.doc = ghdoc
+                    sc.doc.Views.Redraw()
+                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                    sc.doc = ghdoc
+
                     return Result_Curve
                 finally:
                     self.Message = '曲线修剪'
@@ -312,8 +321,8 @@ try:
         class OffsetBySerial(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-多折线偏移（按线段序号）", "RPP_OffsetBySerial",
-                                                                   """多折线按指定序号进行偏移""", "Scavenger", "Curve")
+                                                                   "RPP_OffsetBySerial", "W13",
+                                                                   """多折线按指定序号进行偏移""", "Scavenger", "B-Curve")
                 return instance
 
             def get_ComponentGuid(self):
@@ -361,7 +370,7 @@ try:
                     self.marshal.SetOutput(result, DA, 0, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAGZSURBVEhL1dQ9KEZRHMfxx7vyMlAmUmSwkSQWKZOJQSIlKdlsGEwWpWQwSCkGT7FYWIjJIIVBkTJh8VImJRn4/q576uQ59+ne2zX41aeec+5z7j3n3Hv+qT9KCXpR57USTh6O8IVXdSQdzf4TeoBESicW0O613FmBbvyEHXWETQU+oMFvKMLvLEPXZ1GmjigZhVm2rKIcJktQ/5zXipAczECDL7GLbb/9AG3Dmd+eR+h04ARX0OAN2NvShnvompwjdDTrC5jBW3DF3ja93MAUoAbFGMYtzEDpgyu5mMA0StXhShW0vHeYJWuv+6EZBt08dAZgz1btRFOLO+jm6+pIIBm1qBKtPz+zph5j0KSCErsW6VA9QgO1YvuQ2Yldi3pgBkkDXHHWonGsodlrZUZflGb1ghvoBvsohB1nLeqCmdUzRtCEFmxiD7p2jGroEA75fYcwpzuwFnXDPCDIAXSo7AxC166hkqLfgbVoEmloNY3QlpzCPECrckXbav4TqRYp+nQXMYV8dTiid2cekLUWxU2oWvSfk0p9A8GZfDm6ge+4AAAAAElFTkSuQmCC"
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAI6SURBVEhLYxgFww+ISbqlAXEUlEtdICsboW1uv/m/vun0/0AuK0SUSsDO7bSjvef5Lxq6zZv0zWY9d/S62gOVwgTKGsVzNXSb1hjZrdSFCuEFQIMTnX1v/Xf0ulwD4ruFPjS2dNj+T0zGOxqsAAYsnI5J27gdnWNivfy/ntn0XzYuhz46el+9Zu95ocXJ46weVBkKAMk5+978b+9+LhIqBAYaeo2XLB13/mcQEDXTF5N093fwutjm5H39q5PPjeOaBu0uQDVCrr4PFIGuKgXi0w5el784eF266eh9rUVFu8JHXNKz0sb54Eqgyz/bup2yghiLAHJKybVqunVHGWxcj063ct7739Ru3VVn39v+UHkM4Ox9ScnR60KJo+flE/pmM/7buZ/8r2sy5Y5X0D15qBLsQEO3PkVJPX8RlEsUkJLzc1FQzZoNZApARGgP2GRkQuyhbJIBE5TGCpwC7poZmM+5Z2a3/j8w7qqgwsQBNZ26ej2TqW8MLOZ3eATekoEKw4Gj95VaYLz9sXDcNkVZq6zS3vPcf3uPUzFQaZyATULWzwSYmnZb2G/5oK5Tv8HCccd5J5+bX5y8r63QNploBQwOM0evK8eAyfO1vdtZD6g+BlPbdfGmNqv+y6tmoSRZFCCnkpJsarvmP1DxVt+Iz+JQYQZ79/MOQBdvMbSY99/Yaul/C4ft6228DwtCpWGAXcuw64KiWmYRlI8JRGUDlOVVMjOgXAwgq5hgK6eSngzljoJRQHPAwAAAp3S7mE1UKsAAAAAASUVORK5CYII="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
@@ -526,9 +535,9 @@ try:
         class PlineOffset(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-折线偏移", "RPP_PlineOffset",
+                                                                   "RPP_PlineOffset", "W15",
                                                                    """折线段分段偏移，三种不同的偏移模式""", "Scavenger",
-                                                                   "Curve")
+                                                                   "B-Curve")
                 return instance
 
             def get_ComponentGuid(self):
@@ -583,11 +592,20 @@ try:
                     self.marshal.SetOutput(result, DA, 0, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAIOSURBVEhLtZa9a5NRGMUDikUtQgtiV9sUIZA0398lXZ0stQl0cXF1URQk4KLoJDiIpdX/QeoqCnZooYXODg5FoYMlVSndCsbfKccMmpY3cj3wcN97bp7zPPfc9yaJ/Q+kUqnzlUplNp/Pj5sKh2azeSqXy72vVqtdxm+mj0ehUBgrFov30un0VVMnAtFz2Wz2kJyuipjuD3ezXqvVukogcdpLxwJbFkulUpfGvpL72nR/JBKJM4h2lECikrTtN4ytcrk86o/1wGdf1et1NfKAhi6YPhkIXkNwh6R9YolCuxygCv5UMeIG8YL5OkUl3nZqdCDQVHImk4nbthlZwdgRrx2qKOJvnTIYZIfsQeCpqSM0Go3TFHquw9Q5/bk+EEheIz572kM8Hh+iyEN28ziy7/2AwC3ZgdgVU2FBd5flNbu4ayo82MUnCmx5Gh6IP9KFYyeXTP0b8Pk6Yi1Pe+BNSut15GtjwdTgwIbbElHw/IyOpxAe063WOoW/MN9inDhKGBSILuswZcXvS6Q7AH+A6EfG7+IZtyk67LToQKTt7je5uXOM88R94iWxpoIKnmXVRadFA52dxf8OyR9M/QXWnlBgg/Gmqeig4zv+oSiaCgddebz+gUWrpsICa9o6PAqUTIVBMpkcwZJ3Ft80HQ6ItuS7XkWe9/SPwEthwKs2yQ72VIQCK/pB8VIAxGK/ADVGu47UwxZAAAAAAElFTkSuQmCC"
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAHnSURBVEhLYxiywM7jlKG9++lIKJe6wN71lI6d++nzdm6nHaFC1AOO7ie17d3PnLNzP2sJFaIeCFHYqw4y3MbztDVUiETw/z8jw7bvbgapd12cnU96OLifcbf1OO3mZHfcVbHpdYxc9YPbrg7kGg4C9f+Z+Ca9umgUf2ufk9PJbnuP0xPsPc5OcHI6NVE/5+l0hm0/46EqyQfeBof17d1Ob4RyaQPs3M9UAVNJP5RLGwCMzF0OHmedoVzqAzuvs5r2HmeOubpe4IYKUR8AI7nQzuPMdCiXNgBoyRZ7tzM+UC6R4PAHQfFFz4nyurHLGX57t1M7pzBM4YEKEQYsyz6v1c5/dsjJ8eQKYIpZbu95dgkwKOYBw3wGMN1PtPM42wXETfbu5yrtXU5n2Pid3yva9uQiw4V/hB1l739ewDLg3D6juFvKNjaHRG3dLss6up9St/O4YOjged4alHPtPc8EAAuyKGBpmeLgcibfOuhyPvOij40MZ/5zQY3BDew8Tjc5uZwuh3KpC+y9TkoAg+SAq+tO2iQ9O/dTfbbuZ7KhXOoCe/fzCsAkt8/Y+AwrVIi6AJRC7DzPxUG51AU+xkc1gBbsAhb4jFAhKoKV/zj1Eq9sAObGAKgIlcHqL4ZMi97vhvKoDBgYAPSXr1lTGqsuAAAAAElFTkSuQmCC"
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
                 self.factor = False
+
+            def message1(self, msg1):
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
+
+            def message2(self, msg2):
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
+
+            def message3(self, msg3):
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
 
             def offset_curve(self, tuple_data):
                 single_data, dis = tuple_data
@@ -644,7 +662,8 @@ try:
                                 Message.message1(self, "距离数据列表必须和多线段数目相等！")
                         else:
                             res_poly_line = ghc.OffsetCurve(Curve, Distance[0], None, 1)
-                        Rescur_list = self.double_line(Curve, res_poly_line) if Double else res_poly_line
+                        Double = False
+                        Rescur_list = self.double_line(Curve, res_poly_line) if Double == 'T' else res_poly_line
                         return Rescur_list
                 finally:
                     self.Message = '折线段偏移'
@@ -654,9 +673,9 @@ try:
         class ArcPick(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-圆弧拾取", "RPP_ArcPick",
+                                                                   "RPP_ArcPick", "W42",
                                                                    """简单圆弧拾取插件，通过参数修改，重建一个新的圆弧""",
-                                                                   "Scavenger", "Curve")
+                                                                   "Scavenger", "B-Curve")
                 return instance
 
             def get_ComponentGuid(self):
@@ -705,7 +724,7 @@ try:
                     self.marshal.SetOutput(result, DA, 0, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAHKSURBVEhLxdVPKGVhHMbxGyJp/G1iFjaSLCxmwSgWRNlIRMrKjmQzCwtTYkbkz1YjaxssbJSsbChZiCwQio1iwUKmZmQz833ee97rHe657j2uPPXpnt8573nfe95z3nNC751JTKPYVG+QZfzFHWZRjqSmERrAukcRlHZ8Dm8GSwdO4A5wjkxkOftWUYWEMgrbwYWz/RVKDjRlV7DHBhBXvkEnaDp0FSVe/Rt5cJONYdhBfiBmaqCGD6jXDi+7mAtvRk0T/kDndmqHX3agRn2mekwu0sKbvtFN17nXUPtnqYMa7JsqWBahPgZN9SS6aTrYY6pgqYD6OEaKdrjZgw6Wmip4DvCsnwzc4BZ6zl8TOxPNpvLyAb9wiZdupl/GoPWzBA3QgkjUqTrXs65FFCTzUMfWGv57ZLehA7WmSjx6R2kW3EEkkl6M45OpgsV9xZyhG0mN7uUGprztqNEVbOEIh96vFl8hkhLdA3cOZQV6RftFi2oBI0jVjlj5ArfzU6TDL5XYhNpqLRUgZvTxcAcQTdME2qArbEA/9LGxbfQmKMOLsQPoX7V6v7aTaPSvv0Nvg7iSjxl8NFU41RiCVuk6tIh+ogtq75NQ6B8itYJa+UxZQQAAAABJRU5ErkJggg=="
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAQbSURBVEhLzZVdTBxVFIBHbNQYleiDoVaTaoBlt6W2sVWLu3NnZufn3tnlp2xrNManqjHxxRfTaKCjaEIxauKLDz7oe5PGxCgqJmorUHZm9g8WlKKWamNxqWCCrdKmcz1nuKWlXfD3wS+ZzO45Z86599xzzpX+V2ipyQ0kNaoTmt9N2Oj2hDWxXqj+Ofel379RTZWfUljxMDheNNq+42bHDzzZeowrrHBWYaXPVFZ6UphLhHx+kyTxa8TftYlrR7Yo9ui4tetHTjt/AodFLlveCZl6ZXifVO3RUG7uOom6oTg9ukW2XJ9Y7uPCxerI1N2msrG50LFdrBC70CXbuWhsT/k61MNKb5BZqZmw4ivg/Ber8xQEd+fV1PgFQt2+0MlqEJbbjk7xI3gPtOi5O4SqKhCsDlL1UTI9yY324xx2+K5QCRynBles2IUeWE1WYfnzmGtCcwPSnoPXCquqwGof0dumXPg+l2yd4sn01zxhZSckh9cIE0lSqP+Y2fE9RM7PQm6ntdR4eJAJOrJXmKzKrTsXNmvpY29DARwilt8Pizqnt37DZcNlwkSSEpa3Xm2fasHTh+19gAFgy3l4FiH3W4VZVXivtFH8DJFNfz/LzGIxvCdEl9hpDN0u09x5Qr2AWEc3YrrA8C2hvoqgO/J08Gp0MdjfuI87ZB3KZOY1J1snMcCpiwWxTMIY0TD3sIvj+B8Ob11L2+DNoRIInossHzY4fYb3Rjl/bRMPXoyc4U6sDuX305FbiOXNaakJrpr5e0Pji4DiUax5iP6lEIVwR6oBh3uDvugcrDoTOI1P8N4Y530xHvRETgfdjTuEaQicRd7sOAFn6JlCtMSlAO6gEIXwA/fUBk6kwl/fxPlLTUtP6Lypwl9ouOqMZOqXjfZpLrO8IURLQAAlTJHlTjuXlxkQdNVvA4ezYVoOhM5ngq5Is1AvgynFhtPS1VJkZ+sI9RdVeyzArhXiZYJ9EOTlprPw/Bw8Xx8T4hUozHtIh36AIHNLc+kKYBeHKZRZwsxWbfegu+GBoKth5couQ7ay77Ddp6FJvUNCtBLZ8h/GplNZcSFhuncJ8V+CGEObVbt8Tm/7lieYrwnxlUCzWa6HQ46w/HA97b9eKNZE1/1awgrjNFOB9GQ/EeLqyHouCl18BisKZv4R6I+7hQocfVoL8+YgDkQhkuI0H4OmLFidMzi2Zwkt3SlUqxO3hnU47AWWgXyywq/QfD3oFGaOr6W/+h2KIQ4Dbgc4fAOe32hnhYN9BWXCxZ/TYgxuVeyxD+FG47h11S5x7FBI4QI04zzOLCwIrHm82WT9iwbx6d9DtseicC2+ieWHTiEAjvILsPJ5uPH64Z0Rpv8OvOzV1MQMBiK08Kxplm8Tqv+OB7XhDXDIA3AmHwvRGkjSHyZFFajLbW89AAAAAElFTkSuQmCC"
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
@@ -757,6 +776,7 @@ try:
                 try:
                     self.tol = Tolerance
                     self.r = Radius
+                    tree_leaf = [list(_) for _ in Curve.Branches]
                     re_mes = Message.RE_MES([Curve], ['C端'])
                     if len(re_mes) > 0:
                         for mes_i in re_mes:
@@ -764,7 +784,6 @@ try:
                         return gd[object]()
                     else:
                         filter_list = []
-                        tree_leaf = [list(_) for _ in Curve.Branches]
                         for _ in range(len(tree_leaf)):
                             if len(tree_leaf[_]) == 0:
                                 Message.message2(self, "第{}个曲线数据为空".format(_ + 1))
@@ -782,9 +801,9 @@ try:
         class Dotted_Line_Conversion(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-点线转换", "RPP_StartToStrat,EndToEnd",
+                                                                   "RPP_StartToStrat,EndToEnd", "W45",
                                                                    """曲线集的起点和起点连接，终点和终点连接""",
-                                                                   "Scavenger", "Curve")
+                                                                   "Scavenger", "B-Curve")
                 return instance
 
             def get_ComponentGuid(self):
@@ -837,7 +856,7 @@ try:
                         self.marshal.SetOutput(result[3], DA, 3, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAKRSURBVEhL7ZVdSxRRGMcn7YXuoigtKbtQdua8zKys2gqFppvRi0ZQmIEKBQUR4VWQXvgJuugTdNvMOTOzb5Rd+QW67CbBnT0zs7rr2ht+gOmc5RCoa6640U0/+F88589zDnPO8zyj/GdfdL1fPoYI6wWO32/kNvpV20fSag7Q9vugHcxCNxiCueqQRtgcMP2T0j44qh0kdVK4JENFNYu3dOL14Gx5BNjBcD1ppDiiZ6rD2GIJZSFqkan1Uc1wQCfB7wMgKd7Gpo9Rutorrq6esLuagNlqn+awO4gUX6BMuU2m7wRYYRxS/yWww3Gcro5DyuaNt94Jae8JdMPz0PKeDS4sHZZL24iiFsNdu6jRoDueW++Opdk56TQMsv27iHqqDJsPpmEKu/w99guw2GW8uPkQmmxCz3+bQmRFl9YWAA2eqE54SoaNIxJRtqqizEobypYHAPEnpVVDbAoIm4GEjcql3dFI2ANIOMOrY0pf/DktSlDcbfK1f1z4hvmlAzvBDeTwquM+zG1M8+J4rNpesrbBn9AoSyHiPxIPDKzPRxOfoiOKZbWKL9BzX5Fh+h3YLV3hTfngvhW1Cn9wKdqlarbRZS6fBjZ7KsMt1JpwcXOCN9c9/OHHJO9yKK3G0XiTQepdlWHzge8KBuLjQYYNA6zSBZwOY0Ki2eTyTsQ0BdR/HudXJZf2BFheu+h46K6NwSwX9eb1j2tnpL0TjRY6ocVmNerdBPnvcT5djXriG8eBG8Y1Pgx5BV2X6Qo/bCzGp4EM69P1hv8XeAnCbGVU1HVdOUKVUfHvQDa7JlNrB2j51U4ZHhzVLp5FNHiF0+UUzpdTkHhzIF9pl3YTiKJD0FnV9PR6jxCipb836P4BivILbfdLrpUGntoAAAAASUVORK5CYII="
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAS6SURBVEhLvZVrbBRVFMdHiCI+CGqQSGqh6bJboBW1D9qmu7O73Zm5++hLWh5B09pgY2IwRJBQrd2WpsWqTROpDRgNShA/iNEP2EoEoyHS3Z2d7buU0kJaCxGEik2qUdN7PPf2unXsJxPj70v3/P/33vOYOx3pf4VWW1bQphQVyqTFQvpvoXWWs9D+GNDatdVCMkGDFpUesO2BoHSXkOLQYEoqNK4rRm+RkBZCa606tCVhAmuDkOLcDmY/SOusv0D7eqANj5YLmUMbEpNovXUG3k6F32pSW4W8kGdLPj35+nMnYEvhKYeQ4rhJqHaiZitA8wY4VHHgPSFzaNCWAQdXA7y1Eob3amNCXkiWp78j2z8FGWp/rpA4hHQsyVFik8XFBlRu+Qay1b7TwuJYHWOZ71Q20y9374TtRaduWbJuLhOWGVmLnvEUXgbZa2QIiePUdL9SdBly1J4fsrULsw5NDwmLYyex/dn+G5CuXsHkvbMef2ytsMzgxnOegkvgUkMbhcRB/WOt5Co4iN7k0CIzsqb3CYuD/hl34AJggdPsr10xFoyYI5NoOD8wDA6fsU5IUhYJLUN9WibGtINEMvH3LB40KGxJLupejt6MQwuPY+LjWsk1sJPwDmGbwYWGOzAEed6wVUiSg0RLyFPXASv/hGAyl6+XVRpPYCe6yg7F7o5hgue9pVOARewXthk8rN/l68cWQ0lCwvYjx72lt8CuRrYqyul7Xb4+UwI8+A1f6U/gJHq5w6sr3s0/smRtwjYjE32IVegJDCSyOBCI3oNVTTm9PX/Icvdyt7tr5VwCfT6Bpnd7Csd4US6/ka4WT2KCyOfCNoMbR5zebmwxlMBipxbV+Ey1yNdzftcalgA7HeAxrsOYYpeTPFajKfkFIzhO8y2Lg62P4XOAXI+xisckepjN1K5FX2Cxi+jJLv8A66CXxU4S3eHdfJON7AMW5xYaq5zeGMbGqCTBHUwzgQfyBHkktoItwFav4TOhsta9hvl5+WGr2z/EDozx9Zr+EcGZyySyjcfywH2oTaM/lY7jZZoJNEdZAmY6SCxTLf4e2w3H23VpERu75ziCrrIyWIyjucGej13TH2F+MAiLsMgJ9GdzlO8e5pv+Ds522OnrAUJGluDCZnY78GbsEfZ8AhL9yqnom9TiCXZ9zwmbw57P3EWY69oEdtCHFYGsGhbceMntH8Tf5y3CjifAEXzB3mofu/Na5GVhc9CL/PNljYPXNJSnxSBX6XnJUzjK7v55YXFYYladXTP6cQwXeTeeLtNB2Pm3bK+shB8X0jyblL5Oxd+LbUcn3EXs7TSqhMXxBKKJmcrA77naAOT4cDxq2BBWnDT3SGeWbwps8rjpHyanouSzd6/WFsDgvm3g8XZNp/nHHxAW5/6Unx9qerrl9tArbjhS1Qap+RdfFFaco5XVZ0/urofGZ1pkIc0zulepgEMWgNYnoXr74SYhx6lKP3Inflavw5sJAPU26Ni1i7+Qf0FrLE/QxtUUWhOABpNPCHke2iIt/fW11GNX9mkfBsuP3i1kE7Qu+X1oTQNM1Alg/v7i99oG9SkAbegHbe1C/vfQlg0bIbh+wYefAa9a8+jBlJ20JWGpJEnSnytwY1SaJ/chAAAAAElFTkSuQmCC"
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def get_points(self, origin_curves):
@@ -875,8 +894,8 @@ try:
         class CurveJoin(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-合并曲线", "RPP_Curve_Join",
-                                                                   """曲线合并操作（多进程）""", "Scavenger", "Curve")
+                                                                   "RPP_Curve_Join", "W2",
+                                                                   """曲线合并操作（多进程）""", "Scavenger", "B-Curve")
                 return instance
 
             def get_ComponentGuid(self):
@@ -919,7 +938,7 @@ try:
                     self.marshal.SetOutput(result, DA, 0, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAFzSURBVEhL7ZS9S8NAGIcTtYIWQglCodSCDn6BLQhWoZ3UTUHBxcHFVSfFRUQ6uyhtKc010qYpYglFUKE4BpGKg6Iu3Ryk/0Ln+HvPDOJ65yD4wEPud29IjvtS/jon/lM6A/ASWjxJQvWfo/ABHvIkim3bQcs0k35cgm9wnSdRTNMMX1Qqi57n9SPuwCcYp5ow1VJprFGvp/DxXsRTeAt1qglRq9W0smHM3DWbcV3XNXRdQYMXRcFo1TJj++/t9jgiLeYj3KOaEIyxABykHzDHiQ2FwxvofobL/AVRzvL5iMXYAbU3FSWBib5Hc4KyMKVsNnperaY7nc5wIhjcPQqFVj+iUTpI4piFwuS146QxNX2IuYCq3sxrmvhO8RdztuW604ghSFswRzVhMplMj1UsJrvdbgRxCtLh2aaabNbgK1zgSTJ0UbXgCE8SoWNvwwaUs1O+QXPuwmOeJDMHX+AWT5JZgXSHp3j6BWj0sa/mPz9RlE+HX2apIbtNQAAAAABJRU5ErkJggg=="
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAIsSURBVEhLY6AlkJQJDIQyqQ/UdGrnuwU8/A/lUheo69ZP8wh+9d/QbM4tqBD1gLpO7RzPkDf/jSwXXANyJSCiVAJqOvUTQC43slwMcrk0RJRKQE27eiY4WCwXPwRylSCiVAJK6oWzoYbfAXJlIKLkA0Ytg45DmvrtC0AcFa3SiR5BL/8bWix4BOQqgsQoAjxC2poOnhf+6xpN3CqvmtHoHvjsv45R/2uglDpEBYVAVikh3tHr4n913cbnjt5XgBG65ApQmOJggQMRMacqB8/z/519b4FSyw9hcccJ8krJQUApVogK8gEziODgkLIytV3z3z3oxX8791P/Xfzu/DezW/+fjU1YA6yKFCCrEBembzZru7HVsmumtqvv6ppMPszOLu0gKuEUomM0aZq2Uc88Ve2qRmiZQ7oPVDRLF9p7nP1vbLX0r6P35f9eoR/+K2sU3YBKUwUwArG1mk7dVUevS/9BkatrMukpUIwNLEsFwK+mW3fAK+Tdf2XN0vNmdhv+GlktPQWVoxhwA7P/CVAO1TWeuIKLS87H1f/hf3W95j6oPEWAHZhb94HCXNug5yBIQFzcUkxdr3G2hISXJlgFBYBL26h3m1foR2AO7QMZzgsRpg5g0zbsPgByua7J1P1APjdEmDqABWj4VojhU3YB+ewQYeoADi2D9vVeIe//65tOPwzk80CEqQNYtA16N4LCXM9kKijMuSDC1APcwOLgHRAfA7L5IELUAgwMAG2XtZzil6uYAAAAAElFTkSuQmCC"
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
@@ -971,12 +990,13 @@ try:
                     sc.doc = Rhino.RhinoDoc.ActiveDoc
                     self.tol = Tolerance
                     New_Curve = gd[object]()
+
+                    curve_tree, curve_path = self.Branch_Route(Curve)
                     re_mes = Message.RE_MES([Curve], ['C'])
                     if len(re_mes) > 0:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
                     else:
-                        curve_tree, curve_path = self.Branch_Route(Curve)
                         zip_list = zip(curve_tree, curve_path)
                         bole = ghp.run(self._join_curve, zip_list)
                         New_Curve = self.format_tree(bole)
@@ -994,9 +1014,9 @@ try:
         class PCLINE(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-最近点连线", "RPP_PCLINE",
+                                                                   "RPP_PCLINE", "W3",
                                                                    """几何图形到指定线段的最近线段""", "Scavenger",
-                                                                   "Curve")
+                                                                   "B-Curve")
                 return instance
 
             def get_ComponentGuid(self):
@@ -1045,7 +1065,7 @@ try:
                         self.marshal.SetOutput(result[1], DA, 1, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAC8SURBVEhL7c4xDgFBFIDhpdNrFUIlEkJBI1xA4Qg6jWh0DqCj2U7vBiqlQi0OIApR6ESl4X8zppCdlek070++7MzuvOxEmqb9pxw6qJpdeDW07DK9Ck54fcQIaQU3s0ce3na4oYsxZECesu95yPsp5NwcAzywRqIMnliane0Md7NfrnDJj+52mWwL+djHDDI8RANND3k/gpyboI0LNvBWwhHuZnKbkBZwMwcUkFoWdRTNLrwyZE7TtK+i6A0ySS+PMwgz8wAAAABJRU5ErkJggg=="
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAH5SURBVEhL1ZJNSBRhHIeXajbcD3WbzdaBMlI0JVzdmcXdmXfcrf3QvQmdFQIVOkidIoKo6BDlsUOHPsCDWmueu0iWZW2xsIFHjxJJSrGFJkT8/Q3zDyw6yVvQAw/zznP5McPr+a/QtIHkkebhERy9bpGL0tVzbyVdeEehkGFyk4o/Zk6tpQsVUtVkhptU/Lo5uZrqL1Odqqe5SeVfDEx9TPW/pfqwkeImlaBhTq/19mGgPmZzk0pQt6bXe/veUCDUKbhJpVa3HmKghIGoxW0nxUBr99Jg+PCzXX+ebj1at/OvKBg8keT0kyv7BoeX5soVorsTnylqrpxE1OFtOAqH4AN+noY3oHNTBqDTz8Ix3KItO7+IgeMJvO9k3H/p2vJ3Ap+qRIns+/OIZ+APWIL34SachEVI8A68Cp0+Byux5ATZuZcYaO/B+6+cKpTPXb+5+mFkbLkUObrYxDkA97pHz35+Oqjw934Av6hq55wv+MOAy7ifD7uhzhDFqsi9oJra1jg3qagY+CJyCxg4ZnCTStgQM19FdoF8vmbngkinIS5mNkT2OQaaurlJ5VDcfrxhZecxoP2VgYhhz25amXlSfFoXN6lE4mL2m5V5SopyMMpNKo0Y2HIHGjq5SaUxkX5Cdv41eb1aGzep7GnpuHC5pePiLZwVN3k82/Q+nY1ZhBAvAAAAAElFTkSuQmCC"
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
@@ -1091,9 +1111,9 @@ try:
         class LineLength(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-求线长度", "RPP_GetLineLength",
+                                                                   "RPP_GetLineLength", "W32",
                                                                    """求线长度，并保留规定的小数位。""", "Scavenger",
-                                                                   "Curve")
+                                                                   "B-Curve")
                 return instance
 
             def get_ComponentGuid(self):
@@ -1116,8 +1136,7 @@ try:
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
-                self.SetUpParam(p, "小数", "N", "保留*小数. 默认一位小数")
-                p.SetPersistentData(Grasshopper.Kernel.Types.GH_Number(1))
+                self.SetUpParam(p, "小数", "N", "保留*小数.")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
@@ -1135,36 +1154,23 @@ try:
                     self.marshal.SetOutput(result, DA, 0, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAANNSURBVEhL3ZVrSFNhGMe1peC84cp9E0RFkkCdmxeKMMGEJIn64CeNvGUhigvbDDTXCAKR6VrDVoqj0DRNJdNQ0ayJ5WXzwtQd3VxhmiCKt12aep6e404fpAy8QNAP/rznvM//fZ7nvOflHId/QlxcHCs/Pz9erVYH0FNHC5fLFXl5eYFCoRikp46WiIiIhziAVCrV2meOGCzwAAeQyWQj9pkj5v8pUF5errHP7A0AOBIEESSXy6/y+fzclJSUwrS0tMLa2tpckiRdadtufhUoKSmZqK6u9lOpVH6YyMketaNUKrkJCQkSf3//CU9PT5LJZIKrqyuwWKwdicViXAJc2r4bDodTjANQcnJygqCgIBgeHuZTMTxZUeHh4W9dXFzAw8MDYmJiQCwqgraWZhjTDNj0hHbOoBs36KeJDnwCd2rNb0gkkqzs7OytpKSk7eTkZBAIBD/MZnMej8e7i52S3mw23CssAOO0DqxmE3yZX4Iu9TTUdGq2q1r7TfXdwyvG+SVic9N6iU65G3w0Blb3RwWgfFBncdv6qVBaaiosLnyDtXUTVLzpgysFzyH8hgyibsrgwu1nEC+sAl6mHF60q4EkbUX2jH+hrq7Oxdvbe9DZ2RlqaqqpfYX6riGIzlEAL0MKwseN8E6lAfWoFghiakFvMBjwenV27rsFGztHp/kzmIvp6+vbT73Ajx968JYEgbwZTl2TgOBRPeim9LBpXvmEiW6hglHuaDqOIxvlQ6fZm8jISCWDwYC21rebJLlNZhbXQUhqKTR19oFtY9mISRJp6/7JycmJxwFEIpENEy0WKFrI4JRS6Pmswb3dasVOT9qdBwAXO7LZbC0nLAyTkbPN3YO209fLoLGjD8htawfGj9HWg5Genn6ZOv8N9a8WNkxW40WhEoSyBrCuLc1gQQ/adnACAwPbQ0NDqe4HK5p7rdQR1BFT2Dicpy0HZ2RkhO3m5ma5k5dnwgITifdfgriyFSzry2205XAIhcIE6m/2vqvDMDo9O3cm6wn0Do1R3cfSlsMRHR2987tcWVwYl79WWWL5T2HGoJ/FAgzacjjKysqk+C2ivjGVA6OTq0OTX2F1ZbmJDh8e3PcT1HagmHgdgspABdLhfeLg8BOC7AQKjrtfNQAAAABJRU5ErkJggg=="
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAMtSURBVEhL3ZRNaBNBFICjWBRR0JM3f1Dwag1WbJKd3SS7O5tNmqS1VUEPBQ+KCOpFD0KwIghKi0UU8VIPgiLiRQSpWmzVNtk0yaap9if2V6m2/hS0anvw+WY7rYRY+2NPfjDszHtv35v35s3Y/g8IaVgmqMYtyZdpEGm8odgbswabCzi8Ja8bCI2Xc/P5Y7fHC9DRRznUD5LeATTcCYGKbnDj3OPHddkwEBo9xc3njxVANfokPQOFjhaof/IBbt8dgm3FLeg4DpgBfo3j3Hz+TAUQtTZweA0YHvkB56t7rGCLGsAhp2H3fhO+jk3Avso0FJHY4gbYQVJwuioLn0fH8RwSWP9WENT5B4hEYCkh99bw5e8AdlcKrlwfwAAT0JUdg+rLfbDdGZ1TAOzEFaK/3SNqqRpRS76S9PZRQTEkSzl9Br4MaLjz4J4UlB8wgYYS4FL+noHgT+8SdbMWHfd6At1Wx6mlQ+AJdAJRWqllxAIQNf5JCQ2A6OsEgXZYQ8K5Fw1p2Qg7i5w2lXzJCtGXbnT7XwItfQ9K+A2IWuI77r7erbcdK1ZjW7kpI7KUKFEq+dpKBTWWN7yBbKlLTm1ili45Koia+VwO9liOWWvj7p+6tfQhrz+z3nK3UESaOOvW29HxO+YUszVvuPVkEVcvHLv9WgGmfkcJDYIc7GeOH0t62s7V/wqWj7beV8NvrYPDLCJckQelD5ZjqWQsYa0n0PUIW9zFVTODZ1BnOcc3iajGQS7OYae7eZ2km2cws6yXd1Jg7zg2ilHFTf6MoEZPsJKwNnWpsSNcnAPRWislX3pYDQ8B28hkJ5kPCU0dLS55tpqb5eNSjCLsqp+s7oTGLnFxDkQxzsnBXlBCrEWTgyJNnpR87Ru4embYrcS6d7ILg2m22GywhKummcqOBSBaqs6pN63lqtnBn2sm0zW/EeXFFi6exqkZDtau1sWkiatcPDfwxjrZz2x3LrUlr+5+f3wlPitZKzvVaOLiuYMliesVX/AdiTVyUQ7YSRcnL5o5RtTmjVw8d3BXFzyBbFKixmYuygEfvZvsiSBK82EuWlwIyawSaKqQL2fBZvsF0I7e31s7rqUAAAAASUVORK5CYII="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def RunScript(self, Curve, Number):
-                try:
-                    re_mes = Message.RE_MES([Curve], ['Curve'])
-                    if len(re_mes) > 0:
-                        for mes_i in re_mes:
-                            Message.message2(self, mes_i)
-                        return gd[object]()
-                    else:
-                        digit = ".%uF" % Number
-                        Length = []
-                        for crv in Curve:
-                            if Number == 0:
-                                Length.append(format((crv.GetLength()), digit))
-                            else:
-                                Length.append(format(float(crv.GetLength()), digit))
-                        return Length
-                finally:
-                    self.Message = '长度-小数'
+                digit = ".%uF" % Number if Number else ".1F"
+                Length = [format(float(crv.GetLength()), digit) for crv in Curve]
+                # return outputs if you have them; here I try it for you:
+                return Length
 
 
         # 根据线长排序
         class LenghtSort(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-长度排序", "RPP_LenghtSort",
+                                                                   "RPP_LenghtSort", "W35",
                                                                    """根据Curve的长度进行排序，从小到大。""", "Scavenger",
-                                                                   "Curve")
+                                                                   "B-Curve")
                 return instance
 
             def get_ComponentGuid(self):
@@ -1207,7 +1213,7 @@ try:
                         self.marshal.SetOutput(result[1], DA, 1, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAJGSURBVEhLYxgeIDQ0lD8oKKhp4cKF8VAhhn/XnIX/3TPK/3czXBMqRD4IDw93ZmVl/V9QUPDh////bCCxfwdZzP6/Yv//74xeCVgRJSAxMdGFkZHxf05OzpN///6xg8T+HWQw+n+D+f+/0zq5YEWUgPj4eGeoBY9HLcAK6GZBYWHhQ6gQw789DHr/bzH//39KPw0qRD4AWcDExPQfSL+ZMGFC8Iw5i73/XbZz/HeJ6e+/U4qd/69IGfw/o6MBVU46iIuLcwNS/0EYZJGcos7/B6e75/8/xvD//xUgvgPER9iAeaSeBayBVLBhwwYTYPj/T0hI+A+07H9ZRe3/h9d3dvw7r7Lw3znVTf8uqW3+d1Zn1v//DIwREXF6np6eM4Dq7KDaiQPAHOwAjOAYKA4D8nmgUijA3d3dVl9f/7+Ojs5/c3PzS15eXjVlZWWUFycwMHv2bCFnZ+e1BgYGH9TU1P5raWn9B1r4x8bGZm9AQEDqjBkzJKFKEcDKysrNwsLiqKmpKUFsbGx80NLSchfQwOeampr/VVVVwRhkGchXQPkPQLk1vr6+McXFxWJgCzQ0NOJBikGKCGGQYYqKij+A7K/q6uoo4iAM8pGhoeF/Dw+P7VVVVUZgC4CCPLq6ukpABQQx0PU6wHioAfr6GtBhcEOBwfTP2tr6YGBgYFZvb6802GByQEhIiK6ent5/kOuBjgJF9BWghY15eXk6UCWUAWBE2gBd/woY0XOio6MdgKmNCSpFHdDZ2cl77NgxISh3FFAKGBgARSNMAzVxb5MAAAAASUVORK5CYII="
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAK9SURBVEhL7Y9rSFNxGMaPUASlkjcUPGeXlIwo6EtBWByXbO7utqYkLTU3BC0yxKRiEAR9EKm++CGhL0WRic0rXsowuxzbdOpUXPM2nTrMSxZJS6W9/d3+gWbEWq5P/eDh8D7P+38fDvEfnxn7Usp2rJQeBijfjq2tpXtR/3oebsKLKX06tjxI1F2nZSpzLh79x/ThitEJJdAyXqzFlgexstMmUhpdePQfZv4SY4fr0GQvysaWB5HSZEQF03j0n/bZC4wN9NAQqILn7/OZQbgKtSMFgSlodOqYHiiEKlt+YArqp88yJrgIldYAFdROapkOKIAHVt3GAkWnSaTomMSj/zxBBa/gPNwb0GZhywMq6JKetHyVqS3F0rTeIkXGu0KxyszGse9UjGuYVrcO7vbmnMKWBx6v77Y8zTonTH37TaQwrsrUAyti5RsJjn2nYkLT1bCkgUqHxmqYznxmcGY+bfmU11zlyL4ll9eE0HRZMJ9/f5dUWr4TP/kzHo2eqa5b0LkNM9lQM5cFhlkNNLu08HA0ox+vbGJfsjEiTjGWezDvYxi2fo/bHRwFQES63UQE+oYh7cbRL4naXxbMktiAk2p37lFN6Q9oP0fj6GcgiBTO0qG8VUH4CRc/nLckCOe5kJYEMZIFcVy6QxGn2iyubEhLpvQss6RDwFFMAVs2PM9VTpYkZC1y8GEv9LW2bZTIssBRzgFb7gB26kZx1gvlP8SWTwAl7EOyIPUCSzyIdtaKRla58pHHXFmH949oum0bye+cYUntQIkGgUKL67X2cJPQ3pq8x71iSYbRcQeQAvMimfzyzl66LtJTgAgijxuOxCY2JUUnVvus2KP1alLQvcyWjaPD6G8E5gmK13455tCNKHz374gXDoVSwn6gUnpsZFLruYiEnBAcbQ2sYw1hsXSjOp4gdmDrX0MQ3wEezYpPK8Qy/wAAAABJRU5ErkJggg=="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             # 排序
@@ -1237,9 +1243,9 @@ try:
         class DTS_Get_Vale(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-曲线取值", "RPP_DTS_Get_Vale",
+                                                                   "RPP_DTS_Get_Vale", "W44",
                                                                    """分解线段，以及下标取值（S为边线，V为点）""",
-                                                                   "Scavenger", "Curve")
+                                                                   "Scavenger", "B-Curve")
                 return instance
 
             def get_ComponentGuid(self):
@@ -1309,7 +1315,7 @@ try:
                         self.marshal.SetOutput(result[4], DA, 4, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAEESURBVEhL7dTPKsRhFMbxcw2MEjsLFmaJ/EkhUSSKhR0LaixYiRKiRLkQpUhRrocFFi6B8H1OM71v78qcncm3PovzNDO/mqmx/37bDu6w5VdqGw94DLhHDbaK78wiVLlH2XkxHEKVe5T14aV+PKMHKt+jnuB1YBrtfqUqmMVcwAza0CJN4hjjfqUmcIqzgBOMwaaQ/zCjUHpovkfZZTHoyarco/xraRyfGILS/oX8xc36gDeCXQz6lRrGPg4C9jCAFqkbC+j0K9WFJSwH6E/TP6+Kd+hHeUMvVD8ae9Qr7CIb5Aiq3KNspRjmoco9ytvEFdb9Sm3gGre4aYJer/et4U9n9gNMCfCsAWct1wAAAABJRU5ErkJggg=="
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAM4SURBVEhL7VRdSBRRFLYesh5Ksz+EXkohs5+XSFbbnXvnZ2fuzOyu7mI/IJGEEEGBLz4EglSPPRQFPRW9GWhEPVRKDyXors7O7uzOrqar/dHaD1GRVkgg07mz00amub5ED34w3DlnvnvuOWe+e4qW8f+Al5N7asjgOsfMwyWGy5CSbMZK8iaWkwOsYnZj1WyqJPeLHcriQJLWJta/tBCJpd2quZ76eH5oA5bN81gxZ6TgGwtJ0a/wZBiiT5PQOwsrqSwmRpMdYAHw6sgx+wU2DguBZ1buEN1NfQyJjsuNHy3I+gEjx70IPVptc2FlpFiIVdMjcuMHOCgZ9pCoWH0wvYp+57jIFpYkjkMCo/4jMxb10QPapWDWguzGaUtyPu2oR9Y5mzA/ViKSOM2qqc9SCCok+hQjRbPQQovaUPkEJvFcBRS8L7WftsUxC8Y+4WEJkpMt0M4uLCd64YBLLDFE+LQix/hXQGRwq8sVXuOYedCqONk8Bdn1wU99D+skZNvpUWKMQ1kcWNQOC/7xb5jEUm4S30R9qN4oxUqiA3oMKnpNFZZliHYH/lcvlo1Zp893kThQZQeZB5zvyQn7BUn6Yy8oSApOWlQh1Iel2AX10LTFyskeJBnYJjpAPn0jVHOO949ZQmAClBa/7CaRvYKgl9SR/gpE4idBfRnfLxXpbVTrkNkUS6IV1OdWte28z6y1CQsAieFKuHSd3vrnFn3gIIv3Z+xEWSU1BnGbHSq9FKZQJ/XvcMwlAYl6FaemWlklfZGVzTNYTh1wPhUOQjLFUvBFOax/jJOC4BJ7ymq9A5sdMw+qaejnbWjfNO8bpW2cBa33eHJaLwwciVdDkLeckv4EN9JFfW6iIVYdjuTmTmKGkbRuUNBZWK+BVH/Oo3usNLTLDjIHjBLZyQcmunIG0Tqo7KgcMdGv5HxRnfNnviBitCJklNpEB3WB/rVIMdpBhpYXZhiSjeuMOMgir7YbEgjBnlv2bGt4lZ9FmJKFwFMg6w3U55Gi5TDYfgs8Fx5v3za4dDd42EuDUSWJMNNgAH6HO3KVqsyhAlkM1yASsSfpUkGnAFLTjZxvpAWpw8LcipfxFxQV/QB4Loa50TfLBgAAAABJRU5ErkJggg=="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
@@ -1370,8 +1376,8 @@ try:
         class FilterCurve(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-曲线筛选", "RPP_FilterCurve",
-                                                                   """通过曲率选择曲线""", "Scavenger", "Curve")
+                                                                   "RPP_FilterCurve", "W31",
+                                                                   """通过曲率选择曲线""", "Scavenger", "B-Curve")
                 return instance
 
             def get_ComponentGuid(self):
@@ -1421,7 +1427,7 @@ try:
                         self.marshal.SetOutput(result[1], DA, 1, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "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"
+                o = "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"
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
@@ -1462,9 +1468,9 @@ try:
         class LineSortByXYZ(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-曲线排序", "RPP_LineSortByXYZ",
+                                                                   "RPP_LineSortByXYZ", "W25",
                                                                    """曲线列表排序，当轴输入端为空时，按线长排序，输入x，y，z将按照x，y，z的轴坐标进行排序，CP可指定平面""",
-                                                                   "Scavenger", "Curve")
+                                                                   "Scavenger", "B-Curve")
                 return instance
 
             def get_ComponentGuid(self):
@@ -1512,7 +1518,7 @@ try:
                     self.marshal.SetOutput(result, DA, 0, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAANHSURBVEhLzZRrSFNhGMdX3iuTlJmaaUa6CorsAmLmvCQqDW+bQYEJXQgSydDIipIKbHOXc46bwSyJMZ1NWvmxMtLNubESipDoAkXfog9+Dgdn/Z/jEXTNefvSH368z/u85zzP+7w3yX+tUZNpk2gurQmWPeJmmANkuzWaeI9ev02wjcY0guxRtTrdxXFSl9GY42LZUpfBoPIxTCG+jaPxsHIaDCfcHFc8aTZHORmmBQFuOPV6JfxtoAm+cifLnkPQZuqjvYK20dvd3T7GMGfFMIsLARU0q0m1OgE/ch6Oq0DC6nGWLXDqdPkuhrlLFWKsBFU0ODkuH3b1S602C8kvimEWF5ZF9qm3t8VtMBwe12orvQxTBXaMaTTZNOZVq/dg1g3jSD6h0+W6dLoaL5L7OjuTXF1dR8UwoWWz2dJ6rdZ02/BwmsViyXjgcCQ/7e/PtDocqUNDQylWqzW1z26XvjCZLrw2mVrhyxjx+ZI8U1OJjzH+0G5PDHQE1ovh/lU/gg0MDOy2DA7mIJhsUGztdruMWhojRkZGdvI8vxlIe3p69jNYsunp6QwaM2Pv6gP10WLICLFdsdaBOvAEfABTQAkkeXxeXNGM6hLZUCpQgONCbxnKBgz4BibBbXAIULLvIKqZb44pmVFegz2nVkDfhRVt3jPwE9hAAZivreAziO0IdEQXzyjbBO/sErWAW0IvhCrAG0Cz04B0EEqnwFsyVLwqbl6C7SBfZIGqwAT4AqjceBBOLLhJhiKg2DAvgRTEghjqRIJq4AVU7mUgDCxD9BYJxzMoQRY4A05TZx9wAip31QpKQKKJCqdKDrTgOrgv2itBBUIloGNaSUYJ6AV9q+ARqAGhEqSALbPm2lQEIoJOEe0rHZhWobcGUZAfIKIx0BgbVAHNfsmLtpTorlwlI8QS0ROyd9ZcKDq/TYDuQTCNIAmQMsEvkEAdeUCOCuqEZBB9Q/tKx3+BaMO/Arps9EQ8D8ID6HZbwCtgBpIyvja5jC/biLeoCYkiD74rp8eObv8uGifR29ENfoPz5AgjKpuO83sgI4fcrywq8SvvFc/Utxf7lXdKeWUu+edEWegG03rSG7IqFf6prS31n/yIKo6JLkgi+QsWY2KtjdvOfQAAAABJRU5ErkJggg=="
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAANlSURBVEhLvZVbSBRRGMfXygiLHqKQCFKIkAy6sHjJdefM7O7MmZm92IV9KKhAy4cIesmnHjZ6LCjooadehAhLMNDoQkJBXnZ3ZnZX3TRvmYkvFhhCEBaevjN9LW7tFGb0Axnnf/Z8l/N93xnXf4eEzK2CmmyMxdgalP4tomzUqEfnmFc1FJRswGmVqKZi0Wh2PUp/h9ttFotaek6gZjtKNoJq3tWjH5kUtNwo/UxRDX1c7orF/py5QJM3CbU+LY9W1Kz7yuEZ5lWSdSjlAQF55YYpJlKTouQMOIj4Q6+ZEOjfjZKLqGabcvgdg2ctSnkI1Lgm6UPjsPcWSs6ImuHxh0cZkRMHUAIHxj0eIdTiIEo5eEOAgwGBpq7Dc5SQ5+twqTBeOd7iC75i9WpqG0q/dUCoIRI1tSjqA11Qv0VCkwFc+hVZzmwE4/OQ6lOUbMBBm6MDxTgPNbvM/4dmiMHeC/ZCIcB7q9wwzQTd2oOSDUTZIUfeOGSQFuXwZBMYPyeHx5ocMyA0FdCOvWeC0n8JpRxwtl3cAdHTubr8oBK6LRSaLeHZ86fDrLAiiHJY1AZGUMiDULNTjkzCHKT2o7QyIM1y3jmCkjiBUh6CanQFwuNQ+HglSitDoskKf3jMcVBW7YCfIwzRgkDjd1DKg2hm56occCDKq/yYvNTYjlIOQbWe8Aw9NLEXpRy1St8WXzBbXR+29tXRngpeT1zKx+frL7WvCGrd4O+SauyyFwC4a7r9kIGkW2UwqRv8oZEWX3iw1F7TDBkC6xX1oWlo4/FolK21NxUCinwbWnJe0FKafV2oVivXeRf5gsNLnpC5E9YfRI5/hZmwmu1NCMxBFgbuJL4WxqsY1VJwiEHLngHjH/hcwOB0QAY9YOALGO+mR2aZqKWmfMG+HbgNjCevwBE/xFdnCO0vh/SZV7cE3llwQ86gQcjGYAEYNkkbXPDQl7laSIrl5kFJWuYUOKpyrAEHotADkQkmKd8H6pDUWwbDl7EN64MwaNklmHTZ/jEiqsZpf2TiBQTzDNq8nRDmfJt6aeIRnPfc8iu3Wo1vJlqmW254C5/SeBPKOUQ1SXz8DtLSZ6EujbB3Ey7lw6PmXy2Yh4so5eCf0kIXHYd3jbuZFbubTfvP8Yj4tMJZfnaHzBKUVonL9Q2mpZtIkFobPgAAAABJRU5ErkJggg=="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
@@ -1566,9 +1572,9 @@ try:
         class Equipartition_Curve(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-均分曲线", "RPP_Equipartition Curve",
+                                                                   "RPP_Equipartition Curve", "W43",
                                                                    """均分曲线""",
-                                                                   "Scavenger", "Curve")
+                                                                   "Scavenger", "B-Curve")
                 return instance
 
             def get_ComponentGuid(self):
@@ -1639,7 +1645,7 @@ try:
                         self.marshal.SetOutput(result[1], DA, 1, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAMqSURBVEhL7ZRbSBRRGMene0lRUNDtobceIoJsa90xd2ZvulvrrZIoKbqoiQahZRcllzQNllDEooLAeglTd3fmzK6uWm1B9RBCL0EQhLbnnNldr0W3t6Yz7kchogg95u9lmP//mznf/L8zh5vnP0amYu6zn6JXie7fDNKcQdS9DtHMPE3rWATSVHzEVO7DpvtPvolNctw0MDBQsgSsOdEdz06TqdkbGnZtBSmJpnELFOw4FMDC9SDNOiLRjHuhcVPET/liKJkTEtnrQdRyWSKWUyAliWjCYpnaL/WM2qtZB/Uh6srr/SyGOvHOQURLUqBsVuSY4JZUoQFRa1HfmLMO5CR67j6c7g0Pu4rZAhf9OL3t1Y+jW7qiqU2d2HATymbk5UjOKomIzYjaiySS0dA77K4Ai3U/KCxn0VwLqvvKkOpoRqq1NjKRu0b3AqpxVzveTl5HD62YLJ4BvSn2bJmMxWpErOUsoiqw9NzMORLLLajaKiQsnkOqcAwsrp+Ur/WTtDcdxHASpGnI2J4mEaFBwkIFwo4zLI0msJLDlbFwBRHLBYnYKtmQaj0atxBstu1KUpSY41pXdNcDkKYgvdejMd8NkqwTetcytdajqG032KxAFQzskzyI2Mokdg2pdgNYfwiTg3z/mKujW3VuA2mSF8P5G0MjlhaFZhbqu0+h9uIANleDzXHBwYINErbWJbvXVxcvgjWFSEJYiUhmIyKiDaRJEM46Fkw4qnzE2KpQZyHL/07/x4LVYLPOYnl72LQrAzjjOhtsjRKziWBNo4sYK7uihg645fyErwkQvjWccJ9UYtazMhVusTnYwU4STOw70Dee6WUvL9W3lv4vgDUNTfMs7MSpz5/+TG9Bcf6h7xNfrai240gVm8MjzksS4Uuh9C8ffrUsk4n9vBIXbgeoKQ/kGfHhjP3KiPFraDT9iqTyjYGo+UYwlnWib8LZ+CR+ej2UTaUn7jYpxHW1G2fvAGlWHg+l9vZ8Mb5FcUuFoorn/XRve993fhPY04kkylaGYrmH32kFS0GalZ6h/I2+qKkt/M34SFHN3ojmmTHWf2JAm9v5NM8scNxvcdKPj5GW0uMAAAAASUVORK5CYII="
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAANTSURBVEhL3ZRpSFRRFMdfiy0KpUa0oknjLE6OhahlzTjN5oxLZjUpmRE1pVYqoWngOM8FR7MFVAijxDYKopIsiigCC0yTnOZDRFrkCpmSaR+syHO693UhqXQM/NQPHu/+zzn3nnvuO/dx/y9QKAtDPmAWkxMCNkkS8P4qJl2D18wzyKQHUCJayEwTAjZxFfBiC5Ouwf3BbmRSPfAB3sw0IST2OK2CSdfgGSHBrUkn4KUnyBElMjk5wCq+jjw3nckJgXySwCqKYdI1I3mBOiiT9X63BaQz07gM5io0UCZ9D7z8Ttfh5XOZeXxEEW/SnNk7EU8tRSzRoN70tJK5BEhn+UCx2I+O3UK/BtUdOPJViC0Pw+Qt95/7hrxbLAT+DWVkU9z6mA+Yk1gLoyVeHTV7rf0b44dxg6GpmIXQD5pLzttKxyE6x+P4eCcO5ik676VZXqniBlFpcrSu3db4ZyVabfMCdZRzQBP7FjXGZjPYvU/LNnbKVaaX/fq4TlTqmzQ0DnhZDtjnpXIK8DNs7kC/iO6HIwX+x97xErVc034+2jyEKkPzJWHRsagMT6upc62+5TjVYJPW03eYrjUqMr4XI4yODnJA06BoWSaUc7tWqHrsUds+oue6oWgo8yiE0vlkAzhTbXrRZtzSh0pD46+21ZpeiLUxr0BtcvQtCe51x1pujtCmFaLZ1K+MbL4QbR5GH2VXPpziknqObuAV2tfdaqNjmCw6A4p8K0gnRQuxhsZQ3aZ2JJUPcn6wiNo4mfrtFf3Wz6iMfHaQajzq4yUkSP+ZICLO4ak2Od8rdF2jjZnbb99MOeQMjvqEKuOzauonl+wsuclGOqaE61pIdQOYlVBTx122ZK/md9dgbExDm9F4V1gQ7NIFZMIjeuGEGQSZ6qXJktCAI4Wh+KVoDaaY63FFeI+E+oCXXBybgGzR7UnGjm6sXIXcKC8tx2oxfsuX3Wde0orB7mRX6b9ftBv7UjPQLiEtKcW7qZZcZiYJRAFYGujFpAAUL76K54KQZrdi1SoEfqVQritI4jPkOcnkuCDv6wnl8q0cZCk8oFQeNOnfgk2SBwWyZCanHigQF//Tr/lfId1VQo51D5NTD7mAFeSYUpicerBQYiYVhDP538NxPwBu3IAJ5JI8FgAAAABJRU5ErkJggg=="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
@@ -1754,10 +1760,10 @@ try:
         class Filp_Curve(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-统一曲线方向", "RPP_Filp Curve", """统一该曲线的方向。
+                                                                   "RPP_Filp Curve", "W33 Curve", """统一该曲线的方向。
                            传入曲线则所有曲线跟曲线方向保持一致
                            传入真值则为一组数据中曲线中心点最高的曲线为统一方向
-                           反之中心点最低的曲线""", "Scavenger", "Curve")
+                           反之中心点最低的曲线""", "Scavenger", "B-Curve")
                 return instance
 
             def get_ComponentGuid(self):
@@ -1809,7 +1815,7 @@ try:
                         self.marshal.SetOutput(result[1], DA, 1, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAANsSURBVEhL7ZR9aBNnHMczRVuEbSh1Uzb/6KRqYtKXWG0trtKX2Grr6hYFad3wHY1zE60rnbIi6D8FKVYsvUQoqLW9tJfkLi+1pjRssE1ZGFrqC6XYvFwuucvraCbVmvz2XHkoSGcoWvxHP3Dc8/t9v/c8v/s9z53kPW8VAPgAD+eWweCudTauWvsoePVDnEqNWIlarS7SaDSV7e3t+7Ra7c5kMrkEy9Pc5ZuXWYTiy4ZwVqLbLYuj5xZiKTU2m22pSqVKtLa2vmhsbEwQBDHR0tJC1NbW6pqbL34H4Eg3+op+6g1Ig+anmWAc/xy6PWvGZr0ASZKfVVRUQEdHx9/19fX/NjQ0hOrq6kZramoSRw4dH3mWJBUUp/RTbH6yi80EOlD04IbrCxaAWICnkPTxVY1GT5kChy+j0+mWoKsftWX1lcvt17o7qU7NkWP3Dxw4GO/Qkb+InltCVfPAZC7QXOkpG7vj6E3PyoQTmhaJGuPa9u2fkAtWrlotxilBrz0f4HGGzfTH1+MslPuTpzLNYWV//6QMLIGSs6LHwqn20IHCECoore/hieVMRPaC8q43Tk3wKuihHz5lhMK2Hr80inoN+sCqYb0/63c6JgU6rPBZvF9VYavE6SQW3Ald+sjhGEungzkPmUiO3xkhPsbyTKzeajUdkU8YBNlT0qM83+PeuKvbI2+jeNl1W3DznpGRZBq2TjOsh4XmcP4dJipPWEf3/n/vRdDGaRwgB2ukkHL6iAycTomd3Z+HChqxxLIn7e7Dm3B6JkZX2XEHyIDmC87h1Es4fU0ZdLDgMFqcMHgLDpncm8spLk97a0IBaF8e3x77UYqtM2GeqLcMospp7stLYixu2JSAsfAlpw1B6fPegAx62Bwv6V0L5pgCDLxcsAilZwC1CFtnMhRrW2wKK+ImPt8hxoxvyw69R+kSxzAG6UxIaRpIoiqDG1t/FX5eLub/QvchOLlGPGVinBLKu8FsisjgN+7CUjG2+rd+T/qyYHT82ifGgHKQia6N2/ndlVPm18HIltTT7u17cYjeoKyW4rITJrb4njG6EkyBDdEeT54ey29Ol2tVWW84Ewz/rAAmjhYIZT8yc6U7sfzmkJ71lXbIAvSBCX1CxUkYnuVPbLb0sd+U22Mq3V2+aRlOzS3oZMzDw3ceieQ/v1LI1zwofCoAAAAASUVORK5CYII="
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAANZSURBVEhL3ZVLaBNRFIZbbFVEFB+LIqLgAzWZpGI0Wm3mzp1MZu7MJH0aC4qPhW5072MpRRduFFe6EAUXiguXKqLUB2mbyeTRJK1aH1Xro5ZKLSKihV7PhIO0JrZYXflByMx/zj333nPOvVP2f+Lz+Srdbvc6j8fjg98KlMfBy4NmdoVspv0BLVFPjexRoiWOM9Y7Cx0mB4K3eAThy3qvN+4VhGMoI7yc6PYB2ew5S1iylzV94ErkGXf+A6rVgk6TAxNcFNzuO7CTxWWcl6OMwASkba7zRDVrjWw+aRSZPaA1vuNEs64XXKZCcLliXo/nnSAI9/1+/zyUSxIIxeRg+DGXjK4RSU+NBYPxRWgqDeR8Aaz+W3V1tQo7mI/yb5H0zCNI1ZAYbPdIZn4vUe0wmkoDE2yA/KcJIbNR+i2QmlYjOgKpSex33hm7MSug23JNKCZQllhZcPoVCFzBi/I+EWLEq2Dlp43twxA8OSHvPp9dSfXMV5j0KkpTQ4x8lcS6goRljkosfZsaOeiaQQ6TXHa5rs1EtwKSajXrzUNOwXejVBpnIBTuIDW6ErLZzZ0uCdW/dIIOg3YVAijoOgFRi3eC/XM4bM9BqRhRubdaNvJ5fftHJ+BboqfOUb1rJ410u6PR/IQVj6dWeUBY8yAnavwESsWoavtCana/ViJPOdVTe6LRazPQNCl+dmMe7LQPxn6qNbMLUC5GVDuvsKYBHlBiGkpTQpi9hRr5nDNOVDrqUC6GmJagNrzhAa3jAkolIZH8KpGlG+FgnZJYKqs1vuVyuGc0oLbvQpfSiJp1Sal7zrcpD5eh9JMatW0tXGpnJCPT7/g4RQ9GeuEEZ55JRu5kDb27HF1LQ8L2YmrmR0Wt8yZKPwlonYecmoTqX0HR0xasvFUysiY1uicPOh5RTdDChaXbDc6FhjLcNR37Ct1kZmMyS3pR/nMI6ZtN9PjGWpZyicyKONpWJbkkGO79DqvN+HznKwuOf4sL+pywRFJkiSNEs88rdS/GCGtbiuaCHR+nj3OJaU3voTMecajJfTFkRYieC4ta8jDsbhO6TR8SsgRq5jgcee5cE2pDP3RLNi5q9g742FSg298hqlYyVN8Hk2RvUZZWUf53UCO5XDKebMbXaVJW9gPecWAFuAsO8AAAAABJRU5ErkJggg=="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
@@ -1910,9 +1916,9 @@ try:
         class AngularBisector(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-角平分线", "RPP_AngularBisector",
+                                                                   "RPP_AngularBisector", "W51",
                                                                    """根据多线段折角角度推算出角平分线""", "Scavenger",
-                                                                   "Curve")
+                                                                   "B-Curve")
                 return instance
 
             def get_ComponentGuid(self):
@@ -1954,7 +1960,7 @@ try:
                     self.marshal.SetOutput(result, DA, 0, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAM8SURBVEhLY8AGHF9WK7u8qg+DcqkPnJ/XJDm9qH0K5VIfOL2oiXF6WXcNyqU+INWCj/U1fk/ySwygXMKAFAv+TW+RfllasfhwVKYgVIgwIMWCt9WV/TeSC6yhXOIAsRZ8aav3epxX1gzlEg+IseDfnE5ecNB4Ew4aDiC2BGIdIFYGCRBjwbva6ro76SWBUC5eIAfEu4F4JhBXggQIWfC1rdb0SUHpZCiXIAAlrytAfAaIJ4EEnN7Vxzh/aMRqwf//q5hfV1TMvx6erwAVIggCgHg5EB8B4hYgZrQ5mhVptjHxOpDNDMRMQAwHnxqqMx9mlaRDuUSBWCCOAOI8II4HYmGXVzVhNhcKoBZosWk4twkD2Qz/uovln5WUz6tnqEexlBBghdIgwAjETE7vamIcn9dcBQn45N2Vi6i+4uHbeM31YknD3E/RiVogcYqA0+uaGIenVZctGP5xxlTf8CiYfCt/zrRDW2e3bTyoXnpWCqoML7D8ecHQ5u/j2VAuKnB+Vxdt/6TyiovLO7nszmspkxafX7R5xf53s1Zd2Fraf7bGI3GuKFQpCrB4tJLT5ueJWOs/50/b/Lv23+bP3QtQKVTg/Lo62uFR1TWfoKcauX23s1cvO3z94L4Tf9btPH+2ZdblvpCyw65QpWBg9WO7us3PA/22v4+9s/19+pvN7/MLLX+dM4VKYwKQDxweV10Vtvon1dt9qH3NrF2P1u+5eG7Jhgv7mybdqE1wemokmVbPZf9/R4Ddj60H7H7t+W/7+8BN6x+H8y0+HBOCGoMbgOLA7mnFRX/99wLraxbta59wun/qnNt9E3tvNqVMO1LqeH31bMsbU59bXJj0y+HfnrU2v3bZQ7USB1xeVsfqvas48i+7LvFo6Kxsp5xPtlFrNk/yuLHwhsOH+f8dfi29b/dmcbXpugpw8iUZGHyrC02/Uff+fnbRHN37bQUOLyc/cfgy5af9n5mb7H4v8IQqA4EMIHYA4iAwj1hg8qk+KOPnhP+hD1r/23zrfub0c1Kb8/dpSlBpZLAaiDcCcRGYRyxweVyj6vC3Y77Zv+6Q0Cv1bFBhbKAUiM8C8RQwjwYAZEEjEG8C8zAAAwMABU9tbCea1EgAAAAASUVORK5CYII="
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAN4SURBVEhLvZVrSBRRFMeXggqioiKKMFNzd8vKClLK2pnVcXbu7Lqru1oJvVCKoMiM+qS4a2lqb6OkF0ViDysqiApJkKQ+5M5u9jCs6CWVZlZiUZjYPZ27XpTo5Ub0g8vM/Ofcc+65c+4Z3X9nzpzTo/jtv8ekaKvk5KZ3Jos3jkv/FoH49tsWfgTR4s3gUtBQt7GYug1nwTNxCJf6EIm2j6S2gVn1L+JSUECePh/2TQcM0AUlESO43AfLgLjeAG5RKpf6Dc0zZsGuaUC3TP5CPXqBy98jKNoh4moFDOTkUr+guYalsH0qQPEUoDmRdi7/iKj4jhDXaxAUr4NLf4Q5ZI5ZABaIyz8HAxxTXC2A1WTj0m+huXqBFk7uCmwNbhGXfw2u/LjibAGzclvh0i+BHP1MdN4Be9C52+Dh8u/Bb3BKcTaDoGoyl34KzY2cRAuMLbAXKybPUMrlPyMovrOK8xWIiXWzufQDsDFqHN1kfNxTjsZyLvcPUfGfl5OfQ7x6Lx9LdQKXe6GeyOHovB7KooF6DBe53H8Eol2Q7A+BZRFvvfvZrN4ucDhuDGPv6FoymOYbawPO2dUTNSgwKRjwJF+Skh7gOdCqROLvtqa9h7nK/SdxiX4H3RRyGspwWzADlgmfEhwYoIpt0Xy1zsCGiTRciCVNUJ2VBbBzPNCikHr2Dbh58ODKq+XkZ5Bg0WK5pKtf76yFnaHwYbME2WlH13H578AMahIdTyBGbpjJnqk7Ig92hEFnvr4z03Wle5bc1D4vyRcaMP4bMECtZH8MuqF0LC0YkxE4oYXGrk+F4bETTS9LbAvaQbDcrODmwYMH7Xp04nNas2bZNigOw+YVxVpAoHlJUvVos/VOR7z13leTfDM8MCFYZkmNN3KWnAQoMgLdGtJJiwZ+1/QEi9dtZVkQrYhLwWGzXfNB4QzsjOOhenXGmZFxHXNNRLOIFj9Bp1aReLOlpEbArWzGkSYS3wIs53Qz8S3GQ7rUTLTlAvFmJiQ9WCGQWzHcbR9mte7y1Q0lcHhlKcSor0BOacZDx0YLsC5rSXkBkv0RsFJmPyaSykYbqIHxtnfY0zux5WttHg8M4K57iMPqmSG3Vk6Xnp5jfQlXWIkrPYHGFXhfjj+io5jJYVHRDuLzAVx1GXbgvWhTija78boD329LsDUWi6ovRafT6b4B/23A/eqzbv4AAAAASUVORK5CYII="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
@@ -2050,13 +2056,13 @@ try:
                 try:
                     sc.doc = Rhino.RhinoDoc.ActiveDoc
                     Angular_Bisector = gd[object]()
+                    self.eq_part_num = Count
+                    poly_trunk_list, poly_trunk_path = self.Branch_Route(Polyline)
                     re_mes = Message.RE_MES([Polyline], ['Polyline'])
                     if len(re_mes) > 0:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
                     else:
-                        self.eq_part_num = Count
-                        poly_trunk_list, poly_trunk_path = self.Branch_Route(Polyline)
                         iter_ungroup_data = ghp.run(self._get_result, zip(poly_trunk_list, poly_trunk_path))
                         Angular_Bisector = self.format_tree(iter_ungroup_data)
                     sc.doc.Views.Redraw()
@@ -2071,7 +2077,7 @@ try:
         class PtsCurveRelationship(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-点与曲线关系", "RPP_PtsCurveRelationship", """确定所选取的点与封闭曲线之间的关系""", "Scavenger", "Curve")
+                                                                   "RPP_PtsCurveRelationship", "W4", """确定所选取的点与封闭曲线之间的关系""", "Scavenger", "B-Curve")
                 return instance
 
             def get_ComponentGuid(self):
@@ -2138,7 +2144,7 @@ try:
                         self.marshal.SetOutput(result[3], DA, 3, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAO1SURBVEhLrZVtaFNXGMdvY2rX6FpXX2pLcm8SbpuYtVHJlK1sdCBjChNEqG8ffEEo+MEhZptzWGM72MSJY+AcYSsDNVHDrO7Dqhbf8IuiTv2gXwoyWk3bJTdWN5VNkvP4f+49xlT7tuEPfvQ8z83tPfec8zxX+T+ca2y092uau8fnq5apV8vVUKh4UNPa0uXaEpkaQkRRbHI4PpKhkIOlpqYJMqX0uFzVfzZ7P8+2+D6WqTw99fVvZDQt3FNT45Wp0cGPV6Qx44IHLIadNzd6ksZnurDbio4jnmReAXi7KWlV/WRAVcf3gLtut+++y/WWDHfCG7CBsBSNimLH+AcYhyZjLhFuLOK/iYIlkbTD87CUAyE6A0QnmsLhMM++G87i/Jj0ezzzU6raciMYzL822AdPW0OLXDr+C9EFEkJMR7gHtlFzc7GB+7t1nXPDgw1803C5Vierqhwy9Sm8Eo1GHUKc/EikDlRx8lE6Xv3EOPw2jwHvS5fApDKq2t6nqgErPTYfwCR8XYizC4iuUy4d22FeGQrXxDW/oky97fWW91dWFr79iPBr9sH3OBD9+yeJhx2LBv/4eQrHLxKqKrm+sLZ0ngzHxSnYag2fI4wDTvHPby3iQaxGphQR0Z20p47EV4FdMjUm6+HvPCCK2MRgfC4NHjNnnjViq4kuUTYda+aYoUhg4jcfTu9aO7v8pQmZ5/Ye1o3XTqYq4F1Yz4HIHGogukg5I7aXY0okJoj7+3WixIvHeAvk0zYULhhUathQ1Y0y9RP83hqaS1KWfdSxQWSOmA8chXXwKNcR+pWDNbP8gKSm+f8OeuvEl/7da2aX8caWmRf/GwvhGYpEbGgvrSm0GCstIWq0P27xkWjzc+mPCNE5u+j+rkSGhYTgJUI752LjSVvp58wsK7HdmjNzcr4K6ebeyURktg6GSCnCXlzJGvE+IY6YLaMAJ7wMuT8NC1fsIWuItU/FasS/vz7JGfGoTJngFG3PZWLf0tVosUyZiB/rKiMLpvXGls4YsYt2weXWEDc86JgqHh9rz6YPrpKpkeA3fH/ruxWdtC9IotXP1f8SfOSuwXzxjIMG+DU8CY86im3rja06OqzVjYfjFqyzhsPChbYI7oYnYAfcDEefVG8gUPFXbe2012y2LxDyJnFnnAPfgcvgdsh7wzM9CDdAHQ6h1+ksRS1tS3k8Zu/Kk3K7l93TtGc9pAnyhyUB+Z9x9W6C+HiNXhv8gAFNWzng8QRlyuKOrjv5s8jnV6ZeEYryFDQXUJRmojKgAAAAAElFTkSuQmCC"
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAQRSURBVEhLtZR7bFNVHMcvOmc3OoooKI5/iFLMxCVb2atr72lvH/ferXs4N/GRyB8mIDISnJY/dGESjdkiyiBDZLoNFSIao5s6N7KUdqDdo7fcMvfIxsYWcDGAj4H4KMRz+Z3LsVq2diTET3LS8/39zv2dnt/5/Q7zf4AntZvwT0t34r8YPTUxjKIwOhgLqLwl8LSmBf+q/RuHmTXXDb8x6cpF7Qw49qkGClqvaBCajBrnx1NXXf05saCmZn9yxA7r6CcRMGZS6BTEZSYDz6Rcxmc17xPNCv1ZFnGgG4khH8sHIiPfIftamjbMHPNuUF5wv+PPRkM+VpC81oKTPosodyGn/0E14FxAeu6CcRuZQ7DD8JE7z/HdsugRWib3ZlonBvVVdXU196ehQW1a2qeJCHnvQUKwAQmBnWqw+cjjQoeM9mAxlTGxiMHHONdIa0XFYKKZD2wEvYu64lP2xNcfCMXHHyXzbORdQfKsOm4A8cFXba6xsK20727EB55DgvQWdcUG0nSfp7PsohwwbIO6WuwomVJYvn8Pdc/CaGxVL9NoC1Xl2eX5N4DbX9Le9uSZo0dsVaDu5FxDjazQp54mHiWPd20pXddZR2V8WKG3JYsbmDfof/F0ODo6vyocittL+BKD4AQrs9BwE1REOTVHcDhCC63iwN65fO2txZ+0flbmj7kBBF6lXNUp+BemJ4Mbasy3h8qoKwJXKKfai04piJeaqClCvl2uNDnlN6gk8ZLo9Dqwsw6f03wBTfeSgR1pNDlm/0uCme9ebnBJyWQO9a+BfmHhN8HslLaaHLLaB9CwzfiC9kf8J7OS6FlAox1EolSKkJKABPkwdOvz1BUF6ww8U/IUVsxiL2cWAuvNfPCfDdrw+ZQr8NitVhfeCNmAFYJFueX+JIsYCoP+iLqiICnjikZfzHX6l6QbxzdlmMbeJHbIRiKk6F510VyoJ6AXmS18s8hgkO5QHXGo3l77yraX6xuojM+anIkDesN0CZURTMKJpXa7pKMyiuMey7D3CDdKZWxImdXXuzua39tYSU0qpEShesLwJHQTTTazuUZ3WQuDBqI/bH52z7v7Kj8m87jABlpflz3c4zV+SU0q5MJZXnobUrdF1YJkKqy4BCXb7yb6IcOZykdyJ2vJfF52vPZ62+7dW5+mMiZJK35PpVMo3/7NsHk9lfFJz5s4sJad2m4S+/QmMRQ1smzD+urq2ofHv19dHTiWk5NpHXuArGOFE82Qwps7AeQ3DZ6EDkvBSQ88yVEDnhFPlXvvt1JPuQJ3dXotGvFYCgY8UM6fZ5qnltMQ/wI5Xww1u4jKmwZfYXJJ91OpAjoB/6BpJ51MikU14lFdA55O/oNcrmq4BUhzKedSFHx64QWIdzvDMMw1hDbSu8rKyGEAAAAASUVORK5CYII="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
@@ -2207,6 +2213,7 @@ try:
                     if len(re_mes) > 0:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
+                        return gd[object](), gd[object](), gd[object](), gd[object]()
                     else:
                         Relationship, In_Curve_Index, Outside_Curve_Index, Inside_Curve_Index = self.relationship_point_curve(Points, Curve)
 
@@ -2223,7 +2230,7 @@ try:
         class CurveVectorParallel(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-线与向量关系", "RPP_CurveVectorParallel", """判断线是否与置顶的向量平行（包含反向平行）""", "Scavenger", "Curve")
+                                                                   "RPP_CurveVectorParallel", "W24", """判断线是否与置顶的向量平行（包含反向平行）""", "Scavenger", "B-Curve")
                 return instance
 
             def get_ComponentGuid(self):
@@ -2290,7 +2297,7 @@ try:
                         self.marshal.SetOutput(result[3], DA, 3, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAJYSURBVEhL3dPLS1RhGMfxU7suFE2XRUQW1CKhWlRGN4YIyhBMUTAKs8aZcS6eM9OMo3kBwYW2sKihiFy6sBsNUYzk2NXKscBplAmrhYuwFu3qH3j7PvmWdDGsTpt+8GHOeTnzvud93ucYdkQpNUtf/psM1QYSL8LHb+lb+3PtWFX7+6YmlQlFTushe3OisnJxqtr1YTxap0ZDdRE9bG8SHndbLhRSlEqNRWJNengqY/VRayIWy+ZM89cs7fO9lR21hJkdsayxtN+v0j6/ehWJqKwZSmaj0Xl6esO45/V0jYfDapgHhnlwSkBlAlowOKm2VjPVc9NUGQzW+NSAx6ue+HzsIqz63G7V7fMt09MbRry8fHVXRcWBsyUlk8q+VzatztLS4mTAf3LEmixR0u3OdBQVbdRT25PXLY033tQ3qGR19UOnM3++HrYnHy/Ed7xraVa9LlfucGHBAj1sXybaWnteRiNvVX//Qj30Q2RLa7AOG7AJW7ELe1CIYpTjEI7CiyDC21flpfIcjstcS3u2Yye+ifx5EI8xgAe4ixRuoxc3kcBV9KAbFyFfbwxhNKAZ+7Ae8sJfM1v//m5WQHYpu5HFrkBeMA0LM8oSFKAKHfgyyVM8wnV0wg0pz3JMm23w4BSkJFKyIdyH1FlqXIktkIVnFFlVJpXD7EccsuX9yMdft54scAmy3TuQw6vBZsyFrVkLacUz6IPUWRY9hyOQzvjThvhpHNiNRsjhSjtLh0i7Sls6sQi2Rd5ezkU66jxkd88g34zs+iDmwNYsxV60QjptJf6LGMYnkwQFaee6yDEAAAAASUVORK5CYII="
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAMgSURBVEhL1ZRdSBRRFMenB6EgsB6EohIqdcc1zbTIj925s+u2c2d1sxTDpyAEw5IoFcXSVVcr7QNT6cEIQ7EQJJ8ifAjURNPd2dldv9KVJZDEqA1MAiNtbmfzhvRhge6LPzjcvWfO+Z9z7sxdZlOgVLBxSmHofroNPIpF9UqpVS8o18IOUldggQkySGM0UarZSaU0LIS6A4tSFv6C3DtEFCvrJiUHQql7la9VMceV2shLSoVqHRaeD1O0k5pIQmrVMIlqjlSpsghhtlB5hlm2sJ2k5Qjxj/pfa/qL3VITUh5BiEW18ttfqCJsL5VnGF8Re/rd1ei2uQL1P81XrG77WMz+ZpGtC6XR3cQKwjdYslgZtTh9Oa6I5MYHUfmNs1SXWU8aov3is3Je4jHqDgxfmhtZcjeJLFlVH0byE1nqDhzKndgWUh86rzQxEdT1Kxr8MkSXNmFEopTGCY4MhG3ZnNF+lsdyjlawXUTYcYXDjhIk2Ms5LFUjLNVxgr0e9vfB/6Asu2E579Sjt0dPjLcazN4urdGWSaVX4IThMylmjwcSJsDGOcHmRoIkwzoMxYZh7QfBXg7busGeIWx/CvsOiHkIzxoj9DPFar23kDNKFoPZUw0xZr15MkaDh9S0xPpISBjcphOcUbzoyOSwbOGx4wlMN8iL8kyKefoTNH6bhq6NwSAF64xDhyExCwmOSk6UOuFYnCA2h7C8gETZB0c4BWs3CNfz2JXDi85krWDfzTBk9aL9BBlt5yCoCYmOXujsDYjM/xDC8iwk2kCoHYmuUp3gPsmZRiMRGttOU9dGKwyd15s9HdCZFYQJL7oGoEMrb5LTNVhWG7K8wTR0fWix3ZhinmrjTa4REPd3Os1j53P4iqr9X1ayQfrzz2u9QMchfKpL0GHXdSjWh0SnDwougb2HqXqgYA0nyqI+dXAPTdkY8blSkB47YnR4JBcmfIyw0wvFvoHBUcozYF1wdwq0JjlJk9q/k6ZtDGQa28WJbhGK3AQbgBf/WZ/22v/uFLiIo1pj3z4aGhgQ6tmKTM5Y3jR6AS5fM0p37qCPNj0M8x3X08+ThSAtrQAAAABJRU5ErkJggg=="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
@@ -2360,13 +2367,13 @@ try:
                     self.angle = Angle
                     Curve1, Curve2, Index1, Index2 = (gd[object]() for _ in range(4))
 
+                    tree_of_curve, curve_tree_path = self.Branch_Route(Curve)
+                    tree_of_vector = self.Branch_Route(Vector)[0]
                     re_mes = Message.RE_MES([Curve, Vector, Angle], ['Curve', 'Vector', 'Angle'])
                     if len(re_mes) > 0:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
                     else:
-                        tree_of_curve, curve_tree_path = self.Branch_Route(Curve)
-                        tree_of_vector = self.Branch_Route(Vector)[0]
                         c_len, v_len = len(tree_of_curve), len(tree_of_vector)
                         if c_len > v_len:
                             tree_of_vector = tree_of_vector + [tree_of_vector[-1]] * abs(c_len - v_len)
@@ -2386,7 +2393,7 @@ try:
         class TweenCurves(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-创建中间线", "RPP_TweenCurves", """在两曲线中创建多条中间线""", "Scavenger", "Curve")
+                                                                   "RPP_TweenCurves", "W11", """在两曲线中创建多条中间线""", "Scavenger", "B-Curve")
                 return instance
 
             def get_ComponentGuid(self):
@@ -2435,7 +2442,7 @@ try:
                     self.marshal.SetOutput(result, DA, 0, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAKISURBVEhLtZZLaFNBFIYvra/6qg9aSe5MirkzqbjwuVEXFnUniAspCBbRSkUEUYob0a1CNyJ0IehCFNGdoOjG10KkIj4WbRYqWosotcltHm0a0o31/2cmRXBhcosffHD+k8Xkzp05ifcP5sHFtvw/bIBZeBtuYmPOjLWsX5qGLpL98DmchveggNEJZfJIRbYXSlL1FxI66dpkC3wGS3APG7WyAO6CZq9nOjsbi77qKgv9pixTlUmhr/6Ixf58D2fhDNxqUg00w68whH1wNTTk/eTuKakHSzL1bUwEyrXJRTgMG0yqAe75MZiGk/AMnKUo9fWCUPlifN3s4uA7PGDL+uiCE/CuSY6cUE+yfsCXXIVPcd+W9ePDDOw3CWQSiVgogsnRRGqta22Hn2GjSREI4C+40SQQCvU09INzLi6BI7DdpIjcgHds6XnjMujFNj12kbyGB20ZjR2QJ4wjw/vpq214ik84o9VtuQkv2zIavCNcgCPDC1ep5VhgZEwqbh85AV/aMjov4HFbYjD56l3oq+rx5N0YhctMighP0jVb4jQJdSsrgisukiF40pbROAxf2RJPINQhPMWgi4QvuQw5ESKhIW+t2YZcMtmMBfKZuNrM7HgIP8AWkyLwEXJsG7hFOV9xrFThqXoE87CbjXq5BAdsidun1MK8UF8mhH7w1vPmuzY5DbkIB2EvbIU1sRJWYI9JYHRNsrUkdLok9XBRqn2uTTg4z0Oerrpm1V7I34FTJgGEBkzavimZKpelHioldM9MR8ci9zEvZ9yWtcNvynHOy7WTDRIK7eN3o286kRrPCH3BtSPDb8U/Adyy9/AoNAwI0ZRva1vh4pzhuOAl5MtvYuNvPO83z1On87DUpboAAAAASUVORK5CYII="
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAKjSURBVEhLzZVfSFNRHMelKFN0kiu1tGTEoDbZde7u3rt773b3N7VkFQW9WNhbD4VFSET0IFk9BIWIgSWJZKsgNUuD2T//FiEIQUQPVkT0UERUlIUmt++5niDn2q7mQx/4sP2+57Dfzj07Zyn/BS7/3cNysH+MV7qiDilSazIf5OjQwlDENW4VvD0tvHJrVArcV32bn6qccrM3Pd2SR6csIBmrVjBc0z5P6eMpwXv7GZK06YEFJj9/u00pG1GL+eazNNJFMayAJq1Kgo1tOCKHBtWcHH8ujZIyBFXqS3gOeuHfSBV9veN24WI9rZNihvthBL6Bv5sNwBI4C4Y/XyuHBlSDoSCbRrpZBHl4AZImU7AMxrA8Sww8+MG6r3fQYF744Df4Fa4hwZ9sYE5UBsNjKufpupKXt6mQxnNmCyQruaxVMViYU1VSoO+LiHPCeW48YeWONla+dpwO62YYkiazVkEx2NjGnfjgZs7dOSKFhl7QXDfbIGlwVKv04vJFPQ4xspfhm6tszoZSo1FcTYdiWQY/wVdapRd3aLhVCvZPCkr3hOi/o8rBAdXuukTOwOLpGTNogGQVbq2aAxkwM3ftDhMjtNQEKp6rNq4p3iZZIWkQ1ar5Yhda63lvz3e8XTqdzKAdkiaVWjUfTNZDTinYpxaaq8n9FAvZo/eQNKmG8R5lYsjRx+arDNu4h0axMJDcV6QJ+Tkeg+Tkk0etD2z6B4d0tYmW8ciCdfAjJI2I4/AhLIWJcXrao7zS/ZqWiSDfuhyeho/gZ3gAJsZqP7OL3DHrLDVhGukllb4mZYnT3TnoLR9VWVekbn3RSVeBeXe+oWBjtsFgyTYaw5l03j+RVuJqq8P/71vclj+d7o5J3tM1ISg9U6L/3ju5bHQlnReHlJRfaUG7tHobhpIAAAAASUVORK5CYII="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
@@ -2502,7 +2509,7 @@ try:
         class PlaneTrimCurve(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-平面修剪曲线", "RPP_PlaneTrimCurve", """移除平面一侧的曲线部分""", "Scavenger", "Curve")
+                                                                   "RPP_PlaneTrimCurve", "W14", """移除平面一侧的曲线部分""", "Scavenger", "B-Curve")
                 return instance
 
             def get_ComponentGuid(self):
@@ -2544,7 +2551,7 @@ try:
                 self.SetUpParam(p, "Parameters", "t", "平面和曲线相交点的参数值")
                 self.Params.Output.Add(p)
 
-                p = Grasshopper.Kernel.Parameters.Param_Boolean()
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
                 self.SetUpParam(p, "Intersected", "I", "如果平面修剪了曲线则为True，反之False")
                 self.Params.Output.Add(p)
 
@@ -2563,7 +2570,7 @@ try:
                         self.marshal.SetOutput(result[2], DA, 2, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAJBSURBVEhL3ZTPaxNBGIa3+SGl2ZlNoyZVya31IK0iwV5Eg5mdxVRptBArETxU2yKCEkWsF29ePHgQ8SB60KP/gmCK55qdTSu9iPSiF1FUxINg1/cL06BNNk0gXnzgge+dYWd2J1/G+P+w3GzcqGQjOvYeppwZpsReHXsPV8606eWO6Nh7LNc5ZrrytI5dw6r2hOHPRXVsJqbkKKs5Mzp2xfbVScaVfdvwjT491EyslksxJa/o2BVxT4zxmpzXMYClTJQp+3rbtwiAefYkGuSkjsEwV5QT6+e4jsQwPAtvwhuQfqMk/As0yCVz5fg+HYOJfyyU2KI9gnIKvoQ/ob/Jz/ARpM3r4PwXUkrGdAwm9iRTDo8n1lBuXrSV32F5Z6Voxt/mr6JuyxB8FhlP+JFccmOBdfgK3oHUXRfhPfgGNjYKZwY9/unUGdSB0Bl/gH5oxPSjU7t/oH4Ix2ArQrAIl6EflSk/IpKrqPfDJnKw8TZ9u/pfmJXsAk10QD+8u62U/hVKD9DzX6CgiT+hvqfJ95C+xOBr+csY6bhVY08PPTaioa8oaR1qCvq6BqPwAUzVE6BWrd+sHTCwMjFkfStcQEkt+g5unAadTGu4K+dxr1CrbgnursOsKs7ruAdWIW1wnwZawpWYpgd1bAuvipLpyaM6EhZchLP11ArLs4XpiYKObWGuLA8uO2kdOyNedQ5sfXEBPxvhSt4ynhfDeqQzzKXsDlYTJ3QMhL92hllNXtOx91hKHGSezOv4D2j7XzGM38oLoJLIQIxjAAAAAElFTkSuQmCC"
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAMdSURBVEhLxZXtS1NRHMdPaYtpJfVGIQmiXplZsJ7Q3H2Yurt772Y+7EU6MqKMCiqR6Em5reyFaIFZ2IMQIT5N1DG3dGkucyq650cjemPQq/6Hu86Zh4XU5k2QPnDhfH/nnPs95/5+51zwX9GbQJowAfZgmZJbTrATN6VjMullHVaqEMukPJnPlbdPFvBYSsdkEmRD5raTWCbFYhEy+q0t5VhKBxn0mY2SDPrGHuqwlE4sBrYM2YRjWCZlwwZ1dY6crp42Esuk/JMBxYWO0FzkGakJTqt4z2fDpUkPwYTNNBsx4CF/8DeDPL1JplC4t2EJAMEEcmk2/I7mlhcoPnqHUvsO1dT07n7+tl2lZEJaio+MUFxkluaCFXhKAmQw8N6oxRKQmsA1UuOdJdhwzmpA7eJINviFZkP38/RhWTwIgTnYOmptVmAJSCaiItnIR2hkVXGREhyO029r4pXqaCXcvZNiwxaC8+fjLrj60qV8omz+IJYJUBUN2O4WfReB/KsItqMYSrxav3gemnyg2KCDYHy9pbqlvvqb4/5C+pv1ROGK9HJ1OIR0s6+6NiDuKHfixyPKdT9FcBz1o1VSbKiSrXKd7bY2tq6IoBQuhpiLyc8silkVc2IWHX9RKkatwlHcTMnop9tatFO7mJ3pjoEMFEM63pmMasPM/vbO1+teAfEkW1oSSUYUq3ycQvEjbrQGml7Ihkl6jL6vivfO1NZPumGZTsPkPaW1wQI8bA3IoN8mxBeC5pOsb4xQuywK3r3WgGT91+HLAzQXbVNqAocbGgblPcMtp04z3jxYpk0w7lTx0SGSC6nxlASoTJVly/WwRKME62nC4VWKePc+UuOzkRq/nWJCB3AYVow+bdhijCcUQRBCOsVFz8HdjFNceJrQ+F4Qat+DEp375eVGe7i4LDqIzg8e/huCcV0hGe8jLBOkuuxoJlhAsqGr8OQbueqlGx1vOi/iLulIvU0RI1PNGtyUzqZf18hAyg/nFTQYHGvdiIFe1mWrLMIyKW12Q2b3xIUqLKUjCET6vSn5XiyTIpiArMWxa90f0yYAwC+VQFNkpV7euwAAAABJRU5ErkJggg=="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
@@ -2616,6 +2623,7 @@ try:
                     if len(re_mes) > 0:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
+                        return gd[object](), gd[object](), gd[object]()
                     else:
                         curve_event = rg.Intersect.Intersection.CurvePlane(Curve, Plane, self.factor)
                         if not curve_event:
@@ -2624,7 +2632,7 @@ try:
                             Message.message2(self, '平面未与曲线相交！')
                         else:
                             if self.flip:
-                                Curve.Reverse
+                                Curve.Reverse()
                             curve_event = curve_event[0]
                             Intersected = True
                             origin_dim = Curve.Domain
@@ -2646,7 +2654,7 @@ try:
         class UnifyCurve(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-统一曲线方向（逆时针）", "RPP_UnifyCurve", """统一曲线方向为逆时针""", "Scavenger", "Curve")
+                                                                   "RPP_UnifyCurve", "W34", """统一曲线方向为逆时针""", "Scavenger", "B-Curve")
                 return instance
 
             def get_ComponentGuid(self):
@@ -2697,7 +2705,7 @@ try:
                         self.marshal.SetOutput(result[1], DA, 1, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAANnSURBVEhLzZRZSFRhFMdV0haKNoKguw4i2R7VQ4HlkqbO6IyWRTslGNlKvRSFQetDDxVRDwXRAkFFUb5UZJuUIdg2jrYwo5U2Lm1mWRHh1/9/u9fu5CRtD/3gh37nnHu+e++c+0X8T4yC4779++/ZAoXpcTgc/jPWQqu55We4F0rwr1gIraYbYQq8ZYu9gZtgP/jbOKHVaAcDNubBamjl6+ByGAN/iUnwIxSRUT3OxM9pzR+z6PVoI/Od7nAVrIfWRj44G3bJMPgK8oISBtQM3wk9t1E43P6LQ/OezZ6ySthfyQDIIXgLrY1uwGmwE0PgU8iiO7APjFBSrk5VXTVCcdUK3dMgNOfdCkfepb7M2VDhfvgFWhudgh3wrryQCT8cBA1iY/d0l1Mrnikuv1Cz64SSVr7bTIVjJDwDrU0M2LwUMtAMHTAEeWr5Ps3dIJTMh9iktiVuehUn6mdY03eJi26wzAy8hOMLKkS05nxULGd412BtIE8uSZCTLi+VEkqWae5Goblr3g+f+XCCmf4RNma/JVz0hC/MwEoGHKk3R6h4HZonKJR0bx5jduTEK5u1nFdCyw68HDb3MYfCDl8tJ7AddryJ7ZAbHDVWQE4871ZdAaFm1bZLzspOEyElXd+j574Vera/buycGv7AFrwh9rptrEz4wzDYCjtGUEk6P1/LrhdKVu0nJbOS30YIUnLpYX3Ge6FnVVdNKWzqbYaPQPbi6IZQCZmYZaxMpOSS5ZqnCSMaaNHTvTxRQ5BSys458tpErOdxkRkKQvaZaKxssICJ08bKhpx8ZYOe+1rILn9QcXpDJkwdvaufkl71QXM/KceSPzp78OvudGyMgEy+g/0ZsCMnX9upT28VivORX830DTbDBlLa7Td6TvBuZKRxZrHHISMRhnuQBWHPEzml9KBjRhs38eqeQNy4AhGtT/Ot4dOpLi+/2quQ1+eyPhw8kllw1liFQU4tO84nkTOrhZzuq9c8zWju/9A/fvVMpNtMB7I2HPGQG7DIOIfCoec0FWru4H3N/bxBz2m8MGFdexzCHA5ee4E1XcFDjoV8mgSYBrMg73ABzOffqKiYouheEg+3bXArDEBetwJ2yXrIwj81FnYJJ4TfRAvkwceRq4EPIIeA43gd8rwphifhMXgALoY2IiK+Ak2UQMs6P0amAAAAAElFTkSuQmCC"
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAQQSURBVEhL7ZV/bFNVFMefGsFFIhiDf0Dbh6/vVwtME2VgDNNs7cZ+w0Ib/UeMSzaD1kCy4Lr29XUt2wDdTzcToiwS/LWEZP5BTIxmkWAgMmZihEHnj23MZEHll8j66717PPftWrcMNRr+Mn6Sm/Z+7+k595x77i33P7eFVJMqm+2uWDoq15GAuJTJt4ebTdJGM65ehTfyAXrXg9mifmdElcDPAfE+ZvLvmX1FKkTnv0LnOjBDcrepyYeh3QXQlw9mTJkxWpRmEhRXMvN/RrJJ8pBWVxK684HsXb6LyVxalx7BLAYgrgL0Y1Yx9Vo2qrTP6m4HM/l7UnukCqNVzUKnC6b3FMS54iua6P+patNuksdMuJSuytkWtZfE1BQtH4kpabNF6UuFFYWZ3JpUUKo1W10EOtaC0SxaO1/lGR0Stl8HvurClLN2un9N9bmNljEyG3La0XEbZnXNyggzw/nb6aC6jpn8QTooPQ3tboBX0XlIaGAyxxd/9rijIgGOyu9hTc0PIJQdL2JLOX7BszCiahAzmYIuPLOIfOXSTvcytozOm5XnYT86P7AWICw8x+QcNu/IGF81iVlMwkNbE11MXkRGU16wui2iDIGPu2tODMkv0k4hbeoNIyQ9QzVHxfmP+LKzccsAsT81XLO68NMye/Gp95z+NAg1iXfY0gLMsDxMM0iGxBIm0QBSgEY1muXjdH6/58xye8nIqOBLgr1sLBfkd2yeLw5bQbZ9+2H9QbibyRztJDOmEizPjxM7+HuYzHH0dqJ4iWDnYGQn1UQxsNReMnpM8KXAUT7WbRnOw150sp9uQKj55pNNuy9a3WVoysvQT8sjH7SM5pPVpE7abqYmRZlEudNRMjJId2uvSLzFtByri04cELbfAL56zHJIItLntNRZTS62DOaTDsr5sM8NRJMnwOebOxyG3XvqkIBBHJXj73Mc3MFkC5vn9McrS8+TwZfqCkhMMPC2z4DuXsKWF2KGpdNzOxC9TMph85zsoSXhK8ePiVvGcw8eX/rl0TzPRPrrRk8n9CqQDSv9bGkxeNgN0LcejaQPmLQAm/dEKy2JozzxlaP8Qp1jy7kOfttlWOE5e5REVw1DhxvQRyEzX8z1JvUB0qLcxIcseVXnVzB5IRum/Hme6YllpTNwr/ci4TZfHuht8D9M9jmTpqZMn6l/NNdVtwRr+K51UcJynOhSQUaTNtNDwyaowHkt2b+kerLxscahnTuODAe2DhD9wV0kyg9CD81c7mFu/pyMJj4Jr+FtxrfI+sQzoRcHenBgYHgdRy8+2V0CQLeI3+kaaq0uyGjyBubmrzHCUjC7Vx0kEeUIXvk3sXX7MP1OU5fbjIisgy43EfzTMXSpHsezRszlzwTlJ9jP/1Nw3G/kbAy8W3WYlQAAAABJRU5ErkJggg=="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
@@ -2763,10 +2771,12 @@ try:
                     if len(re_mes) > 0:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
-                    elif self.is_curve_closed(curve):
-                        Curve, Bool = self.unify_curve(curve, plane)
+
                     else:
-                        Message.message1(self, "要求闭合的Curve!")
+                        if self.is_curve_closed(curve):
+                            Curve, Bool = self.unify_curve(curve, plane)
+                        else:
+                            Message.message1(self, "要求闭合的Curve!")
 
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
@@ -2780,7 +2790,7 @@ try:
         class RemoveOverlapCurve(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-删除重复曲线", "RPP_RemoveOverlapCurve", """删除重合的线段和曲线，可调节公差将相似重合的曲线删除""", "Scavenger", "Curve")
+                                                                   "RPP_RemoveOverlapCurve", "W12", """删除重合的线段和曲线，可调节公差将相似重合的曲线删除""", "Scavenger", "B-Curve")
                 return instance
 
             def get_ComponentGuid(self):
@@ -2823,7 +2833,7 @@ try:
                     self.marshal.SetOutput(result, DA, 0, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAASUSURBVEhLpVZraBxVFD6iaX9IrVbFJjvJSnaypG4SwT4QEa1Cpb+MVtAf6g8tigR8gK+Klobij1YEheIjFUSr2ZndNCVQra1YfNRXtWobg5HYtNrGmu7MPube3c128xi/e+aOppv9IfjBx5xz7ux37r3n3jNL/wm78reS71+gvf+BpEyQJV4hq7iJ/XRuKVnyc/rQ9/G8h2N14EbbVrgR8y3tKtwM3hWYISy5HcyCJSQpUKqwjNL+IthjtI8TjNIW/yL99nmAuFFtiftOc6xbh54Ai+CF7DEs8RGlyz7Z8iQowK06voEGpnwarKqxezlWB45h2k4kdli7y8AZcB17DFveArEyOAEOg+OUHllEhL23vBGyRRXvfKHfXgCnuXVVwWjzc42tLTp0AEwGpoIqohK25e/gEQieRS1u4zFbbEGsCDq0uxzlWB04RuxkJmI+rt0HwInADGGLHeBpJPoJYr9S0tvGccu7Ab4L5jF+B8fqANv0LpIMarcdFIEZIundh2JOQORHvU3BElOlCMRPIV5EbCPH6sA1zM1I8rV2LwWzgRkiJddB4AySHMXzBAR3cTxdbqGkcBGbI7tUc/z+hRMxX3QjsbBOl4P5wAyRkndDREL4OJ5liL7A8WRhPQ2ewylCoa1KnGN1gBUcdI3YG9q9CZSBGcKWr2M7lFAOnMVsV3M86fXRQb4LR9nXOJft7NQmnY1Gl2cN088YprpkCmr1Xwamgrq1djHD25Auz+E5zPGhuSUQztJ+329IZXvnpq7aOlvpSk57if7Zcoc7U0jsUa+5y2PbcOHO8G+IloI+uIE9hiU20V41S2zNkHp6T3E8KR4JWkW5smR3pq2aa9pclYmdlcyKvhmZ+LNSSLw9tt5cnGsyq5lI7CH+DZE6fZOg7l9qlraYpFRxCrNVRzFHKXElj1nyMO2ZVtv2CfvzkBnv4no4ja3PZI2YgykrwYvBafBBNRbA8p6GAAoo/oDgX6jFAMdt2QG/gHEcTxleoAVAcSdx/p/Ubg9YAHUfCm7wz+Ax8AeIjqOoQXZbPorYaSQ/Rf2FNRyrgWPEV+NoVrymdnUsFb4DXw1MhZS4hgUssR+CQ+AoDZRW8Ri3biS1xG9I0MqxGqjWgPM/ot0G0AHnNTmr1I0ExyC8F1vxJiewi9cFY+JlbM03GD/+T6wG2UisF1t0SLuXger2XsseI1W6HUKq9wxA7DWecdiWU8WNsH9BghFs22McqwFaQw8u16h2F4NqBWvZY7wvOyF8Qot/AL4D0aBhWfmr4U/CP4Bn2GPOg2u0rcEKSvloVPUeBZUsLDjQ5zfgxzg93nYIjcF+GDMu0nvuJTxuyUOY/acYy2O1Cwp9ZOXKBtQgh4/N/TqkPp2fBWYIS1gQUAX+Fvbz4DDEevVYN4jWIb9CorofHKxgJ27x99pVPUh9zVQ9NNLiRgig34uXsBIUWfRg/33q96/gcfVdtsXHeM7gj8G8ExLAaYy3TzXHfS9iXq9Dqos+G5gh1PbY4jk8x7mr2qIfdgePWXItH4akuJMGZBfHaoBV7MNWBf9GiNTqdxAR/Q02uobyT+UMIgAAAABJRU5ErkJggg=="
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAARxSURBVEhL3ZV7TFtVHMd5LD7GEJW4kfmHoobEGMxCYLb0vtrbe2/fLXMwnIvGTaMTQ2Jm4n8mJs74StQIapa5aXRO949xI6W3LS2P0ZYW+uBVpIwycStzmxgmloHt8XfuNZGVFv/3k3zSnn7vub/0nt85t+h/x9PgbrJp4fkDXOCtQdIdtRPiATn6b0guwBPswEP/DDdQAi6BV5S8b9K2ZwH1sEHkJV2/uVhXpXRFfrTgB83NZ25j9NFVtWE0qVD47pSjjbSDaPsObV+j7eJym9aHxjQh5CDEj+Q4L6+DCHzV2Jo+aGxeQhTv75CSPGwB58CUUtMzQJmm0Cnas9pLONNdtLdKumIjd4CT4BpYxZoSTt72MyKFUB0O8/EyiKrut32jtCRvtrPnUzG1H3WrxDY5zgsN4n9x/OCR7AO8bR5RQvCclORhJ5gpLt5ylrJcGDcKoWteyp0VCfF7OS6IF8RFytWGMTuINObRHVKShxQYoAzjLlY3ku4ixYyLcHrkqCC4A3EBnanlj+eEPSlECyFGSnIoBRfBQcI0OWgUhrO9TD9yko7TtfpYLWuMM4xh4gma9z0iXf0v9SAucNjyVLZVB11IC0HcYRtQgKi84lER1uBaGxdAEbofnaR7jtbrR1b0T15FQlMKac0JpBYij8lTJAwgLtDK2y53sOZpKBB5UEpy+AHMPN7w2QhlnUVfqvtRH+FIhwn7fQ3CkKAxTbxE66KvMbowboZiaYbMCRBVVNapWXPiOixyTP75VhpAVLbt4aTKnFh6hg+hiGYIuUnxWJFu+nardfFurXa4QsH77qUNQ1WsdabWuP/3e2BOBZgGPRrz9CHD3kXcpi/CeAP9YGaX8qsEaZlBx+iejJ9wr3xI9SqVupEUZ5mVHo3WcgFx1iTS772OONu8E+YcAVFRSUmr1poMqPWxG42WeDm+4XqkXr6rojZGWpPL+zn/r0F49iLRfaqoGZXSutBRxjD2BSWEPoXvH8Pn+xpT/G2VtrcF5l0Cf2rUnCfx+lDC0Cf4hrmcAdd2KU64leapbCftmQgxA8hBOnbLcUFwK+LFfcG8L/2K0HQZqflwo5SsAx8RV8AIY5wIUrqRhW5SvOQgHDNSujn4nMIFdmots8fVhnHEcdHtUrKOrSBeJDdtmYnyfGjeTYh/wu7tktLN+RbEBUo1xngnXiM4tqulZB243fAhN0nqo/2sPpw+RzpXRMIRktLNeRfEBapNLVdteOELdRDu40xtfUcXAf3fyXjSPqpn1UE7cndsLmoQF3gPDxj96DK8F5I07cWP/RbwwqBt5TUhlWVu8VnOnwnDKWonur+T44LgF9UUeBMs4yzxdvxOIAX/mzjMZQCETjo5RUCvf057VyLqALKrxCY5LogJxP/iNB4w+tg4Z52Ddh0m8Xg90jm0taz6ImlJrBmF4I0+yvOXSDjjcrwpZ0FchNLv+6UGNmKW0g3n3Q9vgId4W/JwnT78zo8qu0IkRUqONgW35tcgPlWLCNZVw7JDlX8DMHzplecfzsMAAAAASUVORK5CYII="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
@@ -2933,7 +2943,7 @@ try:
         class IntersectionBreak(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-相交位置打断曲线", "RPP_IntersectionBreak", """曲线相交位置打断曲线""", "Scavenger", "Curve")
+                                                                   "RPP_IntersectionBreak", "W23", """曲线相交位置打断曲线""", "Scavenger", "B-Curve")
                 return instance
 
             def get_ComponentGuid(self):
@@ -2976,11 +2986,20 @@ try:
                     self.marshal.SetOutput(result, DA, 0, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAALfSURBVEhLpdVrSFNhHAbwOZ1tatp0amkJBbUh04XmsiwkQdMiqcwkCxGC7IaEEkYk1Iq8UEEERdAHKRSS9aGim2WQmUHlhzJHRX3oQhFmmNGFUt6e5z1tzLa5kz7wg/e/7Zy9t/MezSQTCqVglNUE0w5rlaZPIkDAFllNICnAG6yXlf88AXZiQqmE36CXlf8cgw9KM3AsUAMcahkUxuuNOXWZdV02U+Zj1IkwDfhHIeCdxUa9UViSsuL+1n6zGTgVHmnxFjFYOSAc9ibvz3/CZ3gDT6HbbJxzp7+sTzRlH7+OugH2wFZYAdwEnpiAc87RZCVPTa6utFSITeZyXrQT6uEonIELcAseJkUmuk4uPfF9eUohO8DpdHdmCGIgYHbDF6UZNC3wDDiFnCp2NAnGTR84lWbQlMMoRMlKRdgLDnOjrIJnNvD3+bJSkRLgBTNkFTzcWQPA9VKVc/BCaarORXigNMePuzdHZKU+3Gm/wCCrcTIdOD12WanPPOB1ubL6J1zUA7DXWdjadsjePBqpi+YCL4MFYIZZwN9FQhj4y3vYrzTHhg/XcKhWKy4VOUVX8X1hNMSxN/6MwDDwZs/hEXRC+8GF9Z9uF997GxuRwIdyG4w5PsLBZDOlD5bMXdOq0+nmo14CfOQ3QBXUwWE4BW1wBbqBx8brxmzHUHu+U8TgbEJNPtuWU8EvMmT1n8lIyEibEhbuvjE77BMH8AwJNMfBEp0ea/1aZd3RjDZHXyQ/9YoLTitNT3i+8LjmOvGidcAt2QhngYdePwxotSEjnauuip7VvUKvi+BIePjJGxQ05OyrvbayQ9hM9h7UfGh64R38APeceuNifwTOfwe04AFy1Niqb1aYK75F6aPYGe48zSLAsVwm+ktdIm9mAc/7l3AXzgPfWLXAhc4DKyQDt6u/yPsBRy2jg1RDmOFGusn6qjQ1V/WJGCB8B/APtsvKK5yOJqU56VyGXRqNRvMHAvLFHyMDDfkAAAAASUVORK5CYII="
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAPWSURBVEhL5ZR/TFtVFMcrmZvGTLP4Ky7OGKNu8kNsaCn99W7h/bj3vVeKcTAZZJlBN5Yt2XDg1CiBzKlLppPNhCUmSLLoFjf1jy0z4kiEMQdt33ttKaYWAoFkilGnGSpKWbmesksIGXQV//ST3PR+T+87995zzzmm/zc8778b4aCHyeWBpEADhwNHmVyAE/d6ipUodePgA8z073FIoXGOBI4xuQCH7+JqjujTcIvNzLQ0othxh+CLrXWp/WuKyi/dbjLRLJ+vM1v29tG84th6tuwGrELkfG7J8AkmlwYR7V2+dHAGkWCCI9ofFiF6JVZPxieb7JQoPf12KdwLJ+3gsHYaYa0N1rXk8UPNB7e8c8FoIL/VbzpeWSDElWJF55ASeiq7YmAlc30dh3BxLa/GPB4cUhEJV9qkgW2f1u6++sMrzhBRulucUrgdNvgcNuhERO+D0ETz+cGRD55vHP17/wZaVXZuqkjsTyDZoPAu03DgIuZ6cSoqTq0sFL+9dr/z5/RZUkBvFeW+CZsY3q2qPWsQiTzoUgOPIPT1CrZicSAzauGUfz1KBlcx05LYJQNCFzjLZGZAel5A2H+GybS4cWAXvMvETU89RyHpuxPinOSwfxMzpcUl+x/3KBEK6WxmpvSY+ehGjhgzgqDdxUw34xZIgJ/gFq8ynZ5Sb/dJF9a6mcwIp6i35pfEDSZvBEma1y6PXd5ZfiI+9ca66ZPb9v6SLwyeT6Wmh+jtELIjcMIDHAm+jGR9B8LGZiRrXvjfYxX6LaVqZ11jdWuyp25jznpHbDVzOw/CvQ9b8djePRUffTjWiOi5XTWnn+Rjn4DjLyGnL4HzCBTgEMy/h3EF5r/D7xSMpFn4ju6vPjpDj5jo2Z07Ehby4yQU4ovM9UKgguucUmScyUVpaqJZkDG3pZLBLobvy5GG1rVvb9rQ9sJL0TJvZ/cTeNKdqgm2fCE2MTLqEvW3mcwIQr5YBQV3jyD72w5tfWu49pmPFTuJb3cR41625Dr7Kg/nPPt0F7UWRzjIoIdSPQViLbiJVu2RjXoO64cgNMdnexLRQhCeUQjdr6lQ5fPx5LHnmpOpMDVXt04USMMjSPwmd9axA+t2GxkJDu8TL9M3c6iqdv0Jze0afAjNT08grF+FOcReH4Be1AXzU7DB+1Dpr8GogYdXzELM0lrzuvnAlsOJqrIzVbOO50BiINeKR99r2XpwOtYgdpX7vlKht9g4ofex1DVJBu1ijrySoaBDMj5jch4KxWIRBpIrbNTFTMsCetIeGB1MzpMN3dMtBQshR7KYadlk3JP+OybTP+zDpjL28cxWAAAAAElFTkSuQmCC"
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
                 pass
+
+            def message1(self, msg1):  # 报错红
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
+
+            def message2(self, msg2):  # 警告黄
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
+
+            def message3(self, msg3):  # 提示白
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
 
             def mes_box(self, info, button, title):
                 return rs.MessageBox(info, button, title)
@@ -3054,18 +3073,18 @@ try:
                     sc.doc = Rhino.RhinoDoc.ActiveDoc
                     self.tol = tol if tol else self.tol
                     Broken_curve = gd[object]()
-                    re_mes = Message.RE_MES([curve], ['curve'])
 
-                    if len(re_mes) > 0:
-                        for mes_i in re_mes:
-                            Message.message2(self, mes_i)
-                    else:
-                        curve_trunk_list, trunk_path = self.Branch_Route(curve)
+                    curve_trunk_list, trunk_path = self.Branch_Route(curve)
+                    c_len = len(curve_trunk_list)
+
+                    if c_len:
                         intersection_points_list = ghp.run(self.Find_Intersections, curve_trunk_list)
 
                         zip_list = zip(curve_trunk_list, intersection_points_list, trunk_path)
                         iter_ungroup_data = ghp.run(self.temp, zip_list)
                         Broken_curve = self.format_tree(iter_ungroup_data)
+                    else:
+                        self.message2('C端数据为空！')
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
                     sc.doc = ghdoc
@@ -3078,7 +3097,7 @@ try:
         class ExtendTargetCurve(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-曲线延伸至目标曲线", "RPP_ExtendTargetCurve", """将原始曲线延伸至目标曲线""", "Scavenger", "Curve")
+                                                                   "RPP_ExtendTargetCurve", "W21", """将原始曲线延伸至目标曲线""", "Scavenger", "B-Curve")
                 return instance
 
             def get_ComponentGuid(self):
@@ -3140,7 +3159,7 @@ try:
                         self.marshal.SetOutput(result[2], DA, 2, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAM9SURBVEhL1ZRbbEtxHMf/TPBgiUtRO+d0dOfsJgiLrHQ93bARIlvE4oXEg5GQzAMR8eAWIh7Ei+uDbBMyQ0NbvZ/T7mIqu0RUuwsPIoZZL7R12Zj+/dr+g8XWdbMXn6fz+/5++f/+v8v5o/+KrjydxF7YqLQWWMuNG4zTiDx+HGqHVOTrt9h4xwWLSmg180LQtc6FXcVubOANS0jYmJkkqB1lotqus/FixF3SibtVbfhERSdeee7tgFMhXDWpLDtv596eSuKTx6q2lotqR4cHDn28phVbebHdphKPP1mmVUqqQ7vQ/X5MQsfGzbybEri1pmN9FxZ5x6CNt58XleIy4o5ji8xBteHLqOrldKIkh1apXdygbnzlLunAgsp+zawyM8T1N7dCAiQpJNbo3MnXLm0qbA4+LHr03Vhg2Urk4TmGJ6O7A0Gki5wkSmJ0Sp0MDvfB4UGNQreCyAlRnGk8Wnb47m5ijkx0h+vVDe7mIuc3jVIztNcJiKSmnh2QSK3EHJmWPMONp8XPMPS/mEhJ4afZQ14qww+rNIlIfzPzeqDy4p4e3J1RV0GkpPGmyddCEvw+PV1KpKFEZldTORf9EdSIMdIPVqCanjnElRQ+iqUDkCDAcCoiDaVBYRHqNjnDKXXhS+j+IEaa/sCq045s4h4VaE2Kl2I/eumMfUT6zYOCBzs88CM5l9/bFhNqQ6XIGGkX8je3RKQyl49hS2L6KEAV7TCHa8SMA4fPaihs+gIPlolIvwhLZdu/ybIwXpiDQwxb2yvj5MQ1LFBBVR/FthIzjllluQ77jvUKPUWkIbym5FyY5u5Ek3xmuB8fGe7Ic5Yd9jnuo+SVkCQA7ZocE4y8baVnfSfWKw0HYkIC/JR842ea8+BFufgTw70IMBmlxPULGLI6OmgfzcUva1ptWgVvjAY+R97dP3AgNOUDzR2ERAPRiqAy7VsZm0vcyMtkpUUTwByKiDQ+3iyQy0I0W4MXZuPvskwcpNlT7rlzZ0R9sEU+GPb+WOC/Er0pVNFG2vb6XRq7GWbQ5Idhk5CJAdqyFxYghNOzcT+T+dVHs9DNCaZ33qL50Kor0STQJieRJ54+muN9FJePEEI/AfSqZENpN+ScAAAAAElFTkSuQmCC"
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAMzSURBVEhLrZRbSBRhFMfHiK70YJQVFaEEmga96So78+2sOzPfzKyr7roYBD0EJb3kSxBEIQS99BhJBb4EQYGRXcjwocJWTffiruu6aphl6301xNRyw/k6M3wV4W29/GAe5n++OWfO+c45zGbCq9GzSPCepK+bx3Fcv90iB2qLTs8ThP3PqLw5mHH9/oLCqEcomSK80jnMir5cato4vNSUyYrRHteZXoKdbYFctjWdmjYOJzWxrBSNq+6vZDKWSbQE85aaNg7CbW6r2pUQiuPEqjQ/0H4xnYQwRJtlTPTI+uEkb6WtqI+IpYPEggO3dE37yVwzAswwd4xD64UDh2LJILE5+ggn+SupzGgTzAkaYBShzzuonDwIVW1FcvtD7BonemmgFd3U9Je6p2WNd+9Vk5y8PieVksNs9qQiHHwjl03qbRjnpFaWmv7jaPZUBSsnYA7anlBpdcyFngyL3NGplH0jFiXcmy82Z1HTIljJd8gihxJIDsyY1XAqlZeHFVtyeSU8LINzhENN+UJDGjUtCzRAA3aOEVb0llNpaTjpg4NXInOyK04scrAWwyqgphXhsPeCXkpO8j2i0mIg1YpCey+RSof1TrlN5aTglcAxyHoBMombTC07qfwPsxi4IThiRHD0Ew77rlB5TYDzkFDcD3fmy6OSQQonhWuQMk4KCvsnd+3TZKqvGT1r/d6gTJcMwSRG9prFYL1YMkaa3pWR2MCRL5rGXNTmmVPGgTUC93BOdk0QJPnuGwIMzWV7OYGS+HsWphm/PpF/Hm065ZXD9T4vO5tsMw4nAZLabVLpkB7ghSGwQijdVvzp6oGM72ngdAvsFUWbY6phgX2MBFRitccg3dAAkoM10OcupEQOGh8uAyv4ROwc1UtUR6WlgWApSAyeR7g7ZLVHid5+knMEZiIwD5PdCM9NXu1wINGfZVY9qYIQ2s0KremwAF8arYr9VdTV6vBFXTkw0ZUwE68tuH1aLIkRfbql0hF9N8Hfemeh6yYtcjvR9xVM87hVbTlMP18bIjQFUsM2Xg5fh7I9B6fdkNUUBP4BJRyCAX2MVlgp66LA0b1HVQdS3e7km2GTYJjfKbuH310UeOsAAAAASUVORK5CYII="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
@@ -3262,7 +3281,7 @@ try:
         class CurveDirGroupByGeo(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-物件确定曲线方向", "RPP_CurveDirGroupByGeo", """将曲线最接近的物体的一端作为曲线的起点或终点""", "Scavenger", "Curve")
+                                                                   "RPP_CurveDirGroupByGeo", "W22", """将曲线最接近的物体的一端作为曲线的起点或终点""", "Scavenger", "B-Curve")
                 return instance
 
             def get_ComponentGuid(self):
@@ -3311,7 +3330,7 @@ try:
                     self.marshal.SetOutput(result, DA, 0, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAQJSURBVEhLrdV9TBtlHAfwTqbI4qJmhmVSxmyLKX3v9WqQWtlwdFAZA8ZKCXGaLItkZvqP8e0P8Y2hsiqWJW7Z4iKysWaMUSnrKIyObVSSVbJNg0qqe3FMvL7QhZWXrdzP36NHIrRCM/dNPuk9z3P3/O7uubvy7lXyu/5ILbnOruCa9y75F9hUnfv2M2r7+Bmlcyqgds24NMf9b2ZbPCncLolnwxC7Sue+s5Z2Rl5TdU42Ke0Tl+THI1G1G0DRBaB0AchaghHqoO+lGoD7uMPiR/PtyLJs95319MmJ11WOyRacbEjRPgHq0wDUOQB1N4C8JQTyZmZIfejPA1TreDtlv9206eDlR7gpFg7VwuhpD4CmH0CFZydrZkDRzFykbOH9Okd0m2EANKXHfKkP83hkQmHy0qXV+PsF6kFjyIz+O/o+Nl3bdmuPrpPdahhglUX7vI9xkz2JSlAdcqMwgnn8KB/NTTj81qPcJslyJEabUT06i26h+ZONom70KapAMhS7wNPRLaYZtjgwM12wF5vkTBk0f7IR5ES7ECmchR5EC4cd3pk8M2a8BpALEFkHpw7Qxdjdh06g9xG5JeTW3F2mBssl4MsDuEIBXM2BkdPPvsENzQm7WrwqnC4Sku1AmvAdBtt/DywWf2chPXkmG6b6FRA5pwH319pabmhOQnzRDj9f2Orlae7HAiMJF/ilyaC82KSEHw6L4ftvZGCrp8gTEhPmcZEaJz4/yheU+vkiD9e9eG60F0t6G6VwrC4DOj4Tw5HdWvJExARXeQkW6AvyhYMBvjDuScQN01GW2WuVskdrM8CBBWwW2sINxSSQJtoDa7LAnyZcy3UtnlFHmcDdKI2SKyAFjlpoKzcUE4YvMEfSMyEkEOB7l2DGe8wr8RZNttWtgc7PxWBvoD/ihmIS4GemMXzRu1wzsQDAEleD5EKPVQAnGrLgvZfF27E7G61GyWSf/x2HRV3Q1SAJOa2qr5KSkj7Brtm3l3wKBtBh9AHaivToCbQMJZ7GXSWz/0g61IEuIVJgGs0W/LcgGkStiDxV21AeIm89+ZYtnhznJr380HpryorlG7FZit5GzciLQiheYeIm2o3iR+8152l/M/mo302gvlEBT4+9YNvAvlJdwdbk1LL2lbhuSdyu5MMoR+TjRxaf3MrziFzdERQ/fEt2iuSkYbvMuzGovFwOqqtbQHOzCuhwFVDXTEANl49qr5i79eEXPy5gd5a/yn6ZSR4W7nASsj4P/LO5QLLq12XITxXuVbQZihSuwmpZn3GftN/okX73fFg5XAZUsBLo8SrQMJWg+qksSl+v/PGpn0013OF3n9wduQ/Jbc/JVV0F5bLewg9lZ412qcf4q9K3GeSeIrI+GB7vLxGcxVTGg02mAAAAAElFTkSuQmCC"
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAQPSURBVEhLrVZ9bBNlGH8To1EwksxkgkaMERQ/ioQNqPvo27u217tradfe3bp1ZYYZN6cu+BU/khkjJmqmRvzDxc0/GOsd4HAIIwb9ww80opBeW7ZqBBeGMWwDGQwmDNl4X5/eXgakmhBzv+SX6z3P+z6/ey73/p4iO0ApuoH9/G/E4986nnyO9DasO38fC10zpk4hjpxFbfQMWsJChVCqNgRbnp2kj7WQn1ioAOPjqIicR/fTSeQlf6FHga9A4ffIBOqALig5g3azpYVQ1Y2B2ppttPkZSp94nrTmY7DRQy6iNijSSSZRN3ATmULthKD1wGagDHwIeBfwDeCtweDRORh/c7NV9ErEFD0cr+mhsdovaKTmZyIIn90JG+4GroCnmw+8ni0FUChA7pm3kPAPlA43BqN7OvnA/l1OPvcjljLHOXngNCeYJWzxDKqrDaUuvoNGoklaznXRSt5YuXjZqHfJ8rHGEtehtjLPwPZKIZ3G/tRxt5ShvtBhKkZHqaSepEJkjHpCw9Sz+hDFYmaak/t/4/yZB1npGWhasjZRlxfYAsW7jrmE7z6S1XEqQwFJGaP+yFEocBAKmBeAv2MxtdctpbdgKf02FtPNnJiWucDAw1jOzWclr0a1atQn6naCwFZa4emecPm+XO2W+tvdkvmW2282YTkruqQDDp8vW6xp9Dq27doBHTRcEqj0GBdW8RtuYyl7oKrJpkRdHxPQz3m9m29nKXugafpTiUQfrYp+Qit4fcLn6y5mKXugqsa6ywLGKafwcRFL2QNF0V9IJHaBQE++gz9FMXkLS9kDTTNetgQiPbSc10eW+rrnspQ9UBTj1RmBbSBg/IHxxhtZyh6oqv76GhAIWwL6UElJxxXWYAMUJfmmJVD1aV5gkIXtA3TQdkmgjE9mXYH0Yi5w8HGXmIq4/OYjWMgtcgp7i/7XKc4DvqL318BBC1X10nJ311fgNb2h2mnL0HzhIcoFchSEzkL8CHjRPuAOLJkfYr/Z6hLNBiybIu8/sNwbTC3E2rFCu4aT3DkrwCd/wHJmGR/IvQNGthW4pxT/ajr5gRG3lKXe0CCY3zCY4AlmhicsM8zH807rFjMnOak/UyFl72XlrVf0Yn3icxDYDnZt7GfhWcDQKR0dvKMJzSXFDueoYyX3i1Ah9K+1OpDMduhs50xnqSPgspNg2VMuMb2CbUcoGOyYA456OKrupmWc/j0LW4DRWA+jcoRMoxYYQItg+BS+gqtA4ROn89jNZcRjeliLfQ0d6PtYyAI5jdaSv9EQjND1INYB3WyCq35xwrp2AN8FtsJIbYIHCANXAf/djb1Ssg/cdDO7ncX0GHqJwNBntwgK3ARFF4CoA8iTcygGwk9D7DWY4x/AP4xGhBD6BwF3I4wXPtnvAAAAAElFTkSuQmCC"
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
@@ -3352,9 +3371,23 @@ try:
                             stock_tree.Insert(item, path, index)
                 return stock_tree
 
+            def get_boundingbox(self, obj):
+                if type(obj) == rg.Point3d:
+                    obj = rg.Point(obj)
+                obj_box = obj.GetBoundingBox(True)
+                return obj_box
+
             def get_closestPoints(self, curve, geo_list):
-                point = curve.ClosestPoints(geo_list)[2]  # 得到物件距离最近的那个点
-                return point
+                new_pt_list = [rg.Point(_) if type(_) is rg.Point3d else _ for _ in geo_list]
+                point = curve.ClosestPoints(new_pt_list)[2]  # 得到物件距离最近的那个点
+                if point.IsValid:
+                    return point
+                else:
+                    box_0 = rg.BoundingBox.Empty
+                    box_list = map(self.get_boundingbox, new_pt_list)
+                    for _ in box_list:
+                        box_0.Union(_)
+                    return box_0.Center
 
             def get_curve_extreme_point(self, Curve):
                 # 获取曲线的两个端点
@@ -3410,7 +3443,7 @@ try:
         class BoundingRectangle(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_边界矩形", "RPP-BoundingRectangle", """为一组几何物体创建边界矩形""", "Scavenger", "Curve")
+                                                                   "RPP-BoundingRectangle", "W41", """为一组几何物体创建边界矩形""", "Scavenger", "B-Curve")
                 return instance
 
             @property
@@ -3466,11 +3499,20 @@ try:
                         self.marshal.SetOutput(result[2], DA, 2, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAADPSURBVEhLvY3RDQMhDEOZpN+dsut0hy7ScTiSJuAEJAh3V0sPhdjgVJRvJuXX95F2magVvD/PPKPkmJHn4e/vLCiyBfpY5mXoI6Ts+B+aawEdaMyQN7/BedsFkkNYPhcuEF/p5HLrBbJXhnI5VrSgk/O7TKTACPZ0KEbkhwv0Ljs6minCzHIBIhkevMDnOVQgnmLkfBbtdgqMnGd82kcLjOCRUqVvtgrgTkczRPgmVIBIjgeUz50tqBpliDMFVSNfmRZcxf8LaHE19e/7SPkAfwbyenorel0AAAAASUVORK5CYII="
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAQsSURBVEhLrVZvaBxFFD+qIvW/aPtJoV9FqbaBNjW7O7t7tzsze3e5S5N8FkEUUeM/sJoK0aIE0VKEgogfBBVEKv3QDy1a9bA2udzt7eV2k7vUJmk11obWXhqCgqLt+N7e3JrLhfY++IPH7cy8eb958968dzHNdq145sxbhJb+d0G7MZ16B/jAkqB95wX+rhW2+4KwMmdFondOWL1nBO+vr6u3Vmjfr+FvDJnQOGGlrzXm7tV4aVij3isqLT5DmPu0Rt13CSvXEr3zwkxWBYxHQ72mgD7YeA2+94CNVzVaHG6slXJoNyRwBpeFxovPx1aBONOPGNx/H2TRcPyrRrLqIqlcvi5029vLBy43CPhAXajInsg/QBz/Pd0JLtrZc0J3/GXDqRzUncpOua8FXV1HbgGdfXCIGcInL+m8sqDzye9JZvIuQt3XoytC92Hij3j6tDCcKaFz/zDhlRRjp2+WttrQPTC+0UhOu3b2F9hb+gau5SONe4eA5LiSDO5uIcDTgsES4f4TCitvkjauCY2WPsd9Ki+ZcqoFxPbejgjwrlRWfEGuRXi0d+Z2q29x88iI2CCnQhC7+LgDezQrPySn2tCwGxEsCYy8XIspytFNOg8+gav6BzOH8HJdZ+Vj4PabkFkHMTt0Xj4s1UP02BMP68x9TA7bCVS4M1zYSXJbzNTMAsYDUvIAGHwRyD8Gg7MgVw0n+AsC+0FX14c3hZYA+A3xOA96Z+XUOh5w92WMvpmsLZqpU8u7rLGHpG6EwUFxg/xsAXj6KT4s1XZ3yKl2AsK9Zw1aeDCenp1TzBNbpV4L7MzU/WY62ArebtdYcRu8HW7w4BimuWKPPyfVQrR7sCoGa6EkTsThoVWxXISSngWB0pH5SZhO9TIGXapG6JhAscdSmOtwxzU49ZMqLVBIQWawwCGs1o2PTaq2oCMCQvNb4ukf/zac6ZOrg9oJOiNg7piZnLlCSO5eOdWCRGL+TiM5BekZEC3pqxqrbLOsyq24Rqj3xhqCwp5w1ypAmg71WHkuhxFUOr4dvPoSsucKlplmbFj/b3jQfaij0QK0gXqToA5p6o2Gu6+JkQ1gdNTOLkDNClagjO8n9kRW524PlA7VTM1x8GAzpiskxe+YBCEBniKeOoX16DNpqQ3xeO0eKGQ+678Ixv39O9jRO+RSC+A6b4OKegE9gpRvEFjZn6HhuB5OgOtHCBm5UepHIGziPiNVzWlWMS2n1gV4mIODrEDjORQ1HIwBPJ6nMAXp7kXsXN92d3+xUe7pGPAe3sGWSlhewfj913CgozWrqUZP7kqk51egZPyA7oY7OwAcMGn3nYP6VXgJxxCTYT4oCdAViP7xRj92hzS78BXWFri27zB9O5RZ6Hx/hn0Z7OjNnrzevwpsJFgO8Lqac9cTfO2YLLz/Ujhu/KtYEv8C/ZUN1pUdzyQAAAAASUVORK5CYII="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
                 self.ref_plane = None
+
+            def message1(self, msg1):  # 报错红
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
+
+            def message2(self, msg2):  # 警告黄
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
+
+            def message3(self, msg3):  # 提示白
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
 
             def mes_box(self, info, button, title):
                 return rs.MessageBox(info, button, title)
@@ -3508,8 +3550,9 @@ try:
                 return stock_tree
 
             def get_boxegde(self, obj):
-                origin_boundingbox = rg.BoundingBox.Empty
-                pts_list = [[_] if type(_) is rg.Point3d else rg.Box(self.ref_plane, _).GetCorners() for _ in obj]
+                if type(obj) is rg.Rectangle3d:
+                    obj = obj.ToNurbsCurve()
+                pts_list = [[_] if type(_) is rg.Point3d else rg.Box(self.ref_plane, _.ToNurbsCurve()).GetCorners() for _ in obj]
                 box_egde = rg.Box(self.ref_plane, list(chain(*pts_list)))
                 return box_egde
 
@@ -3567,21 +3610,23 @@ try:
                     Bounding, X, Y = (gd[object]() for _ in range(3))
                     self.ref_plane = Plane
 
-                    re_mes = Message.RE_MES([Object], ['Object'])
-                    if len(re_mes) > 0:
-                        for mes_i in re_mes:
-                            Message.message2(self, mes_i)
-                    else:
-                        trunk_object, trunk_path = self.Branch_Route(Object)
+                    trunk_object, trunk_path = self.Branch_Route(Object)
+                    o_len = len(trunk_object)
+
+                    if o_len:
                         iter_ungroup_data = zip(*ghp.run(self.do_main, zip(trunk_object, trunk_path)))
                         Bounding, X, Y = ghp.run(lambda single_tree: self.format_tree(single_tree), iter_ungroup_data)
+                    else:
+                        self.message2("O端为空！")
 
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
                     sc.doc = ghdoc
+
                     return Bounding, X, Y
                 finally:
                     self.Message = '边界矩形'
+
 
     else:
         pass

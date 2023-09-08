@@ -36,9 +36,9 @@ try:
         class BrepCut(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-Brep切割（高精度）", "RPP_BrepCut",
+                                                                   "RPP_BrepCut", "R2",
                                                                    """Brep切割，精准度最高，会输出未相交以及切割失败的Brep""",
-                                                                   "Scavenger", "Brep")
+                                                                   "Scavenger", "D-Brep")
                 return instance
 
             def get_ComponentGuid(self):
@@ -100,7 +100,7 @@ try:
                         self.marshal.SetOutput(result[2], DA, 2, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAANDSURBVEhL1ZTJTxNhGMaN8egFjUv8EzwYL8YYTUwkmvkHvLsFtYSKgiIqIRjFIDFW+gGSEqTQhXY63ZnOtJTSBYoBBUFADy6JSxokgDKktFN8/ArjEsV6AGN8k18mmcPzm2fe5F0XCh3cMDN47FByWMXM9hUwUkTFSCFKoIiRhPPLeEsZyXWZSXIUy1UmaaK0VTKyqZqB8Vbeulxj0R3ZNDd0KonX54HxYmC0BHhcCgxcAuLlQOwK0FMBBCsB8TrA3wDc1YCzhj41SGjLDytRK4/uTlZwcgrjhVgYVCH1sAipXjXSkWKku0sgB0oh+8oge8uRcV1FhqvAorUSn81UZq3BW83FfCVq5VEEHz6PFSI5oMJCfxEWYmqkwsVIBUuQ9pcizZchTQWykwpsFchYKrGYFVjWSuC7BNmzLJBpgyWBaS0Ff70B/71Bdgdr2ICGixeQ8tCFO6iMvQi5gy7cQBfedg0w3MBU1fG9StTKk1PgVyMZu43MCx8yz71YnOjE4lgWfgk8ExHlnRGWdbBOh5tzOz2cx8NzfKfARUIxTvQFanMKFkQVpP56QHoFzE4AH39ibgID8Sh8QhCh7jDCPVFEI73ojcUxMvwUAu9/+QdBIaS4loY/A6ae/Mr0CMJBAazNCbfLC6+HB/16CD4/YpE++DrF4f9A0CXAyv7LBtrq/M3S8KlPeHGOHjo1MESP3sAFoJ8evJ5zkAcb6DKfAzOjCiPL0HDMjiJCBTkbNNw6kDcZPzY2/+h0YjpakJjuOZuYDp5NzIiFiY/eM+8mw5rZ+cQo5t4MQvrK2yyPMP/+MUIBX+4GdNbn79mxed+ubVsP7N6+5UdUR3durK2pLbHZXGg3mGE0WmAys7BYOLBWO+w02G53weFw5xTknHuk+YTF6sQDvRH6djPaFUlHh21JwnHO1Qm02vsF2X+sbzPRFh0wmKww0/BsCxvrWCuB65vAqAisimDVv+j/b0DIfbUghmB3eOFy83B7BXTyfhoSgF/sRldXCN0/Hbp430M8HRnPHrvXSszvp6rq5v76Rh25c7eO3NUQoqmrJ3WkkdSTJtJI3zc16YhO10yam1tIS0sraW3VE72+ndisdmJoM5R9AXhmdNkT9EQjAAAAAElFTkSuQmCC"
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAImSURBVEhL5ZNPSJNxGMd/OvembXvfNynTvTP/hvtHE8NqDHKCoTSzizcZLCLqEHTpUlBZLRaLdtYukWCQw0sdRvQHvQiW1qJyVJKDBA8evHju2/P6m/kOfLdXRIT6wuf2Pt8Pz/O+L9uNmA2y5XRJe0rnFLEsq9iKYy4teUkz+/iosTwe67dj9Y4Tq9cPF4ae6XfZQDOdfNRYhl+Ha4G4B6CCgjzwIOITtywYSg04gJgbuNVSmPtuhI+sCYJ81Fj+dcEgEXVxEl6ca5VUwQk+aiz6ArWcmL9Qh0ykFpmL9TjbbFEFYaJFh3IiL/qCmAtX/ZUwNVtR5pNhapXBRDN8TSYE2wUE2zQcFXCyTfhts5R8pE6RV/PoC6JOdDgqwEaPw5o9DctiL1hXNaYSIrBgBz7XbPCF+GFfk1Gni1fzPJqMHAIeeoF7dGctcTdCTXvBkn7IS72QlvvAumvwNmYDMlT4vnqDGYIknbQJdaqn+puhRHcV0lcakb5Un8/lBgSUcrBrHtrCD/YsAOasxJs4bTBHgndUuo4qoU1yG+QJ3ESSSOmwHPCa0eMX0HNMQCRUgZWJg8AHTXkRQbG8mB8/APzM3Vw9zSyVTWvKtylIfXq6H/iau7m2VMt2BOlREqhfyWbF6/zXglfZ51XAogJ8oxetx3fil4JT9KXRTN6PVizJG+etGInJGBmU9Lkt4cldGY2KSRU4+Kix1BE3iahBzhA7Hcb+AJV+qCe0V0zxAAAAAElFTkSuQmCC"
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
@@ -189,6 +189,7 @@ try:
 
             def RunScript(self, A_Brep, B_Brep, Tolerance):
                 try:
+                    sc.doc = Rhino.RhinoDoc.ActiveDoc
                     self.tol = sc.doc.ModelAbsoluteTolerance if Tolerance is None else Tolerance
                     Res_Breps, Disjoint, False_Breps = (gd[object]() for _ in range(3))
                     _a_trunk, _a_trunk_path = self.Branch_Route(A_Brep)
@@ -201,7 +202,6 @@ try:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
                     else:
-                        sc.doc = Rhino.RhinoDoc.ActiveDoc
                         if _a_tr_len == _b_tr_len:
                             new_a_trunk = _a_trunk
                             new_b_trunk = _b_trunk
@@ -228,9 +228,9 @@ try:
                             for s_fail_index in fail_tips[f_fail_index][0]:
                                 Message.message1(self, "第{}组数据：下标为{}的切割体切割失败！".format((f_fail_index + 1), s_fail_index))
 
-                        sc.doc.Views.Redraw()
-                        ghdoc = GhPython.DocReplacement.GrasshopperDocument()
-                        sc.doc = ghdoc
+                    sc.doc.Views.Redraw()
+                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                    sc.doc = ghdoc
 
                     return Res_Breps, Disjoint, False_Breps
                 finally:
@@ -241,9 +241,9 @@ try:
         class FastBrepCut(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-Brep切割（Fast）", "RPP_BrepCut",
+                                                                   "RPP_BrepCut（Fast）", "R1",
                                                                    """Brep切割，优化时间效率（出现不稳定情况~正常报错），会输出未相交Brep（若要输出切割失败物体，请使用RPP-Brep切割（高精度））""",
-                                                                   "Scavenger", "Brep")
+                                                                   "Scavenger", "D-Brep")
                 return instance
 
             def get_ComponentGuid(self):
@@ -300,7 +300,7 @@ try:
                         self.marshal.SetOutput(result[1], DA, 1, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAQOSURBVEhLrZVLbBtlFIVDu0IskBBL9iy7QxHqmlXLqiwIxW1RF7QB59U2JA6kpYIWGokKcGjsPOv4MdOxPZ7J2OP3K04cpyl51c7DpKROBI2KQxvH9dgOhz/xCCVplMQSRxrN5v73+8/VPTMVh1XmwbljxfkaRWbogiITqFFk3XWKrHBJIbHNColuURTZ7xXr2tZ35PLylR79pA2rTUDiEjDeCIyqgMGrgP86IN4AAu1Y62ztlcvL11+xc9fxqA656GfIhWogeRuQdzSiwDWjwHwF8G3IdF1Vy+Xl60AA14ZsZ+vPcnn52hMgNKBgvYKCqRlgbyJ7p/m2XF6+tgOkoBI5L2k8x2NjwYuNeQ+wGMRC1LFM0ayftwkBp+gOOB0un3z8YO0GZD1XUPxzDHg+C/wdB9Zn8PtMDLzght8XRGRwGOFgBPLxg7Ub8GITsBwF0tPA0wng2TTmJ8Kg7rEY4O1wOT1wiZ6ifPxgpWNnv8MKWc/JOrKiDUCkBXgSIw7I7VeniIM4fpsaBBnRNoC7BKDpD47u96C19chy6IxyPf55Ih34NPHMffHh04G62ZVEsJheHEP6UQyrqTFMxgKgGdtOB0+ip48Vpi8kc7HqZDakTOY8dUlJvJzMc18k80xLcsP8TVLqveYm9zi67Xnlrcr33tBo767oDQz6+ymYTAzukfGwLL/TwVLk9LtYUAJTtcD9emCIjCFAUuoiuz3wNWC/BQJIkaY71NBw6zVtp27FYGSg19OgTGYwzG4AcZAKf1S58fAipFGy34NKSL565J1kBfkmFMxfAtZvNwFzpOeRUuuSGhsbX+/s1q0YSWODgQZNbQJshwQ46kmASIgo4oa+BkmjmpH7/qfKU5WvdnXrNgSyljwvwuFww+Xyw+cLIRyKYCQ6iuHICF4GeGuRD91AIaJG0d8OBDuRFTqWKcr8vs0mnOA4+8mh8NBJSke9/cOP7Ur1L1qVWt2h6iBvrbZH1dXVp+rr06mMekplMpiaXgK8cFZDmuWAzEIpQGtxZP6YgCh64fX4EQyEMT0Vh50Xa2Uz+2tPQMJKms+UArQ6ieeP78Ni4cDZBNgFESPDoxA4R7XcYn9tAv4hgDwBSASQ2xcwsAWIDscOD1gMf3gcj8mKJkg6xy+TnwhZ1QWejGiOQEhC16aRXX6wC1CGA7/+xJtzYlVVwvpxVYI6W5Uynz/lsfRFI0EfAm4BYZ+IoMcJq5UDz5VGVJaDvXT7p+5+g4lFd68BOh0No9GyC1CGg72k0fTQjJknCaVKCSWfgP8VoNX2svyAa+vbYrXypLEDdrtzK52bqzr+6yQE3lEjl5cvtVpzx2A0L/X09qf67xpTRgOdoigmZWHYlI3lUiQLSzYLf0Yu30cVFf8CBoYWjQuZXXMAAAAASUVORK5CYII="
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAK9SURBVEhL5ZPdS1NxGMePtem24znqfFvjjM23pSmmeTESqpGpBQW9EGlqI/AF8600dZikki+FmMagKP8CL4quXBFZDLywDLGQ1uxiV7NEggglJfr2nHYObSkhzTu/8Lk4/L6/3/fZ8zxjtpV2EDmEZQMSiJBl6S+Ig/OiAc4ywU+5gHGbAYdMmoeSJyQdnq4yAiNZwMAePzeJ21koz+afSZ6QZH1B1WIgA+ja7aeHoKCyLH5c8oSk4ICedKAjDT9bUnDSxDrpPIwQ5yTyX7K+lAPo8dX2VBw9rkPapVRk5LLL9gtqj93GeuzVrKfQEv6E/BH+a5vXwalKmsFwJnCLel+fBK4tHYzvNAoadgEfEoB5PbAkYKSZ+07+aP+1YMUTZUTFX5QT+cdS2Ke2vCiXLYd3lZrZSXM+v3qgWUBvewwwqwNeERQy1BS5RP4oIlhateKyi9bQ3ZQMN1X4m8ZkvKkxwqwN75JsssKGalkf5qjyGXr49SYC9Kyi5as9zd+CXuq1iLiKNNS9uoh+ySZLM9jILeAjtUV8WOZfATpWcWWBtgI3aEPkVezPwI/rZuQmRnRLNlkq6vUXsefwUIgMfTuuct/ofP0M1gXQtizWJWG+QkBs2M47ZNEHwJ07ono32he9NnqN/wN9lxSq3HSuJoIlBiy2UkAftYYqn682QnveAHVLOooLNGuODm7Z0cqtODr5FWte+BhdEas0bkAMsV6JGoXdJ/8CCpku0YMZ2QfGVYzONi2wQC0QV/GzgPqz7LR0bfNSKpns/YLqgdWkHhXJjlM+KjrBo7I5HhP3Y4G3tO/iIN/rUXNKMyldC0mm58PRgJceniWmpE3ZwoCcx4P0J3JTWwJXcQsD8ibuUu8XA1ZRnMEnAbVn2BnJE5IMpUWque6GSG93VQB1kV5LpvKe5NkSKTdgW4hhfgFGLJ5y1vCiOQAAAABJRU5ErkJggg=="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
@@ -396,6 +396,7 @@ try:
 
             def RunScript(self, A_Brep, B_Brep, Tolerance):
                 try:
+                    sc.doc = Rhino.RhinoDoc.ActiveDoc
                     self.tol = sc.doc.ModelAbsoluteTolerance if Tolerance is None else Tolerance
                     Res_Breps, Disjoint = (gd[object]() for _ in range(2))
 
@@ -409,7 +410,6 @@ try:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
                     else:
-                        sc.doc = Rhino.RhinoDoc.ActiveDoc
                         if _a_tr_len == _b_tr_len:
                             new_a_trunk = _a_trunk
                             new_b_trunk = _b_trunk
@@ -438,9 +438,9 @@ try:
                                 Message.message1(self, "第{}组数据切割失败：请调用RPP-Brep切割（高精度）插件查看！".format(_f_res_index + 1))
 
                         Res_Breps, Disjoint = ghp.run(lambda single_tree: self.format_tree(single_tree), iter_ungroup_data)
-                        sc.doc.Views.Redraw()
-                        ghdoc = GhPython.DocReplacement.GrasshopperDocument()
-                        sc.doc = ghdoc
+                    sc.doc.Views.Redraw()
+                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                    sc.doc = ghdoc
 
                     return Res_Breps, Disjoint
                 finally:
@@ -451,10 +451,10 @@ try:
         class Brep_Union(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-结合", "RPP_Brep_Union",
+                                                                   "RPP_Brep_Union", "R21",
                                                                    """将多个Brep结合成一个.并消除参考线""",
                                                                    "Scavenger",
-                                                                   "Brep")
+                                                                   "D-Brep")
                 return instance
 
             def get_ComponentGuid(self):
@@ -510,28 +510,23 @@ try:
                 return Merge_Result
 
             def RunScript(self, Breps, PRE):
-                try:
-                    re_mes = Message.RE_MES([Breps], ["Breps"])
-                    if len(re_mes) > 0:
-                        for mes_i in re_mes:
-                            Message.message2(self, mes_i)
-                        return gd[object]()
-                    else:
-                        breplist = zip([tb for tb in Breps.Branches], [PRE] * Breps.BranchCount)
-                        res = ghp.run(self.brepbp, breplist)
-                        Brep = ght.list_to_tree(res)
-
-                        return Brep
-                finally:
-                    self.Message = 'Brep结合'
+                Brep = gd[object]()
+                PRE = PRE if PRE else 0.02
+                if Breps.BranchCount == 0:
+                    return Brep
+                if Breps.BranchCount > 0:
+                    breplist = zip([tb for tb in Breps.Branches], [PRE] * Breps.BranchCount)
+                    res = ghp.run(self.brepbp, breplist)
+                    Brep = ght.list_to_tree(res)
+                return Brep
 
 
         # 合并以及封面
         class Seam_Merge(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-封面合并", "RPP_CoverMerge",
-                                                                   """封面以及合并曲面""", "Scavenger", "Brep")
+                                                                   "RPP_CoverMerge", "R13",
+                                                                   """封面以及合并曲面""", "Scavenger", "D-Brep")
                 return instance
 
             def get_ComponentGuid(self):
@@ -566,43 +561,34 @@ try:
                     self.marshal.SetOutput(result, DA, 0, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAJrSURBVEhL7VbfS1NhGPbfifBH0XX3QRQdU8ouishsTTnNublja2oiUWbdfAV2YRKUFuKs1ZaK021u/jZlVCBEKM2Ugmx5dr7zbe7pTY5g5JnSVYEPPBcv5/A8fOd7n/e8eam3F0qzCzLj0xbGxy8zHqtkPCwzfdjG9EE70/sdTPc7me5zsbTXzdLd19h6Vz1b72xkWe9dlu1oOpyXC2r8Ygd+uIAPNmC+BnjnBOJUv6kDptzAmAeINgKhJiDYDPTfAAI3gZctVLch095YY0htj1S8nGFBhjZtgTZhBY9VgUdk0AlAJ4Doc0D4ayF8CtK9V0EnQOZpPTKdZNp7B5mHTVZDanvsGfwHBgEXxAs3hNdD4g1Id11H5nEzMo+om7rvIXu/5awhtT1yGgw4kBo5T8+KoU2WQhs/BT56mt4pAx85AzFxDtqA5Tn31Snc51JET50inrkV0eVRxJMGJdvTquQwqIYWqEVy9gj41/3Qlgu3sADaSgFSX/Zhfa4MCFM+wpSToc2c3AJe3ab6AXYwcCI5cxR8uQjap0N/8nMRvsdKofvobkzuaM/gHzBQ4+XtWKUJOn8FeF9Nk5Qm6izVUwoQ8YDHj1HX5ENLHCQegLa0hSv5WI2V5DbQ4xWF2Y+ypE5bJHWCGKmU1GFZ4oN2SQ04paVwSV9yTkIiehyJyAkkQsVIDBGDJzf47fUlSrpimnQjbuZYm6to/fWvWBuzYi1aBTUkQw3akOq3I0WfUCcKystfG2zc0aIMPmMBn7RCH62CPiJDhGwQwZ1nlSFjDvMm2N0wNGTMsWdgyJhjd1tHw+9bh39z62jDT8ohmpsIqcR3AAAAAElFTkSuQmCC"
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAH+SURBVEhL3ZXLSxthFMVHjdYmRgtVow2ok9RHjGARXBtQsCJYNPWxVTfFJ9GCYBfVNuILXYm6cSm4ceOf0CIudVEfpQvRLty4cCG4PD33GxMTyGSchV144MfAN/fek/nmOxPtf8tlA1vykB/kygaHpIo8SuFXuVnYDpdit8+L3Z409BLWlBdkg32TRru1wm/cDuB7DbAcBBZqzVkkS0E0lOaKwYTRbq2ukjwHbqcrgW80+VptzgyZrUG954UYRIx2az13A1mT9xO7zgXwzjD4ZLRby9yAv/gy4sevIR0nwzqOR3TsD5ZD6tm3RkIpaCLFJK7UBhx++6UKezyWp6M6/oz58HfCj+NxH+aai+DNd8CVnZlMTiZeOjLE/IK8VtMpU4Obqbc4GCxT26Lucf/VNs0HVP3VpD+ZqUr87C8TA6FBTadMDe74BPsDNJDBsfUYUitmiTAr53xCzhTq1XTqowpalAUrDJqE6T5QiAZwxn1PMk7HfT1nJhl8cHPvFlqKsNpWjNXWBxa5NhMqNAzkiKYamoiJQQHZIUcmXK+3e4xPRaqhiZgYWGm9o9r1pAYbnYE8npynM9jseh4G8g7kJKWDgfzN1LPHlsFWd9DNjNQZiU4Hs3MRiQctnmQrRQudWQj5nAhVWKA70ehV/3ZChep+hPLJZxK1wXtN07R/xQzcRVjpR7UAAAAASUVORK5CYII="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def RunScript(self, Suface_Or_Brep_List):
-                try:
-                    re_mes = Message.RE_MES([Suface_Or_Brep_List], ['Suface_Or_Brep_List'])
-                    if len(re_mes) > 0:
-                        for mes_i in re_mes:
-                            Message.message2(self, mes_i)
-                        return gd[object]()
+                Brep = gd[object]()
+                if Suface_Or_Brep_List:
+                    # 封顶
+                    Brep_List = [i.CapPlanarHoles(0.1) for i in Suface_Or_Brep_List]
+                    # 封顶后列表去None的操作
+                    Bool_List = [i for i in Brep_List if i is not None]
+                    if len(Bool_List) != 0:
+                        # 缝合以及共面
+                        Brep = rg.Brep.CreateBooleanUnion(Bool_List, 0.1)
+                        Brep[0].MergeCoplanarFaces(0.1)
                     else:
-                        Brep = gd[object]()
-                        if Suface_Or_Brep_List:
-                            # 封顶
-                            Brep_List = [i.CapPlanarHoles(0.1) for i in Suface_Or_Brep_List]
-                            # 封顶后列表去None的操作
-                            Bool_List = [i for i in Brep_List if i is not None]
-                            if len(Bool_List) != 0:
-                                # 缝合以及共面
-                                Brep = rg.Brep.CreateBooleanUnion(Bool_List, 0.1)
-                                Brep[0].MergeCoplanarFaces(0.1)
-                            else:
-                                # 缝合以及共面
-                                Brep = rg.Brep.CreateBooleanUnion(Suface_Or_Brep_List, 0.1)
-                                Brep[0].MergeCoplanarFaces(0.1)
-                        return Brep
-                finally:
-                    self.Message = 'HAE 封面合并'
+                        # 缝合以及共面
+                        Brep = rg.Brep.CreateBooleanUnion(Suface_Or_Brep_List, 0.1)
+                        Brep[0].MergeCoplanarFaces(0.1)
+                return Brep
 
 
         # 分割Brep（面）
         class SplitBrepFace(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-分割Brep（面）", "RPP_SplitBrepFace",
+                                                                   "RPP_SplitBrepFace", "R3",
                                                                    """面或实体切割，分割面或者实体（类似小刀平切面饼）""",
-                                                                   "Scavenger", "Brep")
+                                                                   "Scavenger", "D-Brep")
                 return instance
 
             def get_ComponentGuid(self):
@@ -660,12 +646,21 @@ try:
                     self.marshal.SetOutput(result, DA, 0, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAANQSURBVEhL7ZT7T1NZEMePxBIt8Wf/BH4wGqM/9SeNf8Fqlg3iI6IFn5cW6INHeVWjIhKzoiLRpLCu74u25VVEwFaEVrGACj4TL4HEipqtrUh7W/p1Dr0xZuOumvibTDKZm9zPzJwzM2fYj0pNWto65fP7BWALRpr/WPXcuUXz4DLp+S2asabtmrGzuZqx06R1ezWB00Uany5r5YFFi4pHHZnLXnb8NztZZ9A8rs1froRnbLBhteqtNzuAUR3kgTzInnzEuo2IdxQh7izFbHM54KzBm7rirl2MZb3xbffimR6yl9jbnDUg7jIj3qKw9mqEzpQ/UMInE4SHtON4rEOMnGLkFO8xYtZVhAQ5Ja6RU8tRhOst7TsZ2/RhOMeDF3rEfMT2cdaA2U4zEq0K6zgCudE6qIRPJgj5tRIe5SHSLyDi1iN60wC53YyYowQxsWzOKXSqtI0noMO48VSHyACxHs4WQu4wIeZU2OuHEbFV3VPCzyf4JRL09q5ZSE5BTJqAUSMwXAzcJbCvEujdD3QeInuSxrTMncNYZngkx4+pImCM2BHOWoA7FcAthb15HNFG69O54A2Mqf5asTTtdffm7Om+XCHYrhWCDrLNe4XgJUEIn9MLYZtBmD5XKYxX7c4oS03Vv7qRlTHtI8ZFbOtX2KZy4d0x48Zaxhbz3bL2uFpt2sFYxnrG1mcq+vu/dANjv+Uxlk28aw9jG/+P5f/4TevUavPcLYCKlAnP1vpgf64Y6CRt3S0G7PvEqSs6cepCgTjVZBI/XrCKkzWFFpNKtWPCs836/t5OMXDjC/YqsRc5axQ//F0hvq0vPTwXnAtvctiv/QcT1INHVFc/1ddHdb1Nde2muroOkj2B96csbi2dPjSk9SNgTvZriLOl1C9aET0K2/UnoraqZA+4zL+D+QQ/LUEALwqA+/mA10AjSuPXTePnolF1WskeQ6je0kUPKIsSeDFeSONMrI+zNLI9JbQmFLatFjO2qodKeHpofBf5tX2Jh4I00096SydFugxStN0kyfZiSb5aJiXs1VLwZEnjvpSUraHhnMuJJ3nSzACxbs4WEGuUZIfCXjskRW2VTiV8UgYHc1X4qjZ8Vnt6+pJqtbocvRULv8VyhjHGPgGPiWiG21cMagAAAABJRU5ErkJggg=="
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAALbSURBVEhLtVRbSJNhGJ5jbUpuQs6YJ7owa7MkzVKkdM3JLMxR0IFiTjNtc5uZWHohUfrPdvCURd7UjRdhaGloWlJdeO3oQGBQQt1EFOVNWoEXT+/3b8Hcr2nDPfDA++/9/ufZ9x5+0f+isMR3Qmd4sSvwuP7QHno5qi+dqQg8hoVoomol5uqmhtNyBuuWywUYR1wRJZtixB+zk6Lns1UyIRM3zOfneRb3Zhz9zWJBnt5LUUi+kg77A0JIxVG+6ZotgEsDtKqFbE+G03QDTx3VFKcI804N5prTkaqQ/CQ54U0UUvGbueatdJAOX90upDOJN5i011BMBqH5VnZGg5xE2S+SS/KrBkEuFb/63JgGcGRwhQ6HkmMGvXhsIwOODELzvIkarFwkx/qxFGs1mLBZImfQbrqO8cga9GAskgbXmEGtNTwD2jDfQnMC4E7mxQR0x6KrwoNnjjMUy4V5mjI2vlnxoh8kJ+NFtQbfYb3xfV9hyXRfZhb3jTvlQlelF51mLzrMHfASPeWdxC64zW6cPjIO27EBuCjPbsN64uTZC45GuM10E/l53sV9xVMjxWWz90Tag779euPspULDdGP6NsunO5X1GKy9gCFLPR5YzmPYWocRqwMPrXaM2qtgOz7Ai43RLR5RqVjDJ2zn+NF9Yq/GJC1hLm16bsGwo6jsnYm/xV+wEs03baZNpvpyrEwhdMnRbfbQop2lOI5+Y+eCyJavPRVZSr5EMX7VIKylyaxU7Da8YWh+PaaI9YOVLGIGXjJgfYmYAZss1vywDOhr+vrLxdUMvLj/L4M2NXarZAskl+hXDUKMJGrmexN9rnt2At4MIXuScauqAxN1DUB3qjDfuYOmKwMapXSR5BL8qktx2ZC2ES06JVoK4oXUxuJkcSsqi2oolgvzB5QwZSogjhINkZbYLymEnli+EtP39D9XqT13l8sFaCRKiOFBV/r2tt74oSHwuApEoj89Q3ZdEGG9MgAAAABJRU5ErkJggg=="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
                 self.tol = None
                 self.cap_factor = None
+
+            def message1(self, msg1):
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
+
+            def message2(self, msg2):
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
+
+            def message3(self, msg3):
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
 
             def mes_box(self, info, button, title):
                 return rs.MessageBox(info, button, title)
@@ -712,20 +707,11 @@ try:
                         brep_list.append(new_cap_brep)
                 return brep_list
 
-            def sort_surface(self, new_brep_array):
-                pt_list = []
-                for single_brep in new_brep_array:
-                    center_pt = single_brep.GetBoundingBox(True).Center
-                    pt_list.append(center_pt)
-
-                brep_sort_by_pln = self.sort_by_xyz(pt_list, new_brep_array)
-                return brep_sort_by_pln
-
             def sort_by_xyz(self, pt_list, follow_object):
                 dict_pt_data = dict()
-                dict_pt_data['X'] = [_.X for _ in pt_list]
-                dict_pt_data['Y'] = [_.Y for _ in pt_list]
-                dict_pt_data['Z'] = [_.Z for _ in pt_list]
+                dict_pt_data['X'] = [round(_.X, 1) for _ in pt_list]
+                dict_pt_data['Y'] = [round(_.Y, 1) for _ in pt_list]
+                dict_pt_data['Z'] = [round(_.Z, 1) for _ in pt_list]
 
                 zip_list = zip(dict_pt_data['Z'], dict_pt_data['X'], dict_pt_data['Y'])
                 w_sort_pts = []
@@ -735,35 +721,36 @@ try:
                 new_object_list = [follow_object[_] for _ in index_list]
                 return new_object_list
 
-            def _get_intersect(self, item, pln, new_brep_list, error_brep_list):
+            def _recursive_cutting(self, ent, cut_list, new_brep_list):
+                cut = cut_list[0]
+                ent = ent if type(ent) is list else [ent]
+                for en in ent:
+                    temp_brep = list(en.Split.Overloads[IEnumerable[Rhino.Geometry.Brep], System.Double]([cut], self.tol))
+                    if len(temp_brep):
+                        cap_brep = self.cap_brep(temp_brep)
+                        new_brep_list.append(cap_brep)
+                    else:
+                        new_brep_list.append([en])
+                temp_list_brep = list(chain(*new_brep_list))
+
+                cut_list.remove(cut)
+                if cut_list:
+                    return self._recursive_cutting(temp_list_brep, cut_list, [])
+                else:
+                    res_list_brep = self._handle_brep(temp_list_brep)
+                    return res_list_brep
+
+            def _get_intersect(self, item, pln):
                 origin_pt = [_.Origin for _ in pln]
                 new_pln = self.sort_by_xyz(origin_pt, pln)
-                cut_pln = new_pln[0]
+                cutts = []
 
-                single_event = rg.Intersect.Intersection.BrepPlane(item, cut_pln, self.tol)
-                if single_event[0]:
-                    surface_cut = rg.Brep.CreatePlanarBreps(single_event[1])
-                else:
-                    return None
-                cut_object = surface_cut[0] if surface_cut else single_event[1][0]
-                if 'Curve' in str(cut_object):
-                    temp_brep = list(item.Split.Overloads[IEnumerable[Rhino.Geometry.Curve], System.Double]([cut_object], self.tol))
-                else:
-                    temp_brep = list(item.Split.Overloads[IEnumerable[Rhino.Geometry.Brep], System.Double]([cut_object], self.tol))
-                cap_brep = self.cap_brep(temp_brep)
-                cut_off_breps = self.sort_surface(cap_brep)
-
-                new_brep, rest_brep = cut_off_breps[:2]
-                new_pln.remove(cut_pln)
-                new_brep_list.append(new_brep)
-                error_brep_list += cut_off_breps[2:]
-
-                if new_pln:
-                    return self._get_intersect(rest_brep, new_pln, new_brep_list, error_brep_list)
-                else:
-                    new_brep_list.append(rest_brep)
-                    res_breps = self._handle_brep(new_brep_list + error_brep_list)
-                    return res_breps
+                for pl in new_pln:
+                    single_event = rg.Intersect.Intersection.BrepPlane(item, pl, self.tol)
+                    surface_cut = rg.Brep.CreatePlanarBreps(single_event[1])[0]
+                    cutts.append(surface_cut)
+                res_breps = self._recursive_cutting(item, cutts, [])
+                return res_breps
 
             def _handle_brep(self, breps):
                 for brep in breps:
@@ -771,32 +758,49 @@ try:
                         brep.Flip()
                 return breps
 
+            def _get_surface(self, surf, pln_list):
+                cutts = []
+                for pl in pln_list:
+                    single_event = rg.Intersect.Intersection.BrepPlane(surf, pl, self.tol)
+                    if single_event[0]:
+                        cutts.append(single_event[1][0])
+                cut_breps = surf.Split.Overloads[IEnumerable[Rhino.Geometry.Curve], System.Double](cutts, self.tol)
+                res_breps = self._handle_brep(cut_breps)
+                return res_breps
+
             def temp(self, tuple_data):
                 breps, planes, origin_path = tuple_data
                 list_pln = [planes[:] for _ in range(len(breps))]
 
                 res_list = []
                 for brep_index, brep_item in enumerate(breps):
-                    res_list.append(self._get_intersect(brep_item, list_pln[brep_index], [], []))
+                    brep_list = [_ for _ in brep_item.Faces]
+                    if len(brep_list) == 1:
+                        res_list.append(self._get_surface(brep_item, list_pln[brep_index]))
+                    else:
+                        res_list.append(self._get_intersect(brep_item, list_pln[brep_index]))
                 ungroup_data = self.split_tree(res_list, origin_path)
                 Rhino.RhinoApp.Wait()
                 return ungroup_data
 
             def RunScript(self, Brep, Plane, Tolerance, Cap):
                 try:
+                    sc.doc = Rhino.RhinoDoc.ActiveDoc
                     Result_Brep = gd[object]()
-                    re_mes = Message.RE_MES([Brep, Plane], ['Brep', 'Plane'])
-                    if len(re_mes) > 0:
-                        for mes_i in re_mes:
-                            Message.message2(self, mes_i)
-                    else:
-                        sc.doc = Rhino.RhinoDoc.ActiveDoc
-                        trunk_list_brep, trunk_list_path = self.Branch_Route(Brep)
-                        trunk_list_plane = self.Branch_Route(Plane)[0]
-                        self.tol = Tolerance
-                        self.cap_factor = Cap
-                        len_b, len_p = len(trunk_list_brep), len(trunk_list_plane)
 
+                    trunk_list_brep, trunk_list_path = self.Branch_Route(Brep)
+                    trunk_list_plane = self.Branch_Route(Plane)[0]
+                    self.tol = Tolerance
+                    self.cap_factor = Cap
+                    len_b, len_p = len(trunk_list_brep), len(trunk_list_plane)
+
+                    if not (trunk_list_brep or trunk_list_plane):
+                        self.message2("B端实体、P端平面未输入！")
+                    elif not trunk_list_brep:
+                        self.message2("B端实体未输入！")
+                    elif not trunk_list_plane:
+                        self.message2("P端平面未输入！")
+                    else:
                         if len_b != len_p:
                             new_brep_list = trunk_list_brep
                             new_plane_list = trunk_list_plane + [trunk_list_plane[-1]] * abs(len_b - len_p)
@@ -809,10 +813,10 @@ try:
                         trunk_list_res_brep = list(ghp.run(self.temp, origin_list))
                         Result_Brep = self.format_tree(trunk_list_res_brep)
 
-                        sc.doc.Views.Redraw()
-                        ghdoc = GhPython.DocReplacement.GrasshopperDocument()
-                        Rhino.RhinoApp.Wait()
-                        sc.doc = ghdoc
+                    sc.doc.Views.Redraw()
+                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                    Rhino.RhinoApp.Wait()
+                    sc.doc = ghdoc
                     return Result_Brep
                 finally:
                     self.Message = '平切Brep（面）'
@@ -822,11 +826,11 @@ try:
         class CirBrep(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-开孔圆柱",
                                                                    "RPP_CirBrep",
+                                                                   "R5",
                                                                    """根据置顶Plane生成圆柱切割体""",
                                                                    "Scavenger",
-                                                                   "Brep")
+                                                                   "D-Brep")
                 return instance
 
             def get_ComponentGuid(self):
@@ -890,7 +894,7 @@ try:
                         self.marshal.SetOutput(result[1], DA, 1, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAICSURBVEhLYxj+4N/HJ8IvLm0Uv3tpGVb8+cUe8f///7NClRMPgJrYTq90mHd6nsT7w9MFPx9Cw4enC3w+NJX/67GZwp/PL1G7dW1foT1UK3Hgyo40j2tLef8fnsjw/9Akhv+HkfAhoNjJ6Qz/j8zg/H9iGsP/C7MZ/p9YpHcGqpU4cGqVa8S5uWz/909gwMAnpzP9Xz9Rfe20aQm2GyfIHwVZcGSO3DWoVuLAmdUeoWfnsmO14Owc1v/zpwQlgNQtm2jden0hw/+jcxQugTUSC/BZcGQyw//t/YLP10zSXrJzAt/n06DgoqYF+/qBLp7C8P/cLEicHJtKAwtAhp6Zzfz/KNA3x4CWUdUCkIFbJ8leXtpvVrp9osjDszOpbMHZucBInh4TDVK3fLJjw41FVI7k49MY/2+cIHNs0QTb5K0TJW6fo7YPQHFwHBgHp2axgiOb6nEAT0XADEaTVATKB9v6BZ6unqC1iCb5AJSTF04OiAepW0KLnAwqi9ZN1lg/c2ai/SZgWXQRXBaRaAG+wm4/KKMBU9KhaTzIkUxaYXdxZ6rntSW84KIZFz4CjOCDQPriHGCqWqB9GqqVOHDr3z/20yvsFp2ZL/X58AyRH4emC2PFR2eK/ji/ROXu9d3ZDlCtpIEvL69IPLm8Xvb2qeVY8dvbO2T/AR0DVT7sAAMDAMIBR1n7It7KAAAAAElFTkSuQmCC"
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAKjSURBVEhL1ZVdSFNhGMedc9s5Tt1qta2zzYY53c42LLP2kab2Ja4FLTI0WoIkloRBub4EzSyXZREi3fRBV9V1UDdCEHQVq4sugsroIiTJq2IXNaJ/z7ujNI3WbIPogR/nwDnv8zvneZ+HN+9fhnGRyImMokhZIJuo0qvia1YQxl+pEbh4vZWP15by8Wp6ZzVRrMp/QWstUor04QnY1EBUBAbt8zlTCQw76GrHwxYLYh1W4AK9N+rEUd9S0Nr9Uor04d0tFgEjTilhKufsmDlhg9/Co6lOhbV2BXq9OmDMjYF6XcYCzy4HCdgfDFDSVEZEdLq1ONzOAVMmfHlmhGiT42VXGaKblzNBWEqRPn4viDpQKxTi0Y0lwFsB+GBGeKcK90NmjG7LhYDqfWWTHp51crx7rMcEiUr1csycrMBQ47IcCGb34TjV3Wvl4DNzeNBmoT1w4XRdcg+yFMxJ6Fmij91TZ7GuuiiiL2eCOQYJJmP3fyUYJsFZ+kLqnCSs3+cSLmSxghATXHZiurcckRod9tk1GN9qlIRs4LIVtLqK8bm/Ei6jEj3tPK6PatDgV6CjSgucp5pnKzhQrcG9HSaEmpTU66Zkz3+PGWC3FGDqyCrpT7IRdJLgZrOA7jYemKSBilF5SOB3KvH6UBkwlAPB7YCArj0keCMJvj01wCcqMdn9vwhusRK1/iwR24OcluhOUEBLQAVMmyXJcwMcpQV435P9Jnv3ukvwidpUpDY9dbAQd69p0dyoQNilmT1wKGkql0T0b0wKMjsPghV0ol114WPEhmM0aGFRg7EtBmkGGKxEqdBQRvzJE61dSpE+SniF7Ml6gfvaYC1MBG3qRKBcndhO1w0WPuE1cfMxM/iElst/RWutUoo/h4xYuUg4YkHk5f0AfPqfOyDBqiQAAAAASUVORK5CYII="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
@@ -996,9 +1000,9 @@ try:
         class GenerateMinBox3d(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-最小外包围盒（不规则3d）", "RPP_GenerateMinBox3d",
+                                                                   "RPP_GenerateMinBox3d", "R25",
                                                                    """通过点阵列生成不规则几何物体的最小外包围盒（3d）""",
-                                                                   "Scavenger", "Brep")
+                                                                   "Scavenger", "D-Brep")
                 return instance
 
             def get_ComponentGuid(self):
@@ -1022,7 +1026,7 @@ try:
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
                 self.SetUpParam(p, "Count", "C", "迭代次数，默认为18（建议15~18之间）")
-                p.SetPersistentData(Grasshopper.Kernel.Types.GH_Integer(15))
+                p.SetPersistentData(Grasshopper.Kernel.Types.GH_Integer(18))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
@@ -1178,12 +1182,14 @@ try:
                     self.tot_ang = math.pi * 0.5
 
                     BBox = gd[object]()
-                    re_mes = Message.RE_MES([Pts], ['Pts'])
+                    trunk_list = [list(_) for _ in Pts.Branches]
+
+                    re_mes = Message.RE_MES([Pts, Count], ['Pts', 'Count'])
                     if len(re_mes) > 0:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
+                        return gd[object]()
                     else:
-                        trunk_list = [list(_) for _ in Pts.Branches]
                         pts_cloud = ghp.run(lambda pts: rg.PointCloud(pts), trunk_list)
                         BBox = map(self.min3dbox, pts_cloud)
 
@@ -1199,9 +1205,9 @@ try:
         class MappingExtrusion(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-映射及挤出", "RPP_Mapping&Extrusion",
+                                                                   "RPP_Mapping&Extrusion", "R14",
                                                                    """映射一个物体到指定平面，之后通过线段或者向量来挤出实体""",
-                                                                   "Scavenger", "Brep")
+                                                                   "Scavenger", "D-Brep")
                 return instance
 
             def get_ComponentGuid(self):
@@ -1263,7 +1269,7 @@ try:
                         self.marshal.SetOutput(result[1], DA, 1, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAASuSURBVEhL5VZLUFtVGGbhxhm3jqPjQkfcOK0r9+6cUWd01alASwshTUoeTUII4VHSEJLSWLDDWBctQgivAC2QpLSUVyqtFMIjhApFbNXWaqvV1DTJvffc1+cJuSOdcVPapd/MN2cm+c/3ff/NyX9u3vPgUezIG/KGyStcpbxo90qDDq/U7fJKfpdXznLgZItS+mxIzpUH8GctsFoNzDqB8SYg1AwEKS+0AoETUEp3Dm5Z8w5ZMUokpgeZMYG/VAXxXD3E7gaIXQ3A4OcQ/K4epXznyES1/bhlRWah/D8GCHgg+hv+IH0ulVK+M6RWtLv4Vb1MlgzILOpArhjBj9q2Dc55IfQ62kjAuUfZsjMwi4cGcduCTFSHzJIO3KQO/IgF4vl6oN8Dodv5OxmxF5GeYyXKlqdHakn1Lr+mk/lYOX08+lwH0wbwYWvO4LwXfP/Rs1y48hO2p6FM2fb0YGLqEO5ZIMVp6pgRQtwAeeYIcMkGjLoh9jgfkDFbIQnaC3ZskFql6de1CRLTJrjF8r8yUX2CdpDgpgwJPlSRkEOuBBmqPZ2ZNn1KgtX7dmxwZ970HhvT6dgZYwmZtBx8HLJr0zNmdTqsV5NBq5oM16uSU9ZiMmYpeiaDW7Pm3eno4RImcqRAnKjcmw7WHkhGKvYzF4z7SD9dR+qLkuO2kucwsO1OL+jKmBnjPnHcWpgO15QmI5aDTNh4gAzQdaSuODlRWfo/NlhbNr6dXNYUM1eNheKEpSgdspekIpUFTFBfQPrNhSRUv/fv6coiMm7ZQy7Y95DuY/uVrdsAHC/IP5jz2Qhl0J7P+h358lnPFu9fqvmY+9ZcR79Tk8sVn2U7YK5ZbNyo0cafs9r4YYc1Haq28yG7hR+oq+AD7jpFdhup1bIT8qZZ4qbMEh+qloRepyR2uCk9kjDgloRwTYqfNpcLo7YP2WsGnxw3ydyYSebP22TS55Q5n1sWfY2y5PfIYleToMjmkF5Xv8qtazK4YYT0jRW4WEcnowvoPE6ZnfUnwY7Zgtz18o/IRMUBdkmTwIoJwjj9Z4/YIfW7IGbrOj3AcCukjsYuRTqH9KrqC/xmBBulI3jaAoTtQK8D6Mia0BEccD4mUXWpPHX4A2le04VbenDzBpDLZghDVeD7GsD7aBj/cUjdTYLs9+Qr0nS+3yx9jVs/xAgbGrDZGU8N7oXd+LmvBXc7T+HB4BmsDbaMzy7XFa9E3IbNaNWjjRUH+Hk67J4wID6afugUhHZXhyKdQzquas2mZ1bV4BSD78LNWAx8hXjga8z52+67JgaKxmabTYuzjsnv1xpxdc4Nfo4aTFZADNaA722A1HUCcncTz/pcbynSNH287HWans2mZ26o/+0A4Sqg5ygdwS2Q2xz0g5dfkhdKVFJc9RDrtNOYFmSOXplT1CCUNaD38lAr5PbGNkU6B/rsv9xKT8WfNKAnht6tHkg+z0O5ufnF69erX0ktq4dxWw92RQMuRvmEgTTQCKHLS+gbxZuKdF4eWdfuwh09cJ/O9F8MOW7SsItU/Ar9cadPQ2xvrM7W3p01v58Vx68m4Cda/yNdb9LTtkBPW4TWRk6Dafec2RLeQl7eP3k9Ca1oMJ2oAAAAAElFTkSuQmCC"
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAO0SURBVEhL7ZR/TNRlHMefA+E4D47zjgsE7k45B2aJdxwglbCGqXeXHHhqi61aKI0/7ARZ/iZjYRHVMos0KxaXQREgTG2dOjdNNzN2m1OR1Vozs1hb/5n/NOPd5/M8d2NHrj+u1V+9t9e+3+/u/Tzv+z6fz/cj/te/KadGiLOP3JcRWVs+JxIojVJGlBgjem3SBfJUKWtiaicw0bUIOLYU+KxUMUQcKUPp/Nmg31+VzgS1i8D5tkJguAz4uGQaCljjNnLAgHQmqJ0EwlsXyA1xmDaOMVqOLZ57OOBr6UxQOwgMBedTQPlfAvY/kc8BP0tngmojMPgsBZx+CBihkBinHsS53YUccEc6STYiTHxFcPXjoG7poGuc5s1N3ptlTIJ3sQHPr8tFmz9HUUMEcrGh0swBjNRjloxZONZcgPBzCxBudUhOUAGDyy1s+kHZptXo1722sVYX2+TvkHq6KEcLfMptRgUboCvzRQV6GmxsuqRs06pfmda9epkWT/p0GBuxYCxkRuSwGZf7s3B51IK+DtlFU8otRLDYqgNCVCDmQxfQR+33eREO1qez8aJ0ARrHo9+5+XaDR3RXOlPRuSkDmMwDrs0FxqPcyMOZd0287hZ7WbsqCvTUw24KcMqA7u17sLv1bfhr98J0f8cvNu/4PqtnvM/m+wam6uvhulr/RLEjGa+3pOPOtzn4YywbU1FwMw+9L8g3uKm2F6Kz+t50oH864MXNL6Ox6QM87HsDWa59v9pWjX2Svypywl7zPazeiSvmgtrJlGQBj1s3FQwYEfRnorkuE01eA97cRrQaOOCK2l6I7polBlUDPp7YER1fiK46WcizbFq0/mqq3XfRw/ek4wSObinA7d5S3D7oxG+HXLjRVYz1y/TYXC9HhVzHCtUvnaNmSSyAoYK3rc5m4zlli9MggfPtDlpHjREiP31kv7/nQpPPgMByLa8bkk7SyDNVZmCQjDMCtntlwBlli9P7BCIv0ajoj/6xXhemekrQ4jeiYsksXndAOkmnWlZYVIvOCGhdKWfKaWWL01tCw9N0IR1ttPOYkBs7A2Y47BpexxNX6kLn2lzg5AMqJAY9b/PKgJPKFqdX0lI0uHWomGpFb8DHxIxWYH9DNkwm+ZFtUlYhrvudmTjQaMc7NKRi8HNVoZ6Nd6tBe1qqBj3BHAzvsGJ4az4Gmq34KGhHQ3UmUlJlwOPSmSTEHrrwJnfjS+IpYqYqCR4hkwRPTeanKD8S14gi4h9JS+iJ2TNII/4LCfEn0cFCml3RkE0AAAAASUVORK5CYII="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def get_new_brep(self, geometry, p1, p2):
@@ -1306,9 +1312,9 @@ try:
         class BrepOffset(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-多边曲面偏移", "RPP_BrepOffset",
+                                                                   "RPP_BrepOffset", "R12",
                                                                    """根据折线生成偏移曲面；输入端D和V输入一个端口数据即可。""",
-                                                                   "Scavenger", "Brep")
+                                                                   "Scavenger", "D-Brep")
                 return instance
 
             def get_ComponentGuid(self):
@@ -1362,11 +1368,20 @@ try:
                     self.marshal.SetOutput(result, DA, 0, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAP0SURBVEhLtZNdTJNXGMc7pxdmN0t2swuX7Ho3S4ws3hii44IQSMYUgy7bZKBOEAU2QChtpaUtbWn5WAWiI7iBgB2Ikqk4LAUUhraUfkiRtmgDyJAvs4ELLe97/juFEzsDBLqPX/Kkzds+v//pc54K/k9q4+Kj2dv/lt7IlNj+vV93N+9L9LJH/x6JQLLNFp+WaI5J/XUgKhWufWdgiDycwT7+5/Qdytw5ejw7ZeSzTLvncBYcseno3X8CdyOO/VGcHr2LfS18nkokb7/IF2VMZuR5ZtKEGP3iW1g+SUVf9EkMRqXB+FFSI/tqeCzqJe8u6YpEC7LCiUChHNNZQowk05MfOfMqYODjVJgiksO7YJQq3+f1StWyXjmHKh1eyqWYzMmHLz3ntYCBmDSYIpPHLIITOwQQbGftG7OkkX/AVygquQr5ImrKgAsqLGqkmDsvXjdgOC4D3ftTSoK9u8YEO1ck60FUkj18uayOLy8K4JIWqFAgUFYEf7l8wwDrp6dhjjru76duplkfohano1IFVGuAMhm4UimWS2WbBjjiTuH+0dwJ058ksXeOHLk1OfslU74O0YhdqCwGry0Ep6O1xQDLgc9x33APFgAjtLomlz1MGYJoCz4MnhpUHE6AMyEV5qPfoNO7AOMUgdUP3B3n1v7R6HhkqFaDaM+HFxCbhD5tA36ZB0zPCIwTnL97grzHtKtAgDeIWjSE7+ThBXyVCeehUzDe86H9N6CPhrR7Ax1MG4Juzm6USQEq33LA6WyMHjwGa44Wt8aB208I+l4AN71cEtOG4FUFSlTR7SmRbCFAhOmzmRg7eRaD0ko0POxFm4/DnadU7uEWOibIO0y7CiSSbaRY+BjlRZsE0FLk43dhLkZKL8HY6cYNKr3im0fbsB9dU8ANF9fMtCGIRhQBKgrKNwpASQF9LsZ4zWV0mdxo8QAt3qAQaBh+jlZXAMZnwHXXcjzThqCnVwd3HxrxmgBo8mkJMVV7GT3dbhiGAQNd9GtOnhaHVifBlaFZtLkJrjm46Ts28hbTroKEhDeJUuhZueC/BUCVB6jz8LymBj2dj9H0CGgcAprtPJpt3KtqsRHUOWZwe4z+okH+e6YNQYole1fGo6byYEDxOVq5mLl4ET0dLjTYgXoncNXKw2Dl1tRPVuAH+yyuB0dmIQeYNgRRCHXQKwFFDq1szFZXoaf9EeqDjTZ6agtBk5lH4wbVZKZ34FrCj+aXPosFO5h2Fbo924k06wlUuZi7oEfPz3bU0YZaKq9/QLfjAb9pNfTTsY3SnofzWqYNsaQ4F4OmqxjsGkML3YYmN708OudWOu/W4OsWqo32Geh4dA7HHqZlCAR/AcjfanxY7dq3AAAAAElFTkSuQmCC"
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAMhSURBVEhL1ZVbSJNhGMd3cOo2JTe3qVszy1k6kwpTSCNadlC80Moi8KLoYCGr6EBFdKIsM7qIDhchBnUjmHeBF4ERFSEYFakUUUldKIGlWNCB6t//eb9ZIp+n6qY//PjY9u33vO/7Pe/7Gf6n2CPXf5pF5Cx5QnrIZWIkf5Uosom0ExSmWlG33IOG8hTERZvA7+rJH2cV6YynaOcCBx5XTwdOZgFngsC52Whe45UCwly5eTJxkkaC6nwHXu8NaFKRH5sFHCVyrQuiIhgvBa7Lnyaa+eRF0BWNO5unaeIaikU6klNZ6KpOG5pFtvx5vKwgH9ZyVIOHZ6oR6oqHkFlwVgV+qxTYoAxjZAn5Gs5LAGo5Yhn1kRFCPTjD8yUeKXCTmEWklyzyYVsu5TLq45n6Mj24TA+qpoG9+pUOj7KNiI08LQnY1c2TkgsnMtG3LwCbxfSJHp8yjshFX3wU3h/M0LpET6IHxWq2p4OqgMtm/kZXuqb8nTyCG+t8WreMt+byu8yQ977ZnY6TITdyE61wx0bBZFSdlKGsw3KrJINLIyMZ6u/REDkf/uChmQjnOSkzwukyYnOlFfk5FpG3kGhljaSA4CEfkOoaPekQIucgZCd7rRY4nAY0HJ+CL+3JQN9UhNfYpECDsg5L49IZtonJuc7tW9Ng4qiLF0Zj4H4S8NILPCc9U1FVrvbBNU2rJZEMNlXwhvE2U00m3u7PgM1oQlkoBuhK0cSdKWi54EBlqRWuBHXoNStzJDvcNjMGDrBzxmtLDqA4LQ6pfhO+P9Lk/XeTsDIUK9LvRMRbyTzyK02ZPGtUW45VgPuibWOqiHCv3gm88uFjWzLystRD7SC5ItPLFoLaIjdwNnv0Ihz9yvR4zMk2A8+0Nd+uPdBu4hLRWCklfWEex5+lRc+wENdbbSCBs/vBIrEGExprpwAf/ehvTYIlSvV7uTJMIAHSmuOJwdXVXnTvSkcvz/7ePbzy+dxe71fLc2CDHZdqErCpTHXLOyJvuUmlinRYzEbY+fayWwivMfzM74VO8jjCFfJHkaO2iCwjIbI4QiGZ4IvdYPgJEM+2UYRmKHsAAAAASUVORK5CYII="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
                 pass
+
+            def message1(self, msg1):  # 报错红
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
+
+            def message2(self, msg2):  # 警告黄
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
+
+            def message3(self, msg3):  # 提示白
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
 
             def mes_box(self, info, button, title):
                 return rs.MessageBox(info, button, title)
@@ -1413,9 +1428,9 @@ try:
         class SectionBody(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-截面体", "RPP_SectionBody",
-                                                                   """原截面成实体（已删除），Loft（EX版，可放样面或者线），时间效率达到最高""",
-                                                                   "Scavenger", "Brep")
+                                                                   "RPP_SectionBody", "R11",
+                                                                   """Loft（EX版，可放样面或者线），时间效率达到最高""",
+                                                                   "Scavenger", "D-Brep")
                 return instance
 
             def get_ComponentGuid(self):
@@ -1464,7 +1479,7 @@ try:
                     self.marshal.SetOutput(result, DA, 0, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAT0SURBVEhLlZYLTNNXFIevGc1GI2GBhSBE0CFghUIfYAsMEMUMISEjcTPyLEVAcJtDnrNIh7AHymI0MMJ0grpHxh66DQiTiTLeGpERM2cggIIRhUkZpfQBO7un3GoLzLlfcpJ/773nu+ec+yr5P1J1pmzQdqYdNFxKK9X9sK/E8NWBEsPJgpKFykILM1QoSv8+dfiYvrJIwVyfLm2XzN3QnVSpaU3WwPUMgPZMgKYsgO/zAT5XAnx2+ImdeR+grhzmj2bfepgem8IQK2u6Pc5T1yGr0rYnzsGNFFC3yEH9SwLM1ctBW7cXdGfeBn1VLhiOFxgNThXDQqVCY1Ckld4nxKs5KNyFoSyl7Urg6ToTq3VtiVro3QP6XxNh5lICqJploGmJXzYBVCoATpfAfHlOjzpmW9SfhKwd3siXXigrs2FIQgDIqtnuJKm+W/Y1XJMDDNAyUDhcpd/XkmGhKxWgh/2+shegYT/AtxR+rgij1uoUqeX3CNk4TYj7pLW1pDc6ehNDL2oga+cG9UfhOXNVOz78qzz84PTR7blqk328LXf8yGtKU5umNDJXUxSdq8mLydG8Kyuc2BkRR+EujwjxmeJwhCOenoHN+fm2DL2oG2GvetHUvMYJeVllZlOErB8jxPN3skZEv9ct6Vv3G+clEfXhI3iKyxWqrK39+yMifBiWCWDVzdBQgYrDEeMgc5uhUd3l8ULGnZ2lFCIw75uwtRUP+PqGqTkcX2Mb7R/x8AhqLiiwZ+RFKS9fthqUSMR0gMgcYLJBkWjr0jaE3qMwNNMEKisrv76ICCEGzNCLOt7Y+PxdgcCfDrSAYETjrq5SzGCGw/Ex70PogEgUNmFv72caO+biEtiRne3AsE9Up1SuHuXxJNTJogQIHfby2nLf2VliXh41lyuYcHT0H/L2Dn3Eoqe+ov6wMPGy6FFNWVl2Y25uAUsnmLK1FQ3TGpvD0XBd7vB4wdQnEDPB/gc0+na53IkhLdWamrqGliLAIkrqiIAhWh5TlI/7aAZ04i0PuVzjmmH0N4ODN9cBPMeQluqIjXUdd3CQmkN0tDy4Q7AUCHzcR4PAkmF5MBPMetzJKaBDLndluOXq3b3bfdLGRmI+AS4elsdYArN247bl80NwEoSrCRHelkgk1dXVHIZbrqtRUd54QEwQLMkdD49X0JZOgGXB3WOE08xo5gHd8fHrGWplLT1kCMXoVfQgmcOxfYyuFS4wftPoBQNCYUBNTc0LDLVcuDC3zA6ZaQvi9lwaPWaGi4v9uBaTdnbSvl27PBhqZeEhuy0Wb6YwI2SGQ3yG3HkhYy5sCzK4cWKaEU5gin5EIAj8UankMtTKqquoWD3M50upE+4UEV54/WSt3wNC3PBCw8sPDS+2PwjHZ5AQb/yesLL2vx4ZyWOYf1eTUmk3TA8ZTVmIN+fEdo+tM1+8fkF3+o16zYnYBs2RpIa54tQGXWF6/bTyzYvaooym+dK32tQ5yQX/GT2qJzPTcdTBWYqvkCovKFZ/JWEU+tIAWunb2/gOwHd5AGcPAZwsBqj9AODLMvrAFNbC+WMvMsTTdTFa7oQv0Wzljvf0bYkL+GJpWhJA15AC+m8ywHB2P8xX5QB8WgzznxzS6cpz9zDXZ1Nvetym2XMxP0E/PonJMN+WCAttMoCf6e/z+2jE9N9DbSFoK4qGNSUHApnbM4qQfwDk9fBxw79WaQAAAABJRU5ErkJggg=="
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAARRSURBVEhLxVUNTFVlGD73XuRwPefecy/375wLFgYUbP4Vi7/ASSaCYFIIFj8zzRo5ZdGiMnIpZjEEcrm28AemBoFKoJhbNWdsyQQr6GeF1KatnNXYbK0Vbd7z9H7fudcEZDVn9W7Pzrnf+b7n+Z73e7/3Cv913EYoJ9zOf/0L0VSYIGN9knIl45aIs27J8gqNZRFk/vUmxMmGxW6cKovC0WINe/K8qE51Ij9euniHK7yDvj9CmM1n3kBY7aL5h9blPhwp1NDxgIoueh5f5cc7BPa77l43yufa/kiLtvYromUrrckgRPDV/yDmzvGInLDzQZUTXotDNHa0SMOJh/zooWfzMi+qUhzIi5MuxEWGH6D1JYRZnGmaeDRBCceuRV50LFfRW+RH90qNE08W6yR00beQu/YCFdsXuVA6x/Zbsl/sk8PNNcSXQjBx5mC0bauQUbPWhvJ0CWvm2VFztwt7s33ooVQdozMJpW4yDl/jjm3qjVwvnkhSIIvmE0FuQbCYhb6f3vUC3/rxS78PH7RG6g1VNjyWI6H0Thkb5zvQmOlB5/0aeosNouulkrlj39tW+CDNMJ8P0gsmzWMe+bXPB3yiAR+p0D/XAhj1A5+qGD3uRludA9UlMsrI3Vpyt5nc7Vt6fXfsjOqpIIj3fYNeEJSkxLCxEDkGSWBADbAnzhKGaXyExEY0/Hzai1Mtkah/0oZ1SyWUkbvKBQ40LfTg0AqNn8l7JVHYlO5kAq0GvSDE5meKAXxJRIx8UNWvCkzGx4QvaB5zN6xi5JhbP/iygqcflrEmQ0Zpgh0NlEp2hsS73aAXhPTKVTOBr2kRkRD59AIEtgH+HnL3lQb9UpTestWOqtKZaN6sBGJ9YUygyKAXhJU7n7JPFBicXmAKyNFIlweVxbTJi1EYessNWTL1Eq/FoBeEqq4dDuA7EmC7GdICV3c5CVPGKWXj5KQs14rzVIWXz6iI9pq/IU67QW1EQ0GSFTsrHOhucrKq0fUhIjpH9lm+Wd5DAuRuggCdRXWZhPaXaIOXopGfLv5OfPMM2r+i89lkJ9pyVNSmuVCd6cALhXbsfs6B/gMuXP6Q7gcrAMOdznM/QGKjfr19mwMVBZSasWjUb7CxvLOWMTFEi+nMbuotrH7fpgvEavvNZSq/WM+nReKZbAV16xR0N3J3JEICF/w41+PRFy4Ixzi5HDjogskkNAYpJ4YmW4b35Xt5DfPrTkKsBx0upEtDgkeovpsX+1CbHnKnYM+LTuSkioHT+10Y/0xDYkzYySDd1BBFISbWIW7Mi5d6NyQpY01L3Ly/MDF27dktZYIhd23krvYuNwqSrbwwVudEfE80boPt7yOSkJvij3iVuuPwpnuceku+j7eDUKtmnXRXlhdbVtuwf4tyhean8pU3GIm32sPW58ZJPfRX+mPDfW7eOV9f4sH8+BmI8pofD867KaEQsjNmWXdkxViH6P01Pvr/hSD8CWmp5jIJPDqGAAAAAElFTkSuQmCC"
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
@@ -1536,9 +1551,9 @@ try:
         class CullBrep(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-删除重合Brep", "RPP_CullDuplicateBrep",
+                                                                   "RPP_CullDuplicateBrep", "R23",
                                                                    """将重合的Brep删除""", "Scavenger",
-                                                                   "Brep")
+                                                                   "D-Brep")
                 return instance
 
             def get_ComponentGuid(self):
@@ -1589,7 +1604,7 @@ try:
                         self.marshal.SetOutput(result[1], DA, 1, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAQeSURBVEhLpZZtbFNVGMfvyqDtLayFMtYpOnVVNCxGDWokRvliNhM0sdnYWFQ0TgcjuJa9EmMq6hf5YmLiloCRDyR8WEgIc3R+0SXLBNvbl3V13JZBb19kbnTMmqztbbt7H59zd6rMsa2Rf/LPOfd/zvN77jltmjIyw+xAv8EUIWCYjbh3P1pNo/W1yDAfYiFg0VEarSrc00/3vkCj9YWbH0LHSSF6H41XCPe00j1utJ7GxYm8EVpCz2HxwzT+R5i/QuA4Ju61XpSw+F0K4XDU0Lhwwlmyhl71hEUJQadok3PkGecbcO6kWZuy6X6FIAcFtqO/ofN+unz/QqABgT4CpvAfcdxAl++p2JWd2oGBtfcsE0Jb7mqwl8aK7Ha7qmGgQYEJznJT2Kk7Jri039106k5OB5inSF7HyGo7Y1eR+Qoh0IyeQUu0gRe9hazZ7Yzq1ZG2zXrf14ZLEy9WRJ3st1GOFaf9LMQ8GhBcuqHefY42i2Ghv6nytrVh6/zyrzMCNyMsQMH1aBudX1zaACV1/u6d1b+dMV/knmkJucoWCvA/AioYPfey9MGuUKqpPAcHTfPiQVOiVakrCEEXKPAUjUjTAZp9Tp5fumav2ev5cs8gt/v05Ph2CLt1EHWr4Xd/CZzt6pTqt2WgqeIveKcyj+PcZQVChJDPKOjfEIUZi5mfrEUfMx5m5PFHd3tPPu9wP/49P24Ewc0uNRhXwen2T/Nv6UW5seJPbJCFRtPcTwoEAfUUPoWjQQnvEuZmzJNSSUluqHmP5U35/LMu15N9NzitFHNrsYEGbuEJhvv255sfnMlb9HloNqWhsSLxBZNlmKcRkEWn0TWUuUK4VovOL25SzSZHj1xOTr0djLq3pSNcKUQ4LcS8myA0apTPWD/JHK7x3z6wI3HWYpivIlfwHhbKaAtlrar8c5X9oC4F+OEQ5KZPwHzgdSnuKc9EXJocaRL1qCH8qx58Q08k/cPVLUoRgrXoXcrDGkqHO6pSNzvG5J9bQAweBzHUie6AOxOvZREuRvCaCieZ40sh7ts4LPj0K657VYm8rWtR6IJcvBcyoeOQUZr04CnqJIHTSBFuqQHxzAQZ2esxT5mZlq8t+YpNmwnaBiHWo4ALFkPdcCdQKyOc+L8NglGurJoi1lZy4sjWDG8bhUj3sgZZbJCcbMS335KNe9UKPIrfqsQkSxoM8mNG5RdgXQkjhzTpoPUCOYFIr4cYor2Q4j/2hl3683hNizMBFmbR+NuUiDp1B2h5cUrx7a149zkQuiE/1YlwpVkqGzrRxI8xDyD0K4Fjf4lwuuEbV9n3rzvMxf8xIJKvHTWmeWufGLIl8fOQEH4rHbT1wIi9lKwLQpVGuKp/RHCyJqXg/wiCH21Ph2xNYtBqW+Dba2XHsXXekmH+BpxJkHeWQ4wjAAAAAElFTkSuQmCC"
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAQHSURBVEhL3VNrTFNnGG5pi8M6O9GINzbGwAHSc1oKTC6lkDhqI+ySuKTNNG6ggIBQcITBVgqFVUF/GNQNiTMzG/OybEvMppl/BOemOMEJdUixKIqgw7AsG2YE7LP3XEbCSEwZ//Ykb853vvf+vO8n+V9iN8kx4TgDISStJOv4v/8A59usCjbDYtD5BIkffytgtVIuvf3hq8uwOtB/jP7ThWvfICU5sJlZCOxZA+xdA0faEi7JKV4rkUSo/P2G2rKeBRrVePhuOEIXKTh9hqD2DVuTggO8Q+VhQH0U0BCFvelLuSBtgQF+d9pzn+PvODmzeRWClDIP6VjecxbIDFukGPeUvCAE2x2Fpowg/MBVzv1Td59vXAFq9xrZLhdcZo91ISr5cMf2EKA2AthFgT+IxCSdD2Uu4zo6T7KYt5wD3ksODsBkHSWofhGgr8caygX/iySSt5gDzGzQvD/6S4kmLsGuSL4D1EXia8tKKPyk18nmecF09siKW/EURirChUFT8OrUJThFgf+ZwdktwVAqpANkGyG4CPAO71SO7H+5+ef3E7954NTvmzhiNIqqKZSbwpQYsxMlNFxOypICOVq+mCeTdp/etEpYYUrUkReClU/LfyPd1Bah0fQamk24XBiDu2U6TNTp4T1kPCuq+XdQ+3rEAsBJdFCQwvhnuOAf81raGJlU0vOlmTqhd+AuDkXwQvlo8SvhZQ8OppcP1qdlTToMpyccegzaEtBf+RKGqxIxcTCdizEN1oxwJXJ0Kk6xX7iaQhDJVRs9wKXzZfckEgXrPbrB1VOxFn2lOtq4FAyVxaO3SIsr2xm0bWPQYo6+JbhORynJPuE4AyqSJpLl6KW1chpwtyqBr/oRVT/wThx+2aHBjzlqtGaz+Mys+XeRTwYAqffIhgZ3dfJXf9boux7ZktBfooOrSIP2Ag1u0rmrgEVbdjS+3cLi0zd1qaKrb/A2mkxoMvKD9Nbo8Wv5WritMWjPVeNiDgMPJeggelqz1DhmVg+etL/hL7r6hsfVKR/BSVzbE/GwJgkDxHkPVX9hqxpdhVoavpYSqakDFi0WTbPo5htwzi4fr0q+9XtlAm7QIC9S1deLYuAqZPE9JXBbdeim83mi58xbLI5a4ma8gyfC22BM8DpScIcG6aJBtucyPD0/5TG4lMtOo+e4RX3/RMnGANHVNzyuTXVgTxo8pbHopECd+Ro+wYVtalwrIHqsWlyaoof9RHTzHeN2Q/RoZWLnSEU8+ijY7Z2xRJWGp6e3mDaJuuLo+Y7oadkUmym6zRoytzU2k6qv77PqLl/NZya7abij9HK5YXObdNwSPXYy37BAtJ8bOvK1Ya4dcetvWmMOX8ljXOeyGU+LhbGJaoJE8jcYYhnYpbsTQwAAAABJRU5ErkJggg=="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def mes_box(self, info, button, title):
@@ -1633,9 +1648,9 @@ try:
         class Fix_Brep(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-Brep修复", "RPP_Fix_Brep",
+                                                                   "RPP_Fix_Brep", "R22",
                                                                    """修复损坏的面，不成功时爆红，有开放的Brep（Open Brep爆黄），修复成功会有提示（注：此程序不能适用所有模型和情况，请合理使用）""",
-                                                                   "Scavenger", "Brep")
+                                                                   "Scavenger", "D-Brep")
                 return instance
 
             def get_ComponentGuid(self):
@@ -1677,7 +1692,7 @@ try:
                     self.marshal.SetOutput(result, DA, 0, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAPzSURBVEhL5ZRdTFtlHMYxM4uJmcbEzMQrjN7pvYkX6s0uvPCSZBcm4AShtKyF8llgpeV7DrcYb2apsCkfawstXwU6pLYMVph8DAaDbBiJJjIVGCHt6TnvOefxf+DFdnaaEU288JectDk97/M+53mf/tP+Pwh3c9OFpYJXhXljurpgPolg5jP8p38GkPZU7HbOkLymF4VZHRNm9GJ86uyuOGXaYDeKQspESXN01Pwmf/zo7C1kF+HnQsiLerA5A+RbZ6HOFALTxcBMOTB3DghZwEbKL/ElT46wkP1KfEUXlZf1EG7lQ5g2gNwjPmGE+G0hxG/MEAPFUAO0UaQe0oClgy99MmIL2X5sGBH7TgeKBvGbBYjfMCIeMkEcL4I4VgxptBTSUBnkQQsQbgJzWxr58r9nbyHnNDbI7TyJa+4j5H5Sc0/iwQP3UqAE0nAZpMEKsL5KKH0Ul78erNN2iss8noeLuhfiy7mb6qoBguZ+mtxPHbgXQyRO7qXr5H5Ec18O1k9n4K0C81QD/Q1gXbYN9Svrc1wuleh8thM/mg7Ek6MJ82g096Pk3k/uB8i9rxKstxqy+xzkrhpg6BKUK7UNXO5RhKWP3lXXDRBvJ0Wzf7Akrh0sbSAMV0AOmMH8pfvRsN4qyB4Sv1YDpdMO9F2E2l5n4JIJcCfjeGzp41XcL0hE88fBHojLQRO2u87jfpNnPxq5n96gh9y7rJA7bYD3ApT2ujCXfBSKxo6fKJrZPIomH/HDg9WiCR5EI4+ZgXEj1mwDWLOMQPZWknvaoNsGtbue3qCJie3217lkAnEl7w1xNY+xJYrlMZ2XeDS7njrEvFZ83+xCJHMZe84WoJc20dz3X4TyZa2dSybQxkF0MSeEH/6689oGsYEqrJ53I1J0E5H8OSwZw/itxQHlGtXT1wjlat0KXNbjXDbB/ryZz53FugmxlGh45+kPxUZKoNAleGoQ7WyA5LLh4WefY8fuBJyXIXVUv8MlU4nN6d6S7xSAzZKw1vmkcSBdp0omdV7us0Dx0kW1VF3UfVcL4jVfDD/IuFK+9aHzPS6ZSiyiq8C9MoiTSZ0/HAfJndda46bWdFHu7iYoHQ2bqnrq2c33HS9tZTpKt7NaL2yfaX3bleE6xqUTUDRf424lpEP3fxoHKZ33fgq1rf40X77Pgw8cr21lOXJ/PdN6gt9KAFfGMTFc2INFK43h8tRxkNz5vhbIbbV+vvRoSKGSKnm8YgeTJBSqBQLkdpC+++iTqoqeZoqmMYa2xnS+5OhEfSUvY6wqS/FXO5iveoLcr7Puml9Yp31X9XyyIzlr9fzRfwcErU/D1fS8etV6EpetL/Lb/yVpab8DAbCxRT6DURIAAAAASUVORK5CYII="
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAUWSURBVEhLxVVrUBNnFI122tr2Rzud9l/HdvqrJbub3YSHGHyVQKkjIAItvqpOC1bxgWIRHwhVa1VEMBUVGaUCTTBBnvURVHQcrMOIvElUwAcYRBSo1UGRZE9vkm0xo8PQ6Y+emW8y2ew99+w9Z29k/yusZTPetOUGJ9gLQjNs+SEbRV1Y2IAhcrz083+Hbf/0NaiIAorDXadwFsS84AH7r6GVom5mdH966DvSrf8eMES+Yt/h34oDQUBesOscmQHk06cxzNmQGllt+aFrkRz5mlQ2eoh7pgdBGwgxWY2nP03B0EFqlB/iOrnUyNFMHwqUUiNdSN3gL8FyqXR0sKcFlCNdg6EUPzxc74v7iT7o3eqHgcwAF7mOyHWOhvRE1ETUhfSIeWEfSOUj48m+WR+LaZohbJ2MJ/QE/Rt8cS/RG7dXKdG6kkfr9564uXEi7m6bhod7A/E4Kwh9mUGwamd8IlGMDPvuoG34ORB2Uv8oSY0H6yfg7lov3I5X4dpKAXUxHK4kcqiicyzcA+VzFcj9UiiSykcGchaME1P9rdg+FYPJfviDlPas88EdUn1jtRLmFTxqojnUJQuwlAq4uEuOU7E8DodPnOSsB8aKYtDrTrKXwab94iuHevEHPzzepEYvjad7rTc61qjQGiegaZkC1d9yqE4R0H5ShUtaFpez+cFmA1t1rVzI7Df71rcU83trslSvSpTusKdqLiDN32Uuqb9P6q0JNPN4JSzLSf0iGs1CFqdjWJQs8kBpFI/8Od6x5jLBt0HPH75nUqHRyO8AZGMkymEMZgRz2K0BtkzCAKnvk8ztdKin2VvWCLil90b1JgXKIuUoDJdDN1vRkzsv4C2JQlapVagb9IK/9NUd9t2BmdAGwEbq/5TM7Urwwi0y9yrNvmkVj4Y9POoNLC7uZHB2GamP8twslY+MvqzIt8VUTR/opXrqiKbDXMq+w9x2imcLGXllpQLXsylN55WoyWHQVsSjxcBZzUbuQGMBrxnonRr/2DLRXJvLLZFoh2FLn77Yzdy/o0njuU7mNi4hc+MUqNnLo3KDHKVzWRQtFSqaCtkEMri26SgnDtb4gJqZ6495MhLtMMjcOuyahmfPRdNh7o04Uh+jQG20AlWLWJyMksMYQebO53Fopt8UqVx2Kcfno8tHOFOXSfnAUu4ZIl124Zk2WI0MWgGbh83tJnM7VqvQnqBE93EfWLIFnI9mUELmlsxhkD+bb5DK3dCkFz49l/zhOOmrC7R3CpChkcx1RNNl7k1S37aO4rlPQPUhD9TR3CviGJz4RkBOiG+kVD4yOtIi3rDv+OwRtk9x2zudZG7bKgEtlJT6WAEdJ7zQUs7AUsbgRjEPs4GvvFqijL1aqHLuH+DzqYN3/M42FrD76nO5f2Irg0w2Rvxx8k5k+OMpPYHb3qHkNNNKaCPy9goepxM9YIpn8ft+rqHJyNztOaNE53FK0jHuTmeVauh6MYfaPGZT81GPdyX6YQykTEp6kqK22beonQ0c0XTune84XFjBwLSYXiwyVx+hGNqu0ow30B9Si5HzaT7KJDXq2frukwLMhWxHV+1kL4nyRfRs9BX6NkwwdiV42vrWezmXW+1SBc7TaiibLYdpoQK6ucoy6XY3XMji0q2nhHvNhYpsJMvGSpdfjlvx3h5EntS8nK+6FMP2n6F4ls9nUDRP0VuwwHuCdNsLMKU+N/vR4lyM6r0TXzPcbwtY1Z4I/n3p8ighk/0FoZJMZUIuXLkAAAAASUVORK5CYII="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
@@ -1755,7 +1770,7 @@ try:
                                     Fail_Brep.append(_bool_list[_])
                                     Message.message2(self, "第{}个Brep为开放的Brep（Open Brep），输入‘t’以替换".format(_ + 1))
                                 elif isinstance(_bool_list[_], (str)) is True:
-                                    Message.message3(self, _bool_list[_].format(_ + 1))
+                                    Message.message3(_bool_list[_].format(_ + 1))
                             return Fail_Brep
                         else:
                             Message.message3(self, "输入的模型中未损坏！")
@@ -1770,9 +1785,9 @@ try:
         class ModelComparison(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-模型比较", "RPP_ModelComparison",
+                                                                   "RPP_ModelComparison", "R33",
                                                                    """通过面积以及长度进行模型比较""", "Scavenger",
-                                                                   "Brep")
+                                                                   "D-Brep")
                 return instance
 
             def get_ComponentGuid(self):
@@ -1835,7 +1850,7 @@ try:
                         self.marshal.SetOutput(result[1], DA, 1, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAQDSURBVEhLrZV/aBtlGMcv3To3Z1u32bnuh2m7uNWkTVsDKvunMJWJQqFtMuoaDCZt0ktyl0vTa9PkLm8ul7v8LDX9y+n88Wd/IAz2j+AfThC1UKhQmTJRqggighM2EDdzr+97fV1tnTHBfSDc8zzvc8/7fZ977kLVgOHlgYFXXh0ZyQ4PDT1NYvePC3Z718j58zfdTiccHhxc8Xq99WTp/uBwOPbQNN0eouk4spsAAHVkqXqwqnAgMDzNhociHHd2gmF6I8FgW5SmD+CCPM83IJ8l6bXDKD3NoVg/PxWKDEZY1jPFMBwfDMZ4hklGGCY1ybJZZC/xLBtCV/dUMDiINtSFTIdCrVgIKXVvRrNdx32zrd3E3QY+HS7AcVwL2tw2GQw+hwTYsZBJLIRlY1GOk8IhT9IF+vaS27YzKlvbxvKWk3Smq7KSCviUnucDud6jxN3C67XVj8mWky7Q/TBdtJwg4ZpwFqz7xxVrpzdrfoyEtsCq3fITRgCoOl+u53ESrgk3Uu4H5iOoVjtyDZtRAi1bTniB7RFsj+e6TuON9IUa8Khmk/eirR5vgGo9SMKbYNVMyfQAtnGCO3emQV+oHoNX6ezAhi/dfWy8YD2sRzHoxdmFVROX8ufNR8bST7YQtypw//3oBNj2Zm1Nvkx3q76AYUpPNY4WrG3EpVAfH8IPnLhV4VE6H/1rehxLSHBqS/A/jgQhZfj7iaoBt5UBpkbiUgHVesoBzHt0B/ff7KA2HQJOCM8+s4+4/8nOwfDLvUYPMB/U1TqB2aR9H953ZyU8oF0FF7TllMU+Y2rGnw6SXxEXMO7dOdp4IvFk6v2m2qmmP77wB+GGAOGKCssL0sZbygvNL6WPHyP5FcFCcJuxDVfvfsYNuAv6xCBnV/laQLm9ysGfF8KwvCT9er0003wOGLcmoQJkYgy/r42r2rXpb8ofCAXtvXSLXT7VhkaqRX+ttR88Lu2rSFn7UNC0ZWkdxzpU6tDdB1WBc9PG1h8/dx7+bZW+Ca9GIPxsFmoL6deofqqBmgHscCaTeVuV44vLF6O3Lr8u3rmUFdcAkC7NiPw7kYJzP6lzT/CbSz1LHdK+pfvgRhTeWmIgvKJAbbHgQst1lCCAF+fn56GcVuFkNAEjURHGEklYKpWgKIhfoq5u/6bsAD/Mfv70Ue0603j7E+4N7aPEDW1R+kl7c/Yg1UftRlMEDYIgXC4Wi1BVVagoCszlclCW5XI8Hj9L6vwr0Sh9QBTja4mEtD7Bi58WUuIvxZR4IyYI66jW13oS+jvcnUwmeUmSrqDr+6lU6l1U/Iy+WAVI4Mdzc3MQ3QdjIkC/BERt1wWTlP8HEtiBxH2Xz+dhNpvVO5BOp2E8Hp/4Exj8pAy3ytn0AAAAAElFTkSuQmCC"
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAARBSURBVEhLrZR9TBt1GMdPw1zUP6Yz0RhxzoiKkdKtL5Te0btraYXxqhmGMWAhjLE5bRHKBltpC5byIuBgCwH24gaEocsk4hZDWCYYNtzCGEwdCVgotN14HRIrrCDc4139wbaIJGo//9zv+Xzvd7mX5x7s3wDn3n+CqQwWg9H4OFKeZa4Al0K5HG4dJAKR8iyDWcINP2qEp+vjBS8i5VmYL2OenC+j28YOKV5AyrMsVpCpUB8Cg4eCDiPlWaZyAtKZIhm07BFlIuVZmKZ3n7NkiG4bo6lnkMKgjfJivo4KZ76IJJBam4VyUszUhpy/V0JfYqojpJyDkZ3PLp5StdqKyUGLQToyWkj+MGGiY7lsqTa0ecAUxPRoRXZrNp4BgD3G+X+EOSJrmCsj4WKiX3NvmhDummTfOKuCh7syxX1XUvm1wzrJXJda1HR9L//OryX0L325hLVK9QbhyMPr+nTSyboE/6fRpVanXytoGNCKf7MVUZmN230i2nfzHK3J/lfYyAtqlJvmS8gZm1nldzzUx7tjD7/FJPd5jdvX+7Fw4PI+YTm3XhMfDFvfoxa2dH4oMnE1hVFe7MH92ExZ4MYZPd7fmR64kauXYSpC11t1VNytj0T72XLtV8Qx/okipk8jUaFyBaZE9upsLjF1TU15I+VmLI+UjhaGbP5ZLS52mYhuqIl4CkV/Z9pMU5MG2d6rKVvirMYH3cLBFJK82TxivieL2owUBjWp6+xGche3bt8lkEM5DdMmWbw7fBhugE0aKd/xXDprtoi84Mgjjlp0kg9Q7IYpIKWLZhncPEC+jhTmzCc1dvaGuPUfx+gQ+FwJfZmBq38Lm1ayw1VKjzP1IQtw/B0YNeAHJvJlK3OHKaaDoZQGS7ZciBQ2fjigdKEgyMqcUDUzJ5X3HflBcDrKNxzFjzJhptLhmBKgnARgW9WuJya70iVhbPTXR84nI+GogvXkNq4eLFJuGNKT3cNZAeAw4nA9TQTdGhE4T0TEMnUJj7brHTPlazPJvrNkSeyWNAH0qgXQuU8wjWI3TAEVB5VKGM0hkrm6JlW47vsUfrtVK4ZrqXy4nMyD/kwxdGsl0G2Sv+LetMyQXhY9WaSwjeTgd29oxOzMl8JwDg5Tn6k6HJXROHcOFLLDrkoFM4YgnXsTS/17Pt4X4v0avorzc56NfXvufByvrS76zUgUP+Bqgv/zHcn+90YyxHBbI4Cf1FvAqhXBjf1bF5fbkjGTB6FaBU6j9KR700OciQl8qTFJ9jIqV+fs9rckrUlbv23ayfv93A7e/UtJ/PaLiTwlirFRHbF7jO2ifq04B6n/Rn1KqHdtonITKldwVigq5xtCwXkkuAQpz2LVE82LZRQMGQhuNnkOV6EiculUWCfUhgM0RgCcCYOF6m03xwrkUeiU/4crj4xc+lRhculxw4JBopszSPTsyMi3Z+PcP7IGGPYnSNPlz8hGRhsAAAAASUVORK5CYII="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
@@ -1930,8 +1945,8 @@ try:
         class BrepUnfolder(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-型材模型展开", "RPP-BrepUnfolder",
-                                                                   """型材加工图模型展开插件""", "Scavenger", "Brep")
+                                                                   "RPP_BrepUnfolder", "R24",
+                                                                   """型材加工图模型展开插件""", "Scavenger", "D-Brep")
                 return instance
 
             def get_ComponentGuid(self):
@@ -1974,11 +1989,20 @@ try:
                         self.marshal.SetOutput(result[1], DA, 1, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAOxSURBVEhL1ZTfT1t1GMb7H3jhjXqj7kaDJG6ZuzFTQmghbrq5hGy0kTOKlR9t2WBQbKF44PQcuhEXp5MW29OpJDKZyIBuDMqAQgEdbGyjsTCJ8cq6dEt/UEqlLX38AqdZXaIXZV7sTc7NeZ6c55zn/XyPaKdzXrvv2bt9RarlvuOqpS65aqmzTLVsqVD9ZqpSLX1arRJsmY/VmLsX99TAr/XAbR3w8yeAkwFGTgO9bRBsmY/NmPt6cPYjJOZOYH2iBjGHBnE7Ceqlsd7Z8hQEfN2Ws3vtdgVwpwaYqQPGtcCQHhggNXWxOw8wc/uz/nCWeIOTlV7/kMrr7z/pDVyq9Ya7dF6/tdEr2DIfWrnvuZELh1mX7SjnMhWxrnMydvosxc4YS1kXrWAFW+bDG9/eE1uoBNy1wA1C0mQD4CAkXWWB7tankKL1/4OiyHw5OWTVSE6TmsYIRde2KUo+CYq+4nJe/XNS/iDsqvQFHGpfcKDaF+qp80UuNvgCVr1P1MG+9bzHLqXclz6g3J0U5bYpKI+5nLrXrqbuGNTHjOU5L93qKSz2PK5/oabutqqlTOmbrwzx7zIuWyE33l7ETXwm4ybairnpVjk3rv+QE/WaJO/gd3JIPBrgJvm86SZglBwSxxmELE0bHVrJcSwqgcWUTj5/rAUYPo31bxnwmoLiwKwiiYVTwE/E4yT9D5NnXDEAFzmI+kwF4sSCErEbZElOQsFwPRIDBLXLLVi10g8tWrE0NKfYSMwKOlliwk703mas2uhVi6ZASgKiG2kUJdKXvBkQfywgLgSE0wLiaQHblPwz4F8p6jfnS+Ahv9tbhIIpQsEoqeHqJgUGRPjmgFWXJ4vMlwHzKf1jYJDo/QwiF5qj1vp8WXBOEUtRlBzb1BuJ3oLkdwaIuj8X56zMlvlDE0p/YLjKHxqo8a/8oPGvdev9D02Ny+2avGP3XfJk2KVEyFGFFXsNwj9qEP1ejwfmhsiXp8RS72TJX6tTRB+pQuhKSm9EyNYEkVH7xi7nN+8zzo5CZuz8UcZ5VsY4z1DMFFfKjOhK9Crxnhcs+tzXeJ0km68VrhMHyXUk2yw/lFUm3vuMmd6fxdPkfsoj6HzpkeztihbTKyL9DRIK7OzWGxgOHHhRQD6z2aLIrcTmEmNkSXHHI4pCvD5meE/ysmDNbP6LouCTCNiq6Bc1kjerseEiFFx/RNEK35TYcUD3uXxJdL4CazNqREZPYm2wDtHLWsR7aNw3aUEfzNslWDMYkehvqUZItKjznNIAAAAASUVORK5CYII="
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAKTSURBVEhL5ZRLaBNRFIZn8phEmza1JZqHTUjS5l2hC0vBRaWC+CgaKlJrGEFJRVQUaVWkvoq1FFt8LEoKooJWXLgpSHUlcWFpVq6tIM3CTRR3QqEUjv+ZOyaR6mqyEPzhW8ydM/e/nPPfkf57ZexmecZu/R0Fa3jXJUoMSLHIs++P+6k4HKbi+ZDgchvN7HcTXmdFlQHxab9dbCWaTBDdjgvupej10a1soIoqA4JB7vO5EK3ditHa9ahgPEEvD/vY4JioMiBZkh75nVYKN4FNOs0KuR0WNsiIKgNqUMzPXg34aGEwQAsn/ILTQbrW3cwGfaLKgJps5qc/rrQR3cEMxtF/5kEKLfLWxqBRMT8sIUE0FiO6GRXAbLbP80eDLs5vdZ4ZXjPL0rp1xmqSP+3wb6Ce0EbqCeqE6yjuUtggLbatKMv55RyXM43TzaPHvZE6KiKO5XVmKEwHog56q7bQEpK0dDYoGG6l0Z3aDPaIbStSOb+c43Kmke+PZ4KUaW8gmkpW1hm0Qt3mpNIQ7sFE1T24n6Inae2irTd4cchLK2NxWhmJCNDTRSSjP1kvPr6BHv8C2R9INWinXsXz6tWIAIOe3reFDXrFthWpSZeNutHP7oAOerrdayenzVTq8NgKHe4q8NxoMy3iDrxDz/NlNit5j8OSx36dYtuK1McHPVTCKUroowYi+OFkgGRZmtZrDEmd5xncrZoB+vwVRkhMTq8xJDWHFC0jRctIiQaSwn9LBZHUawxJ7fTZKY2BpmMOQbyediPXfA/0GkNS546gRZOI4yhuJoNEfLkQ5hbVxuBNpkXLcfm/MpWg75e0GdTEYHBil4sKuFiFbEBwKkBz/T7C7+K5XmNI7WDkL+wF/6Ik6SelEYfmZ4ql2QAAAABJRU5ErkJggg=="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
                 self.tol = sc.doc.ModelAbsoluteTolerance
+
+            def message1(self, msg1):
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
+
+            def message2(self, msg2):
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
+
+            def message3(self, msg3):
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
 
             def mes_box(self, info, button, title):
                 return rs.MessageBox(info, button, title)
@@ -2086,10 +2110,10 @@ try:
         class BrepHole(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-区分Brep是否带孔", "RPP_BrepHole",
+                                                                   "RPP_BrepHole", "R32",
                                                                    """区分Brep是否带孔""",
                                                                    "Scavenger",
-                                                                   "Brep")
+                                                                   "D-Brep")
                 return instance
 
             def get_ComponentGuid(self):
@@ -2132,7 +2156,7 @@ try:
                         self.marshal.SetOutput(result[1], DA, 1, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAKHSURBVEhLtVbZb4xRFPe/EN6IqKVePEl4UCKUB8TSiq2oXaPxoLEkQjQeWjGmbZpUU6MtpqPLVKeiTCo6qCb1YJmI2BJpbHOX7/s5d+F7cFszdH7Jyf3uOWd+v3vOXTJTfN9fTFaVL1MC55FHKIEq+/0b3psByOFGyJEmsquQo9fhpfvhve4LLJ0gf8TEVR7le2+TliGAU0B070GmZhpY/QJkwrPB6uZBRLdAdO6EuL3djNHN5J9r4iqvZirEncOWIYBTgMf3gV0rAjJjkI9DmkB07YboPQQRP2DGrjLyz4dMXQLYGOUvh+g7ahkCuCsgEta8BP7HYYjkWbCGhW6BhkKIB2d0HmteSgIVliGAW6CnHJnaGVT+HNMCJdBRSq3ZRS3aYcaOEvJTa67MQiY0k/KnZ1+B/+EpvJc9kEO1kM/b9Yb671Pw3z0KjOZemjb7VdzYi074n0YsQwCngIbMQD4JE9GQdfwb3AK+Rxv8GaK/Uq9Oz5V5IjA1zwLuPbh3AjyyUp8M3rYG/NZGY23FYC3LwNWJuXvcZk8MpwCPbTUn5P5p8Pa1+phqi6wg3ymwxkXg0U02e2K4BeiE/CKQz5rAwgX6UsmH1don4vvBb27Q33/D+BXUFZgL11JkVk8VqbvBiZzVF/5fBbo1qvetq8FvrNOCPFZKq15PvlVkxbRPf/zMCafA+PDtmD2cAt5oK2TyHPX8IuRgNb03l8nJbTQ3OAUUuYiWmCchRq9n70HamC82mhvcArRyTa4etu5yiMQxEvhqo7nBLTB4gVa+jcj3klAZvfNHJrmCVEi3RSQqibwCYuAkHa3vNpobnAKQjFb8zZAKNf6wgdzhFphEKIE8/qsAfgJdGFoFNH4/8QAAAABJRU5ErkJggg=="
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAUCSURBVEhLvZZ/TNRlHMfvvDvujoOD+6F3x3EigoSCuoliiNpJbsDQSbGaJqRO7ZdjiWauTSoNQynRQsvfOIzN2EzT0pU/cKWIvzF/JlZqWluWUOrcwPnu/XmOTvqu1X99tte+z/d5P/d5f7/P9/M8z+n+zxhNntSQTyR6keEahpEI0oMMJIM1OEk4MvoFDCgttmH2JBvKSGmJDdmDTKA202bSH85NsiGvH0kmKVHIireKVkUWD/FZEEyMRLBPiNEJVliN+rPULETF41MLrMCv8cClOOAC+T2AVa/aJUllP5fpCt5KBZYMAN7uDyxLw5kXE0XbRraffqEP8G4asJhaJccsTEWiw3SXWvgtgsX5NLgYh7KJtorC0ebn7h7z4v25ymBhstN0qXNBivoh3nhEmRyZkSDaFkHaqGTyN6ktSkVneYoY3KLmICpCBnzyybmWeWmJhqI7zV7UvPLQoENj0NzNQNrqzUTjGBmrNcgJT9E3PuCkF2gPT1FFisvUigomX8ppkClYno5zs9QUfSycfSkRqBaNJkupczqTnKY2amGD7Mw0E2oXx2LzwhjUL4pB7ZJYPDXWIkkWeKOMP++c5Mfu4gB2T47H7qkBLM/tJdpWsu2DAg8aZyagcUoAjdN6Y29JAJ4o431qsUSFnkwhr2koJXbyDHlPwwqSTjLJarJOwwwSjgDZSBo0bCBSCePIWtI9gdznkWRSTbQP8DwxEBXTigfZ0TK7L1pYcgq2pY/alGirvuWzageOfOTG+QY3jta78UlVLMxcH9Trqkqjsa/WieN1LjTVurD3QydSehvlt/LgKp6dn+0EVqSHallgW/pEc8Xom+6zqtDiw4k6180Hp3wP7n7lQaRF30h9UzOT4ic/zm5xt9/c0/MervoxPN3USa2PJJcoKXvUEaoAKTWBbekTzWnXH8Jxr3z8Zhm8qdze2NGkDPbzdmPTBhdu7lEfPakoaJmPb+OQOcDUwfsEGS9RMieLBlU0kMUisC19oonBvYMetG53/7bs5eg1F7e6f2nf3ytscGC1E51nfKh9PebLxjWOc7KehvX/u8H0uWLwDmtZFpPAtvSJ5ozWH5MpwTV/iB/9uLWPBmb9Ier1h/kGMkWK66Q1DsNZ9tQSJblEpsdmuDzUb7kx1GcOwTb7vqOWYTTqNuYMjWjLyza35WWFrsGMiDaDXreS+pzswaY/CsdabhcGzbcLx5Ac822HXX+BWngviiKVREqvO+VEYjaRiulOE8klI8gJckpDDQnHrHxuxdXjPajmClWM8yCD2zC1Aq+rxw+7Vjiwf60TB9c5sW+9E+sXxIj2KamXVd19Jcs1YDdKFXmIirkyCKsGhipJqBmImUNUkqeT4w0XcJp7VKsPHU0sV87ztZ09RdtONh9lcizvthfxOsAdIdu1j6goq8hxh6rorzLl3l8SWmhFff2G82CVbKmIORBt0WWda3C3X/9claWcB3XyxCp5124q11RXxB1qXqLivw34Bl+sdJycNj5y+vc73He63kAZHBCDJTToOg/kqjWY9y9TNDHJb7iMFk7Nla7T7oYfV3cog12k4fD03uqUC59ovPZ3R8g3iCMqZowIWFE2yqVWr2KkSwZJklGRVv3X40aaMSFoxhNBCyaMsWBMhtKkUsoHe80I9n14Jj9GeI5fpibVqUIO5yJSoqGASPQk2n8Vsk1biWz1//Svwq3T6XR/AuoV/1LH16SbAAAAAElFTkSuQmCC"
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
@@ -2206,12 +2230,13 @@ try:
             def RunScript(self, Geometry):
                 try:
                     sc.doc = Rhino.RhinoDoc.ActiveDoc
-                    Perforated, Solid = gd[object](), gd[object]()
+
                     # 带孔Geometry，不带孔Geometry
                     re_mes = Message.RE_MES([Geometry], ['Geometry'])
                     if len(re_mes) > 0:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
+                        return gd[object](), gd[object]()
                     else:
                         Geometry_Tree = [i for i in Geometry.Branches]  # 拿到数据 二维列表
                         res = map(self.Geometry_Multiprocess, Geometry_Tree)  # 得到物体是否有圆的真假值
@@ -2231,9 +2256,9 @@ try:
         class FixHole(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-圆孔修复", "RPP_FixHole",
+                                                                   "RPP_FixHole", "R4",
                                                                    """修复Brep或者Surface表面的圆孔""", "Scavenger",
-                                                                   "Brep")
+                                                                   "D-Brep")
                 return instance
 
             def get_ComponentGuid(self):
@@ -2275,7 +2300,7 @@ try:
                     self.marshal.SetOutput(result, DA, 0, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAARWSURBVEhLrZRrTJNnGIaZycj+7NeyxXiIWZTS89fzgba0pSDgYSMIy5iakRnZH0n2Z4kxMU0WY2LIgoRCwiwLy9iCZjgNIIIgwgTsHCDSoehUDlGGgIAcS1vvPd/HK7IBQ41X8vRr3r7vffd97idfxGo0NLjfYV/fLLOTrvhgMLEzFErtmw18kcmW3wwzEy5zOJQQBLZjofYgENh/0u3GOrbl9fH70yOD03E9QAIQdgLPqBBHlYL5+YzLIyNHNrKtr0dgKDET2AHMkWiQxBdN+NqFUOiTgcnJLx1s+6sT7nddRSAJmIgHZlzAPAmHmIlglEQmqeHZ2cxD7MjLM30taVP4lmMeD0l4iAzGqabpe4Buw5ss3obWkUot23fK7z8TyY6vzVSDdRdu2YFuqgckOkhCT6imyGRZy/hcPkYw+Gnr+Hj2Vibx/zys1GejzQL4qLpigb9IiL/NKJlMUs3+x0Qw2kktSxuemzuwg8msTnuJ6sjTOj34CrfGADdswB0HMEAmw2Qg5EImy3LhRzmV6vPD9PEWk1vOpTx5dk+ZCvd+UeFJjQ7BZjPQbgVuU8v6SPhfuSwxoXZ9741Dzolk7NvrbDeZbBfsTmcGk31BRQ7naClSoKVIhttlHB5XaxFoMgF/kMmfZHKfxAZJfGkuNL5ny51QymzglDEwGEzQ6/WwWCywWq3pTHqBM+70yAu5hq7rxRwaCyToKlXiUYUGM1eMq+RCT7jgPmyGRGyAWsVBLpdBq9WSkQFGk/lpcnKKiMkvcNGTtq2+0N7p86rR4BGjvUSB/nNqTNbr8YzPpfN5LvTvxxIQGHKg5BslCWvAcRwUCgXkMpnwNJktsNjsR5n0C7wnvn73UoHrrK9YJ5j87pULuYzV6hBamsvf8eiu0uH+eR0OpGvwwYZoSCRiKElcKpFArdZCbzT9zGSXU+NJPHb1O6PQruYiKXpOcxh+nkubFaGbsWgtVdEAODF104aDaQps+VAhGEjIQKnkoNEZfExuZao9uzMuF8RMNxfJ0VQogf8nJQYrNZj/zYiRaj06KrQ0VTSmwy6E79mxP0WJzVskEIujIaNWaTS6oCM+3s7kVuZc/h5dfaHtjs+rElrW8YNCMOn+kcPdawYKmgIfo5pIwINGK0RR2yASSQQDjlNBbzA/YlKrczov+/26AudFX7EWDfkL4TcXytDvp3bxrw1+ZKfJZDQOhz6LxvoNWyGVSoU2qTXaUSazNjWehNyWU0ahXdU50ei9wRvQuPKvD7rJUJsZ548pstZvjKqIFomgohuotbomdvzlqPLsPHil0BisPylFO00RkCyIBydiUZUn6+P36HTbN4uionrFYjFkEslx4eCrUJmbGltXEDPQ7FWit8OBx3dtuF7KoeyobDfbEuFyud6jWzSKRCILW3o1yvP2bqrN1zTyE1abKwuVH1d8xX5aJCsr6216rP4CXAu3272uvkj30a/fahRsaQUiIv4B6Q48zcsB1rkAAAAASUVORK5CYII="
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAASySURBVEhLzZV7TJNXGMaBAmplDhemMhEFJlgspS3FIiQOAooMEZAlM4ZFtkoLUqVGGRkGE50TzaKiu8myyGUTOjenmQPNwmImpfdWCs4KKrqQRbzOqMvQQp+9px/xQlnc7Y89yfPH951zfs857znn+3z+T+KRs8m15AT24r9SOHkT2ZgqDEHla9EIe2HiDXpmQdPJ/1jp5MbwkEnXNMuicOb9RS73sdxh98kC9/1D2fc35ka5Av39+qnPOrIfG/BXFErW8Px8bUvF09CsScDdpiy3+7t8N47mAi3ZwCHyVzlwt60YOf9B+u8r5KFuGmMgL2WAP1OYj6/PwZiZk+9UUwnO7U0DjhHweD7w5TKgmaDjmULdrStc7VuThxNfngri7ORw3sotWzQLD7UE+74A+Gb5+MAnfTjHs5Lhz1+F67NMnFZLEcDz7RvleSlGKQ11X6tKwe396dzg8WbOJkBQ1navbjH6t6bASmDjGhE6yTOnBF4n1vMc8mlNyogMvtqrToRljQQXq5IxVL8U+JpgLQRlYQR2NWXh2u5UnK1YAIMyHjoFgd+MpgABHGoJ4kMnjxArhkOOkSCEbzhTmoCuUhnMCgnOlCRgcFcqRmjm9z5d8mi2nQTV02xNKjGFzEf3lgJ0vZONXo0YmZF8tg8ZHHGMggJ5De2rRThblgg7wW1KqWc1jvUymEok6Fgdg47CcOiLoghOIW9F49IOJXDuFtzO6xhsqMe6tIUsoJgjequyMX8eetcv8ARwphClBHrFPM8sB7Qfoa+2HOYyMTqLwnDuvSrcaPkRvx3T436rFe3bD7CAHRzOWzlb0+agXyN/BGe2FsfBvj4ZLp0FGAQe9NxE34F62DfloUOZgPbyQhjfrcFD+y9oq65mAVoO563YIvEMXN7wdIBFIYBz8yqgzQDXiQ7cbNDiap0WFz5shl2TBtOaSOiVcXCUp+LoKgEC/HyNozwvBaVHBF+/UM5KxME9pnqb1IvQVbMbA3VHMGK/AjguYei4HrYN2TAWC2iP4mEtEUJHqw19LmCAWIEccowEL/LNDs9JerwCZosqDh2qROgqFLjRasJQ9y1c+WQfDMXzPXBTiRjmUjG66JTFTZ/8gFCzOOIY8QN5X5woFOInteypAKtKAjOFGItjaMNFsKxNg+6N2fQc6zlhLIDZWS5D5lzPJ0POEb21ecsr4bTRT5RJJYWNAhjAoIjBhd1q3DHo8HNjLSxq+WiJuPa+DTIoEmawgNc5nLcKCkXTMFiRBNsonAuQ0qUSwqZOBk6ZgZ5B/PqtCc49dbBqMmFUxsK6VoKrlXLsXBLBArZxOG/NnREUOHxkZSwGNsrpNj8OMVGJzGULcbn2Y9zWtmNE54DrpA39NW/jvHoezLSCPVmRkL4UxAIqONz4kk+ZwHPsSJ+Di3TpnGUyzwoYwKQS4rQqCfZtVUA3XQp9D34oSce6BSGICJ54l8YeJKd4KM/QRPK+xVFTcapIhCu0Jxaqs43K0FseD0dpLJpWJiFPOBt8no+T+laSw9jAv6vlIXz/gV0ZEbioSYRBFY/tGXNYGdhfrJWcR/ZnHf+N2I/9cHL4FMwOnsC+93vJItbwbPn4/AHatyJxkIwp4wAAAABJRU5ErkJggg=="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
@@ -2313,13 +2338,13 @@ try:
                     sc.doc = Rhino.RhinoDoc.ActiveDoc
 
                     self.tol = Tolerance if Tolerance else sc.doc.ModelAbsoluteTolerance
+                    ho_brep_trunk = [list(_) for _ in Hole_Brep.Branches]
                     re_mes = Message.RE_MES([Hole_Brep], ['Hole_Brep'])
                     if len(re_mes) > 0:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
                         return gd[object]()
                     else:
-                        ho_brep_trunk = [list(_) for _ in Hole_Brep.Branches]
                         temp_breps = ghp.run(self.remove_hole, ho_brep_trunk)
                         No_Hole_Brep = self.Restore_Tree(temp_breps, Hole_Brep)
                     sc.doc.Views.Redraw()
@@ -2334,8 +2359,8 @@ try:
         class BrepSolid(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-Brep是否闭合", "RPP_BrepSolid",
-                                                                   """检查Brep是否为闭合实体""", "Scavenger", "Brep")
+                                                                   "RPP_BrepSolid", "R31",
+                                                                   """检查Brep是否为闭合实体""", "Scavenger", "D-Brep")
                 return instance
 
             def get_ComponentGuid(self):
@@ -2358,7 +2383,7 @@ try:
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_Boolean()
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
                 self.SetUpParam(p, "Solid_Result", "S", "如果Brep闭合返回True；否则为False")
                 self.Params.Output.Add(p)
 
@@ -2435,7 +2460,7 @@ try:
         class Surface_flanging(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-曲面折边", "RPP_Surface_flanging", """面板折边，适用于规整铝板，特殊板材可半手动处理""", "Scavenger", "Brep")
+                                                                   "RPP_Surface_flanging", "R15", """面板折边，适用于规整铝板，特殊板材可半手动处理""", "Scavenger", "D-Brep")
                 return instance
 
             def get_ComponentGuid(self):
@@ -2497,7 +2522,7 @@ try:
                         self.marshal.SetOutput(result[1], DA, 1, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAOzSURBVEhLxZVtTBNnAMcvxM23WRVxVsW3vZAt+7JEjFliNDH7YMycL7Fh2Ou1RRgbqEvIMNGpLbgwwGpp8Q0xtLRsQukrhfI6DoasohYGzs3AFrNkGca4L0OiErn/np6PW253zBA/+Ev+H5q7+z1v/7syL5zddXWzOV9De1p35/a0zqZTH13j07VX+GR6+fnhfOHdmf1D2H+0GIVpWuRZLDDWVN3Xtoe60qLtR9Njl9/bIgzPpLdPH20g3GPoiaIoZSPOM7NQzizGyaR3ULR5B458dhA5dhs479e307sjLk2MZ/fc7F1FH302ek9gLdd9GZ+WlMNOxGXMcjF2Ro3TTCLJAtjI7xOvr0ehxoDPvyzC3qoLD/QdTb073c5Mqpka1tfgNF4bwLENO0RZGZOskPiAr5LrC8nqFsGqSkHphg9gqj//k1u4eZiq5OwNhZawLR3jWY5vYJ2xksx0qYJcHhsZpHzO6sngox9QLfTfojo5nC902DgwhHx2H84wKkWZUqzMK6g4locARuF8GP2Q6qRoPJ6XtYHG3wxtPIqT19H9VxZKo0bZnNWo/bOHzH7gZxNMCVQpRecPaYx9MeSaSsm+JiqIlGNl5uFcphFB3EXVxPfZVCeH9YV79NGrKEjdKh6ekkyeZShLUKNmJAyXcOOOa7R1LtVJEavZ+R2yzjpgS1hGDo08qCiUxkpadnrTFoTwBxyTfWaqk0M+C05DbBCHtunJ7KdzuCo4fOWoEYbHHfd5NdVJ0Xs8ajbSNm6sD8EyL4Uc7hJF2X9jJSWwr3iXNGcYVZOxC1QnR+dt+MLYP4i87Hwy+/mKMqXEq1lZfAiXhNuTlQ+73qY6KU+rqW/vwlcr15P2JCnK5IlXcw28Y1fhFAYbqE7Ok2peR675hPjKK8vkEauZYUA9fodzoncj1Un5uKLiJZ0/PBSvpnnd9KppJd+h2pEmOIQbfVQnh3W55u5p7WjZd8ZB5AvEj5eyUJqn1fST2Tse92mobmr2Hyn0lr6/EydVb4rbFF+JLb7HCvJ4rKQI7raL5MW69YuJ52dQzdSwjXUHMrqbJ3L9tcgvOA7zP4PFv/0Lxf+Bf+VJsL+WSqr5K5l9/wGqeDasq/INQ8SXo/s23KxrDY7l+C7hYEEhCshglsS3xHY9Wdls1LpPwS2M/GW7F1HRx6dHdp1zOdcS5HR8o5drDd77JEBWVlIC81YNLGtSH3nGeqPVwo9Z9PbnI9dfvcjQHNrF8Y1OY1dkNKO+Zphe+h8Y5m8CNtoPOIxFZAAAAABJRU5ErkJggg=="
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAPISURBVEhLrVVtbBRVFB2DJhpNdna6s/Ox64DYph80MST+wp/4xxi1Il9FKElVoqSKGq1UQaBgtQVDAesH1MWGSA1WpdFo0oJtoYR2urhb2q5rt5ZWxVWoMTVNU0i9xzvlVQ2MuxviSW4mefPeuW/OPfeOlAlw0vI6T4qaC2lAWzCz+H+CurQIndWfn7L9YRoxiRJmJ/qNjdQXuEtsuX5Qt343zplIfKbilQdkCpV7YTdmgfo1IGGAhowIDehVFDHuQZt0oziWOahbq8OvAewt8+CHddkYfToHzSuDqF3uwzvPyTjZoOBSlJMNc7KEMUgxvZZs/T6EpZsExX+DotqtdEa/+Funit1FPqAyH9iWB1Txc2s+fuJkXxTfjn3LVewr8+LYfi8n0UFRvVNQpAZ1+YuRDOCTnTKOF1tXiLfk/hOzyTjxLxty0LLGQs2DPhzc7mmmwcCzaSVj/VsxYqCmRMbEi0y49V/kV4fzblchPnrYxPkWH9fIOAZJukFQXQvqUe/kTdPxo1moL2KNqwrciWeDE0yW56JmtQx8z/Xo9i8WVO7gQm3BxQAOVHjQV3oHsJ3lcCOejdfy0b7Kwld7uQ5xI4Ej0hxBdS0AaQ4nGLrcq6FmmQLafJX2blFZMGOESxE/qFffJKjcAdt/L0YDaK/3omlpIL08lXn4cX026jbIjlUv47Q2T1C5g7r0RiRN1D7lQbIs+4pb3Ihngy/QuMRE7FNuwJjxpaBxB8KGj74xJi60q9hTpLL2aW7PMf1yHqpXeLmzuQfO6EsElTtY+/VO5x55Q0bHo+x9Lp4b6d+xIx92yTw0vc7yfGf8jLa5Nwsqd/Bg68EQe5/t5tgupfed2FGAtx7yY/y0Cuoz3hQ07qBT5kLETfQ1KQgV6emLuy0XY9zBu9ex953BZ2uFgsodLM8eXAjgvXIPYo/PT+99vkDzsiC6D7GV48YpQeMOnLW8FNanpiLs/UcU4NUMvM97ZvZ+6ww4rVRQuQNhr4dvEfr6XS9aV3Jxdy1IrT9/3cBj89GwmYs7aPyONo8sqFKjovS2UH2xHx1r5mLyJSZy6uAmFa8f4BmVPD4z2N4Xx9ODhs21523/ny37Fbz9pIKGpQb6n+B6OJI5o9lpOv6yiRdysXMtF5cdR7a6SBzPDDRiFdBYcNN0TIv2fp6Fj6sV1JX4cHRFEMlncoDqQpxYbSH8IXdu3IiLY9cHGrcWUdKsHbPVc52HFXxQoeDgKh0bF8t/TPZorfz3St25mYIoeAtNWffTqHFo+IQ63hGSD4tXKSBJfwFJUlB3sB8X5AAAAABJRU5ErkJggg=="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
@@ -2595,11 +2620,13 @@ try:
                             fold = list(zip(fold_surface, fold_size_count))
 
                         Fill_Brep, Folded_Surface = zip(*ghp.run(self.add_fillet_to_edges, fold))
-                        ghdoc = GhPython.DocReplacement.GrasshopperDocument()
-                        sc.doc = ghdoc
-                        return Fill_Brep, Folded_Surface
+
+                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                    sc.doc = ghdoc
+                    return Fill_Brep, Folded_Surface
                 finally:
                     self.Message = 'HAE 曲面折边'
+
 
 
     else:
@@ -2633,3 +2660,5 @@ class AssemblyInfo(GhPython.Assemblies.PythonAssemblyInfo):
     def get_Id(self):
         return System.Guid("86c4ead2-84fa-4dff-a70f-099478c2ccca")
 
+    def get_AuthorContact(self):
+        return "smblscr47@163.com"

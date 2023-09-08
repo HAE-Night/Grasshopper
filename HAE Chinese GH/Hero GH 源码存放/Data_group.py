@@ -35,9 +35,9 @@ try:
         class list_values(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-list下标取值", "RPP_list_values",
+                                                                   "RPP_list_values", "D1",
                                                                    """列表根据下标取值，取值下标空格间隔""",
-                                                                   "Scavenger", "Data")
+                                                                   "Scavenger", "G-Data")
                 return instance
 
             def get_ComponentGuid(self):
@@ -102,8 +102,8 @@ try:
         class Subscript_Value(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-多下标取值", "RPP_Subscript_Value",
-                                                                   """多下标取值，最多取到六组数据""", "Scavenger", "Data")
+                                                                   "RPP_Subscript_Value", "D5",
+                                                                   """多下标取值，最多取到六组数据""", "Scavenger", "G-Data")
                 return instance
 
             def get_ComponentGuid(self):
@@ -186,28 +186,21 @@ try:
                 return [None if index == '' else list_data[int(index)] for index in index_list]
 
             def RunScript(self, List, Index):
-                try:
-                    D1, D2, D3, D4, D5, D6 = (gd[object]() for _ in range(6))
-                    re_mes = Message.RE_MES([List], ['List'])
-                    if len(re_mes) > 0:
-                        for mes_i in re_mes:
-                            Message.message2(self, mes_i)
-                    else:
-                        index_array = self.handling(Index)
-                        origin_data = [self.get_value(List, _) for _ in index_array]
-                        output_tuple = tuple(origin_data)
-                        D1, D2, D3, D4, D5, D6 = output_tuple
-                    return D1, D2, D3, D4, D5, D6
-                finally:
-                    self.Message = '多下标-分组输出'
+                D1, D2, D3, D4, D5, D6 = (gd[object]() for _ in range(6))
+                if List:
+                    index_array = self.handling(Index)
+                    origin_data = [self.get_value(List, _) for _ in index_array]
+                    output_tuple = tuple(origin_data)
+                    D1, D2, D3, D4, D5, D6 = output_tuple
+                return D1, D2, D3, D4, D5, D6
 
 
         # 列表切割
         class List_Cut(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-列表切割", "RPP_List_Cut", """在列表指定下标处切割列表，树形结构输出；
-                （原电池最后一个下标不做参考，已改）""", "Scavenger", "Data")
+                                                                   "RPP_List_Cut", "D2", """在列表指定下标处切割列表，树形结构输出；
+                （原电池最后一个下标不做参考，已改）""", "Scavenger", "G-Data")
                 return instance
 
             def get_ComponentGuid(self):
@@ -293,7 +286,7 @@ try:
         class ListExtremum(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-列表极值", "RPP_ListExtremum", """求一组数据中的极值，{1:最大值，2:最小值，3:平均值，4:求和，5:累乘}""", "Scavenger", "Data")
+                                                                   "RPP_ListExtremum", "D3", """求一组数据中的极值，{1:最大值，2:最小值，3:平均值，4:求和，5:累乘}""", "Scavenger", "G-Data")
                 return instance
 
             def get_ComponentGuid(self):
@@ -383,12 +376,12 @@ try:
         class Data_Delete(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-删除列表首尾值", "RPP_删除列表首尾值", """删除列表第一个值
+                                                                   "RPP_DeleteListFirstLast", "D4", """删除列表第一个值
                 删除列表最后值
                 删除列表第一个和最后的值
                 列表的第一个值
                 列表的最后值
-                """, "Scavenger", "Data")
+                """, "Scavenger", "G-Data")
                 return instance
 
             def get_ComponentGuid(self):
@@ -472,7 +465,7 @@ try:
         class PickingFruit(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-树形取值", "RPP_PickingFruit", """取树形数据的分支，输入要取的分支标数""", "Scavenger", "Data")
+                                                                   "RPP_PickingFruit", "D21", """取树形数据的分支，输入要取的分支标数""", "Scavenger", "G-Data")
                 return instance
 
             def get_ComponentGuid(self):
@@ -588,33 +581,24 @@ try:
                 return fruit
 
             def RunScript(self, Index, D1, D2, D3, D4, D5, D6):
-                try:
-                    re_mes = Message.RE_MES([Index], ['Index'])
-                    if len(re_mes) > 0:
-                        for mes_i in re_mes:
-                            Message.message2(self, mes_i)
-                        return gd[object](), gd[object](), gd[object](), gd[object](), gd[object](), gd[object]()
-                    else:
-                        Index = 0 if Index is None else Index
-                        origin_data = [D1, D2, D3, D4, D5, D6]
-                        available_trees = [_ for _ in origin_data if _.BranchCount != 0]
+                Index = 0 if Index is None else Index
+                origin_data = [D1, D2, D3, D4, D5, D6]
+                available_trees = [_ for _ in origin_data if _.BranchCount != 0]
 
-                        single_data = self.Picking_Fruit(available_trees, Index)
-                        result_list = single_data if len(single_data) == len(origin_data) else single_data + [None] * abs(len(single_data) - len(origin_data))
+                single_data = self.Picking_Fruit(available_trees, Index)
+                result_list = single_data if len(single_data) == len(origin_data) else single_data + [None] * abs(len(single_data) - len(origin_data))
 
-                        R1, R2, R3, R4, R5, R6 = result_list
-                        return R1, R2, R3, R4, R5, R6
-                finally:
-                    self.Message = '树形取值'
+                R1, R2, R3, R4, R5, R6 = result_list
+                return R1, R2, R3, R4, R5, R6
 
 
         # 树形数据处理
         class TreeData(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-树形数据处理", "RPP_TreeData",
+                                                                   "RPP_TreeData", "D35",
                                                                    """树形数据处理的问题，B有多长A就会有多长""",
-                                                                   "Scavenger", "Data")
+                                                                   "Scavenger", "G-Data")
                 return instance
 
             def get_ComponentGuid(self):
@@ -659,31 +643,25 @@ try:
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def RunScript(self, A_Brep, B_Brep):
-                try:
-                    re_mes = Message.RE_MES([A_Brep], ['A'])
-                    if len(re_mes) > 0:
-                        for mes_i in re_mes:
-                            Message.message2(self, mes_i)
-                        return gd[object]()
-                    else:
-                        if len(B_Brep) > len(A_Brep):
-                            Result_list = A_Brep * len(B_Brep)
-                            return Result_list
-                        elif len(B_Brep) == len(A_Brep):
-                            Result_list = A_Brep * len(B_Brep)
-                            return Result_list
-                        elif len(B_Brep) == 0:
-                            Result_list = A_Brep * 1
-                            return Result_list
-                finally:
-                    self.Message = '树形数据处理'
+                if A_Brep:
+                    if len(B_Brep) > len(A_Brep):
+                        Result_list = A_Brep * len(B_Brep)
+                        return Result_list
+                    elif len(B_Brep) == len(A_Brep):
+                        Result_list = A_Brep * len(B_Brep)
+                        return Result_list
+                    elif len(B_Brep) == 0:
+                        Result_list = A_Brep * 1
+                        return Result_list
+                else:
+                    pass
 
 
         # 简化树形数据
         class Simplify_Data(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-简化树形数据", "RPP_Simplify_Data", """将所有传进来的树形结构简化至最简状态""", "Scavenger", "Data")
+                                                                   "RPP_Simplify_Data", "D24", """将所有传进来的树形结构简化至最简状态""", "Scavenger", "G-Data")
                 return instance
 
             def get_ComponentGuid(self):
@@ -759,7 +737,7 @@ try:
         class TrimTree(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-树形修剪", "RPP_TrimTree", """树形修剪插件，Depth为树形修剪深度""", "Scavenger", "Data")
+                                                                   "RPP_TrimTree", "D15", """树形修剪插件，Depth为树形修剪深度""", "Scavenger", "G-Data")
                 return instance
 
             def get_ComponentGuid(self):
@@ -925,9 +903,9 @@ try:
         class Data_Structure_Comparison(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_数据结构对比", "RPP_Data structure",
+                                                                   "RPP_Data structure", "D31",
                                                                    """对两组数据进行对比，一样则输出True，反之False。\n注：此插件仅对数据结构进行比较，与数据内容无关""",
-                                                                   "Scavenger", "Data")
+                                                                   "Scavenger", "G-Data")
                 return instance
 
             def get_ComponentGuid(self):
@@ -1019,10 +997,10 @@ try:
 
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-数据清洗", "RPP_Data_rinse",
+                                                                   "RPP_Data_rinse", "D34",
                                                                    """去除空值和空格值""",
                                                                    "Scavenger",
-                                                                   "Data")
+                                                                   "G-Data")
                 return instance
 
             def get_ComponentGuid(self):
@@ -1099,9 +1077,9 @@ try:
         class DataComparison(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-数据对比", "RPP_Data Comparison", """Group根据条件分组.""",
+                                                                   "RPP_Data Comparison", "D32", """Group根据条件分组.""",
                                                                    "Scavenger",
-                                                                   "Data")
+                                                                   "G-Data")
                 return instance
 
             def get_ComponentGuid(self):
@@ -1239,7 +1217,7 @@ try:
         class CompareSize(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-数据比较", "RPP_CompareSize", """数据比较，用于比较长度和面积的取值（几何物体），也可纯数据比较""", "Scavenger", "Data")
+                                                                   "RPP_CompareSize", "D33", """数据比较，用于比较长度和面积的取值（几何物体），也可纯数据比较""", "Scavenger", "G-Data")
                 return instance
 
             def get_ComponentGuid(self):
@@ -1344,9 +1322,9 @@ try:
         class Data_py_listdata(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_PY列表输出", "RPP pydata",
+                                                                   "RPP pydata", "D25",
                                                                    """将Python的list类型转为正常数据""", "Scavenger",
-                                                                   "Data")
+                                                                   "G-Data")
                 return instance
 
             def get_ComponentGuid(self):
@@ -1406,7 +1384,7 @@ try:
 
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-真假筛选", "RPP-PickFactor", """树形数据批量选取，通过因子（True，False）筛选""", "Scavenger", "Data")
+                                                                   "RPP_PickFactor", "D23", """树形数据批量选取，通过因子（True，False）筛选""", "Scavenger", "G-Data")
                 return instance
 
             def get_ComponentGuid(self):
@@ -1538,7 +1516,7 @@ try:
         class TreeSynchronization(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-树形数据同步", "RPP-TreeSynchronization", """树形数据同步，匹配两树形数据所缺失的部分（类似于空占位符）""", "Scavenger", "Data")
+                                                                   "RPP_TreeSynchronization", "D22", """树形数据同步，匹配两树形数据所缺失的部分（类似于空占位符）""", "Scavenger", "G-Data")
                 return instance
 
             def get_ComponentGuid(self):
@@ -1634,9 +1612,9 @@ try:
         class Tree_AddRange(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_树形插入", "RPP_TreeAdd",
+                                                                   "RPP_TreeAdd", "D13",
                                                                    """将Data_b的数据根据path的属性路径添加到Data_a中返回""",
-                                                                   "Scavenger", "Data")
+                                                                   "Scavenger", "G-Data")
                 return instance
 
             def get_ComponentGuid(self):
@@ -1695,32 +1673,29 @@ try:
             def RunScript(self, Data_a, Data_b, in_path):
                 try:
                     DataTree = gd[object]()
-                    re_mes = Message.RE_MES([in_path], [in_path])
-                    if len(re_mes) > 0:
-                        for mes_i in re_mes:
-                            Message.message2(self, mes_i)
-                    else:
-                        if len(in_path) == Data_b.BranchCount:
-                            if len(in_path) == 1:
-                                Data_a.AddRange(list(Data_b.Branch(0)), in_path[0])
-                            else:
-                                for path_ in range(len(in_path)):
-                                    Data_a.AddRange(Data_b.Branch(path_), in_path[path_])
+                    if not in_path: return gd[object]()
 
-                            paths = Data_a.Paths
-                            Branch = [list(_br) for _br in Data_a.Branches]
-
-                            for _i in range(len(paths)):
-                                for _j in Branch[_i]:
-                                    if 'List[object]' in str(type(_j)):
-                                        gh_Geos = [GH_Convert.ToGeometricGoo(_n) for _n in _j]
-                                        ghGroup = GH_GeometryGroup()
-                                        ghGroup.Objects.AddRange(gh_Geos)
-                                        DataTree.Add(ghGroup, paths[_i])
-                                    else:
-                                        DataTree.Add(_j, paths[_i])
+                    if len(in_path) == Data_b.BranchCount:
+                        if len(in_path) == 1:
+                            Data_a.AddRange(list(Data_b.Branch(0)), in_path[0])
                         else:
-                            Message.message2(self, "添加的数据和路径数据不匹配，请检查")
+                            for path_ in range(len(in_path)):
+                                Data_a.AddRange(Data_b.Branch(path_), in_path[path_])
+
+                        paths = Data_a.Paths
+                        Branch = [list(_br) for _br in Data_a.Branches]
+
+                        for _i in range(len(paths)):
+                            for _j in Branch[_i]:
+                                if 'List[object]' in str(type(_j)):
+                                    gh_Geos = [GH_Convert.ToGeometricGoo(_n) for _n in _j]
+                                    ghGroup = GH_GeometryGroup()
+                                    ghGroup.Objects.AddRange(gh_Geos)
+                                    DataTree.Add(ghGroup, paths[_i])
+                                else:
+                                    DataTree.Add(_j, paths[_i])
+                    else:
+                        Message.message2(self, "添加的数据和路径数据不匹配，请检查")
                     return DataTree
                 finally:
                     self.Message = '树性数据插入'
@@ -1730,7 +1705,7 @@ try:
         class DataShift(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-数据偏移", "RPP_DataShift", """通过偏移数据列表的方式将数据一一组合""", "Scavenger", "Data")
+                                                                   "RPP_DataShift", "D12", """通过偏移数据列表的方式将数据一一组合""", "Scavenger", "G-Data")
                 return instance
 
             def get_ComponentGuid(self):
@@ -1869,7 +1844,7 @@ try:
         class GetTreeDataByIndex(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-树形下标取值", "RPP_GetTreeByIndex", """树形数据根据下标提取的方式；支持多下标（树形路径的模式为{0; 第N列表 - 1; 果实数据}排列）""", "Scavenger", "Data")
+                                                                   "RPP_GetTreeByIndex", "D14", """树形数据根据下标提取的方式；支持多下标（树形路径的模式为{0; 第N列表 - 1; 果实数据}排列）""", "Scavenger", "G-Data")
                 return instance
 
             def get_ComponentGuid(self):
@@ -1933,7 +1908,7 @@ try:
                             try:
                                 Result.append([leaf_result[_] for _ in new_index_list[single_index]])
                             except IndexError:
-                                Message.message1(self, '超出索引范围！第{}列表数据错误,原数据列表从0开始到{}结束'.format(single_index + 1, len(leaf_result) - 1))
+                                self.message1('超出索引范围！第{}列表数据错误,原数据列表从0开始到{}结束'.format(single_index + 1, len(leaf_result) - 1))
                                 Result.append(None)
                         return ght.list_to_tree(Result)
                 finally:
@@ -1944,7 +1919,7 @@ try:
         class LenTree(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-定义长度树", "RPP_LenTree", """列表长度转树形""", "Scavenger", "Data")
+                                                                   "RPP_LenTree", "D11", """列表长度转树形""", "Scavenger", "G-Data")
                 return instance
 
             def get_ComponentGuid(self):
@@ -2010,7 +1985,6 @@ try:
         pass
 except:
     pass
-
 
 import GhPython
 import System

@@ -23,20 +23,14 @@ import initialization
 
 Result = initialization.Result
 Message = initialization.message()
-
 try:
     if Result is True:
-        """
-            切割 -- primary
-        """
-
-
         # 获取数据详细信息
         class Data_message(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-获取数据详情", "RPP_Data_message", """获取数据详细信息.""", "Scavenger",
-                                                                   "Object")
+                                                                   "RPP_Data_message", "C3", """获取数据详细信息.""", "Scavenger",
+                                                                   "K-Object")
                 return instance
 
             def get_ComponentGuid(self):
@@ -92,7 +86,7 @@ try:
         class DATAKEY(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-赋值键值对", "RPP_DATAKEY", """对物件的键值对进行f赋值，当多个物件赋值时，注意键值对顺序和数据结构；""", "Scavenger", "Object")
+                                                                   "RPP_DATAKEY", "C4", """对物件的键值对进行f赋值，当多个物件赋值时，注意键值对顺序和数据结构；""", "Scavenger", "K-Object")
                 return instance
 
             def get_ComponentGuid(self):
@@ -192,9 +186,9 @@ try:
         class Data_KV(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-提取键值对", "RPP_Data_KV",
+                                                                   "RPP_Data_KV", "C2",
                                                                    """对物件的键值对进行提取，当Key没有值输入时。提取所有的键值对.""", "Scavenger",
-                                                                   "Object")
+                                                                   "K-Object")
                 return instance
 
             def get_ComponentGuid(self):
@@ -296,16 +290,11 @@ try:
                     self.Message = '键值对查询'
 
 
-        """
-            切割 -- secondary
-        """
-
-
         # 拾取图层物体
         class PickItems(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-犀牛图层拾取", "RPP_PickItems", """拾取犀牛子图层的物件""", "Scavenger", "Object")
+                                                                   "RPP_PickItems", "C12", """拾取犀牛子图层的物件""", "Scavenger", "K-Object")
                 return instance
 
             def get_ComponentGuid(self):
@@ -334,8 +323,7 @@ try:
 
                 p = Grasshopper.Kernel.Parameters.Param_Boolean()
                 self.SetUpParam(p, "Switch", "S", "插件运行按钮，输入‘True’执行，默认不执行")
-                DEFAULT_BOOL = False
-                p.PersistentData.Append(Grasshopper.Kernel.Types.GH_Boolean(DEFAULT_BOOL))
+                p.PersistentData.Append(Grasshopper.Kernel.Types.GH_Boolean(False))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
@@ -366,7 +354,7 @@ try:
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
-                pass
+                self.factor = None
 
             def find_true(self, str_list):
                 fix_data = [len(_) for _ in str_list]
@@ -395,7 +383,8 @@ try:
             def RunScript(self, Father_Keys, Unique_ID, Switch):
                 try:
                     Data, Info = (gd[object]() for _ in range(2))
-                    if Switch is True:
+                    self.factor = Switch
+                    if self.factor is True:
                         if Unique_ID:
                             duplicate_rm = list(set(Unique_ID))
                             sc.doc = rd.ActiveDoc
@@ -428,7 +417,7 @@ try:
         class ExtractObject(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-提取图层物体", "RPP_ExtractObject", """提取图层信息，拿到指定图层物体""", "Scavenger", "Object")
+                                                                   "RPP_ExtractObject", "C5", """提取图层信息，拿到指定图层物体""", "Scavenger", "K-Object")
                 return instance
 
             def get_ComponentGuid(self):
@@ -524,7 +513,7 @@ try:
         class PickText(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-文本提取", "RPP_PickText", """提取Rhino物件（可单独选择）中所有的文字""", "Scavenger", "Object")
+                                                                   "RPP_PickText", "C11", """提取Rhino物件（可单独选择）中所有的文字""", "Scavenger", "K-Object")
                 return instance
 
             def get_ComponentGuid(self):
@@ -611,7 +600,7 @@ try:
         class FilterByAttr(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-以用户属性筛选对象", "RPP_FilterByAttr", """按对象的用户属性筛选对象，或在没有对象的情况下并行筛选属性""", "Scavenger", "Object")
+                                                                   "RPP_FilterByAttr", "C1", """按对象的用户属性筛选对象，或在没有对象的情况下并行筛选属性""", "Scavenger", "K-Object")
                 return instance
 
             def get_ComponentGuid(self):
@@ -677,6 +666,15 @@ try:
             def __init__(self):
                 pass
 
+            def message1(self, msg1):  # 报错红
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
+
+            def message2(self, msg2):  # 警告黄
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
+
+            def message3(self, msg3):  # 提示白
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
+
             def mes_box(self, info, button, title):
                 return rs.MessageBox(info, button, title)
 
@@ -732,15 +730,15 @@ try:
                     attr_str = [str(_) for _ in attr]
 
                     if len(attr) == 0:
-                        Message.message2(self, "A端为空!")
+                        self.message2("A端为空!")
                         return Obj, Keys, Value
 
                     if key == None:
-                        Message.message2(self, "K端为空!")
+                        self.message2("K端为空!")
                         return Obj, Keys, Value
 
                     if len(val.AllData()) == 0:  # 判断是否为空树
-                        Message.message2(self, "V端为空!")
+                        self.message2("V端为空!")
                         return Obj, Keys, Value
 
                     value, value_path = self.Branch_Route(val)  # 得到输入的value和path
@@ -763,16 +761,11 @@ try:
                     self.Message = 'Filter by User Attributes'
 
 
-        """
-            切割 -- tertiary
-        """
-
-
         # 创建图层
         class Add_Layer(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-创建图层", "RPP_AddLayer", """生成未存在的图层（只考虑最优时间，除图层名和颜色之外全为默认值）""", "Scavenger", "Object")
+                                                                   "RPP_AddLayer", "C13", """生成未存在的图层（只考虑最优时间，除图层名和颜色之外全为默认值）""", "Scavenger", "K-Object")
                 return instance
 
             def get_ComponentGuid(self):
@@ -833,6 +826,15 @@ try:
             def __init__(self):
                 self.dict_data = {1: "Continuous", 2: "Border", 3: "Center", 4: "DashDot", 5: "Dashed", 6: "Dots", 7: "Hidden"}
 
+            def message1(self, msg1):
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
+
+            def message2(self, msg2):
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
+
+            def message3(self, msg3):
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
+
             def create_layer(self, tuple_data):
                 name, color = tuple_data
                 if not rs.IsLayer(name):
@@ -847,12 +849,8 @@ try:
             def RunScript(self, Full_Name, Color, LineType, Switch):
                 try:
                     sc.doc = Rhino.RhinoDoc.ActiveDoc
-                    re_mes = Message.RE_MES([Full_Name], ['Full_Name'])
-                    if len(re_mes) > 0:
-                        for mes_i in re_mes:
-                            Message.message2(self, mes_i)
-                        return gd[object]()
-                    else:
+                    if Full_Name:
+
                         if Switch:
                             diff_values_one = len(Full_Name) - len(Color)
                             diff_values_two = len(Full_Name) - len(LineType)
@@ -870,6 +868,8 @@ try:
                             else:
                                 zip_list_two = zip(Full_Name, LineType)
                             map(self.change_line_type, zip_list_two)
+                    else:
+                        self.message2("图层名为空！")
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
                     Rhino.RhinoApp.Wait()
@@ -881,7 +881,6 @@ try:
         pass
 except:
     pass
-
 
 import GhPython
 import System

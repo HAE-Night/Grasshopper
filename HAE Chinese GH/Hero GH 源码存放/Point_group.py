@@ -26,7 +26,7 @@ try:
         class PointsSort(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-点排序（参照点排序）", "RPP_PointsSort", """点序排列角点，根据参照点自动排序点阵""", "Scavenger", "Vector")
+                                                                   "RPP_PointsSort", "Q13", """点序排列角点，根据参照点自动排序点阵""", "Scavenger", "A-Point")
                 return instance
 
             def get_ComponentGuid(self):
@@ -74,7 +74,7 @@ try:
                     self.marshal.SetOutput(result, DA, 0, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAH4SURBVEhLxdW5Sx1RFMfxh8GQRDAS7WIKQUUbJVZWaicoFgkknbFwKUQFiyxamaVIE40W/gMxkEYkpDG9SBL3DdzAJVZxCaJgqd/fM3e4c2Z4pNH3gw/65tw76My55yXSkZu4cflrbG79+xmXlHsz8QFbWMcr+KnCBH5jHCVw0d5+uL0vEclHnBudUApxBr+2g7tQBuHXpANB7uAQdtEClOewNamHcgRbm0eQ29iHXTQDpRu2JrVQDmBr0wjlDeyiJigPYP/KFWRBeQe/Js8QSQ/0r/1Cmy54Kcc3LOMz8uGnF25vqy6kJQVoRwvydMGkAV2oSX4Kx+1tRq4u2KjPj+GeodqwGIoOzxf4z/g9XKrh791GEYLoBmpJ/wYyBuUxbE30XpRF2NoogmTjBHbRGpQ+2Jo8gXIKW1tFkAz8gF00AqUOtialUNQ5tvYJoTyE5oxbsAS/FYfh3+AFXCqwB1fTI7uPSO7hEdQtOt02lXiKsuSncNQ5bm+qiXt1cSNXLbYJnWo/6v1J6FF8h3v+ivYOQHs3YEd9MnEjV4dKiRvXu8iBMgS/JpFxHTdy3bjWC7U1ceP6L2wtMq7/wC7633EdN+qnEMpr2EVuXKtd7ReSpqob12/h16QRkejlzOIn7MhVa36FzocOoO1zNcUctFfD8jqSSFwAmoPvaxdGlE0AAAAASUVORK5CYII="
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAOsSURBVEhLzVVJbJVVFL7/OXf4+96jIJCGoQwCWoYWSSGk2PJeKVMRO1AItUEjoqBYwlQNilUWGCFxIQkbgkqI7tzgTllIAokGCERiSyAlwUTTNSEsgI3X79z/f/QRMClpF37Jeeee77/33OEMT40CxnI1t0NPTMxRBi3Sh+zurOfWeEBZNS+lRxUzuSUeMPuyXm+O71CN2ZHyjyHmenuK2+Or/Kq7CLkUZL07H+y2uI9b3R/c4q7xK+46+H7oa7zOXYG+wE1uwLyd8WZX1ouOqvXX8OkS1wnKdVvs7Uc5b3uyiexPdU+RE10iH5QITm/ewQayyR7cZGPs4XNq4joFz+a1lLcHOW++4II5Cn0YcoRXuK8gx7jRnoR8xwV7Gvp7Xo0br7Lf8lp7kpaan8zrZf+EG2zLeKrVPXAZJZ5Hjom8yvXJyc1bcF6t96f8sFEBeew9gRrIc2E0TuXNljKPG3iap/cE7qmoUHW0wp6LXjJfwtJC0Wzq1O3xXQSxX5WpKYGr0b3ikFfa2yqjJgunJqMOxqqmMP4v8HJ72R3MebO1zGNyo3BUby7YTxDE7qynStoS5hVsv/sU87ZnvBrPa4QbFniJ/sa+jwxY7x6qMapKOHqR3tAd8X2c9paK1fTAvUBdus0N0svmZ5hjhBsuHE3HKTNqcWoXUQnJJsNHMKkuRQxZB9kMmSPESBBiVILaqIJuIn29bnae5uoH4HqTT6XIqQJ+QzBTZHmxPkUFe7b4bDyLO1DRg9RgzsHMQWI4/ysUGnpSqIW96E1LjRRbh6wJiGrNcalEFNBgMTtoJr1pdmLBgRwW2B8CJ8nQiyC/hyBP08tBrUQdJM5lE5F3Ex2VR7/ImgBusrdCdmzFwpyqD+Qkndeb4pAxtFB/JhTN1z2mC2m62v6NbJNa6NYbMAcJ8mgDkZ3YYApdlzUB/DxvRBO7gWw6DXOosCaoRppGnRhRQgRIoRX7fzM32NCDSp2Hg2aiM+mcEUHjKX7Tr6GaZRN5KtyGqrTEYFkyZQhP/CvRLOriZeYEEnVBSklCyhPOTYyACoT6DKr8AS8xPppEN8FtSD6lQGrtxXvfowZ7HmZ5IK2qQqGFNs55+7tQiEG3Rt/RLe4+jlMb5g1hBmQ+5Mk6QZD/DEFGu0WQJTskEnN0Kzb4EFdusL8KRXXmR/sx5iEdkWXbw7zhACc7oDvjh/hPuARzXMICldyMFP4cIzkdHkPX8RrXhz51FtaEwD0DxMnT2sD/FUr9C+6U9SlB3IOYAAAAAElFTkSuQmCC"
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             refer, vector, switch = None, None, False
@@ -138,7 +138,7 @@ try:
         class PointOrderGroupingSort(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-点序排序（分组排序）", "RPP_PointOrderSort", """点序排序，按X-Y-Z轴分组排序""", "Scavenger", "Vector")
+                                                                   "RPP_PointOrderSort", "Q11", """点序排序，按X-Y-Z轴分组排序""", "Scavenger", "A-Point")
                 return instance
 
             def get_ComponentGuid(self):
@@ -187,7 +187,7 @@ try:
                     self.marshal.SetOutput(result, DA, 0, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAGcSURBVEhLtZXJSgQxFEXLlRM4bUScFk6gf6Sggi4UdKkiqAgudCMuHED8ERWHpdor8Yu8J1Sa9KMqCd164WQglUq91M1LUWpBXIjrCuZFTEuiat65mBHFovgRe2JVrBnGhNeAGC5rrwlh5/CeA/EtiivBy2PqEmfiVTyLN3EkUjqhuBUrNCIaEl9iVPSJKfEpekVMmxTsF2HFNCKeBJGgbkG/3/XqtUWRs8CgaAi+nGhmBRGlInAL3Ih1GhHx5ez5i+DL+Rf7IqVtinuxQSNDPYJ/QJ2jHQp8HlrxLzVe1k2x19bnodoe9z7H3/j8XYQ+73TcrRz6fFJ8CO8SO27PAeP0a88JYVmfPwrv89Q5YD7P+3Fe3HJO2DPrc/uFsXPAfPp+fK7sNyNgZfYszDWhz9sZr8xvrBjzeVvj5HNS7n9omuJBuKyXIfY6dg6sdinIRalkxx77+wB3sMctPq9Rdja19wHnJOc+yF6go/vgTizTiCh1Durk/u2lOKQRkfU5deoeR/w3l665/Y8FIVnClFt1HxBV1bzToigavznUYxXIUCEIAAAAAElFTkSuQmCC"
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAANCSURBVEhL7VVLSFRRGD7P67zMwmaS0KFMcdDSpphozFeaUYalYi/t5aNErXxUq8JFUBAUtiqCaFW0qaRNu1zVrnUQ0jppEQS1KBe377/3nNEZbRMtWvTBx5z5vjv/+c893znD/uNvQ4DSH/4ZanmZfMCL+A2M1/iSQT47IdL6g6jVc6xADBjVYhevUi95pXqBccqXcqHZZlnvLOgLYVefC7kioV5Dtd2WykbH1Zcirp6MuLIlz4VW7lusWKb1Nz2O342FXblDf4EW9a2liIgRPRhy9TA4kSmy1jfZdnUw4OpxTIBCqitAnu20WR0Jul5jFzNe0reyUSHrnO/6PB7ERLxCvYJG79wD3yAfqc6AV4BvlE8h2dWFxBb9TvejsT6svFK+gRbwrUVwkIqlUegej/LrGFP3DphnPslvAptBKq5B8hQYw75MsnwxhnGh8YgZ0DvrBw+AabAe7AVpMy1Pgi3gbvC40Szpex1IDVANqkWNLEONKBFXscAe8z0bDutGp4MYZScMqxBFYkpsRYpWiWGj5UCxlGxwftAmq2NBlxfLO8YhcF4qH6sebCbeNQrNQYv5Fsy4vKvPhFyHAoANZ4ViyFiL4Ov4tB7FBg9hsxBHWas/GYsQl3vzvHTpUfinQy7e8FHjMVGj3nsRRrwpZbxcPjHWEuSzdtUe8LqgB3mZeG4cQlgk1UeKoZ5A1lsRYb0kijExTgnTI1gBGqFaxslBgPWKajXDS/htfCvwxQyqeELNiKSeZUF22GiLkKxDxNUURg2+kA0b01xQHC1zsdTL/e0yjWJ6FqSEnAJPmzFplhS9brAL7ANpIy3pWVoVeRRZ0lrBFbEatK+HVka0aENvnfikg0ewPmcRNoATfgvjRjJWhIiJa3KP81m2OPMsKi4bmSB5uXhG8VW9QXsdhH0L1eNymnRKIaUNzordJ1UboojbkuilgbEy32LVlDDvsqMLDRNBsydViJSez8QUlx6dC+NlIeUVQQy9CfZ7EyR8i0XlTv3VOwcU0yaHPHtd00V4n86GNzmaREzpulgOvl5Oy315C1jmT/zp3DSyRQMiPCu26bfYgQ6jWTg4vVd4Qj7EHh0y2m+xCSz1h/88GPsFpM/CDb7qytQAAAAASUVORK5CYII="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
@@ -249,7 +249,7 @@ try:
         class CullPoints(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-删除重复的点", "RPP_CullPoints", """删除点列表中重复的点""", "Scavenger", "Vector")
+                                                                   "RPP_CullPoints", "Q1", """删除点列表中重复的点""", "Scavenger", "A-Point")
                 return instance
 
             def get_ComponentGuid(self):
@@ -306,7 +306,7 @@ try:
                         self.marshal.SetOutput(result[1], DA, 1, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAVMSURBVEhLxVV3TJRnHH7LaLW1pzVGrSYtggQJgpooqHB4OLCuGFmKGA3GSRARNY4Yt1UwGqPRugVFRG0ZKioyHamDKUMtyNZyUMq+ffj0ueO0tSL1vz7Jk3vv/X7v7/mt73vF/4KLEolz8uDBy/YJ0du01S0uWFiMTe7ff3m4EF+btj6OKHPzqXmBgW3KM2eQKZNl7RbiW9OjLhFjZuZXGBam0dy4gTQ3t4wN3QUVaW7umR0Q0K6Lj4f29m1orl5Fhrt7zsGPiESbmc0tDg3VQS4HFAro7t1DirNz5iohJCaTv3FJIvHM8fdvU0dFofnIEbQcPw7N9evQxcV1KXLe0nJeUUiIDhUV0D5/Dk1BAd7U1kKbkYE7zs4ZB4ToazJlWT7/3P6xl1e74tAhNGzdisZ9+9B69CjaWSb9zZswZJQuleZGCDHQYB9jaelXGBysBx3rsrOhefwY6qwsqLjuoKA+NRV3XFziafqZwV6c79nTpWTpUrTu2YP60FA07tyJ1gMHoDhxAipmhORk6BMSkOrufj9KiKC8oCAdnj6F/sEDaDIzob57FypSSWoogvx8pE+cmP9OAFxcs7P7sXr1arTu3o3GDRvQsncvFIcPQ80stNHRAKNqi4lB6bp1wMOH6EhL6+wTqSKVt25BlZ6ODoo+8fVtutijh5vR+T8RZ2sbXr1mDRTh4WjesgXt+/dDdewYtOfOoePSJYBOcP8+3iQlQZeYCC2pJpXMTsUp6khJwRMfn6YzQkwwufwQcTY24TVhYVCzRG3bt0N58CA0bLg+MtIo8ubKFeg5XTpSExsLJfcVp05Bd/kyHnl7N0cK4W5y9XH8YmMT8WrtWmjYdAX7oaKIlk3Xnz4N/dmz0J48CTXLp2A52zdtgpoZP5o5s/vI/w1msrMsNFSt5EQpduyAir/qiAio2BslM1Ns3oz29evRsmsXsry8Ks5aWEhNRz8Na4Xony6TyVvpsI3ZtG3caIzWwDaylXvtHIZa7v9sZXXBdOzTwJdkcIZMlmN8J1atQuPKlWgKCUEzB8DAJk5bY3Aw/uRoNzGLUq4T7Oz46foEHBFiEJ3nNzHK+kWLIJ8/H/WBgWigs4blyzvJ9R+LF6Nu4ULU+vigMSgIlQwiYdgwfu+6wU+MPNPDI6+BUb6aPRs106fjNR3Uzp0LeUCAUazO3x9yspY0PKuhXdXkyZAvWIByCl9zcOg6E46X0bl8xQqUT5iAl66uqODBqmnTUDNrFmpmzEDdkiWoZ+0NgtX8X0VWenqiXCZD6ejRqKZdGbO95uj4vsgpiaRvmlSa9TtTfjFyJJ4NH44SZ2ejSBnFyqVS1LFcBTycIpPV1fJzYhAoc3PDS7LExQUvRo1Csa2tUewls0tydNxsci9E7IABHpV0XjJmDPIHDkSRvT2eOToaD/02YgReeXujnNGzxttOCPFdmkyWW8/GllH4uZOTkcU8U2Bjg7w+fSD39UX6lClVdN35LbrYu/c3Ka6u6dWscRGjyB80CIVDh6JwyBBUTp1qTDvR3n6v0Zg4zk83RzivdtkyvGAABVZWeErb3H79UMqsi9mb6w4Oq03mnTBcj6lSaUYNm1lA4xyJxJh+KTNLdHB45/wtjNPm4ZH7mqUrtLZGdq9eKBk3DsXsT7yd3TqT2fvYxpvIKEKjqkmTUDpvHm44Oe0xPf4A53g/cDByXvv5oZL2RYw83t6+a+dvsYY3UdL48XdzvbyaYztHzpz8gvyyC5rxDra66eb2a/acOS3RdnZbuPef+Iq0nS6EC38HkN+T1t3QcMtZ/yDEWNPakjRBiL8At09pA8gJgyQAAAAASUVORK5CYII="
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAALpSURBVEhLxVVLbExRGL7nNe9hYlSrHp1pqSn1atIOaUu6aiJFaMQrDerVUqysbMTKQmJnJRE2VmyRNJogIRIWSDRBLCwEDSEioqnr+8+5dzpze+fOdOVLvvTMf77/+8/5zzm31v9EAmwww6pQC9aYYWUIluWjvFV+wjhjQoFI8ZwY583iFcZzTCgArJ7fUoMxW52O2yjyFqHFZsYXSdYknqjhuK2GYjbGjxCLmykfsDpxUx2A+QkkHDN/+Uo5jqk6oyhBjGXFQ62DueZRFMnwMcxFjGQaEVYvrquBqDE/AjHxOIjV8RXiJTTzjVQjDKP7WkPGrn4YPIwiWX4PmpSREqQ1IndGbHUG5hAUEohUZAhFmsVzKPX22VJ+V+vIsFhLsVPwwEKxv0ukdZFmjfyO7r03iUirRCGsbIzV8tvqEH5T3706WgzIW8QzeC4x1tMIswY+WjD0JlPsIEht9JvX7YR5TryAV9pYzkSMZcQDOixfEzpQMvLGtTna2CJew4PeRCASuG6PC7fDa+ale9tWyTfIXWQsKiPFl4uneidk4GdMdHbK1+j3MpuXr5HAG/isTvocpkvMiXb1C9plJmU2SLGLsj8y6dtzl5iTe6NTbKG45mRVibkw34XbMhKwepf0MHGz2AJ2w8mugCS7gJWXN6e+F/+mx4VWyf0oUsOuOi5lEOPn5I4y5u7VJZYrsg9F5rErjpsHSX5Wboc5PfXiZCIZIo4D/cZXy4/64L23yy2yG0XS7LLj6kBZg7KvzLeISOadod9Q5sFG3qa+6F367QRaKmJF2XntraGsVr5Ovit8pouT8H9BdIf+QNVrxBrrebv6qndbXITGKCzyagIf7G5HW0ADtv++ZPtkvjk0hbmtRlKCDhh9LxQpaiPm2oxkJpr4WvlBF0G7RE/YRqzfTPmiU2xUP2khejF59QMxamMgcqJDTYhebb7HhALRIzaF/oqu0CTGXSZUGRvAATOsCtvALWbowrL+AVSqihre6oZOAAAAAElFTkSuQmCC"
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
@@ -365,7 +365,7 @@ try:
         class PtsSortByXYZ(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-点按XYZ轴排序", "RPP_PtsSortByXYZ", """点序列排序，将按照给定的参照平面排序，不给默认为世界XY""", "Scavenger", "Vector")
+                                                                   "RPP_PtsSortByXYZ", "Q12", """点序列排序，将按照给定的参照平面排序，不给默认为世界XY""", "Scavenger", "A-Point")
                 return instance
 
             def get_ComponentGuid(self):
@@ -414,7 +414,7 @@ try:
                     self.marshal.SetOutput(result, DA, 0, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAGhSURBVEhLpda9LwRBHMbxxXl/Lby1/AFeOoVCJP4TCgWFRBQiQkEiJCKRKDQ6GhGKqzQaodARBUpEI4iEhPB95naTdTezt3Oe5JPbmdvZ397O7N4GltRjFouYQTXSpAejuc3kdOAn9I0mpMkpNKbPtBLShldo5yc0oliGEJ3UgTqSUkqBc9xhDRrXC2d8C0RnP4YyfCALZ3wL6Oxvc5smE9DYftOyxKdAdPYXWMYKtsI+51z4FDiB9nsLP+Ur1rbORdoC0dlPozlPN5xzkaZAJS7xjCp1WKIbVccoSJoCutu1LMdNy54WXOc2/ybtJaoIP5Ni3cdnkkuKb4FWhxpY41NgEtovTsv0Bbo3MiiITwE9ouexEJrDPjR2B3p0FOS/c3CGezSYliXl0E9UgUd1eCR6mo6YVizD2MAS1vEJ7fiOVahf3w/ClQFozLZp5aUT0T+SyzG0OmzRna0n6gPq1GGLZvwQtoPvIinOS5MfW5FiB48uzaZppYiKHEGD9tSREK2UG2i1daE9pBeHWjijV5UpaEUlRa818V8bdxUEQeYXu2uXtVyxgvoAAAAASUVORK5CYII="
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAKrSURBVEhLrZVLaBNBGMcHd2d2ZyZRsQcPCoKoiIpUPXjxIHrz5KEBg0LM7mRjk9YXiiBqrY/4rqFFRHoRj6IUqkItBS8Fbx706lk96UFQRCT+Z/NV8mhNAvuDYXf+3+z3n9l5sQXEUGozG1i+iqoJMsw8N1TPeEnXeFF/dvP+Hookg2P0Pn4cyQuqxk/gGcoZCjFm5Fo+JEe90NtASu9wo7fyY0g+jOSnUzBQ4xRiwqgRcTFd40aNkbQ4uRUrWahXU60dYeQAH9IzPFITLOhLkwxzWRFnYGpUlaRFQXweI//KcswnqTvw0fXYIFT3SGoDyftdI9+5oXzPjZ8luTswghs0grsktQHzKuZv2i3ISbSfJbk78MGt+gjkbZKawS9B7BMfVG/cSL6A2W9WlGso2hkY3CGDmyQ1wQO9DbHXVGWuUc+dUB2gamfsv48NAlkhqQlxNL0R+yeLdjmUPBZKFr9zF4U7g8Zj9TmQ10hqJsMcFjHFjjAdF/seMU7RzqBX92ODgrxKUrLAYJxGMEpSsuAXTdAkXyYpWTCCB9YAh+ElkpIFBg9jg0BdIKkZTCgP1A67ckQ5vckP/HUUWQKsgsZG2P6PGg3cvNztFvWpeLVYyuk+JJ/DIpjlg/qPG8jJWF8KNJ7CqfoLG+Y81avirJ0DZXiot/Oi+iHOpWpOoPfHHxAikAexEL7JTrsYjSr8JI5tFPTmMYyeChzjeE4h9iU+zo18xUosRZ8wmxQd+O6E3l6S/g96HaKnP4U1spdQiGLvi7iO5I0bCUYw/4g2b3lJ9YsI12432IlzI/UhvoSsSXzjtSQHIi+24A6Zh8k0L6s5x8grFOqCDHoXySeinvxla3KLl/fW87I+ZO8BXvQP93TQLYCe7cRjWb3Wwgj0DBP/Si/nUDIw9heQCbZf5May/wAAAABJRU5ErkJggg=="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
@@ -461,7 +461,7 @@ try:
         class SortPt(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-点依次排序", "RPP_SortPtOrder", """以初始点依次进行排序""", "Scavenger", "Vector")
+                                                                   "RPP_SortPtOrder", "Q5", """以初始点依次进行排序""", "Scavenger", "A-Point")
                 return instance
 
             def get_ComponentGuid(self):
@@ -511,7 +511,7 @@ try:
                         self.marshal.SetOutput(result[1], DA, 1, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAGdSURBVEhLrdY9KEVhHMfx6yXykkJKycJEBvIyUTZZyGAzCDFREmVkYsVglEXJYlFKGYjBoAwMohhEZFKE8P2d7tHjnHPPea57fvWp+5z7PM//vDznuTeRZlowhSEU6kCcGce34QyViCVV+IBZQJYRSzrgnVx2EUsqcA9vgRf0IpYswJz8EFfJz4vIwr9Ti0fcYBBdUEqxDbdgDdJOLk6hSdp0ICDT0PcPWMMO5lCAyKxCgyecVur0Q/1M+wjNANRx02mFZxLeApIyddDa14Ms0oGIrMC6QD7OoQ6NOmCRTrzDnPwNgdGDUodRp2WfDWjcJy7QDV9GoE7rTss+2biGbqmWtVbfb7TXLGEPqn6CPx0s0gqd2LzTMlIO9410ad0XI53obdZY3zMbgzm5axi20TZxm+TbMmYRVGAGttGS1hjtV77U4wvm5GprUFTKoDd4C3pnGhCYHlziFVpefYhKE3RL3JPS2GakTB6qkeO0wqP7fADzquUYWq4ZR7vkM7wF9ANUgoyjKziCt4CWdyxXoOgvzB3cyZ/QDiOJxA8jXI+HhRHZIAAAAABJRU5ErkJggg=="
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAJMSURBVEhLrZXPaxNBFMdfsjObndm0VVtssUG0IP5AVFDBk14FRShUWkpVSDabhNjE1qvai968KIIV1IsK+g+Igoqi4KVQ/IXVqhfxHygIxYPrd2aHYNvNmqz9wIe8eW+zk32ZnaFEFNxeGiJhRqsL80WZV+UC8+W87We3mfSq0EcpusjGRMBPuwE/mw1YRV4wtf9iK7wO5+ANNipu8zomKMvFVM76htwmmIgD8AH8CK/AAahhfvagXbK3IKzCH3CNysciqmIDPhg8DB/Bd/A87IFxXIbvofpuBD5xlhf3+Lj7kw0688RpBtkKdHS9Ne7Dp2G4DF5wd+HmqqeB7m1N7jWldnkB74Th3+Spg3tyxj7jBqwoP9FE5zpTaRcbqrZO6dESumlfesCao3rXv/+sOPopl97JAnbMnjSZBp1wFnbpUULQ5mn1fnB0A10pmnSD1/BQGCaDV+RLfXM1iSfU6lqCWgm1MExGej8bZyNigZfEQ+GJnEk3OAdvhmFi1EoaDsOVHIXPwzARu+FnaOlRBGpPeQszetQ+01BtKU1RM6uVtEOP2kP9qC9wux7F8Bg27WEMo/BVGMZzFV4Kw7Z4Br0wjGco1Zt+QhMtHod+tsc6Yg8iegNdnWvKFKVZQdxSpxX2pA90UvSbSiQZL7MZx+Z3GxukNSxaaE/ZXa93VOUk3sS8M2IqkWAXHtPXqetL8jed6Og2pSYcJwtPcJfX9BN8dXxno6lEc0r2saKYxRP/4gV5jQKc2K3A63IP+Wtb2/RwWGXqmZgzmegPX552tJxMRjEAAAAASUVORK5CYII="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
@@ -559,7 +559,7 @@ try:
         class SortPtGroup(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-点排序（输出下标）", "RPP-SortPtGroup", """将输入的点按照坐标系排序并输出下标""", "Scavenger", "Vector")
+                                                                   "RPP_SortPtGroup", "Q14", """将输入的点按照坐标系排序并输出下标""", "Scavenger", "A-Point")
                 return instance
 
             def get_ComponentGuid(self):
@@ -668,7 +668,7 @@ try:
         class FitPlane(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-点共面平面", "RPP-FitPlane", """判断指定点是否共面""", "Scavenger", "Vector")
+                                                                   "RPP_FitPlane", "Q2", """判断指定点是否共面""", "Scavenger", "A-Point")
                 return instance
 
             def get_ComponentGuid(self):
@@ -718,7 +718,7 @@ try:
                         self.marshal.SetOutput(result[1], DA, 1, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAPCSURBVEhLrZRbTFt1HMePD+5F9+IlGk182IMxMfFJow8aY2KMxvlk0Ji9KXtworColUtLIeuFXmDlVtcLG0VuLe3oha5dKXQU6lbZuA1U6JgyLDFAW9rT9vRCz9fT7gSomI3EfpNPer7f/+n390tzeoiDAohHUuNVlWlr3adsVFoll8rfwt16wNIAul3yHBuXTuTCF6/gFgcZEzdMa5qfYOPSKnO18vWUteYl1u4p6Tr7Nqw/vMDahwqeM89m3TXvsPbBom6ffg+/8ZE18hahUj3KxnuiRqpOwMN/nLUFpf1fTWJBDtY+WORs+SkERcjq61fZaE+Z+fI3dm/VZHIG7hXzlPa4KtRT1hXVOaKLHMDTcLQBWCw7lrn2HSft+F6ZGuF8yMYF0f5Tn2C+GpSRT3dvaNf70gPozegxstaGpXXl0QbkFQuefCrrr6Jh44N+8vPjfBiO9e1cKtOHVWMrtwXw/apAT1wH3ZYGuk01tNtd6IeheEBi9JuPU1bOB6wtEu1982l6siJCW+t3rYHOru6wank4+xOGUj3oCmlwMaxG7+YF9G7tY6H79gcUHtHFasDWAKiaip4WA7OtMaH5yLsmD0wE2zGc08GU1GJgW4l+hvznf2FHz4EBS+UvY56D3GXuLv3Mt4/lM3tU/eJQQt3Yn9asWHAJ+qQGvZFOGEIdBfQPwYHu4p+IHjz9Gumoe9eSUp40x5VmE6nMeKHB3RUx3Gvnod9phzFcjIlhMNqJwVjHoTMXsxRbTRBGSnmim75Yoc8pp0ehhpspNiaV+P1OLWCuwJZTAGOsDcMRBcwHMEVb4VsT4/qqpHB98GwcWhD2RMurrnTnkD3RSv29KcNqQAZLVAHrznmYyFbM3WPeTbZK/DklxOX4/dzGYo4pMBqSIDtZARhqMb7egmFSsXc+wSxJjESbO2bQh+sRETD+JTBQh4m/5LAlmmGPNeNKVA5fUAxnRM76fWxkC8YiYqSnvgaGau9/L75/7sMFEM6YVPozfoRnR4SE7yxIBw/ukAyOuBRXY1I4SRnsCTnjZQX/b/K5f0OAX+4JD91zA8wfzU02SW+iA66EFN6wGBPMRq6EBG7y6DiTzCKU9FA+zfQS10iRdBZt8MTFGEs2MYgL16Ug30t4KaF0AQp4k8KSk+8lpiiBbAkt8FHnSk6+l/BTjdJlyHEj1Vhy8r3EzQz/zB+QYTrNLzl3IAExS9c+P5flUcs4h5kMl4FXArhMuQCzGd524TUxk67+LEA3UkGIsA7h/2aD6QnkGqJz2br3/wHxdyir9PYT6wAAAABJRU5ErkJggg=="
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAJ4SURBVEhLzZXfa9NQFMdPknvz46aurg5EmK7aKUOU6qbdhhsFER/24IMy3Zxjtkm6dTrmD1B0DhXEIYj4IIKvPuofqd97e0vTNk068MEPfMn5ngROcu85N/RfwkMRWHVxU9vhsQLvHau5C9oOxHruX+ev/AvadtPMjzqBM6ldNyzKVd2Ge0pbyQQ0bc3at6nIqjLWOgedj3mpMmRYIYqH4gviTOahPTJpxajwA3PcfAS/0qN70BJ0FwqgLYhBBpRJA5JfkArbzy3qUPIEyrfCbGpQif6QwQKvSWuFkVY6RpUYC8QL2sgf1ZkQ6n8uDo/8i2zXm0W4Ck3KAjz012ibcuqBQfwiyyhaH6jijetMMnbk3eK74iHCO1ByNyTx44Qwr7DffIlf0pkMRswtvPOUdl3w0DuQX6ptB4dkI7SXKx3jMv/G5lRr9qFauUFCGfS9XcvJllUO8nhTzLBILXMKAm1n01m1B3XvIwUjBX2nCx6JaTsQ+9rKApxvuquYBbnMqWxAag/wNldpBwuQzTY02gqzeQCVWmGMZbJQ2tWuF1kgeQ9Y6D/jdbGuLZknzZc00d8RLHQXscnvte1lcAG5UU7NOaMtGWXrM5th17TtsIydac8Elo3VxZvYjERQ+qDFSF6iOG+JWZF/QxVFMxgl65M772YeL21kF5Qo8I/TU/JaqRRkgSnrq7PQWYUs6lDBfixeY7KHnE51Fg192LWP42KfHDrNKmyOxjAnnbwctj1oUIclch+Sp6r8mo4cCjHp36lg7sTycoNlwWx4TZT5ZvYkJtIgrroRV53pRxXAj13bw9HIjeH/8ZPWjxzTmX8Mukm9vbwS0V8tu1oLnoBJZQAAAABJRU5ErkJggg=="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
@@ -779,7 +779,7 @@ try:
         class CurveDistanceGrouping(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-点与曲线分组", "RPP-CurveDistanceGrouping", """选出在Distance公差范围内的点""", "Scavenger", "Vector")
+                                                                   "RPP_CurveDistanceGrouping", "Q15", """选出在Distance公差范围内的点""", "Scavenger", "A-Point")
                 return instance
 
             def get_ComponentGuid(self):
@@ -963,7 +963,7 @@ try:
         class PointGroup(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-点由距离分组", "RPP-Point Group By Dis", """点按指定距离分组""", "Scavenger", "Vector")
+                                                                   "RPP_Point Group By Dis", "Q3", """点按指定距离分组""", "Scavenger", "A-Point")
                 return instance
 
             def get_ComponentGuid(self):
@@ -1013,7 +1013,7 @@ try:
                         self.marshal.SetOutput(result[1], DA, 1, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAO/SURBVEhLzVVpaBRJGK3unp57kkyOmcxkJpNEY7yNoiKIEkGIsIKKJxFdlAUVwQMFRQTRKIKKiheoEQNBlP0hKC7iriSKGMQL9M+y7rpBPBB3Xe9b/HyvupMYCSGiLD54VE3Vq/r6e/VVjfqeYbgt4XHbb4b9YBoMYufDg2z/TfS3cQJIgCOdbvcxEZzldDVGgHbMNE80xdMimT5Sn1cotlLrMV4JrqPoSzAarHa6bZiwNzcub4t7yalYSqSkjyyJRAXjfZ3pr8RA29v4Kt1LLhdmZFYoS94j0J/JUsk3rN2upEvMBGeAP4E1HADorel0VXJZJPpGMr3lWbpcHqZ6yku0UlwhU4LhFszDra5R5DIOloJc8DOYDRITjxUUySNsfAkZvMbXL4U9fyfLZHs0Rpv6ObLOkQSXgxvAURxwEQN1aWaZ5pqb2OwsDni2tqdC6nDId4p6yK84D0imU9cZyitt392jBUk5Hy+WBZEcivc4U+0Y6PHW30/10NZw03/R8rDJq8gopMxlkK0CWcrtKPPYjfew4Hcc1prsPJHSvlKXW8ggzKYNVb7AL0/g+X/uxk/Rf4D+Y7S0qdSyN0E2DozqBS7612bno6Z7y/VEiRzKTzgHhyALwjqTYeAi0PwhEG58gTlWEXXUH4BFa7H+Jcb6ebz7uGEHoDzmnYMtryF4nCrXX8avYQYtaBOW5whkP4LG+EC4icHfQcOPOlGQkr+guYpAzKTTAHHDqv0D1rDs6CnTvYHfi1EdLL+5oewHrlSN8QdO0haeATOhlnyDgDz8Msve6krbYCcsawsvChfSWy5kSxs+IABvLXR8IlSl19dwH2dFOzj/D3T8qOdYcw1ZhE2TB9wBSy2lmlnTtIaZzIfvXMhFkqnQzwF0vIAqahi1tO0MynQH6p62MgAzcHWtl7MNKbCmIS+h7bhVVKYPjXZdRNCmWFquoIVmvlYrNfU0xi5gbFduewCu3eZctAGOrCNCc0JZjyiit/waklWyKadA31hodAZAZmVW7jtW3KcW0cqaUOQ25iNgQCs/RZ5h7eMdaF1E8jngRjudLxvqKJUa7vU10z7Oc3Nm24LM05a1GdOTwRVa+BlKJgXCr5gFFzAAS5a/x/qDfMS8IB89PhvTtKUIzozZrsblxPhgMMfVdYrZvFisJi4iN8IijM91ptVCkBdOlVh2M8+GmuN4/MKGcZDj3UFNf9vbMg+Bqv3BF/jNf6pWMAuf01WFOYb5W5Uv+BBV2IDffme4ewiCQ8Bi/atrdHhz/kco9RESr7nIkzHaUwAAAABJRU5ErkJggg=="
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAM3SURBVEhL3VVNS5RRFL5zzz13nHH6tDLKtMakMhQ1JylrMrHI6dNsMvtAS63UUsOkZf+gRVCtJGjRrk07WwYtqoUFgZuEIHDjqk0kpLfn3HlzoWNgGUEPPLzz3vPcez7uOe+ofw0KnkuKA1RpnlKSx6jeftSVPKKiqj2w/SHy9KA5EnbmRI7jSxFnmvG8levMhYgLFetnUJiM8HdgVMI0hh334cBzEcdtUccX8ezCsyfXcXvU6Xx9J1AvHqHNdI+7cdj1gD1RR/XIJp3jqCHs7GDM6RozCulKMOE3ZX6nwFL/phSD4czPOQiV0EOJ1qRRmvNgC6K/AkdXsdaU4wyyoaT9AOkG8DhYTqXmE7dCW2u/a1ZdWKsCm8AsWKZSUntzGjyLTXDkSwPKHRgcFIrT/UCtaCuNW5STU8juBjQHww7LSTF5QTagTMNSa76JDWdwwYhanMm7LjMTkOSJDtF2sqz3w8Ep6DqwpxeaQj0i9l9jtW7TFWZUl/EM7bPfdLV5j8gfwDKUEcBBXL+wOJDRcXJfBnflg0naKZjzM6qFsZs26TemGg7i9EUrNbdzIpTgCd9tRxH9ZUQvWUuDIBvYW8HDXpkF5Zyw03YA0R1Cba9FncVl06rQY9jgy3dNgdlvpxh1Z9i5E8TMMBqDcVfaqNvQ7AXng9bRsEXX+I2ySWqLTRaXr626C0kLWGjq7LSvP7pLApFOksuW2dER1ecPywbaQa98beVg6SBxhu6Q37TTjAeyfIO7mc0gaGXuBTGg0gCBbh6aUPMxKwfLxhSik4lGB/FAzDGGDZrtYIh28Wfv4GTQQVImaWdkCnuDHJYNZbQi9MhKROJEOkRSl9rKQSgHNPUi1EX6uZVph1OfgTiQ1q6xX2GOimYhlJg9dsbX9+cnQxxIJqg17JKBjFKaMZAszSCHS4mgpQJ6AmvdrC4bcJlDFu1nxYlkgna0iI4K6SXMIbAWjOkies3dgV2+uDV2BuvbAq4HF4bWqh9zMOlLcwyfjmJ6h+V4xqqawRi4kbbQW/m8UxVP4l06bFFYCzaCUnf5SmaDZFQBrvFvfxGSUQcoA5aWhaWG/NNJ3SPgcln4X6DUDx2VEoag8PxwAAAAAElFTkSuQmCC"
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
@@ -1125,7 +1125,7 @@ try:
         class SortPointByRightHand(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-右手定则排序", "RPP_SortPointByRightHand", """将点按平面Z向量逆时针排序，多点与原点共线按照距原点远近排序""", "Scavenger", "Vector")
+                                                                   "RPP_SortPointByRightHand", "Q4", """将点按平面Z向量逆时针排序，多点与原点共线按照距原点远近排序""", "Scavenger", "A-Point")
                 return instance
 
             def get_ComponentGuid(self):
@@ -1180,11 +1180,20 @@ try:
                         self.marshal.SetOutput(result[1], DA, 1, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAL/SURBVEhL7VJdSFNxFBcqKIOIiCgiQjJFyZltLnfv3Z0u0CyioA99iEIh+qKXHnopFayIwnrxqfDFTA2/PwK1UFJDYzmbliESay4CPzbd5py6ef+/zl2XYoSkMqKHfvDj/s/hnN/5uCfin0J6q2sLV+8+opjhh7bJc2J/jdeq7sM6xRVeaJ/abiTVzizoizp3Ka7wYm0x0+x75nyrmOEDm9DvYExrfNBbcp2rGh1hc1rjsCXTiGnDZiVk9bDbUzZIbv4ToMXHscvI6TBhxs7hzEkR7c26DiVs9ZCmuBLAAHiT0PftInI6TbAOa7B1Www+WwQwP5+nhK4czMdlBcW7iFc5mNuvILvuHWBKgaUnmYpyQECAf1zglZTlg/nSdgfmRLd/WIBXZQTiRHRlXsOponfw7RSB4jRASiEKkDyczTGi3aSkLg8DPWJ3dpaIkYEUTD45CEeGGk0lF3Cs0gzbo0TMH6cCNh6YpyIQIU1zlUrqn8ECQqF9SETkxli8fyMLcPCNJ8LiycX5rpdkJ4PdpKneCrQiHTBLq6Iiiw5driKxNPwTggGLekguDt1tGgRcJGCmlbw2QGpLg/tFOtCUCpZ1CI5+AWfP8ejvphjwYD7eNz/JxSpSv0O+a2mG/yoXgFvuilYAHbznDHBuS4NrrwHeGD0mtqfCmc/hi1WH9ZFxqC3XUJwcT425OTNweo0iGQppiq8JXg11L1+I66sAc6+IyW4tbM/VsNdoMFpN3wY1FpwHKUaHuvIDmBqlNc7SFG55EprUoXuoSP6Cf4y7FBT3kHiwew6lj3lERanhcf6wQ0jiPwTpLYvLq5Rt+XSZHgEnn6lI009lRhVj4rw8Ivz042TSu7VBi8MZ8ZC8tCpG9C+TlMsk/QRjR3cGC/Q1qjpHetUYbFFhsDXxJweIpkYVPryS/Ssg6VhNapjqE0qDBUpv7RlquBODivzoEFYWRKOqMNS3XDbfi0VZXnRLsEBFwT5V9d04ffnteCFcrL+foC8rjF36ZP/jLyEi4jtfFZxJXHP09QAAAABJRU5ErkJggg=="
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAO7SURBVEhL3ZVdTFtlGMdJFqZ3Nq2MFkrbwMZHWzinn6fnq6ftwsfYEpxaN5PBmCOZMGDD2CVopBuVAi1QWZBAIMs0cZnsQpQbvZjG7GIzSp0mM8bMCyVR78wuvZh/n9O+ZEuoXhgujL/kl5P37Tn/97zPec5p2X+O2iNf2eydmx1suPs4OvNdto78B2y4+9g7vx6vab/7oCy+todN7S62Q/lbjq5f4GjLc2xqd7G137lQ0/ndTbv2mZlN7S6Ow39y1tZ7OTb81+wxOAw95oC538yTXvOAboXXNGBRh962xq7fqfQZhozuymELbzln5Mwj5uC+EUuocqhapLHdGGI5f0szN8BBm1GhTEhQ0iQdw1Ne+F89jaaTi/CNc5i/JWHzdwGtcxLElAx1UkY0p6HhSMMyyymNYb+hXw/0jSvwJosXKmSQFuATp+HsXUQo7UFi3Y+F2260zYrwjNHvtEhsRkPjIecqiyqN7aDtfTkbxuynMmY/l9AyLsH/poRTcwG0XuhDbc8ihAyH5qSE+tdFBC9JOHNVwYsrMsSkChvvGGNRJSmvP97wkzan4aP7PN77wY3EhIIfV1qBtRg2xgfQ07eMeysCvl06iKXLUUQzEr7/w4f1LR/4QRFPGY1HWVZJOO8wj3BWRTQdhDoRRFtSxBztYmPaj66zffAdW8X5iy6MJkPAux0YnAnj+RUPjq0G0NLteUgZB4pRJTA5TWcVKoded/3BCeTgWxoSlyMYzcl4ZfpZjCT7Mbwg4+pSDD/PR3GYFucuypAzGpzPuLYo5oliWgkc7fYb0Vy40DUS88MpBfmMitvpML6clrGZCeJuJowNupGjYwL8dI7eaZGshgOx+k9YVEn2Np1o3IpQqwXowcn6TujiwKUQmkZD6H0nhM3fBMRXBbhfC4FLiQiwFpYn6dyUihrOnmVZOykvL+e95z3QqP7xBQXhNG1bv5j0Ubu+fE3Ax/cb0H0lAD+VpBDMVGhnYkLE01WVL7C4nVRwFYNe6udzNyQ8gB8j6wI8bxSD9BJIKSpDKlg4br982wuEZxR4XvI+3EtFYHE72d9Vu67mIogvi8jedCG+FIRILapO0cvGlCYfjZVt6e4j8xrczzX/SjFPFtNKYA1bv+HPtKDxhBN1x11o7HbB3euE+ySpHwvqc8xTj+T7eTiUui9YVGkMtYa1atkKi2ApWBV6TLGqYLX0mLJuNaykLVIDU53pnz8RxD5Sr6GLdJMtpP7H4iF9ZIAUSP1rKZEqqZERMkZWkf8rysr+AkBB1/doXf1qAAAAAElFTkSuQmCC"
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
                 pass
+
+            def message1(self, msg1):  # 报错红
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
+
+            def message2(self, msg2):  # 警告黄
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
+
+            def message3(self, msg3):  # 提示白
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
 
             def mes_box(self, info, button, title):
                 return rs.MessageBox(info, button, title)
@@ -1278,13 +1287,13 @@ try:
                                 index = a_temp_list + b_temp_list
                                 Points_Result = [Points[single_index] for single_index in index]
                             else:
-                                Message.message1(self, '索引下标不在区间范围内！')
+                                self.message1('索引下标不在区间范围内！')
                         else:
                             Points_Result = [Points[single_index] for single_index in temp_index]
                             index = temp_index
 
                     else:
-                        Message.message2(self, 'P端不能为空！')
+                        self.message2('P端不能为空！')
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
                     sc.doc = ghdoc
@@ -1297,7 +1306,6 @@ try:
         pass
 except:
     pass
-
 
 import GhPython
 import System

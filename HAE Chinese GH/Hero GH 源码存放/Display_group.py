@@ -30,7 +30,7 @@ try:
         class ShowPointLine(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-分析点序", "RPP_ShowPointLine", """显示点序与线指向""", "Scavenger", "Display")
+                                                                   "RPP_ShowPointLine", "Z2", """显示点序与线指向""", "Scavenger", "I-Display")
                 return instance
 
             def get_ComponentGuid(self):
@@ -166,7 +166,7 @@ try:
                     for f_items in self.pts:
                         if f_items:
                             for sub_index in range(len(f_items)):
-                                args.Display.DrawDot(f_items[sub_index], str(sub_index), System.Drawing.Color.Wheat, System.Drawing.Color.Black)
+                                args.Display.Draw2dText(str(sub_index), System.Drawing.Color.Green, f_items[sub_index], True, 100)
                 except:
                     pass
 
@@ -178,8 +178,8 @@ try:
         class CurvesDirection(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-Crv Dir", "RPP_Crv Dir", """显示曲线方向""",
-                                                                   "Scavenger", "Display")
+                                                                   "RPP_Crv Dir", "Z1", """显示曲线方向""",
+                                                                   "Scavenger", "I-Display")
                 return instance
 
             def get_ComponentGuid(self):
@@ -259,7 +259,7 @@ try:
         class BrepDirection(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-面朝向", "RPP-BrepDirection", """显示面（多重曲面）的朝向""", "Scavenger", "Display")
+                                                                   "RPP_BrepDirection", "Z3", """显示面（多重曲面）的朝向""", "Scavenger", "I-Display")
                 return instance
 
             def get_ComponentGuid(self):

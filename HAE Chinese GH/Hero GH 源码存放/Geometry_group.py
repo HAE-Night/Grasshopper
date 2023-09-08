@@ -28,11 +28,11 @@ try:
         class GeoCenter(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-中心点",
                                                                    "RPP_GeoCenter",
+                                                                   "A1",
                                                                    """求几何物体的中心点""",
                                                                    "Scavenger",
-                                                                   "Geometry")
+                                                                   "E-Geometry")
                 return instance
 
             def get_ComponentGuid(self):
@@ -158,10 +158,10 @@ try:
         class Value_And_Sort(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-几何排序", "RPP_Value_And_Sort",
+                                                                   "RPP_Value_And_Sort", "A4",
                                                                    """几何物体的排序，排序完成进行才会进行取值，支持面积和长度的排序，但是同一组数据必须是一样的；增加点序的排序，在点序排序时输入要作为参考的坐标轴（默认为X轴对比）""",
                                                                    "Scavenger",
-                                                                   "Geometry")
+                                                                   "E-Geometry")
                 return instance
 
             def get_ComponentGuid(self):
@@ -320,9 +320,9 @@ try:
         class GeoCenterPlane(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-几何物体中心平面", "RPP_GeometryPlane",
+                                                                   "RPP_GeometryPlane", "A2",
                                                                    """求几何物体的中心平面""",
-                                                                   "Scavenger", "Geometry")
+                                                                   "Scavenger", "E-Geometry")
                 return instance
 
             def get_ComponentGuid(self):
@@ -458,9 +458,9 @@ try:
         class Brep_PLane_Group(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-Geo|Plane分组", "Geo_PLane_Group",
+                                                                   "Geo_PLane_Group", "A3",
                                                                    """根据Plane对几何体进行分组，所有Z轴方向需要跟第一个Plane一样，并且第一个plane必须Z轴朝外""",
-                                                                   "Scavenger", "Geometry")
+                                                                   "Scavenger", "E-Geometry")
                 return instance
 
             def get_ComponentGuid(self):
@@ -636,9 +636,9 @@ try:
         class DestructionGeometry(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-几何物体的分解", "RPP_DestructionGeometry",
+                                                                   "RPP_DestructionGeometry", "A12",
                                                                    """多个几何物体的分解（Brep，Curve等），注意直线的平面输出与曲线不一致""", "Scavenger",
-                                                                   "Geometry")
+                                                                   "E-Geometry")
                 return instance
 
             def get_ComponentGuid(self):
@@ -792,7 +792,7 @@ try:
         class TypeClassification(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-GH数据类型分类", "RPP_TypeClassification", """GH几何数据类型分类""", "Scavenger", "Geometry")
+                                                                   "RPP_TypeClassification", "A11", """GH几何数据类型分类""", "Scavenger", "E-Geometry")
                 return instance
 
             def get_ComponentGuid(self):
@@ -907,7 +907,7 @@ try:
         class GeoSortedByCurve(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-物体随曲线排序", "RPP_ObjectSortedByCurve", """通过曲线的方向确定一组杂乱几何物体集合的排序""", "Scavenger", "Geometry")
+                                                                   "RPP_ObjectSortedByCurve", "A5", """通过曲线的方向确定一组杂乱几何物体集合的排序""", "Scavenger", "E-Geometry")
                 return instance
 
             def get_ComponentGuid(self):
@@ -1039,7 +1039,7 @@ try:
         class Skewing(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-多向量位移", "RPP_Skewing", """多向量位移""", "Scavenger", "Geometry")
+                                                                   "RPP_Skewing", "A13", """多向量位移""", "Scavenger", "E-Geometry")
                 return instance
 
             def get_ComponentGuid(self):
@@ -1114,6 +1114,15 @@ try:
             def __init__(self):
                 dict_data = None
 
+            def message1(self, msg1):
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
+
+            def message2(self, msg2):
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
+
+            def message3(self, msg3):
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
+
             def judgment_type(self, obj):
                 return False if type(obj) is rg.LinearDimension else True
 
@@ -1134,11 +1143,7 @@ try:
                     zip_vector = (total_offset_x, total_offset_y, total_offset_z)
                     Transform = self.normal_move(Ref_Plane, zip_vector)
 
-                    re_mes = Message.RE_MES([Object], ['Object'])
-                    if len(re_mes) > 0:
-                        for mes_i in re_mes:
-                            Message.message2(self, mes_i)
-                    else:
+                    if Object:
                         if isinstance(Object, (rg.Point3d, rg.Point)) is True:
                             Object = rg.Point(Object)
                         elif isinstance(Object, (rg.Line, rg.LineCurve)) is True:
@@ -1148,7 +1153,8 @@ try:
                             Object.Translate(Transform)
                             New_Objcet = Object
                             return New_Objcet, Transform
-
+                    else:
+                        self.message2("物体为空！！")
                     return New_Objcet, Transform
                 finally:
                     self.Message = "多向量位移"
@@ -1158,7 +1164,7 @@ try:
         class SuperSkewing(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-多向量位移（叠加）", "RPP_SuperSkewing", """多向量位移（叠加态）""", "Scavenger", "Geometry")
+                                                                   "RPP_SuperSkewing", "A14", """多向量位移（叠加态）""", "Scavenger", "E-Geometry")
                 return instance
 
             def get_ComponentGuid(self):
@@ -1230,6 +1236,15 @@ try:
 
             def __init__(self):
                 pass
+
+            def message1(self, msg1):  # 报错红
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
+
+            def message2(self, msg2):  # 警告黄
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
+
+            def message3(self, msg3):  # 提示白
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
 
             def mes_box(self, info, button, title):
                 return rs.MessageBox(info, button, title)
@@ -1317,7 +1332,7 @@ try:
                         Res_Geo = self.iter_offset(Geo, total_vector, [])
                         Transform = copy_total_vec
                     else:
-                        Message.message2(self, 'G端数据为空！')
+                        self.message2('G端数据为空！')
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
                     sc.doc = ghdoc
@@ -1330,7 +1345,7 @@ try:
         class MoveByPoint(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-通过点移动物体", "RPP_MoveByPoint", """两点之间移动物体""", "Scavenger", "Geometry")
+                                                                   "RPP_MoveByPoint", "A15", """两点之间移动物体""", "Scavenger", "E-Geometry")
                 return instance
 
             def get_ComponentGuid(self):
@@ -1396,6 +1411,15 @@ try:
             def __init__(self):
                 self.diff_vector = None
                 self.xform = None
+
+            def message1(self, msg1):  # 报错红
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
+
+            def message2(self, msg2):  # 警告黄
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
+
+            def message3(self, msg3):  # 提示白
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
 
             def mes_box(self, info, button, title):
                 return rs.MessageBox(info, button, title)
@@ -1510,7 +1534,6 @@ try:
         pass
 except:
     pass
-
 
 import GhPython
 import System

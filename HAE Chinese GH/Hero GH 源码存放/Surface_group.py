@@ -25,7 +25,7 @@ try:
         class ShrinkSurface(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-曲面收边", "RPP_ShrinkSurface", """关于TrimSurface边界的问题""", "Scavenger", "Surface")
+                                                                   "RPP_ShrinkSurface", "E3", """关于TrimSurface边界的问题""", "Scavenger", "C-Surface")
                 return instance
 
             def get_ComponentGuid(self):
@@ -68,7 +68,7 @@ try:
                     self.marshal.SetOutput(result, DA, 0, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAP8SURBVEhL3ZTtT1tVHMevJsYtm4mGMrfpkk1NjP+Cbxb1/TT6Ql+YjLgYX7iAcxu0PIaxshYQKC2M2YfbFrq15aHtCn2+hdLnlo3yUEBESEDYRoEuMZuAcV9Pe28mILIFEl/4Tb4599yc+/nl973nHOr/ozrTYJ6wc1hSqU/Iqoyj10t0g/XCzqS8WBv7obprXMnXRMUi8yRdrIllRz4dEV0zTaj56qi42jSuLKSjwqqOMXmRKlBce3ucLtOFTnNoVpLeia4660RSaAjPiDrjy+Vt/X5x950/ymiPs743iRKV09LMzICvsHfIPGSU2wwtzCwECkd33e0RCJROM1mPYpXHrkusodJwN59Ds6qxTkla+2b//Mn6LpZcuUi5XseSIxdLTnZMuY7igYP3j3lmzMyX3cey3yXt76OJuZfma+JnOTSry4pwQZGiR//YlwsEKGCAs3/T8+b59vcZByncd51AfqtPm1dv/5hDsxKbJ6XNzPSTZWcOu7h/DybfzdtPodGzAIH27jkOzUqgiV4spR3mtPf43guQruYdb+N7RUCXV7O9A9OkpIWZXtt/B29lOnhSqI1v7aBEGy+s0PXZ0t5j++9AGbp1ts7xCYdmdbVrTCxxJBdX3OQn76uDU6h1zKUv0dE8Ds2qrP1OqbAjHEozR/dWwEccopByHwdfG+/5utH7GYdmdcUwUlVjGUqueo48X4EMMLMus6X9L+CR9xAe2A7AqfsQItv8zAV54EsOzUrYMVrd0Dsy/VwREfh638tYtPEw1vkmApqT8LfyYGx4D2LTMCSeXwe/ldq+4NCsKm6SiIyh4OqzIiLwR8xBuOTvwCPjwSc7iKEWCu4mHqTWEFTR39Fgm4qfb3Z8zqFZCbvHa5sc46kVctx3LUB2ypw1F4z0FSRuUBgldktz0WgJQBlZgypwD1LP3HR+q2drRHx17FK5lrE+fNZBI5mPGN6AX/ZSFs5IcyAx+6AgcDqwSArcR5VxyHyu1vIph2Z1jRw0mefn9WUnb/cCAy8iQJ9A4joFr/RVSExMFq7yL0DpzxRYhGkKKNPFz3NoVgI6erFE7TTtelVk8z9Mfuhh+JoOQdLthDyy/hSuHFhAWywNZXAJlxXejzg0K5F5ovlG/yxWna+xN2VmG243iWep5wAs9TmQdVl2gK+ADq+gos3/FYf9W3xl6LvCH3v0KdcRbDAUNtw7uI9CsO0kavR2EguBkziycGJtdAXq6Cqq9KFvOORWibuGFJrB33DTH4PBH4R+R5OdMvAL2kcA/fBj3EqwNo5tQBt/CJEhsjX3zapsj3xQa5u9IDDMFxQZFv7V5YbpgnJduKBUF3vqK93Jggp1/xkO9V+Kov4Cm/OcEQH331YAAAAASUVORK5CYII="
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAMZSURBVEhLrZV7SFNhGMa3VRCtuULLss7aatCmZSUpFkR2nVOnoARF/xREYheii1ZEUKsgqOxiF0SEzEtZJiG5iuqP1NaIll10F2fltDm3nJRbBtX2dM72rZksdbIfPJzzft/3vs/5LuccVqhQmfoYkeJdNAnDDyVvvkSlapUkDD9UavNFSqY9TsLwMyfDdFqoaD9IwjETT+tmEFVFLlQap8zPf8/cD+nzS0RrRDI4HA7EYjGkUikkEgl9lUAwdwH4C8+BJ1VCNC/O2+brk0IkEoHOY5TkrTACMh6PB7vdjsH09bshztJhySYjXD88pNWHwWAAm81mDBJ8JYbHa+BwOEh6gKNXOnG2zEKiACaTKXSDoTNgcLl/YwBuEgUY0wyCGeAzXbzj3+VhCN1g8iR8sdtIOk3vTzhPWPBloxXmHBva9tnwvesX6QSMBj3Yvk0elcHyyTw+BlxffdkeD3pOtqIt/S1MGz5An23C81Vv0Li7Fe5fvtl0dX5iijMSeysMRpD6Olak6NglkLfsZDQ9sfjy1PgLyM634L7aiR/d3/Aipx4Nmc/QlK5GQ1oTHsmfonJVHax6B+41OqHY2wV+rBLRyypOCdL126k0fa4wy5zrNRCufblSkNFeNlv2ipb2+owVtY8jk2swL8uA87d64LT0oXpdCW6vrsbdNbW4s6YGN1IqUJhcBLOuB8rSblByPaKSqhCz8kE9JXtVzkiYpqvwGgQhmcufhc9WskTw4M6eShwTHkFh4jmcTTyDAmEBrm65Bo/bd6KaWzrB4vCYJZrrKzE89CZPRJ8jsMn9vf0oyyvFkcUFOBS/H5e3FsFhCbwn7SZdSJv832NqM9th/TjodBHC9h6UP/yGkjr/0gUI2SAiIgIul4ukB1i6uQ1xGwz4TWI/ZrM5NAMulwu1Wg2j0eh9Okaaly1Yv02DlK0aNGne/21nxqhUqpAMFLSYwd4kv8aPY2PGgt2YuegAJowPtDPyj6c1qs81RWsHrbyhikwoUkUtLX4SrI9oGq2xI1J8Okz/Mk+SMPzMkWnPCGTaqyQcARbrD5mO385QXqhOAAAAAElFTkSuQmCC"
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
@@ -97,11 +97,11 @@ try:
         class GeometryArea(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Area sort",
-                                                                   "RPP-面积排序",
+                                                                   "RPP_Area sort",
+                                                                   "E5",
                                                                    """根据face的面积进行排序""",
                                                                    "Scavenger",
-                                                                   "Surface")
+                                                                   "C-Surface")
                 return instance
 
             def get_ComponentGuid(self):
@@ -150,7 +150,7 @@ try:
                         self.marshal.SetOutput(result[2], DA, 2, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAMeSURBVEhLYxgFMKBV8V3FuvpifHjz8kwGhv+MUGHyAchAg5KLUfZl22eG1M2+VNpV+XvawvL/3uWzj0GVkAf8apZPCq2be7Ggo/b3vAVJ/09tsv7/bq/Y///HGf5/OSj237Ns3naoUkwwYcIEcQsLi+VBQUEbL1265AIVZrC0tGxxcHDYPGnBrqqExq5v7/aL//9/lAFsKJg+BMSHGf4/362I34LW1lZnYWHh/0Dm/7q6uqsgsfT0dDNBQUGwWHXrtFsVk7ofwQ09gISJsaC+vt5BQUHhv5mZ2X87O7v///79kxUQEOgE+uC/ooL8/5K6/rOlE3oegw0/SKYFEhIS//v6+v5IS0v/37NnzwJWVtab7e3tf9XVVP8VV/eeo4oFW7Zs2aOsrPzYysrqv7q6+v+TJ09u4eHm+gr0wQWKLKitrXUGuXzDhg1To6Ki5gGF/oeHh4OCKoaDnfV/cU3v9dJJFFgwffp0M2tr6zurV6+uWrFihaOmpuadadOmrf3//7+cgb7e3fquOTuKejqekm0BCAANYwNiFhgbLAgEILbron9iWU31H/4fZiTfgpiYmGhgXlABsUNCQlLc3NyEgEzmkED/FIb6/wJZLQ3vKbLAz8+v0NDQUA/Ednd3rwFiSSCTxdXZsUZj8j9hii0IDg5O0tbWVgaxPT09c+zt7QVAbDcXpxzR/f95spopCKLMzExBoAWrfX19E0pLS6WAQbQRmJpcwsLC9IMC/Dd650yzzW5tfE62BcXFxdzm5ub/gSlpOjBPCNnY2Px3cXFJ8fb2drG2svzvGN3pl9ve9IiiIAIavhFYTESB2MDIPuHk5KQH9ImQuanJcY2qf5LZLXUf/58EGggq6ICGwi0i1oKMjAwnYAGnAGJnZ2f75ebm8q1atYo5IzXRM2nDa96QmlkvZ87L+H9kg+P/V3ukIJaALANa+navDGEL8IH//xkY0yackTMsvx5sW75nYlDt/NPAIPs+Y27a/xOb7f5f22Hx36ts9m6ocuoA4/r/cnol14Mdy3dMDGlcfsG/esEGqBRtQPvSw4JQJj0AAwMAfgZy+8cqEK0AAAAASUVORK5CYII="
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAARgSURBVEhL3ZVtTFtlFMdvQFcGYxSHvOiKbFEKvb1vbXmRAR0DWgrYoTEOcMbXD5tmyLLFD2Yf1C8zm8TE6TQh84O6jTIwgxZKgRYKyAqbM5uJi24xcdEQY9wSk8VkmR7Pee7T0o5Pzm/+k39yn3PPvb/znPPcVvj/yK4olQ6Ho1NV1Qd5KEWaJtU7HFqnJEm5PFSB/gz9OfoL9Cn0afQA2oc+iTaidUlW8apN00CW5SgPJYRgTZElsON9BLzKwx+XZG2BTlMXPGPaBV2mbnb9QsmLoBgVwPvX0GkskySKliuS1QqKLENNTY2Dh5nwpSdUjCuSBLLV2sPDsdcf64Ur7u/h3I6lhL/D9ZMPP0WA43oalyiWX8WX/yZL0h1FUWjrTBUVFZusongL712jAtTVHVw/LL0LCw2LMFE3yRyqm4Lo9nlQjRoBDuppXKLF8rOmqmGsdgAhtxsbGzdRHFvWoyoK2O3afkkUAWe0lz0gCDePaR/B3PaFFEDEOQtl2WUEeElP4yIAvmi62m7fZtNUsNlsr1Ecq/8RK/+hvqqqnNqnyfIe9oAg/HHc9gmr+G6AOdtMgOf1NC4GUNUldl1eviJJ1ouVlZV1uCuwKUqv0+nMo50ktWjlPaUP5hu+SgEQUMlhQ+7V07j4Di6wa1F8i6rFyn9B36aX41xKaNA45H3sAUG4eKD0IBtsHEBe3BEDV4GbAB/oaVzYihUEfE3XimIuwfXfVLEsS2MU0zSxXJUVkCyW/bRGfeopbEXAcgqAgHu27iXAnJ7GZbVYrmOLzvElrf2sPTZbO61L5eItbFeiGG/RroKMAhivnYCp+nACQEM/pn1IgFvofJZJwtOztaO2o3TSMxUNtk4+h/3faLfbyy63Xc6dbZtdOOv2e7FNotlszuaP5KBvHpVT5zBZP81syjQR5BWWGRcApM+2RcHvHnubh4SoO1q05F2GUXcwfnqSFegufnZNm2K47iruJkBQT+MK7Q5lTbhDdxDwJg8JQXewKNI6AyMt4y/zULLesBntrC10guIA+viOyEcJ8KuexnUPgNaijKI1c6Bv4WTVaViXto4gq7oHgLbhvg1w5vFhCDtnEgCCjW4LQJ4h7z8DLIZ0A6uWqk4GjNUGoTCjMBVAIsCoK5D4oRpsGswhwJctgd08lCwtMz0TfNVnUgDT9ZG1Owg1h7IWnz5fGXRP/BVujbwf3blsoljMG2sIeyIQbp8/RDGeHldzviGfzYAA8SNKPxcD1YNgSDOsAkbbR/NCnqnfI55ZWPJeoGPZE2gL5E56pv+cRkAMj+pIS+DuNu2zbrTCjDOacorou+Cn6IaexjXS7D/8TcclGHdN3Oh39T9AMb/L33+p41sYc43/1Ffdt54lrmqKWlSc+QhsXr85YVob7zcSIPXfcbh5OH+ubQFGXP4jPCT4XL5Hl7znMTZygIeS5UJ3oHdye9FPcNNPjBmdqqHmoUM+ty/lxlDT0Dunms4+xJf/QoLwD/EreY+V3S4zAAAAAElFTkSuQmCC"
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def bubbling(self, Face):
@@ -189,9 +189,9 @@ try:
         class Surface_Area2(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-面积取值", "RPP_Surface_Area2",
+                                                                   "RPP_Surface_Area2", "E4",
                                                                    """Breps求面积：面积除以divisor，保留decimals位小数；""", "Scavenger",
-                                                                   "Surface")
+                                                                   "C-Surface")
                 return instance
 
             def get_ComponentGuid(self):
@@ -214,14 +214,12 @@ try:
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Divisor", "D1", "除数，默认1000000")
-                p.SetPersistentData(Grasshopper.Kernel.Types.GH_Number(1000000))
+                self.SetUpParam(p, "Divisor", "D1", "除数，默认百万1000000")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
                 self.SetUpParam(p, "Decimals", "D2", "保留小数位，默认三位")
-                p.SetPersistentData(Grasshopper.Kernel.Types.GH_Number(3))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
@@ -240,31 +238,24 @@ try:
                     self.marshal.SetOutput(result, DA, 0, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAALnSURBVEhL5VVbSFRRFD2lmVlQ9hH1GSV9mJGWk6ZZ0UNJSyRNyB4fQdr41ilnGNEaNSnTO2aZOh8VmlMqoeOrx6hj+UwnRa2klIj608D+Cq3VPt47ICLmTPbVhsXd+5xz1zr3nr33Yf+v7RWwxl35xdszuTMuOLOxIja/OlSast4ALHFPn9i8PXko1Otic46/8qHp9GXtWKqgRKU+HKlFeQhMN8ZIy/9sgYVw3pbyyddD0ZGwP6VOH6LWDcuvZkzml8TgWeURjDZuwXeTE9BO2maGW7po+Kh6IqXX57cgtV44m1k8nqZVQl8aAbNhF8aN64CXRNYhoY3QSjCJsVAcjz2qroUJyGIftfTW+gKv6OVOAt8lJ7cQzoa1Al7xFfX9NTtFci7C8YLQQrCQdhF6CPxLaAPWCxhkmKIdd91h6C5imGomIi7CyYlwuJSh/TbDuIHibhsEPhhlGChhoHAaqggiei2SvX/AYLdUHFeE09gQg9ZagRES6KUdUoiNGxhWr2T41kBkbxmijjE4OTI42DNEHqWxQRsFzIWiQMY58XlfRWR0oA7LGJJOMKxfy3B+MQSe5zIc3MGweyvle5w49uYeg/MqEghaBIHWfIaGbNFfTrsP20eklLaODn8hMNokQ3eBSFqlYfhJKcsJedyUR6SUntw/eYB8Ww55qF42nYLXIilryoiE2kFNFkOuXEzZX5TC2liGpzk012tDmpqrZdMpiX4Cr2ReB0SEPoKlornP19hSaH01niKxpXLngw29yDhYR62Ct4LZjW0uWCtwWFl+NypbmCrQyWGsCsDHJy74YVohfpGl+fG2YRG1VoAuF3s/zWcXt6SBMC9F040Alb71zBVhLE1Igb5MbN9fZ7ZvOpsCXczC74O5zC0bzq6KER+PxI4Ev0u15SGpunfyLM3kzZJotFQfgqY4C/7q5mhp+SIYXaGu6olNron9x70VxuvBGkPbBe3jU9LsvzH6tXaSO8MY+w2gMpgCaT3OBAAAAABJRU5ErkJggg=="
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAPMSURBVEhLrZVdbBRVFMdn25IFfBHjUjZpWmJrI7Nz73zP7OzslG4bdR9WGg3RuBiKL4qBRI0afdAUNWoM0JaPqKQPhkiM8qgmAvWBAFXagqExPqyY2IqkIBbbRImY2OM5O7ekrDtLSfwnJ3vPf+6c39xz7+xISxUAxMTw9mUYRpKx1ITK+QSOmbBvSOd8q6HrJa4oQ8KqpTUYwxi95YxkWVznjIGmqqBp/LCwyyoUzJVKKnWVruFvSdhR6lgdXz1VbN4E9bH6XcLDJ9R1jjcDQv5iTLkePBgkxSVJVdUncGV07XpKlieEXU2JNcuTc5/5X8CH9kHAfCC0UQZjjFZgmeYhAmma9pq4JCmyfE5lrISQ4zj+UdiVStTF6sZ38X747oHvYUDbQ4D+8BIK286oBZ7rPiWvW3cEV3GZfGydomsamKa5nSnKJwifLN9ws+owjr+RehNOd43Bic5TMKjtrQDgCgiQdpzNXJbzhqGD53m2oig7ye/p6bkTn/5zBPwkbllQA8bhba3bYbR7HI4ExyIAYgWO42zDNIaF5lSVfYu/V7F1x2gOjr+qANwVk2Innr33OfimaxSOBsNLAjxPORY6QDmFZVkbhEeAhRbFMYb75B0w3n32RvFIgMW5YhoGuK79AuW4yTYVx75fyefzVEzCdp1EwBUao17d3NJbLr5QuCagpaVlOR7VR3zfbxYWVrzPw/PbJjI6ro6us26R7nvfOAAnO0eqAvbq+wkwGE6N0Hy205/PdnGRVqqfnpKKVQJO5b6Gd9i7BHg7nFpFM2n/UfACuGZ5cN72U8JerEgAbfjT92wlQDGcWkVTVvqheTsDl3Tn73O23S7sxULAvkgA7Q/OuT+cGqFhztuHFKVRpJXa/x7uAbWjGmDL2icJkA+nCv0aBMlrfq6I7SnOeNnH57z1hT8zHRtmcTyb7ijOZILHLprmSjH9lUKygMXGbjqiNQGX7PTDkFkP4Pr/jXQW/nEz8EMm0yqm09/DEL1ko91n4Mvg6K0Bk4bTNWu6079oZjkuiKDxtG5NT+nmzxOO0ySmk+obYg1nP8BW0X/QAiQS0IdPtZPzOyjybW3ll4u0u6lpBXl9YXsqv2qtjfHG2UPOxzCSO12GRAIWa37jxhV/pP3dv7v+y8KqJTsRT/x20P6ovJIlAS7bmWfA78TeB1Bys66wa8lYtWzVxQF1EEr589C7dgsBoo9pyba1GdOZvKDbY2dM825h30rN+NEZ2SG/Di+2v0SATaEdocX7cBtahvFpLpGDeCy+J7T+fxFkDL8Vb0mSJP0LdW8OAQ0P96cAAAAASUVORK5CYII="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def RunScript(self, Breps, Divisor, Decimals):
-                try:
-                    re_mes = Message.RE_MES([Breps], ['Breps'])
-                    if len(re_mes) > 0:
-                        for mes_i in re_mes:
-                            Message.message2(self, mes_i)
-                        return gd[object]()
-                    else:
-                        divisor = Divisor
-                        digit = ".%uF" % Decimals
-                        # 计算
-                        Area = [format(rs.SurfaceArea(i)[0] / divisor, digit) for i in Breps]
-                        return Area
-                finally:
-                    self.Message = 'Sur面积'
+                # 初始化参数
+                divisor = Divisor if Divisor else 1000000
+                digit = ".%uF" % Decimals if Decimals else ".3F"
+
+                # 计算
+                Area = [format(rs.SurfaceArea(i)[0] / divisor, digit) for i in Breps]
+                return Area
 
 
         # 曲面或者Brep反转
         class BrepFilp(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-BrepFlip", "RPP_Brep反转", """通过向量反转曲面""", "Scavenger", "Surface")
+                                                                   "RPP_BrepFlip", "E1", """通过向量反转曲面""", "Scavenger", "C-Surface")
                 return instance
 
             def get_ComponentGuid(self):
@@ -305,7 +296,7 @@ try:
                     self.marshal.SetOutput(result, DA, 0, False)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAOfSURBVEhLpZZ/TNR1GMcfjnnHgXAcuNxsq+wP3KrNClajbNUxSV1Om26mFkq1VXj9XEbdpjVBjuKch+unnHSIU0BBvH6QiKeoEPTDKJ0r3VybTWrzD5camwavns9dFOFhX+K2177f7+f7PJ/35/M87893J0NDQwu6f+gP+EL7Ar5wT8BXO3HWhI8Eyus6qi5dGQwYgdCevnPc81KYpWUhlpfXsKzMOisra/AGN1NUEX82+Y+sraPQ14T5GYFg7f7TPOit5NznLgaidgY6HNbodPDjdifb3kjnd32mW3M77WzfXMgdJTu4+MdIgVV+ODQJvhM4apFTQjRoQySTefmp9Ed07ITQHHqA20sa/i0w50U/x+rTaFw3iV1ldmuUK5V2lsyerCLZ3DAtk+gmIbLVozsYJbDYV0H5s24k2UXqZDdpVkhz485ykzPdRZZeRaaw4K4kPqn3cOeqUQIFz/n5ba+T/tYkzjbbONtigYiNvvpk5t+XHtvBw7PS+bVN2FPnubpEHq9fG+WEHq3jF8oxpU/pUrrHQGOatVQpjmzWFGuuyftWaKoZQ+BCuwb1atBXQu1rDhretMeTDo5Bp3C5Q/hltw2+1OfDii5oZyiBQMxF3Smc14QV87RpSdm8VZICJzVJV5UQ4ySzy+MjxtSFCXcw/xU/0XfTuWV63BF5t2aw7hkna59QdPtWKH0sld3rhdZwAhcter2CqueNE1w4nFnMuNlF7m0Z5NzoIucma0ybmol3YRIRbfJVLvKoiwaPpBB5O5nrr3MzdYqbtg168ExPtNaW0V7s2jJGky8ZF2kNz7Ta8ORm4F2UCt9o0qFxoKZI2GQjcHGfCphVGOcYe/7llNjVJA+vcqSTRqP2vbaAmcgEmolMeYyYjg1G4+PD11icseVoQcsCehY+KhVWPyp0vS+8ulT4vlb44OW49wc15vynGje803ELqL9XzhEWzhKObhWWeFToHeGFxcLPO4Xls4XiuULNao3VxfwvgaKH4hOe+SwudGCjMPdu4eQ2oSBXKF0mPF6osebAjVtAAw9W6+RNev+1sLdK6G8W9geFnxqEvBnCRq/eN+r7kWWyLHBAMU02yeZ++Fuj5Rhoj/cjZmGdMPb+vwQKvBVxR5ivqUm6FibGlCXROxX9OHwvM0sa/xEIdZwi76lKdnx4Py1b8mkJTYBwPr71xcx8Ovy3QKjr9AWKNrSxorqHoureiRHs5clNh/G+167/KeBP0gy8jAnAb0EAAAAASUVORK5CYII="
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAATBSURBVEhLxZV7bBRVFMa3T2ixpRRofXRru2wL7uzsPHZmZ3b2VWmRBqUNhhaNJkarkhoNxEciBYJBQBqUtIBKSaNE1EJ59N3tdoHSajBBgxoT8UVJSSTioxSsFET7eWZ2o9E+gL/8kl/23s2959t77zlnTf+nFhKvE9uIGuI1YgtRTWwiNhAbiduJG5ckCCVaSUkKDTv5VAGLM0tQNPsezJ9VBDXdDTldhjZTQ37KXNCaa0Savm9SBQKBeI6zL2dZ+xecwwGH3d6ZZc76eQm7BCuUlaiUn8JjUgXqtPrRo/5eHC88gWesK3SD5kiE68jpdCawDLPSzjD9uoE1b84pi9mCcn4ZUY4yrhylXCm2uGrR6gmjO/ABFtx6n26wPhIhoouKP++b4uIp0em4ihUE4X7TVFN5RnzGtU4thG7vEQQpaJfnMDo8TWjV3sdRfxsWZXqRl5y86mJh4czvA4FZ+ud5SW0fcWlfD7s8FWfVpUnRmOOqcM60OWjxtKPJ04qDWjP2eUI4JT+CS4INv4giLogSLjoVQo0gqRgUXRih76D6MCypPw44lQXReGNUmJ2cjSat9W+D/Vo7jijVOC6vwMfKamyxaNhpyWvrF+Q1Ot8R5wTXabg8+EGUPxkQlSdP8vzsaLwxsk1PmI4GtZFO0YFDWgvRjEYtiL10XcGCE/Bk3Ku/wfOR5RGdEZXKs6L6UHQ6VpIkmUVe3JCbnyvTtL+G34Gwv4cethNtniCdqI1O04JwoAcVuU/oBvuNjdeTzWZLpNTc6mBZ8BwHyqaBPKv1Tz/rRxFXhLvZArhZFRvkV+ihQwj6wtho36wbnCbijCCTad06UyzDMAXEHtZuv8rz/MvZWVlv5GTkoEpagxedVXjO+QLq1Hq0aB3GtTWo+6FfI23XT3vjcjgc+dFhapwpfmS39C6lZR+laZiuqAv7yKBR60RX4EMEMop1A72NGBpUvI5LXu+EDzueepdbKo07P0AZ1abtRVDbTbyDXt8B1LBVyEtKOvu5pM0d8hZafhLV9iuy5/ywS6v6VZmfGY0xqdZ6Z/nooY9SHYTxpfwohnkrLggODBJDIo/fnBKuym6DIVHBsKgCbj/VgXZ5wKmVRuNMqEU503KNgjtEmRRSt6NPXo1jrnUGH6mbsCrbhc3mO/d8y8uPnxPkz0b1OhBcPf1OV9mnHDe2EZaVlSUCiIlOc1LjU0cPqE0IecNkEjJO0hglRPXgyzB6klEPZyTlgQFJXayP/6sYURRv4zjuaWp2X/EOvoLmosViWZR2y4zfq6VX8aZ7F95z70Uz1UKk8FpwOHAMy8wP6ga1kTATqLjYOoXqYLfI80YdMDbbMKXsBcbGDN01b96oyIhgGBtektdT4+v+l8HSO8p0g62RSJNI/0+goAtZlg3Z7fYFVHzpKSkp7rQpaah3vY0GrZH60UGjP/1j0IOFmUaqro1EuXn5zElmo3K7fUfQ4Q2h3RtEp0+v5m70FPSBS+N1g4cjy29ezwozRDQojaiX3kKdsx47nbuwTdiBWn47NrHVoCTQDdjI8ptXb0JsAqbGTUVibCLiY+IRFxOnB/yDuEJcJk4S1+9H40hPVQ/hJRRCJPRfOo+wEjlEFpFKTCCT6S/UT0S7ialDIgAAAABJRU5ErkJggg=="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
@@ -351,9 +342,9 @@ try:
         class SweepOutFitting(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-曲线扫出", "RPP_SweepOutFitting", """解决原插件扫出的问题""",
+                                                                   "RPP_SweepOutFitting", "E13", """解决原插件扫出的问题""",
                                                                    "Scavenger",
-                                                                   "Surface")
+                                                                   "C-Surface")
                 return instance
 
             def get_ComponentGuid(self):
@@ -394,7 +385,7 @@ try:
                     self.marshal.SetOutput(result, DA, 0, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAQISURBVEhLrZZ/TFtVFMffrK6DhVmEYmlLC6V7pT8oJVJ+tJWSCqw42jJHtjnqwubC/ljEgVPo2gTUxGEMc2RNJjaCIRkLxGSw4GAbi8zNRVwChtVocMmy6CKRFN3+MP7V6/c9ri6Fgt2yT3LSd84995777jn3vDIrGR4eFjQ0NGxJSUlJy8vLS2tqakqmQ08Gi8VSrVQqL2dlZY1zkpmZOZ6dnT2mUqlCkEa73S6hro+H0+kUut3ulPn5eWFPT4+woKBAZDQaDWq12otAIQS/huf+oqIiA53yZPF4PKKcnJwWBJvF70lCiIAOPRrS/Lc1VS/vNVF1FcjNswjSjyBzLpdLTc2J4aj21LU26u976y0dDEOS5Wy9s6LC1lq33eorse6soW48CHJILpf/Zjab9dT0/7zxmnGU3GBIcwN7u/119d1LwTTyy7lkEpkQkltnU8mJd/STjLAtm7ozOp3uVZlMdg9BEiuAlgOmD8lVAbk/8RQh0wwhNyHfQmYhtyA/MWTsxPP3VIY9RXQKg8S3oepuUHV9dteVvfkAu+UXnYJch+CNvjguJkcb2XAoIL/zYCqJXP8042+z/cB/QRQKxRQCtVB1NeXl5WauRF2uHVVLFzYt7xiLL10UkCP7tt5lnvNWLXuSTZ4ax8Grp8V/fvmx9C+7Z/m4ULoa5OMOd1F5t5UUFha+i7Oc1uaXfHLKb5idO7M5SmYY8gcCvHdY9YOzyrantL4libozjMivHHg/d+ZUG/trR8d5/sYjwIhGoznKj8fDZrOxSqXic5FYM/2i3d3+0Vv6/q9DqdErwXTykqN8bPve9lTqSiFP+5p0E837y77itNzc3G3Y5DV+aD1Ylt0lkUjDgi2Wapk2sLXQuvsVOhSXne6K8zU121q5Z4lE8n1CLQW9x4DE/c7tiprWhpANLpfndCAQ0IvF4tGE5nBwfQjlF0GNr3mr/6W7uzvJ7/dnZWRkfIY5h6g5PiMjI5rJyUkd94yG58WEHxPtO+np6UEk+hhVYwmHw5LS0tIrxcXFpLKykvh8Pj55aAnjeO34k1aAI+pF1z1C1ViwaD8WIkNDQycHBgb29/X19XB2HBUrlUp/9nq9m3nHdUCSz6GS6qn6EBzBBix+G92RRKPRh/VOwTFdQPc8SNW4cGtg8Ztc7qgpFtyD77RaLVlYWKiEsygYDJZwk7gxBN+HqhrnHdfAZDLpEGCut7f3GWqKZXBwcJfVaiXIA8HnM9rZ2bmEABu5MYfDIcMndGa97zRy9QHeNETV+EQikTKU2+Gurq7mxcXFF6iZB+f7TT6gagz4w7AReZpHyzFS06PDBcAx1VI1BuTnOC7nKFUfD3TMYyjDVZcOXViKVh2ura1VUBNgmH8Al6pd4AB4HswAAAAASUVORK5CYII="
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAANHSURBVEhL5ZR9SBNxHMYXhJqRbepkZJSVZU2lRInMtpWlmYaalC8ZvVFSvjDLdup0WlKpEWiZoUxtc6VmJkaU5qYzzTSJNLJ/ytLEBPFtSGKC7Ol3dYHUlq6/gh54uOPuns/3+P2eO9b/rYk76bYjcmrDYPG5B2MqaUWvPHE7c+vvNaZMFk2okvPGlVTXiEKiGyqR6CfLUzF1Nw3DpVJ8kFNKdVbUUubx+Wug8OxWnZLSTpVJgfvpmKmU4SsBT5alYEhB4XMxhf4iCrrydLwrTOx+L09yZKJz61PBmXidgtKDQCdvJ2OMAHvyY9F4MQI1qcHoKYhGf4kY3TdPEcdhSCVDU1b0hIqKXM4gjOtjXlzcTAV5U1USevPj8FgaPi4O2tgncl4xvW/tTlzZJkFlVBRuhB1G4YHTSPILhCzCpyz3ZEhsjjiIzWAMq6fgjOtoCaUfLZHgcfLBaXHwpiou27LaxyZgMMflpr7e6ym0glY89KzDI0812kWdiLQ/DhK1+0GYQ4NFiRWTKimUsYGD/LWLsleb85uuulxDm3cHmrc/wxOBGnWCeuaoJtdf4KjDMXqA0w/CHzRck72kr0AyXhG/T8e1YxV5W/v31wsa0Lqj7TvUkE0aoG9QrKlPO4LNfM5AgO3+ieck3ChqQq3giUE4bZMGjJZlOJ+P9ET4qhA0C9ugFjYYhM62SQPEB1duku4OhFqghUaoNQicbXofOnZ14tCqE/MbYLHAIl/uXkw2s9UgkDa9XGqhBi072lEtbIJGUIvzDqEwY7H4DMao+KHLw/QvvF8aBNOm4XSTqgQayJwo5C7zQgvPsbPZjpdC/hN/7r/VQitF5ZYqaEVPjcJbSJuue5QigeuGe2zzDtgtCmbic8p2D8//SzvpunF4K3LdbyGJbY/P3MUZABYw2Xkp4pLLZaN91wgbUe5Vixib9TT8ApOZvzhmnKIqz2o0iAw35xmpYgxpSrmVWRcTMU1ubLcO+oP6+RuYbfpboN8+wWYdZpZxQpmISTL35+0deOP79vsS/epXPq+RT6p7g80egkhkwWRMkq07x0Of6ZoN2Ya035zhkokUh0i0ca3lzPMmy5zYl9jPmC2Jm3mOXHL+L4jF+gY/tnp0YF4HUQAAAABJRU5ErkJggg=="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def RunScript(self, Sweep_Curve, Shape_Curve):
@@ -415,9 +406,9 @@ try:
         class Curve_Trim_Offset(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-曲面挤出（修剪、移动）", "RPP_Curve_Trim_Offset",
+                                                                   "RPP_Curve_Trim_Offset", "E14",
                                                                    """修剪曲线，选择挤出量，挤出曲面，若不输入挤出量，则输出修剪后的线段""", "Scavenger",
-                                                                   "Surface")
+                                                                   "C-Surface")
                 return instance
 
             def get_ComponentGuid(self):
@@ -484,7 +475,7 @@ try:
                     self.marshal.SetOutput(result, DA, 0, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAALXSURBVEhLhZZZyI5BFMfHGsIXolxQyBbKEkVukIhIuVG2Qh+iKMsF5UIK2V3Yk6yFuMGd7UoR2S6QZLkgIVH27fd7vpnPyzsP//r1zpk5z3lmzsyZ5w0ZtYQVsBkW2IEWwjboU1ghzIMtMLSwQlgEi+uaoRbWw1roYEelOsN1+AkvYAAciPYxaAgbo30JmsIm0Hcw7AHHxEk0hnr1hmfg4HloDnuj7ezVBtA+WVghrIFH0A7sc+w5pJXVy2D3QIcjdqA0c1Oh0sxT8JWgXQNbY/sudIUqTQMdLhdWCIdA231QpqEy+HLQXgetYvsVdISs9oFOo2FCbBtU+RLtE4X1O/hFMMdTor0bSnUQdBoOc2A/KNNj//HCCmEZpOBJ+tuXVpuVx0wnT4pqBNshF/xCYdU9sxq6gf0P4Y9TUynP61vQcS6YS9unQS2FyuDTQdvTpuzXdjIN7MjJ3H8HHUdEVAqe0pKC3wQ3eBD0gidgv6sq1XzQ6Uph1VVnLvgtMB1jou0kusAn+AjtISsr9SV8A6v0BljZKgW/DQYfG22LszuoM2CfY6V6DDq5L7PBDf87eJq5wa3iftAMPH32T4KsvE9+gPl0BWom+NAdaAKVwduAteNhcCJPwbGeUKVO8AB08EiqdMZzwduCdXMffPYoOHYOquTD10CHs3agWVAW3LQMga/g3bMKHDO9vqxKk0EHN1WltHh55YL3j/ZhcNy0voMekNUu8AE3Z2BsG9x9yAX/AgZ0thPBcW/fUqXb02Wbd5f6r+DvweJSVr4+fitKlW7IHdACvCrGxb5ccFPRF2bEX/1ccalcqhWoo/uhbPt1ygXX/wN4nNVV0N9Ul8rZ6CRTYTyYBvfkM1QG9+Pixo6C1uCfgTfgszuhVP4jSC/x8lMeRVfndZCCOz4M/AfifvktsLhew39fkopLloBH1mDemum2HQlebimgG21VewOnCZwKIdT8AoEY9NDOJjWiAAAAAElFTkSuQmCC"
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAR6SURBVEhLzVV9TJR1HL8TgiIyCFk0mcFxSR7HPc/v7nkhBQ4kipYcrxIKDKQNZgEZUctwUivKZGrA3XH2R9KMJW2tTCcer8odbyodRAJKiUKbSC43e9HW5rfv7/FRXoaDrdb6bJ89v8/3+/u+PS+/R/EfApTyYknQ8OYAhjfnsbxlL17fJ6LVZDBUeMnuudAYzd4MXzNE+LpKg6HgPtm8IAixrCFCXQPLW6+zXO14ILe/UcXZjrC8eYoI1mnCWypDQ19/SN5+B6Bk+I9SiLj/AhFtlzBBoVqoXi47JehFq4EVrI1EsP3BCnXHWc5ipPZbvCruliFYUKurPYlYm4nxZ/WibVon1LxoNFa4S8EzMLqzgqUMJ5nEBFdxqi6Gq2lCnsPkv6L9KGOoEeTNEqb0wijyG1lKwOlK8NaNEVL1uGyaj4plrKE2Hu/tOyxn3cNw1gJG3BckO+cAk/deJkKDLOdDqTCO596/ESo8ZINCfT7BU14uCYsUUCj4vmQ/3WDyafZCWlnkpc2+vCstTDeSYtePZTxL/QzVZ1ObyWh6ghQwD1cWK0Ch7U/s5G5kg24o+Xu9Mzkk3GWaItOZgIW/inRs9tW6TD9TzQwmHWFcST5ymIRrXITjmkGsl+XC0J1J3G64ugmY4dRJlEpdv6meu5kDWldSj+TvNzVQrRtM6qYaQd93OuFOZxhz+YBq9U+4bkTuReYig5EzIB2JalWVuGVNe8IVdiKjUehN16z9K99EJjdOsedTXxHHXwgio2nZYWPJv6yq5b/GkHE/T3/I8g+EAW04dGl08HKgCPEBG0D1YAi4Kd1u4p5sKfksFChXuP+5aiAWnrDHf4I60z3D71Do5Abwz19tQ93kE/XYDfXEc5CTuxXsuh4Yj3obfiMa+J1o4VxUDTjjhsAR0wWsDwHc/yZNOhulqmXBUPx8GTCT6bAyUwM6RRhEFydC8A/PQFZsPnwZ0AjbK3ZB+MVUaNh0GBz6ZsC3CCb0T8OxqBY4HtUGzthu4H0FWqD0dtoZvBrxyFMwwo/Ae6XVQDu3FH0Kp0J7Ie/jN2DdcA4cTmmCPk0P5NheA+13JvgspRmGyTY4I5bD0egusGORzhgncL78wgWooxNHdBInFH+4E3aUV4FT74DWiDYwfV4Iu0rM2PVtnYT6gxIrnOBo58eQLUst4ITmqFbo4DugTWyHpmg7tKxrxXUbtKxtnadbULdicsrmRQtsu1OAbqQBs2mPnGubryXbPykwm9TfbjwpPdCe9X132R3bB6fj+u/5kEuYh1k4GeO4Z4F24wlMdAo6MPlBoQHeDauEl0KKIC9oCxSoCuGtJ8vhAFcPxEe/8ASsDwvfxg9I3Thiu6Rp6JUm7V7fC4civoBC1VYIW64Fj2UeNMmPyA4kPa7tyEHkdfzQqG8Hcg6KvN29IWVlqtTJHmYf1LBm2K2rgmJ1CUSviAYvNy8aSI8P2p0GOf+HQvEokn7F8ZKaBXqIZSEPIl1Ier5MIy8iO5G7kZHIfw0PIOlv8+6/4n8IheJvHpaDPXCnBmIAAAAASUVORK5CYII="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
@@ -553,7 +544,7 @@ try:
         class SurfaceAngle(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-Sur_Angle", "RPP_Sur_Angle", """求两个面的夹角和补角""", "Scavenger", "Surface")
+                                                                   "RPP_Sur_Angle", "E11", """求两个面的夹角和补角""", "Scavenger", "C-Surface")
                 return instance
 
             def get_ComponentGuid(self):
@@ -602,7 +593,7 @@ try:
                         self.marshal.SetOutput(result[1], DA, 1, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAPNSURBVEhLvZV7TFN3FMePl5eVbeXeBNuOPmit+CBtYbZstBC2YGVGsxRKE5IS0coaG91SMhKmyQKxs5q9kNgFiWA168KIUQeo+2cmom7d8IFGnMvcpvtjJHtkcS7sIRtn51d+A2Qaii77JCf3/n6/c7/fc8/93Xvhf8P6xNLgqhLlEYNhySYAZwHAeAZf+m94qjDnjZHDgFe7UzDaMh9dT8uHtVqTyJcfnicL1eGfjgHiEMXXgLtfgDGAhQq+/PAwg+97SfzjCZM3Nwu3ARQL+fK/QMQ0fpocczHw+/1VxcXFN9rb2xv41OzMxcButw9kZWVhVVXVN2wcCAQ2+ny+PaWlpb1tbW3+RNJMZhq8tUX4maYXTKxO0dHRobVarXeo+isFBQU4Pj5uzs/PP2Gz2dDpdI6WlZWxOTVPn2KmwU6/8KskaT1UlYqnJHC73Q1KpZJV/5coitjZ2bnTYrEc9nq9Q11dXQ0Oh4MZLOfpU8w02FGf8ruUre3Jzc09qdfr91PPE+0ymUwjNTU1P4TD4R0kdtPlco16PJ4blZWV10Kh0LaKigpmkJ8Qnc69W9ScSg90gcFgeFmtVn9ObbC2trZG4vG4m13T09PjjEQiB2Kx2PZoNBrs7+8vouM+MpASotOZ7SEbjUanTqf7kqpN51NzYzYDRl5eXhPdyUE+nBvJGNDLJWg0mrjZbNbzqeRJxoCh1Wp3U6s28CHhVcnkxmqVyvAilXD/tztZA8gw+zJF4xHTspxttWvEgV2bZbfP7k3Fwf0pWL1SHAQoWcEz72bSIE5xDTASFG4BnKeKMBXAZtXrNQ2V5VJfy/OZI+/vSsNvj86bLAbPUVwA/PMMbe+A7E62YtFWLjsFM/ixjxI/BRzqBly/Whi1F4qHGr2Z12PNGfhFt4B4mtYvToglxAcoTvFg58yIvsSfvTsPy4uky6JqhYPLU40WdXjsJGBnE73F9YAf7QX8g8YJMSb6CQUzmC7ITP5Zp+qvvydgrDkdtwceuflMkdS3eKm1hssDrLSrw+c6AF/dSMmXKQYnLpoUZHGWglXJ2kKtHKE29b+ehi31su/c5dLxRXrdS/RvtN3zb+h5Vh3e6gW8tI8upjYlBJkBM2KCdLz1AeCpSCq+tmX+L+vWyk+bl+eE6ONRDtAk5zL3Ry7XhILVJDRMwW75POBvHwJeoN3xdmPG2Cb3Y5dKbKoIyPJcAM89zi9LHp1GuWc4Sn3sFfDgK+nYWPvoV6sc2e9ICqOPGriYpz0YdXV1WZZlisHa1dIxg04TpD1Fexkf7JtzFwB/A5CoKg9BeYYRAAAAAElFTkSuQmCC"
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAOhSURBVEhLzVVbbExhEN5a1a1tqnarSysam150z/2yu6fbbWtbS0UbCSGCVkRChPBARRNJeaJ1e0HwICIiNK6pdSulUVWl7rVBhCCiiSAePJBmzBynm90qseGhX/Jlzz8z/3wzc/7/rGlIQRTFMaWlQpqxjB9J5uSmLEtWV6YlsysxIXG3YdahaUIWx7KfWIZ5xfO81TDHByVNeX2l9Co0F4XAaXV2GGYdHMetlkQRREEAFJhlmOODZvOFb5bdgsslrZCfkn/ZMOvAynt4nnsi8OwbxuW6ZJjjg9emha8HbsDF4hbITcmNCLjdAkPVy6I4X+T5Op7jqIsM8kmSVKXKcp0sy5ogCAFJELahb7miKIn65mj8TgBnvxWTfqdnr9froDHhyFbQGoWbZUkC7PAL2YlUDMuy68kfg8EE6uvrh+FI3qPIc6zMjxWXYLKPaOsmPyY7LPA8uAoKelVVnYcdPKM1wzBnyR+DwQSw9WIaCQoAbex/RpE+v98/BgX2Y1Jan6F4j6oeoy5Q4BytYzCYALZ6kJK63VIJVs8TUbTSOE2rJEncGS3gdisnDIEQrWMQLZBnzQuZeJOVqkaRNiMkAo5lXmLSd5IkhFRZAdblukp2t6K0qAquWbZdD4xGTAfW3HMmjykVq9muKILHCIkAT8xUjmE2K6K4BG94A3ZTQ3YcUTWetgYUWKwHRmPAiFoN8/9DtECONeeXsfwzogWyR2a/RVMD0qY7/w5OZHWyOfkI/v55RPipoHNcgTyKtJN/ENBtrrSYLTuENPHOnPFzv23hGuGAehDsI+wtP0OiMOAdXDHMM5Grfj6a6CtahNxA/hnjKj+vn1QHhzyHobX0GtyZchceBB9BeNpTKLL7v2FcOm2KwGPzhm+V34aOQCe9g/6L4kZey0oefyyQUf52Rc5K2CvvhwvFl4Bi7wcfwt0p96E90AEnfaehATtYmF3dhyN+jPsK9Az98KUXhU/6TsGavFrA/4RezaY9qsle1Ldd2AFnfM3QUdYJ94IPkA+hs6wLQv7zsEvaA0udy6A4veSlI8lBs1+CzNcTDkQwIxie5qiABRMWQpN2HNomt0M3VkdV3i7v1j/jNF8qoMJR8WGi1Xket9Ui6Z4kUY4/YsbYqnBt/jrY6NoEz6e/QIHrcFRr0tezMmd/ZUaxN80J5s0YOhU5Wt8UD8Q0sZcECu2Fetve0d6e1OGp+9A1FzlBD/pHrEU2GqTvfQJyKMNk+gEi3JSbOid9gQAAAABJRU5ErkJggg=="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def Point(self, pts):  # 获取所有点坐标信息
@@ -650,7 +641,7 @@ try:
         class SurfaceSortByXYZ(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-面排序", "RPP_SurfaceSortByXYZ", """曲面排序，输入xyz轴排序，可按照参照平面进行排序""", "Scavenger", "Surface")
+                                                                   "RPP_SurfaceSortByXYZ", "E15", """曲面排序，输入xyz轴排序，可按照参照平面进行排序""", "Scavenger", "C-Surface")
                 return instance
 
             def get_ComponentGuid(self):
@@ -699,7 +690,7 @@ try:
                     self.marshal.SetOutput(result, DA, 0, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAO3SURBVEhLzVRrSBNQFJ6Yumo9QCXnUmwuxZzT+RjbdFPTWJqaimJZDDSyDPNVQggVi8hFTbNSKwpNWqJoFqhhYtYqW1qbZeoPC/oZSGSTEJ+nc9aIGMtG+qMDH/fec+79vnvvufcw/juD19edjGVRefoD4hKd8s94XygtGVbtiLQss98gM9PRkM+enbm+Fkw1LDBdtYFrLJi9uBH6c3nV5kV5eXlrJicnuQDgQOPx8XGvpqYmHxx7myegjY2N+SA8Bzv7g94Ub5oAPQNgEEGtNYYQrc6gy+KdMy/WaDR7IiMjob29/VhRUVGIWCyeValUIJPJZhYXF4P4fP7+hISEhZOnToEwJAR47i7AZTPg410keol4YgX0zd91Ad1ei8DU1NSmwMBAU0pKykRsbOxwTEzM4ujo6GlXV1eora196Onp+S47O3u6X68/c6fhRo3E2/X7ahcGfOlEshdW5LYEyKqqqsqIkMPhQFtbWwP5UHCAx+NBCO66t7e3hnwtLbe9Vzmtn75ZhkQGK+KlBBobG6VMJhNwt4C7LyBfd3d3Bvlo95gPLvl8tgr7BBwk0TkAPLMiXkrAy8urMzExESIiIiArK2scCR0RzuifKy0tHaA5GXv2ZbDWu0OrciPAWxR4jmR9VuS2BHJycuI9PDygo6PjXnl5ea2vry90dXUdoRj58/PzjdTn84NGnFc5gZS7DuQCBgzdQjJ6NX8TwETmarVaI70YhHtdXZ2+p6dHRbHKyso+FL70c961K+pzFSPFsW5z6oMM+NSMZPYm+XfDq2FRq1arN1jGzPr6eqalv+ZTOfszGLFL5PZckbVJpdKGbWj4DzTYl+C/qIiLi9tNMc3mktXGYvfP8BSJCNbk9giEhYW1+vn5CbCtwaTLg4ODqyUSSQbFWjKvspYtEB4e3uzv7x+E7WWRSCTDf1CJPz2dYisloGWz2d54ggsogAcIrsATKCh2P+Xmun8WwAQ6pKenJ+O9P8L7L4uKiuqUy+VnMAcPMAcVu9LS+F07q12WdQIkvof3Pi8QCCA0NBSEQqG5VOBJQLRdIaM5yxLAqrk9ICAA8Fq+YR4WsJJOW8ajFO8XNy/vFeE1OeKOv8bHxx/HUxijo6PP4ilGMAfmySuS5KSkpBNKpZKjUCgOJScn87BGHUpNTRVRbEUEKNm2WrJfAlRJCTobeMWAhaYlBJYyEjAcdftiLhGExzZAJUTrDE/3bjlvWWa/DTVeWDtwmPthuMjDZChkmwxHbQD9H0o4poEC/ukf9kKYzwbUOJ8AAAAASUVORK5CYII="
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAARtSURBVEhLnZV9TBtlHMcPsogSZxgaNufWAnuRTXQVRtgYUF5K2yvXQjfAKCjbWBzGBbbMsEViiEZINEYYQ3AvDF3IdKMFWt567fWutFAoK4O9CWR/jDj+nNE/jC8Z8vOeu4e+QNXIJ/mlzz2/b++Tu+fuOeL/snB4Yet86fxuqINwPBUEABGGh37Wha+rkkZKu2IjY1EZ4iPjDZJIiTGcCK/GER8sZXc6qVG4qDZuwVM+bBrbF3aS++F60fVn8JSILEo2R2fYoD99UCgmk4W2pK8hjAirxxEfFvWgmyE5aMnulOIpAe+75kiapH+6pZ8GC8kU4mmB57Qvah9P5HrBlmkXajxnAuoTG4DvBQURNGlx2UgWLihuSPCUAKOlywbVQzMDVN+1IRXN4mmB+DLJ24tjOR6wZFiFQuPqHSeRYJ8Y8fNPAlpjcfUrBz/oqW6MGlAPLjJaZiNuEXuOx1cKJw0UVMQdQ4JXxIifUALvm9wLjIYBq5rhrKStY7xgAvirOI7bRMqJ7VWrBOWxh5Fgpxjxsyz4NkDAaK0nGZJ9bFKbPu8lzY12rZ2j1VYvbhNJ7217f5XgSOxRJNglRvysFPChsCFy6FGvsv8zIcBjLLma6NKNQF8enYiOd7wjLV9aKUBXxfdSUCCQUAJDvkHRIe+IEgKYLqor15hnjEHjDbrNhT8HCkazx6Bu98dIoEWBQELdov8kNXrfveEsF6B3AQnQuDWpDQlOiQk/axJsitj0XW+aWXjBkAD99qSZICYi5iqO+FiTgOdEs6wFnFkjggBdCRrvj94/x/eC9py1CjJO7TwN7pxx3zqgt7lUUrbI9+LFiMhaBS8Vbyn5I3ChkezDhFq0DkoxIhJKwBbTyZNFk/Wcjqt3FjprHTpHlaXIHY3bAk8pYvJ+RE/PsgDdoibZOSSoECMioQRmyix3Uq7ePuWAkdbQs9P6O2BQmhNwW4S/33cCnyRHlhMuJbfD+oj1n+CIwLKgM9sQtJsuM6xj7/KiVQ8HkRS118PKHT4BJx+GFlkr6ON0Dx+UPhyfq3ikQTmLaohBAqlU/vRS7S/bFsrne+1arhP1XHr7p/x+9GeL/Maz6DiI5A0pEysFF5IugSz6tR47af/t7qFZ8L4x/Q2bb789oLI8mXrrVrP34M1f7x+agYsZlytnjk5u9hR4oEvRXYJPGUza82lBLxu6RZf3tqM1qOwhe17tU/b9PlVwG1iNAywqK9zUTcIINQZfZbbVov87dKzHrBzoQuNQRCg3KhdWLnLjniYkOIYC5zPOq/gd8i9GzQmCUf7kV7KufIl6Tr31yFzxA+AKuHPuInfNVMlUDa2l41BvGQm/ez6ZUc0JGx2q+6pZ+GhXHRIoxAhBdGS1nx6l3OCmPHAt53sOTxP9mv6Dw5TLxH/RWL5GHdTwiIk0HcBtAXVuTC7UvHwGqrZXC3Um4SykRqcu8b2tYkSkW9F9z5HvhIb0hlXfin8Dfd5SQ9TrfAXRKm9KbE5vXvWtDg1B/A2DtsHmaBDYdQAAAABJRU5ErkJggg=="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
@@ -755,7 +746,7 @@ try:
         class ExtendSurface(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-曲面延伸", "RPP-ExtendSurface", """延伸曲面（不含非规整曲面），通过输入曲面的四边延伸曲面""", "Scavenger", "Surface")
+                                                                   "RPP_ExtendSurface", "E2", """延伸曲面（不含非规整曲面），通过输入曲面的四边延伸曲面""", "Scavenger", "C-Surface")
                 return instance
 
             def get_ComponentGuid(self):
@@ -807,7 +798,7 @@ try:
                     self.marshal.SetOutput(result, DA, 0, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAATJSURBVEhLpZVtUFRlFMcvqaSImkwqTVFCoQhDBjuK8lrEy45gCbGlImkwe4ELsuzevXv3cu/uE8uLLG+6CuhOfimNUStCM+1FomR0gOQlorGa+lB5PzSjfmgmZWHZ0/NcFhvLl9b+M3f2d/bunv+ec+5zlrqXWJZdaNHvfoEwQmguqixPddL0PBJXG8sTEMMEK/f05euRTrdSYbZkOTJUJBK+pzQazRzRSKslE92OqrSxFrM2zsJpO5BJG4/4nSstJm2zldMWIL54pYWja618sQ7pi4KsHP2alSt2IIGO8Ka6swAoP7Zpx0IJbduK0M75CGn8RWv+NvwaiKvxl9D2bIQKVpF7ItqeZrFsV5HP4DhYQvl5hL2p7i7NCc0cwZaT5w0poS4HfzFlLuGq2txMsSb3qZn3t6SYbK9EEdajvKCq2i0vE76vSDKzXb3JG1Kmpsws2qlSZiC0qFNMDeonCBsbMzdy9szVhM17spaaG9UZhO8rYsA5kpUhExGercDc9nycsS1FGTLvSI4xtyaGKdygWsLtT04ifF+RFhkPqhK8IWV8S5Uwa8Adio1lO55dTlh/KDaaPRyjtIs7HL9I3xG7gfB/UlrD0iVepNKcf3NK27JAClEPEVY5qQDKSSmtI1I7ghZ78e7yXC5cBIACYRz5y5foAHIR9lzUL5BPET7hD71oPmHPGcfD5JJPoQDP8ZYF4HTeMlMkCEUrvHhLnh/0a92Xy36b/IaRbw4y8kR/uTxxoUKe+KpSdvXqZVcPK09+YpQnz/Ly5GlBnjpZJU99IMru963y9Mk9V6aOomwlUTVbsc7K0/YqS36OuSY3jW9WJ7L7ktfl2sPCrw4WdsIVI8BoBcBIJcDXBoB+HF8wAfSZAXoFgB4R4DMLwFkrwOk3AbptAGcawd1Z/Ss4UQBl4yrCsUGZgPIjzfV5z4hN6aGG9qSQHXiA472aYNcwc909uhtwBYArgInzleDqNYCrxwiTn3KAKwBcAeAKYKpLAvd7VnAfx0Yft4L7SDWjVEHTqnmC8MYyJfiHXEPMPviJ9d3gQztMv2MbUpLY9GXREkc3SdLreeSEcnZ1Crs3MU57IDr65/MF2dNjOo9rAFfhi8GxGpg+WjetGIhseajVVFyMDaIkW244S9rUnBTCtEUGD5/PW3ZzsPSqZ0jnk4G7E8+iqwUUAyLSItGwK8Qb3qYbA8wwjOl9N+hunTEAAD9kLDNIfCEvIM2r5vrN2XxreqqhfWN8wYGIVX8OlPbCuOHBDYiQqWSDaNZmCHVbV6Dm7Ef1LRlBur1rH8HLLeDGIPMFjONB/x8Dp3Pmn+pOwgajD9Si2RlIupLVVpPWIoo7UvEuX29s3PQc60iM1Dqinj73UdbjE4PMNV+H7H2KPF4D3RoLT1eJ6N8Gv/Tt2uwZx0l9PQdddnC/bftWMcDy47jCRV6+TROXSg76fNCOzZ7kGgOFKkvDLCbaIEkFMSbbljWG5hdXsfuTQvNbIx4b79M86Rph/nCP+LYqoLsepjptv3uOoMV42TFx+JDVSVL+S3xNTqqxMT0Bt0fFtK2NujZU1APX8UL7kQX4ngP4jgcYw/EIXnBDOFE/ArhYjRdfDcCXtQDn6gE+b8QX/vXvoq0URVF/Aa0zCJABzoW+AAAAAElFTkSuQmCC"
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAUFSURBVEhLrZZ9TBN3GMfr1KlT3MIU3UaWaIIzm7pNM6eW8qbIXLY5sz/2Yha3memSSZCZaaL4tsFcy/UKBTQwRUVjmAK+8tJCLYhQwBcydII4TWRYZRhDS9vrXct99/zaa5QMxT/2TT6559vf3fP87rm736+qp9F+YKwVGKVYVf5FjAYwQrGqIlker4QBHb169VklfDoZRE8+75e+U6yKlzyFnNf9MYtzRHG2wS9aAgOkbMmziPeLJYodXvlO5yTjgG9A7xf/ZD4XmLqHpq/3e2uYzxoQsw+T533CEuYNklBUyMapMPPDyiC6M/fRBQUE19+/mBfdOpYghyX1uFbxkuDcyxJKHutur/c1I2Sw8+kuy1WPtPGxyvjnjsbg897IFoXTGXe7Zv3Sc2epwSfe4wRXafqdriSd4NhJLfGUyLK6SZYj98hyLrXTQcf3qc7wBZh4n8emE1ycYlV60X2dZryBxTTbaJ3LIVCYR5zUJK9r1HucPRS/xMafSnqf5wLndeUolgoKnYWynEJh9NzPPm3P6OuFaowK5DF31UrssHexWCJ2EI9VNLGaBUbZ35AnyzoWMxXIcssKjuuk0D99WQIM/W5semsrsqdlwrCtCun37IgYO4UVuR644DH6hGAn/bH5atv9daYqK8VpxIltNzvdCzYmI3JEBLTf/449Hj/qlzXDNvssjms7cNAJpM7YwK69QASVL0nRvNvxoWKZEgk8QyRfOo9lRm2gBYyUzotIN5px6pXDqNx6nV5JARWJNah5/QyKtW3Y7wHWR/0QLKDv6wrPloSyIvZq+QSJFz02+rBs6Xf/7tjY1IK0slroG25gE1eC1VNXIX3GT8i60o2SvFuoj6rEsfXNyL51HxVLqMDschTvvIwD3SJSolKDBbbTZ63ru780yysU69zOI7ucD5YzVmTx6YtWrMTJ1MswJ1phia9FU1wzzsc1ojzJgvIEM0zRZlTGmgNxlYYgXxFfjXMftNAdKAVC2ue0T+Z67fMUyzRvLLXDHHUCFrUlkCyQhDAtNMGkNqEqJpjUtIji0JjaDFtM08MC+r6+8BzJW7BbHhjgfd7bWZJQzEjrvHZu7bHjOHD0Jqpia4IJlSTD0ZjQ/LCAtr09LLPfkUrP4ZpO6K/71dW3hbHWVFH0UdrPOKRthYkKsJkOlWwoBhUIaXtr6wucfVCL5oymFlVPK0ONxhJsxxDJhmJQgdyenglGybuZWnSb1pw2gyhwjA0ttrIvDHk49FsHquLpDoZpUXWMBTUxVuIsbAmPPGRtb29Yptuxy+gTH3Ci+y+t21FAvuDH1guVX+bvQ+HB9kCBoZ6BSVON+vgGNMTbUKkxoXThcZxSn0FrYhs2z9wyuEXJTRUTd3V3v61YpjdpW4J5+n9bxJLVxdVT8kZwc3gkTUlC5LhIhI2aiEnPTsL88HexIHxBsIBelsfl+v2fU4usWX6x1CgKXzG+OVrMv7cmFWe2dcASVxt4TdmMz8bWomXxJRyafxjqF9UsSQi2uN0jHI/81qrKsNsn84KrhG0a1CKHzuO00Mpp2Xqr88q3pnKkHDmF0zEVqNPUwRpbh2MLS7Fm+lqMHzk+lMRGfE1MIyYQkwkNsZdgY0Fxvb3z2OaiWKZ3iECSiDEReOP5WZgZNhPjRj4XSvyACKy2T9DLynFI0TqnWk6wDb2fCCXuJtje8Crxv2kqwb6ROcSgvyhPlkr1L4sZ0MRj6DAVAAAAAElFTkSuQmCC"
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
@@ -898,8 +889,8 @@ try:
         class BrepSplitByCurve(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-曲线分割曲面", "RPP_BrepSplitByCurve", """利用曲线对曲面进行切割；
-                注：需要两者相交""", "Scavenger", "Surface")
+                                                                   "RPP_BrepSplitByCurve", "E12", """利用曲线对曲面进行切割；
+                注：需要两者相交""", "Scavenger", "C-Surface")
                 return instance
 
             def get_ComponentGuid(self):
@@ -940,7 +931,7 @@ try:
                     self.marshal.SetOutput(result, DA, 0, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAJ3SURBVEhLtdbLS1RRHAfw352HOY/utYdkoJsoiJ6oZSpKRWaOmkVFCLUvsGxRG2mbBW0ipBcWLlw0RahkVhCE4B9Q2UOkpqQHYaCLnoTVt+/v3C4tmhl0nH7wgZk75/y+c+4585BZVgFVUcQ8y2KV0WX6RqA2ykqtpT7SpmqcTlMhzbpa6Ttp4yHaQdOupXQ4jQ7y3nWCjtI+OkCHKNkclU+mdDBkzRZIxW7Ihp2uSj5etclrjED5AgTrChCsWZRarAD+4jxvju6VqT1iWZCLCcg9QPr/GKRjcTPYtywK50UMzusGOK/qU8qbaEKke70XUKLNtdyAMw8gvT8h8U+uOwzY324GBzbnwxmrh/1oa1rOyxjCl0qmGXCLAa1dZrBvSQT201rYjylJY8/MAnqmIOdHIYEciCWIxMvhJGJJG3tmFuCtoqzJTAhuXwznTUPSxp6ZB9z8BTk55E7wWYjeqDBN7IfZCoh/htzmKqqbzSR/6TxzmlLtRQYB1Mu96ByDhB0zMbdtOZx3jUlXkVnA1Y/uKlo63YkhP6IDVUlvVWYB6toXyABDyneZyf4VNuyRbbCfUVYClB7b7g+QhUWmQU5zEZy3PFXD2QrQW6XHtn2QJ8pnmoROrWbI3/1IH3BuxL3XGpJKzw/IfY45eME0seb4EO3h0eWmO6N1yHvfiHDXun8C9pqA4/38wnsOOTucXscTyBWequJa08hXGEK0rxLRu9WYO7gRoRMrvYBSba6lPx6TXDb5pycQnJTcyCTnTZHbMGCNi9+a4AdSryv9BTSVQ/MzVEzaTEOuk/4B8F4LUFaqhrzbckQv/I9qIQ34SmG9ICLyGxmXtpYnbPhWAAAAAElFTkSuQmCC"
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAKbSURBVEhLtdZbSJNhGAfwzXaQucoMMyTxpoYIImpaVnMHzYmRddGJ1kVXFXSCUqibsm4KLzpgQUyJJZoVLe1AU6fW0uaWoCF0uihI6EKhQRcV0cW/53nGB5HbcHM98LvYu+99/t++9/2+b6oF1kqyiWTIpxRWBWknPwnIaZKSKia9hJuyGdJCVpEF1zHyi3DjEbKNzLtWk6NxtBLlrD+Sk8RJDpIjJNoclk2knGlqNRoqzHBa67G3yiGctnpsKduoNMb65ZWozXGgekVNTI6cOpQuK1Pm8FpJ7dBrtfjWNQj4PwEDbyPGvsDX3CoHFywuwJg9hKD9FV7agjG93jyFG6UuJaCUm3NJwGdXL/BkEngQjBj6gGsHGuVgPrsgBfSZB+J6YR3FpeIr8wygX9F7qkUOXmM04ZnFj36zL2pjRWIBjycw6+6DQZ8OtSoN7Wtvwm8didpYkVgA873DPkudTNia24BQ9XjUxorEA7xTeHO1G2raZVq1Fu7yW9IkWnOWeACjxT5Uu10mlWeVY9QWiLkWyQXQWLhrGNlLMmVio6lJLpXX3J+iAM8YMPgenqYLMtGoMaJ73V1p9m9IcgGsJyQh++nupuNRtLRIdpSvaihFAYy27ff7AZhy86TB7rw9c3bVwgL4UtHNN3m5EzqNRpo0F55D8K/1iBsw434aeQZxSEwTwOg0bp84L00Miwy0dTvkGTVseY6QfRytJdfnBOziMwpcbMO024tp18P42h5h9o4fOzfYpVG+IR8dFZ2y8J7KHpwpPKsElHFzLn55hCkkrNfq5kEbTtenhzMNGWGa95vIo0Sfpp8hXzVqDY8zfgNK6UhWkkoIN+Mzvkf4D4DynYakpGqIclmO88D/qMOEA34QAw+oVCrVH7vEX51nUrS0AAAAAElFTkSuQmCC"
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
@@ -984,7 +975,6 @@ try:
         pass
 except:
     pass
-
 
 import GhPython
 import System

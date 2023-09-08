@@ -32,7 +32,7 @@ try:
         class SurfaceKeyPoints(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-曲面关键点", "RPP_SurfaceKeyPoints", """获取曲面板关键点，角点、中心点、线中心点""", "Scavenger", "Facade")
+                                                                   "RPP_SurfaceKeyPoints", "F1", """获取曲面板关键点，角点、中心点、线中心点""", "Scavenger", "H-Facade")
                 return instance
 
             def get_ComponentGuid(self):
@@ -196,7 +196,7 @@ try:
         class SmallestRegion(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-物件粗略范围", "RPP_SmallestRegion", """以中心物件为中心，寻找一组物件中粗略最小范围""", "Scavenger", "Facade")
+                                                                   "RPP_SmallestRegion", "F3", """以中心物件为中心，寻找一组物件中粗略最小范围""", "Scavenger", "H-Facade")
                 return instance
 
             def get_ComponentGuid(self):
@@ -352,7 +352,7 @@ try:
         class CounterBore(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-沉头孔", "RPP_CounterBore", """输入规格自动生成沉头螺钉（包含M4、M5、M6、M8、M10、M12、M16、M20）""", "Scavenger", "Facade")
+                                                                   "RPP_CounterBore", "F2", """输入规格自动生成沉头螺钉（包含M4、M5、M6、M8、M10、M12、M16、M20）""", "Scavenger", "H-Facade")
                 return instance
 
             def get_ComponentGuid(self):
@@ -477,14 +477,9 @@ try:
                 try:
                     sc.doc = Rhino.RhinoDoc.ActiveDoc
                     Alum_Material, Iron_Material = (gd[object]() for _ in range(2))
-
-                    re_mes = Message.RE_MES([Code], ['Code'])
-                    if len(re_mes) > 0:
-                        for mes_i in re_mes:
-                            Message.message2(self, mes_i)
-                    else:
-                        self.deep1 = Deep1
-                        self.deep2 = Deep2
+                    self.deep1 = Deep1
+                    self.deep2 = Deep2
+                    if Code:
                         if Code in self.al_specifications.keys():
                             order_sp_al = self.al_specifications[Code]
                             order_sp_fe = self.fe_specifications[Code]
@@ -493,6 +488,8 @@ try:
                             Iron_Material = self.counter_bore(order_sp_fe)
                         else:
                             Message.message1(self, '未包含此螺丝规格！')
+                    else:
+                        Message.message2(self, '螺丝规格未输入！')
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
                     sc.doc = ghdoc
@@ -504,4 +501,3 @@ try:
         pass
 except:
     pass
-

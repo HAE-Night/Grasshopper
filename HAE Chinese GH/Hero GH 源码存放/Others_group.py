@@ -35,7 +35,7 @@ try:
         class CreateView(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-新建视图", "RPP_CreateView", """创建新视图.""", "Scavenger", "Others")
+                                                                   "RPP_CreateView", "V3", """创建新视图.""", "Scavenger", "L-Others")
                 return instance
 
             def get_ComponentGuid(self):
@@ -119,7 +119,7 @@ try:
         class StrHandle(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-字符串处理", "RPP_StrHandle", """字符串处理插件,处理存在的符号信息""", "Scavenger", "Others")
+                                                                   "RPP_StrHandle", "V1", """字符串处理插件,处理存在的符号信息""", "Scavenger", "L-Others")
                 return instance
 
             def get_ComponentGuid(self):
@@ -204,26 +204,19 @@ try:
                 return result_str
 
             def RunScript(self, Text, Symbol, Index):
-                try:
-                    All, Start, End, Result, Rest_list = (gd[object]() for _ in range(5))
-                    re_mes = Message.RE_MES([Text], ['Text'])
-                    if len(re_mes) > 0:
-                        for mes_i in re_mes:
-                            Message.message2(self, mes_i)
-                    else:
-                        text_list = self._regular(Text) if Symbol is None else self._division(Text, Symbol)
-                        All, Start, End, Result = text_list, text_list[0], text_list[-1], text_list[Index]
-                        Rest_list = [_ for _ in text_list if _ != Result]
-                    return All, Start, End, Result, Rest_list
-                finally:
-                    self.Message = '字符串处理'
+                All, Start, End, Result, Rest_list = (gd[object]() for _ in range(5))
+                if Text:
+                    text_list = self._regular(Text) if Symbol is None else self._division(Text, Symbol)
+                    All, Start, End, Result = text_list, text_list[0], text_list[-1], text_list[Index]
+                    Rest_list = [_ for _ in text_list if _ != Result]
+                return All, Start, End, Result, Rest_list
 
 
         # 字符处理2
         class StrHandle_02(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-字符处理", "RPP_StrHandle_02", """字符集的拆分""", "Scavenger", "Others")
+                                                                   "RPP_StrHandle_02", "V2", """字符集的拆分""", "Scavenger", "L-Others")
                 return instance
 
             def get_ComponentGuid(self):
@@ -270,28 +263,22 @@ try:
             punc = r'-_#@$%~&:'
 
             def RunScript(self, String, Symbol):
-                try:
-                    Result = gd[object]()
-                    re_mes = Message.RE_MES([String], ['String'])
-                    if len(re_mes) > 0:
-                        for mes_i in re_mes:
-                            Message.message2(self, mes_i)
-                        return gd[object]()
-                    else:
-                        self.punc = r'-_#@$%~&' if Symbol is None else Symbol
-                        Result = re.split(r"[%s]+" % self.punc, String)
-                    return Result
-                finally:
-                    self.Message = '字符串处理2'
+                Result = gd[object]()
+                if String:
+                    self.punc = r'-_#@$%~&' if Symbol is None else Symbol
+                    Result = re.split(r"[%s]+" % self.punc, String)
+                else:
+                    pass
+                return Result
 
 
         # 某度翻译
         class TranslateByBAIDU(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-某度翻译", "RPP_TranslateByMODU",
+                                                                   "RPP_TranslateByMODU", "V5",
                                                                    """通过某度API接口进行翻译，需要ID和密钥""",
-                                                                   "Scavenger", "Others")
+                                                                   "Scavenger", "L-Others")
                 return instance
 
             def get_ComponentGuid(self):
@@ -386,9 +373,9 @@ try:
         class LayerRename(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-图层重命名", "RPP_LayerRename",
+                                                                   "RPP_LayerRename", "V4",
                                                                    """重命名图层，需要csv文件数据导入，会自动重命名图层""",
-                                                                   "Scavenger", "Others")
+                                                                   "Scavenger", "L-Others")
                 return instance
 
             def get_ComponentGuid(self):
@@ -502,9 +489,9 @@ try:
         class ActiveFile(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-获取某些数据", "RPP_ActiveFile",
+                                                                   "RPP_ActiveFile", "V11",
                                                                    """获取犀牛，Gh文件路径以及当前时间""", "Scavenger",
-                                                                   "Others")
+                                                                   "L-Others")
                 return instance
 
             def get_ComponentGuid(self):
@@ -590,6 +577,6 @@ try:
 except:
     pass
 
-
+import GhPython
 import System
 
