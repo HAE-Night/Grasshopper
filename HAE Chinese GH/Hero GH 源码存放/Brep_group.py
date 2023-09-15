@@ -1305,7 +1305,7 @@ try:
                             New_Geometry = self.exturde_brep(Geometry, mode_line)
                             return New_Geometry, Transformed_Objects
                 finally:
-                    self.Message = 'HAE 映射及挤出'
+                    self.Message = 'HAE mapping and extrusion'
 
 
         # 多边曲面偏移
@@ -2500,7 +2500,7 @@ try:
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Fill_Brep", "R", "偏移折边后组合的面")
+                self.SetUpParam(p, "Fill_Brep", "R", "Combine face after offset folding")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
