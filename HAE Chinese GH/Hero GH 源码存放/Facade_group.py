@@ -32,7 +32,7 @@ try:
         class SurfaceKeyPoints(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_SurfaceKeyPoints", "F1", """获取曲面板关键点，角点、中心点、线中心点""", "Scavenger", "H-Facade")
+                                                                   "RPP_SurfaceKeyPoints", "F1", """Obtain the key points, corner points, center points, line center points of the surface plate""", "Scavenger", "H-Facade")
                 return instance
 
             def get_ComponentGuid(self):
@@ -46,26 +46,26 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Brep()
-                self.SetUpParam(p, "Surface", "S", "待获取关键点的曲面")
+                self.SetUpParam(p, "Surface", "S", "The surface of the key point to be obtained")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Boolean()
-                self.SetUpParam(p, "Center", "C", "是否需要中心点")
+                self.SetUpParam(p, "Center", "C", "Whether a central point is needed")
                 bool_center = True
                 p.SetPersistentData(gk.Types.GH_Boolean(bool_center))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Boolean()
-                self.SetUpParam(p, "Corner", "Co", "是否需要角点")
+                self.SetUpParam(p, "Corner", "Co", "Whether corner points are needed")
                 bool_corner = True
                 p.SetPersistentData(gk.Types.GH_Boolean(bool_corner))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Boolean()
-                self.SetUpParam(p, "Line_Center", "LC", "是否需要线中心点")
+                self.SetUpParam(p, "Line_Center", "LC", "Whether a line center point is required")
                 bool_line_center = True
                 p.SetPersistentData(gk.Types.GH_Boolean(bool_line_center))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
@@ -73,15 +73,15 @@ try:
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Center_Pt", "CP", "曲面板的中心点")
+                self.SetUpParam(p, "Center_Pt", "CP", "The center point of the curved plate")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Corner_Pt", "COP", "曲面板的角点")
+                self.SetUpParam(p, "Corner_Pt", "COP", "Corner point of a curved plate")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Line_Center_Pt", "LCP", "曲面板的线中心点")
+                self.SetUpParam(p, "Line_Center_Pt", "LCP", "The line center point of the curved plate")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -189,14 +189,14 @@ try:
                     sc.doc = ghdoc
                     return Center_Pt, Corner_Pt, Line_Center_Pt
                 finally:
-                    self.Message = '曲面关键点'
+                    self.Message = 'Surface key point'
 
 
         # 物件粗略范围
         class SmallestRegion(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_SmallestRegion", "F3", """以中心物件为中心，寻找一组物件中粗略最小范围""", "Scavenger", "H-Facade")
+                                                                   "RPP_SmallestRegion", "F3", """Centered on the central object，find a rough minimum range in a set of objects""", "Scavenger", "H-Facade")
                 return instance
 
             def get_ComponentGuid(self):
@@ -210,17 +210,17 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Main_Item", "M", "中心物件")
+                self.SetUpParam(p, "Main_Item", "M", "Central object")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Order_Item", "O", "查找范围物件")
+                self.SetUpParam(p, "Order_Item", "O", "Find range object")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
-                self.SetUpParam(p, "Count", "C", "范围物件的数量")
+                self.SetUpParam(p, "Count", "C", "The number of objects in Range ")
                 count = 6
                 p.SetPersistentData(gk.Types.GH_Integer(count))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
@@ -228,15 +228,15 @@ try:
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Res_Order_Item", "R", "取得的范围物件")
+                self.SetUpParam(p, "Res_Order_Item", "R", "Gets the object in Range")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Order_Index", "i", "取得物件在原列表中的下标")
+                self.SetUpParam(p, "Order_Index", "i", "Gets the subscript of the object in the original list")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Distance", "D", "取得物件的粗略距离")
+                self.SetUpParam(p, "Distance", "D", "Gets the rough distance of the object")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -345,14 +345,14 @@ try:
                     sc.doc = ghdoc
                     return Res_Order_Item, Order_Index, Distance
                 finally:
-                    self.Message = '粗略最小范围'
+                    self.Message = 'Rough minimum range'
 
 
         # 沉头螺钉
         class CounterBore(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_CounterBore", "F2", """输入规格自动生成沉头螺钉（包含M4、M5、M6、M8、M10、M12、M16、M20）""", "Scavenger", "H-Facade")
+                                                                   "RPP_CounterBore", "F2", """Input specifications automatically generate countersunk screws (including M4, M5, M6, M8, M10, M12, M16, M20)""", "Scavenger", "H-Facade")
                 return instance
 
             def get_ComponentGuid(self):
@@ -366,19 +366,19 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Code", "C", "螺丝编号")
+                self.SetUpParam(p, "Code", "C", "Screw number")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Deep1", "D1", "深度1")
+                self.SetUpParam(p, "Deep1", "D1", "Depth 1")
                 DEEP_LENGTH_1 = 5
                 p.SetPersistentData(gk.Types.GH_Number(DEEP_LENGTH_1))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Deep2", "D2", "深度2")
+                self.SetUpParam(p, "Deep2", "D2", "Depth 2")
                 DEEP_LENGTH_2 = 10
                 p.SetPersistentData(gk.Types.GH_Number(DEEP_LENGTH_2))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
@@ -386,11 +386,11 @@ try:
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Brep()
-                self.SetUpParam(p, "Alum_Material", "AL", "铝料螺钉")
+                self.SetUpParam(p, "Alum_Material", "AL", "Aluminum screw")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Brep()
-                self.SetUpParam(p, "Iron_Material", "FE", "铁料螺钉")
+                self.SetUpParam(p, "Iron_Material", "FE", "Iron screw")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -487,15 +487,15 @@ try:
                             Alum_Material = self.counter_bore(order_sp_al)
                             Iron_Material = self.counter_bore(order_sp_fe)
                         else:
-                            Message.message1(self, '未包含此螺丝规格！')
+                            Message.message1(self, 'This screw specification is not included！')
                     else:
-                        Message.message2(self, '螺丝规格未输入！')
+                        Message.message2(self, 'Screw specifications are not inputted！')
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
                     sc.doc = ghdoc
                     return Alum_Material, Iron_Material
                 finally:
-                    self.Message = '沉头螺丝（孔）'
+                    self.Message = 'Countersunk head screw（hole）'
 
     else:
         pass
