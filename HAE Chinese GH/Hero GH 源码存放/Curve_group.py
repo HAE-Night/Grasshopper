@@ -35,7 +35,7 @@ try:
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
                                                                    "RPP_VectorLineTaking", "W1",
-                                                                   """点向式绘制直线.""", "Scavenger", "B-Curve")
+                                                                   """Point-oriented drawing line.""", "Scavenger", "B-Curve")
                 return instance
 
             def get_ComponentGuid(self):
@@ -53,25 +53,25 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Point()
-                self.SetUpParam(p, "Point", "P", "直线起点")
+                self.SetUpParam(p, "Point", "P", "start of line")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Vector()
-                self.SetUpParam(p, "Direction", "D", "直线大小和方向\n默认Z方向长度为10的向量")
+                self.SetUpParam(p, "Direction", "D", "the length and direction of line\ndefault vector is length 10 in Z direction")
                 p.PersistentData.Append(Grasshopper.Kernel.Types.GH_Vector(rg.Vector3d(0, 0, 10)))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Boolean()
-                self.SetUpParam(p, "Whole", "W", "双端方向（默认开启，True），关闭输入False")
+                self.SetUpParam(p, "Whole", "W", "direction in both side（open in default，True），close input False")
                 p.SetPersistentData(Grasshopper.Kernel.Types.GH_Boolean(True))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Line", "L", "生成的直线")
+                self.SetUpParam(p, "Line", "L", "output line")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -117,7 +117,7 @@ try:
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
                                                                    "RPP_CurveExtendTrim", "W5",
-                                                                   """修剪曲线，输入负数时修剪曲线，输入正数时延长曲线.""",
+                                                                   """trim curve，if input negative,trim curve,if input positive,extend curve.""",
                                                                    "Scavenger", "B-Curve")
                 return instance
 
@@ -136,26 +136,26 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Curve()
-                self.SetUpParam(p, "Curve", "C", "一条曲线")
+                self.SetUpParam(p, "Curve", "C", "curve")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
-                self.SetUpParam(p, "Type", "T", "曲线延伸类型，0=Line，1=Arc，2=Smooth")
+                self.SetUpParam(p, "Type", "T", "curve extend type，0=Line，1=Arc，2=Smooth")
                 LINE_TYPE = 0
                 p.SetPersistentData(gk.Types.GH_Integer(LINE_TYPE))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "L0", "L0", "起点延长的长度，默认为延长10")
+                self.SetUpParam(p, "L0", "L0", "the extend length from the begin point，default is 10")
                 START_DISTANCE = 10
                 p.SetPersistentData(gk.Types.GH_Number(START_DISTANCE))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "L1", "L1", "终点延长的长度，默认为延长10")
+                self.SetUpParam(p, "L1", "L1", "extend length of end point,by default is 10")
                 END_DISTANCE = 10
                 p.SetPersistentData(gk.Types.GH_Number(END_DISTANCE))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
@@ -163,7 +163,7 @@ try:
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Curve()
-                self.SetUpParam(p, "Result_Curve", "C", "曲线结果")
+                self.SetUpParam(p, "Result_Curve", "C", "the result of curve")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -289,7 +289,7 @@ try:
                         iter_ungroup_data = ghp.run(self.temp, zip_list)
                         Result_Curve = self.format_tree(iter_ungroup_data)
                     else:
-                        self.message2("C端不能为空！")
+                        self.message2("terminal C can not be empty!")
                     no_rendering_line = self.Branch_Route(Result_Curve)[0]
                     pt_array = map(self.get_se_pt, no_rendering_line)
 
@@ -302,7 +302,7 @@ try:
 
                     return Result_Curve
                 finally:
-                    self.Message = '曲线修剪'
+                    self.Message = 'trim curve'
 
             def DrawViewportWires(self, args):
                 try:
@@ -322,7 +322,7 @@ try:
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
                                                                    "RPP_OffsetBySerial", "W13",
-                                                                   """多折线按指定序号进行偏移""", "Scavenger", "B-Curve")
+                                                                   """polyline offset by assigned number""", "Scavenger", "B-Curve")
                 return instance
 
             def get_ComponentGuid(self):
@@ -340,24 +340,24 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Curve()
-                self.SetUpParam(p, "Curve", "C", "多折线")
+                self.SetUpParam(p, "Curve", "C", "polyline")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
-                self.SetUpParam(p, "Indexs", "I", "多折线序号")
+                self.SetUpParam(p, "Indexs", "I", "numnber of polyline")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Distance", "D", "偏移距离，默认偏移10")
+                self.SetUpParam(p, "Distance", "D", "offset 10 by default")
                 p.SetPersistentData(Grasshopper.Kernel.Types.GH_Number(10))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Curve()
-                self.SetUpParam(p, "Result_Curve", "R", "偏移后的多折线")
+                self.SetUpParam(p, "Result_Curve", "R", "multiple broken line after offset")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -481,7 +481,7 @@ try:
                         zip_list = []
                         for _ in range(len(z_zip_list)):
                             if len(z_zip_list[_][1]) != len(z_zip_list[_][2]):
-                                Message.message1(self, "第{}组折线偏移失败；原因：下标与偏移距离列表不相等！".format(_ + 1))
+                                Message.message1(self, "{} broken line failed to offset,reason：the subscript is not equal with offset distance list！".format(_ + 1))
                                 zip_list.append(None)
                             else:
                                 zip_list.append(z_zip_list[_])
@@ -494,11 +494,11 @@ try:
                                 for sub_index in range(len(temp_res_lines[_])):
                                     if temp_res_lines[_][sub_index] is False:
                                         Message.message2(self,
-                                                         "第{}组第{}根折线偏移失败；原因：被偏移的折线必须为直线！".format(_ + 1, sub_index + 1))
+                                                         "in {} group the {} broken line failed to offset；reason：the broken line be offseted must be straight line！".format(_ + 1, sub_index + 1))
                                         sub_res_line.append(trunk_list_curve[_][sub_index])
                                     elif temp_res_lines[_][sub_index] is 1:
                                         Message.message2(self,
-                                                         "第{}组第{}根折线偏移失败；原因：输入下标大于折线段数！".format(_ + 1, sub_index + 1))
+                                                         "in {} group the {} broken line failed to offset；reason：input subscript is greater than the number of broken lines！".format(_ + 1, sub_index + 1))
                                         sub_res_line.append(trunk_list_curve[_][sub_index])
                                     else:
                                         sub_res_line.append(temp_res_lines[_][sub_index])
@@ -514,7 +514,7 @@ try:
                     sc.doc = ghdoc
                     return Result_Curve
                 finally:
-                    self.Message = '多折线按序号偏移'
+                    self.Message = 'polyline offset by number'
 
             def DrawViewportWires(self, args):
                 try:
@@ -536,7 +536,7 @@ try:
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
                                                                    "RPP_PlineOffset", "W15",
-                                                                   """折线段分段偏移，三种不同的偏移模式""", "Scavenger",
+                                                                   """broken line offset by segment，3 different type offset mode""", "Scavenger",
                                                                    "B-Curve")
                 return instance
 
@@ -555,30 +555,30 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Curve()
-                self.SetUpParam(p, "Curve", "C", "原曲折线")
+                self.SetUpParam(p, "Curve", "C", "original curve broken line")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Distance", "D", "偏移的距离，有几个折边输入几个偏移距离")
+                self.SetUpParam(p, "Distance", "D", "the distance of offset，the number of input offset distance equals with the number of folding")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Boolean()
-                self.SetUpParam(p, "Simply", "S", "端口默认关闭，开启（True）后是普通的偏移")
+                self.SetUpParam(p, "Simply", "S", "terminal is closed by default，after open（True）is normal offset")
                 p.PersistentData.Append(Grasshopper.Kernel.Types.GH_Boolean(False))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Boolean()
-                self.SetUpParam(p, "Double", "DU", "端口默认关闭，开启（t）后将偏移前以及偏移后的折线首尾连线")
+                self.SetUpParam(p, "Double", "DU", "terminal is closed by default，after open（t）Line the first and last polyline")
                 p.PersistentData.Append(Grasshopper.Kernel.Types.GH_Boolean(False))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Curve()
-                self.SetUpParam(p, "Rescur_list", "R", "最终折线")
+                self.SetUpParam(p, "Rescur_list", "R", "final broken line")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -659,14 +659,14 @@ try:
                                     closest_pt.append(offset_list[-1].PointAtEnd)
                                 res_poly_line = ghc.PolyLine(closest_pt, self.factor)
                             else:
-                                Message.message1(self, "距离数据列表必须和多线段数目相等！")
+                                Message.message1(self, "distance data list must be equal with the number of polyline！")
                         else:
                             res_poly_line = ghc.OffsetCurve(Curve, Distance[0], None, 1)
                         Double = False
                         Rescur_list = self.double_line(Curve, res_poly_line) if Double == 'T' else res_poly_line
                         return Rescur_list
                 finally:
-                    self.Message = '折线段偏移'
+                    self.Message = 'offset broken line'
 
 
         # 圆弧拾取
@@ -674,7 +674,7 @@ try:
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
                                                                    "RPP_ArcPick", "W42",
-                                                                   """简单圆弧拾取插件，通过参数修改，重建一个新的圆弧""",
+                                                                   """simple curve pick up plug-in，modify by parameter，rebuild a new curve""",
                                                                    "Scavenger", "B-Curve")
                 return instance
 
@@ -693,25 +693,25 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Curve()
-                self.SetUpParam(p, "Curve", "C", "曲线数据")
+                self.SetUpParam(p, "Curve", "C", "curve data")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Tolerance", "T", "筛选曲率的精度")
+                self.SetUpParam(p, "Tolerance", "T", "filter curve accuracy")
                 p.SetPersistentData(Grasshopper.Kernel.Types.GH_Number(0.1))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Radius", "R", "指定该圆弧的规范半径（通过半径筛选圆）")
+                self.SetUpParam(p, "Radius", "R", "designate the specific radius of curve（select circle by radius）")
                 p.SetPersistentData(Grasshopper.Kernel.Types.GH_Number(2.5))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Curve()
-                self.SetUpParam(p, "Result", "RC", "最后得到的圆弧线段")
+                self.SetUpParam(p, "Result", "RC", "get final result curve")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -777,7 +777,7 @@ try:
                     self.tol = Tolerance
                     self.r = Radius
                     tree_leaf = [list(_) for _ in Curve.Branches]
-                    re_mes = Message.RE_MES([Curve], ['C端'])
+                    re_mes = Message.RE_MES([Curve], ['C terminal'])
                     if len(re_mes) > 0:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
@@ -786,15 +786,15 @@ try:
                         filter_list = []
                         for _ in range(len(tree_leaf)):
                             if len(tree_leaf[_]) == 0:
-                                Message.message2(self, "第{}个曲线数据为空".format(_ + 1))
+                                Message.message2(self, "{} curve data is empty".format(_ + 1))
                             elif self._judge_curve(_, tree_leaf[_]) is not None:
-                                Message.message1(self, "第{}个曲线数据模块有错误数据！！".format(_ + 1))
+                                Message.message1(self, "{} curve data group has wrong data！！".format(_ + 1))
                             else:
                                 filter_list.append(tree_leaf[_])
                         join_curve = [_ for _ in ghp.run(self._join_handle, filter_list)]
                         return ght.list_to_tree(join_curve)
                 finally:
-                    self.Message = '圆弧拾取'
+                    self.Message = 'pick up curve'
 
 
         # 线段点线转换
@@ -802,7 +802,7 @@ try:
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
                                                                    "RPP_StartToStrat,EndToEnd", "W45",
-                                                                   """曲线集的起点和起点连接，终点和终点连接""",
+                                                                   """starting point is connected to the starting point, and the end point is connected to the end point""",
                                                                    "Scavenger", "B-Curve")
                 return instance
 
@@ -821,25 +821,25 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Curve()
-                self.SetUpParam(p, "Curve", "C", "多条曲线")
+                self.SetUpParam(p, "Curve", "C", "multiple curve")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Curve()
-                self.SetUpParam(p, "Start_Curve", "S", "起点的线段")
+                self.SetUpParam(p, "Start_Curve", "S", "start line")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Curve()
-                self.SetUpParam(p, "End_Curve", "E", "终点的线段")
+                self.SetUpParam(p, "End_Curve", "E", "end line")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Curve()
-                self.SetUpParam(p, "Result_Curve", "A", "所有的线段集")
+                self.SetUpParam(p, "Result_Curve", "A", "all lines assembly")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Curve()
-                self.SetUpParam(p, "Tree_Result", "T", "线段以树形结构输出")
+                self.SetUpParam(p, "Tree_Result", "T", "output line by data tree")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -887,7 +887,7 @@ try:
                         Start_Curve, End_Curve, Result_Curve, Tree_Result = self.get_points(Curves)
                         return Start_Curve, End_Curve, Result_Curve, Tree_Result
                 finally:
-                    self.Message = '点线转换'
+                    self.Message = 'convert point to line or convert line to point'
 
 
         # 合并曲线
@@ -895,7 +895,7 @@ try:
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
                                                                    "RPP_Curve_Join", "W2",
-                                                                   """曲线合并操作（多进程）""", "Scavenger", "B-Curve")
+                                                                   """curve combination（multiprocess）""", "Scavenger", "B-Curve")
                 return instance
 
             def get_ComponentGuid(self):
@@ -913,12 +913,12 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Curve()
-                self.SetUpParam(p, "Curve", "C", "一组集合线段")
+                self.SetUpParam(p, "Curve", "C", "a set of assembly line")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Tolerance", "T", "容忍度")
+                self.SetUpParam(p, "Tolerance", "T", "Tolerace")
                 Tolerance = sc.doc.ModelAbsoluteTolerance
                 p.SetPersistentData(gk.Types.GH_Number(Tolerance))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
@@ -926,7 +926,7 @@ try:
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Curve()
-                self.SetUpParam(p, "New_Curve", "C", "合并的折线")
+                self.SetUpParam(p, "New_Curve", "C", "combine broken lines")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -1007,7 +1007,7 @@ try:
 
                     return New_Curve
                 finally:
-                    self.Message = '合并曲线'
+                    self.Message = 'combine curve'
 
 
         # 最近点连线
@@ -1015,7 +1015,7 @@ try:
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
                                                                    "RPP_PCLINE", "W3",
-                                                                   """几何图形到指定线段的最近线段""", "Scavenger",
+                                                                   """refer geometry shape to the closest line""", "Scavenger",
                                                                    "B-Curve")
                 return instance
 
@@ -1034,22 +1034,22 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Geometry()
-                self.SetUpParam(p, "Geo", "G", "一个几何物体")
+                self.SetUpParam(p, "Geo", "G", "a geometric object")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Curve()
-                self.SetUpParam(p, "RefCurve", "C", "曲线")
+                self.SetUpParam(p, "RefCurve", "C", "curve")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Line()
-                self.SetUpParam(p, "Line", "L", "几何物体与到这条线段的最近点的连线")
+                self.SetUpParam(p, "Line", "L", "The line of a geometric object to the nearest point to this line")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Point()
-                self.SetUpParam(p, "Close_Point", "P", "最近点")
+                self.SetUpParam(p, "Close_Point", "P", "Closest Point")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -1097,14 +1097,14 @@ try:
                         elif isinstance(Geo, (rg.Point3d)) is True:
                             new_point = self.__get_line_point(RefCurve, rg.Point(Geo).Location)
                         else:
-                            Message.message1(self, '电池不支持此几何类型！')
+                            Message.message1(self, 'The battery does not support this geometry type！')
                         Line = rg.Line(new_point[0], new_point[1]) if self._switch is True else rg.Line(new_point,
                                                                                                         rg.Point(
                                                                                                             Geo).Location)
                         Point = new_point
                         return Line, Point
                 finally:
-                    self.Message = '最近点连线'
+                    self.Message = 'line the nearest point'
 
 
         # 求线长度
@@ -1112,7 +1112,7 @@ try:
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
                                                                    "RPP_GetLineLength", "W32",
-                                                                   """求线长度，并保留规定的小数位。""", "Scavenger",
+                                                                   """Find the length of the line and keep the specified decimal place""", "Scavenger",
                                                                    "B-Curve")
                 return instance
 
@@ -1131,18 +1131,18 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Curve()
-                self.SetUpParam(p, "线段", "C", "求长度的线段列表")
+                self.SetUpParam(p, "line", "C", "Find the length of the line list")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
-                self.SetUpParam(p, "小数", "N", "保留*小数.")
+                self.SetUpParam(p, "decimals", "N", "keep*decimals.")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Length", "L", "线段长度.")
+                self.SetUpParam(p, "Length", "L", "length of segment.")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -1169,7 +1169,7 @@ try:
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
                                                                    "RPP_LenghtSort", "W35",
-                                                                   """根据Curve的长度进行排序，从小到大。""", "Scavenger",
+                                                                   """Sort the Curve according to length, from smallest to largest""", "Scavenger",
                                                                    "B-Curve")
                 return instance
 
@@ -1188,17 +1188,17 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Curve()
-                self.SetUpParam(p, "Curve", "C", "需要排序的线段")
+                self.SetUpParam(p, "Curve", "C", "Line need to be sorted")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Curve()
-                self.SetUpParam(p, "Curve", "C", "排序后的线段")
+                self.SetUpParam(p, "Curve", "C", "line after sort")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Length", "L", "排序后的长度")
+                self.SetUpParam(p, "Length", "L", "length after sort")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -1234,7 +1234,7 @@ try:
                         Curve, Length = self.CurveLen(Curve)
                         return Curve, Length
                 except Exception as e:
-                    Message.message1(self, "运行报错：\n{}".format(str(e)))
+                    Message.message1(self, "run error：\n{}".format(str(e)))
                 finally:
                     self.Message = '长度排序'
 
@@ -1244,7 +1244,7 @@ try:
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
                                                                    "RPP_DTS_Get_Vale", "W44",
-                                                                   """分解线段，以及下标取值（S为边线，V为点）""",
+                                                                   """Decomposed line，and the subscript value（S is the edge, V is the point）""",
                                                                    "Scavenger", "B-Curve")
                 return instance
 
@@ -1263,39 +1263,39 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Curve()
-                self.SetUpParam(p, "Curve", "C", "将要分解的曲线")
+                self.SetUpParam(p, "Curve", "C", "Curve to be decomposed")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Index", "I", "分解后边线或点的下标")
+                self.SetUpParam(p, "Index", "I", "The subscript of a decomposed edge or point")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "S_V", "B", "选择边线或者点，默认不选为边线")
+                self.SetUpParam(p, "S_V", "B", "select edge or point，not to select edge by default")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Geometry()
-                self.SetUpParam(p, "data1", "D1", "第一组数据")
+                self.SetUpParam(p, "data1", "D1", "First set of data")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Geometry()
-                self.SetUpParam(p, "data2", "D2", "第二组数据")
+                self.SetUpParam(p, "data2", "D2", "Second set of data")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Geometry()
-                self.SetUpParam(p, "data3", "D3", "第三组数据")
+                self.SetUpParam(p, "data3", "D3", "Third set of data")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Geometry()
-                self.SetUpParam(p, "data4", "D4", "第四组数据")
+                self.SetUpParam(p, "data4", "D4", "Fourth set of data")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Geometry()
-                self.SetUpParam(p, "data5", "D5", "第五组数据")
+                self.SetUpParam(p, "data5", "D5", "Fifth set of data")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -1369,7 +1369,7 @@ try:
                             data1, data2, data3, data4, data5 = New_P_List
                     return data1, data2, data3, data4, data5
                 finally:
-                    self.Message = '曲线拆分'
+                    self.Message = 'decompose curve'
 
 
         # 曲线筛选
@@ -1377,7 +1377,7 @@ try:
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
                                                                    "RPP_FilterCurve", "W31",
-                                                                   """通过曲率选择曲线""", "Scavenger", "B-Curve")
+                                                                   """select curve by curvature""", "Scavenger", "B-Curve")
                 return instance
 
             def get_ComponentGuid(self):
@@ -1395,23 +1395,23 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Curve()
-                self.SetUpParam(p, "Curve", "C", "曲线列表数据")
+                self.SetUpParam(p, "Curve", "C", "curve list data")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Tolerance", "T", "曲率容差度")
+                self.SetUpParam(p, "Tolerance", "T", "curvature tolerance")
                 p.SetPersistentData(Grasshopper.Kernel.Types.GH_Number(0.01))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Curve()
-                self.SetUpParam(p, "Curve_Result", "CR", "大于曲率的曲线（曲线结果）")
+                self.SetUpParam(p, "Curve_Result", "CR", "curvature greater than the curve（result curve）")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Curve()
-                self.SetUpParam(p, "Line_Result", "LR", "小于曲率的曲线（直线结果）")
+                self.SetUpParam(p, "Line_Result", "LR", "curvature less than the curve（result line）")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -1461,7 +1461,7 @@ try:
                             Curve_Result, Line_Result = index_fit_cur, index_line_cur
                             return Curve_Result, Line_Result
                 finally:
-                    self.Message = '筛选曲线（曲率）'
+                    self.Message = 'filter curve（curvature）'
 
 
         # 曲线按照参照平面排序
@@ -1469,7 +1469,7 @@ try:
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
                                                                    "RPP_LineSortByXYZ", "W25",
-                                                                   """曲线列表排序，当轴输入端为空时，按线长排序，输入x，y，z将按照x，y，z的轴坐标进行排序，CP可指定平面""",
+                                                                   """sort Curve-list，when the axis input is null,sort as length of line,inputs x, y, z will be sorted by its axis coordinates，CP specifies plane""",
                                                                    "Scavenger", "B-Curve")
                 return instance
 
@@ -1488,24 +1488,24 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Curve()
-                self.SetUpParam(p, "Curve", "C", "曲线列表")
+                self.SetUpParam(p, "Curve", "C", "curve list")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Axis", "A", "轴")
+                self.SetUpParam(p, "Axis", "A", "Axis")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Plane()
-                self.SetUpParam(p, "CP", "CP", "按坐标轴XYZ排序，默认为世界XY")
+                self.SetUpParam(p, "CP", "CP", "XY Sort by axis XYZ, world XY by default")
                 p.SetPersistentData(Grasshopper.Kernel.Types.GH_Plane(rg.Plane.WorldXY))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Curve()
-                self.SetUpParam(p, "Sort_Curve", "C", "排序后的曲线列表")
+                self.SetUpParam(p, "Sort_Curve", "C", "Sorted list of curves")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -1554,7 +1554,7 @@ try:
                         return gd[object]()
                     else:
                         if Axis is None:
-                            Message.message3(self, "轴坐标未输入，将按长度排序！")
+                            Message.message3(self, "if no input axis coordinates,it will be sorted by length！")
                             Sort_Curve = self._sort_by_length(Curve)
                             return Sort_Curve
                         else:
@@ -1563,9 +1563,9 @@ try:
                                 Sort_Curve = self._other_by_xyz(Curve, Axis, CP)
                                 return Sort_Curve
                             else:
-                                Message.message2(self, "请输入正确的轴坐标！")
+                                Message.message2(self, "please input correct axis coordinates！")
                 finally:
-                    self.Message = "曲线排序"
+                    self.Message = "sort curve"
 
 
         # 均分曲线
@@ -1573,7 +1573,7 @@ try:
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
                                                                    "RPP_Equipartition Curve", "W43",
-                                                                   """均分曲线""",
+                                                                   """equally divide curve""",
                                                                    "Scavenger", "B-Curve")
                 return instance
 
@@ -1592,41 +1592,41 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Curve()
-                self.SetUpParam(p, "Curve", "C", "请输入一根曲线")
+                self.SetUpParam(p, "Curve", "C", "please input a curve")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Espacement", "E", "间距（默认300）")
+                self.SetUpParam(p, "Espacement", "E", "Espacement（300 by default）")
                 p.SetPersistentData(Grasshopper.Kernel.Types.GH_Number(300))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "HT_Length", "HT", "最后距离曲线的点至少大于（默认20）")
+                self.SetUpParam(p, "HT_Length", "HT", "the distance from the last point to the curve is more than（by default 20）")
                 p.SetPersistentData(Grasshopper.Kernel.Types.GH_Number(20))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Offset", "O", "偏移起始点在曲线上的位置（默认偏移0）")
+                self.SetUpParam(p, "Offset", "O", "The position of the offset starting point on the curve（0 by default）")
                 p.SetPersistentData(Grasshopper.Kernel.Types.GH_Number(0))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
-                self.SetUpParam(p, "Style", "S", "均分样式 默认为：2（0：从起始点开始，1：从结束点开始，2：从中心点开始）")
+                self.SetUpParam(p, "Style", "S", "style of equally divide default：2（0：from the start point，1：from the end point，2：from the center point）")
                 p.SetPersistentData(Grasshopper.Kernel.Types.GH_Number(2))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Point()
-                self.SetUpParam(p, "PointAtCurve", "P", "在曲线上的点")
+                self.SetUpParam(p, "PointAtCurve", "P", "Points on the curve")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Parameter", "t", "在曲线上的长度")
+                self.SetUpParam(p, "Parameter", "t", "The length on the curve")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -1753,17 +1753,17 @@ try:
                     else:
                         return self.Processing_Operations(Curve, Espacement, HT_Length, Offset, Style)
                 finally:
-                    self.Message = '曲线均分'
+                    self.Message = 'curve divide equally'
 
 
         # 统一曲线方向
         class Filp_Curve(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_Filp Curve", "W33 Curve", """统一该曲线的方向。
-                           传入曲线则所有曲线跟曲线方向保持一致
-                           传入真值则为一组数据中曲线中心点最高的曲线为统一方向
-                           反之中心点最低的曲线""", "Scavenger", "B-Curve")
+                                                                   "RPP_Filp Curve", "W33 Curve", """Unify the direction of the curve。
+                           if input curve,then keeps all curves in the same direction
+                           input truth value means that the curve with the highest center point is the uniform direction
+                           or else the curve with the lowest center point""", "Scavenger", "B-Curve")
                 return instance
 
             def get_ComponentGuid(self):
@@ -1781,13 +1781,13 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Curve()
-                self.SetUpParam(p, "Curves", "C", "需要反转的曲线列表")
+                self.SetUpParam(p, "Curves", "C", "List of curves that need to be reversed")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Boolean()
-                self.SetUpParam(p, "Direction", "G", "真值则为曲线中中心点最高的曲线、假值则相反（默认真值）\
-                                   如果为曲线则使用该曲线统一方向\
+                self.SetUpParam(p, "Direction", "G", "The true value is the curve with the highest center point, and the false value is opposite（ture by default）\
+                                   If it is a curve, use the curve to unify the direction\
                                    ")
                 p.SetPersistentData(Grasshopper.Kernel.Types.GH_Boolean(True))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
@@ -1795,11 +1795,11 @@ try:
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Curves", "C", "反转后的曲线")
+                self.SetUpParam(p, "Curves", "C", "The curve after reversal")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Flag", "F", "是否翻转")
+                self.SetUpParam(p, "Flag", "F", "flip or not")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -1909,7 +1909,7 @@ try:
                         sc.doc = ghdoc
                     return Curve_Tree, Flag_Tree
                 finally:
-                    self.Message = '统一曲线方向'
+                    self.Message = 'Uniform curve direction'
 
 
         # 获取多折线角平分线
@@ -1917,7 +1917,7 @@ try:
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
                                                                    "RPP_AngularBisector", "W51",
-                                                                   """根据多线段折角角度推算出角平分线""", "Scavenger",
+                                                                   """The Angle bisector is calculated from the Angle of polyline""", "Scavenger",
                                                                    "B-Curve")
                 return instance
 
@@ -1936,19 +1936,19 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Curve()
-                self.SetUpParam(p, "Polyline", "POL", "多线段（不含弧度）；曲线（有弧度）、直线和圆弧均不可")
+                self.SetUpParam(p, "Polyline", "POL", "polyline（No radians）；curve（radians）、lines and arcs are not allowed")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
-                self.SetUpParam(p, "Count", "C", "需要的角平分线段数；个数为（Count - 1）")
+                self.SetUpParam(p, "Count", "C", "number of angular bisector；the number is（Count - 1）")
                 p.SetPersistentData(Grasshopper.Kernel.Types.GH_Integer(2))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Curve()
-                self.SetUpParam(p, "Angular_Bisector", "BC", "输出的角平分线段")
+                self.SetUpParam(p, "Angular_Bisector", "BC", "Output angular bisector")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -2070,14 +2070,14 @@ try:
                     sc.doc = ghdoc
                     return Angular_Bisector
                 finally:
-                    self.Message = '多折线角平分线'
+                    self.Message = 'Polyline angular bisector'
 
 
         # 点与封闭曲线的关系
         class PtsCurveRelationship(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_PtsCurveRelationship", "W4", """确定所选取的点与封闭曲线之间的关系""", "Scavenger", "B-Curve")
+                                                                   "RPP_PtsCurveRelationship", "W4", """Determines the relationship between the selected point and the closed curve""", "Scavenger", "B-Curve")
                 return instance
 
             def get_ComponentGuid(self):
@@ -2095,17 +2095,17 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Point()
-                self.SetUpParam(p, "Points", "P", "选取的点集")
+                self.SetUpParam(p, "Points", "P", "The selected set of points")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Curve()
-                self.SetUpParam(p, "Curve", "C", "封闭的曲线")
+                self.SetUpParam(p, "Curve", "C", "Closed curve")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Tol", "T", "精度（点到曲线的距离）")
+                self.SetUpParam(p, "Tol", "T", "Accuracy (distance from point to curve)")
                 Tolerance = sc.doc.ModelAbsoluteTolerance
                 p.SetPersistentData(gk.Types.GH_Number(Tolerance))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
@@ -2113,19 +2113,19 @@ try:
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Relationship", "R", "点与封闭曲线的关系（0 = 外部，1=在曲线上，2=内部）")
+                self.SetUpParam(p, "Relationship", "R", "Relation between points and closed curves（0 = outside，1=On the curve，2=internal）")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
-                self.SetUpParam(p, "In_Curve_Index", "ICI", "封闭曲线上的点在原列表中的下标")
+                self.SetUpParam(p, "In_Curve_Index", "ICI", "subscript of the point on the closed curve in the original list")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
-                self.SetUpParam(p, "Outside_Curve_Index", "OCI", "封闭曲线外的点在原列表中的下标")
+                self.SetUpParam(p, "Outside_Curve_Index", "OCI", "subscript of the point outside the closed curve in the original list")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
-                self.SetUpParam(p, "Inside_Curve_Index", "ISCI", "封闭曲线内的点在原列表中的下标")
+                self.SetUpParam(p, "Inside_Curve_Index", "ISCI", "subscript of the point inside the closed curve in the original list")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -2213,7 +2213,6 @@ try:
                     if len(re_mes) > 0:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
-                        return gd[object](), gd[object](), gd[object](), gd[object]()
                     else:
                         Relationship, In_Curve_Index, Outside_Curve_Index, Inside_Curve_Index = self.relationship_point_curve(Points, Curve)
 
@@ -2230,7 +2229,7 @@ try:
         class CurveVectorParallel(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_CurveVectorParallel", "W24", """判断线是否与置顶的向量平行（包含反向平行）""", "Scavenger", "B-Curve")
+                                                                   "RPP_CurveVectorParallel", "W24", """Determine if the line is parallel to the top vector（include of antiparallel）""", "Scavenger", "B-Curve")
                 return instance
 
             def get_ComponentGuid(self):
@@ -2248,17 +2247,17 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Curve()
-                self.SetUpParam(p, "Curve", "C", "待判断的曲线集")
+                self.SetUpParam(p, "Curve", "C", "The set of curves to be judged")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Vector()
-                self.SetUpParam(p, "Vector", "V", "指定的向量")
+                self.SetUpParam(p, "Vector", "V", "Specified vector")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Angle", "A", "角度（Degrees）容差")
+                self.SetUpParam(p, "Angle", "A", "Angle（Degrees）tolerance")
                 Tolerance = sc.doc.ModelAngleToleranceDegrees
                 p.SetPersistentData(gk.Types.GH_Number(Tolerance))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
@@ -2266,19 +2265,19 @@ try:
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Curve()
-                self.SetUpParam(p, "Curve1", "C1", "与向量平行的线段集合")
+                self.SetUpParam(p, "Curve1", "C1", "A set of line segments parallel to a vector")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Curve()
-                self.SetUpParam(p, "Curve2", "C2", "与向量不平行的线段集合")
+                self.SetUpParam(p, "Curve2", "C2", "Set of line not parallel to a vector")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
-                self.SetUpParam(p, "Index1", "I1", "与向量平行的线段在原线段集合中的下标")
+                self.SetUpParam(p, "Index1", "I1", "The subscript of a line parallel to a vector in the original set")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
-                self.SetUpParam(p, "Index2", "I2", "与向量不平行的线段在原线段集合中的下标")
+                self.SetUpParam(p, "Index2", "I2", "The subscript of a line not parallel to a vector in the original set")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -2386,14 +2385,14 @@ try:
 
                     return Curve1, Curve2, Index1, Index2
                 finally:
-                    self.Message = '线与指定向量关系'
+                    self.Message = 'Relationship between line and specified vector'
 
 
-        # 创建中间线
+        # 创建Intermediate line
         class TweenCurves(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_TweenCurves", "W11", """在两曲线中创建多条中间线""", "Scavenger", "B-Curve")
+                                                                   "RPP_TweenCurves", "W11", """Create multiple intermediate lines between the two curves""", "Scavenger", "B-Curve")
                 return instance
 
             def get_ComponentGuid(self):
@@ -2411,17 +2410,17 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Curve()
-                self.SetUpParam(p, "Curve1", "C1", "第一条曲线")
+                self.SetUpParam(p, "Curve1", "C1", "First curve")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Curve()
-                self.SetUpParam(p, "Curve2", "C2", "第二条曲线")
+                self.SetUpParam(p, "Curve2", "C2", "Second curve")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
-                self.SetUpParam(p, "Number", "N", "数量")
+                self.SetUpParam(p, "Number", "N", "Number")
                 Count = 1
                 p.SetPersistentData(gk.Types.GH_Integer(Count))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
@@ -2429,7 +2428,7 @@ try:
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Curve", "C", "中间线")
+                self.SetUpParam(p, "Curve", "C", "Intermediate line")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -2502,14 +2501,14 @@ try:
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
                     sc.doc = ghdoc
                 finally:
-                    self.Message = '创建中间线'
+                    self.Message = 'create Intermediate line'
 
 
         # 平面修剪曲线
         class PlaneTrimCurve(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_PlaneTrimCurve", "W14", """移除平面一侧的曲线部分""", "Scavenger", "B-Curve")
+                                                                   "RPP_PlaneTrimCurve", "W14", """Remove the curved section on one side of the plane""", "Scavenger", "B-Curve")
                 return instance
 
             def get_ComponentGuid(self):
@@ -2527,32 +2526,32 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Curve()
-                self.SetUpParam(p, "Curve", "C", "将要修剪的曲线")
+                self.SetUpParam(p, "Curve", "C", "Curves to be trimmed")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Plane()
-                self.SetUpParam(p, "Plane", "P", "做修剪的平面")
+                self.SetUpParam(p, "Plane", "P", "trimming the flat")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Boolean()
-                self.SetUpParam(p, "Flip", "F", "是否反转曲线")
+                self.SetUpParam(p, "Flip", "F", "flip the curve or not")
                 p.PersistentData.Append(Grasshopper.Kernel.Types.GH_Boolean(True))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Trim_List", "T", "修剪后的曲线列表")
+                self.SetUpParam(p, "Trim_List", "T", "List of trimmed curves")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Parameters", "t", "平面和曲线相交点的参数值")
+                self.SetUpParam(p, "Parameters", "t", "Parameter values at points where the plane and curve intersect")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Intersected", "I", "如果平面修剪了曲线则为True，反之False")
+                self.SetUpParam(p, "Intersected", "I", "if the plane trims curve，it is True，or else False")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -2629,7 +2628,7 @@ try:
                         if not curve_event:
                             Intersected = False
                             Trim_List = Curve
-                            Message.message2(self, '平面未与曲线相交！')
+                            Message.message2(self, 'The plane does not intersect the curve!')
                         else:
                             if self.flip:
                                 Curve.Reverse()
@@ -2654,7 +2653,7 @@ try:
         class UnifyCurve(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_UnifyCurve", "W34", """统一曲线方向为逆时针""", "Scavenger", "B-Curve")
+                                                                   "RPP_UnifyCurve", "W34", """The uniform curve direction is counterclockwise""", "Scavenger", "B-Curve")
                 return instance
 
             def get_ComponentGuid(self):
@@ -2672,12 +2671,12 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Curve()
-                self.SetUpParam(p, "Curve", "C", "曲线")
+                self.SetUpParam(p, "Curve", "C", "Curve")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Plane()
-                self.SetUpParam(p, "Plane", "P", "参考平面")
+                self.SetUpParam(p, "Plane", "P", "Reference plane")
                 Origin_Plane = rg.Plane.WorldXY
                 p.SetPersistentData(gk.Types.GH_Plane(Origin_Plane))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
@@ -2685,11 +2684,11 @@ try:
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Curve()
-                self.SetUpParam(p, "Curve", "C", "曲线")
+                self.SetUpParam(p, "Curve", "C", "Curve")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Boolean()
-                self.SetUpParam(p, "Bool", "B", "True反转，False未反转")
+                self.SetUpParam(p, "Bool", "B", "True reversal，False unreversed")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -2776,21 +2775,21 @@ try:
                         if self.is_curve_closed(curve):
                             Curve, Bool = self.unify_curve(curve, plane)
                         else:
-                            Message.message1(self, "要求闭合的Curve!")
+                            Message.message1(self, "Curve required to be close!")
 
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
                     sc.doc = ghdoc
                     return Curve, Bool
                 finally:
-                    self.Message = '统一曲线方向（逆时针）'
+                    self.Message = 'Uniform curve direction（anticlockwise）'
 
 
         # 删除重合曲线
         class RemoveOverlapCurve(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_RemoveOverlapCurve", "W12", """删除重合的线段和曲线，可调节公差将相似重合的曲线删除""", "Scavenger", "B-Curve")
+                                                                   "RPP_RemoveOverlapCurve", "W12", """Delete overlapping lines and curves，Adjustable tolerances to delete similar overlapping curves""", "Scavenger", "B-Curve")
                 return instance
 
             def get_ComponentGuid(self):
@@ -2808,12 +2807,12 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Curve()
-                self.SetUpParam(p, "Curve", "C", "待删除的曲线集")
+                self.SetUpParam(p, "Curve", "C", "Curve set to be deleted")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Tolerance", "T", "范围内的曲线将视为重合曲线")
+                self.SetUpParam(p, "Tolerance", "T", "Curves in the range will be treated as overlap curves")
                 Tolerance = sc.doc.ModelAbsoluteTolerance
                 p.SetPersistentData(gk.Types.GH_Number(Tolerance))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
@@ -2821,7 +2820,7 @@ try:
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Curve()
-                self.SetUpParam(p, "Curve", "C", "删除后的曲线集")
+                self.SetUpParam(p, "Curve", "C", "curve set after delete")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -2936,14 +2935,14 @@ try:
 
                     return Res_Curve
                 finally:
-                    self.Message = '删除重合曲线'
+                    self.Message = 'Delete overlap curve'
 
 
         # 曲线相交位置打断曲线
         class IntersectionBreak(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_IntersectionBreak", "W23", """曲线相交位置打断曲线""", "Scavenger", "B-Curve")
+                                                                   "RPP_IntersectionBreak", "W23", """breaks the curve at the intersection position""", "Scavenger", "B-Curve")
                 return instance
 
             def get_ComponentGuid(self):
@@ -2961,12 +2960,12 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Curve()
-                self.SetUpParam(p, "Curve", "C", "一组相交曲线")
+                self.SetUpParam(p, "Curve", "C", "A set of intersecting curves")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Tolerance", "T", "公差")
+                self.SetUpParam(p, "Tolerance", "T", "Tolerance")
                 Tolerance = 0.0001
                 p.SetPersistentData(gk.Types.GH_Number(Tolerance))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
@@ -2974,7 +2973,7 @@ try:
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Curve()
-                self.SetUpParam(p, "Res_Curve", "C", "在交点位置打断的曲线")
+                self.SetUpParam(p, "Res_Curve", "C", "breaks the curve at intersection position ")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -3084,20 +3083,20 @@ try:
                         iter_ungroup_data = ghp.run(self.temp, zip_list)
                         Broken_curve = self.format_tree(iter_ungroup_data)
                     else:
-                        self.message2('C端数据为空！')
+                        self.message2('Data on end C is empty！')
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
                     sc.doc = ghdoc
                     return Broken_curve
                 finally:
-                    self.Message = '相交位置打断曲线'
+                    self.Message = 'break curves at intersecting positions'
 
 
         # 原始曲线延伸至目标曲线
         class ExtendTargetCurve(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_ExtendTargetCurve", "W21", """将原始曲线延伸至目标曲线""", "Scavenger", "B-Curve")
+                                                                   "RPP_ExtendTargetCurve", "W21", """Extend the original curve to the target curve""", "Scavenger", "B-Curve")
                 return instance
 
             def get_ComponentGuid(self):
@@ -3115,17 +3114,17 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Curve()
-                self.SetUpParam(p, "Curve", "C", "原始曲线")
+                self.SetUpParam(p, "Curve", "C", "Original curve")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Curve()
-                self.SetUpParam(p, "Target_Curve", "TC", "目标曲线")
+                self.SetUpParam(p, "Target_Curve", "TC", "Target curve")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
-                self.SetUpParam(p, "Type", "T", "延伸方式：0=Line, 1=Arc, 2=Smooth")
+                self.SetUpParam(p, "Type", "T", "Extension way：0=Line, 1=Arc, 2=Smooth")
                 default_type = 0
                 p.SetPersistentData(gk.Types.GH_Integer(default_type))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
@@ -3133,15 +3132,15 @@ try:
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Curve()
-                self.SetUpParam(p, "Res_Curve", "C", "延伸后的曲线")
+                self.SetUpParam(p, "Res_Curve", "C", "The extended curve")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Boolean()
-                self.SetUpParam(p, "Res_Bool", "B", "原始曲线能延伸至目标曲线则为True、否则为False")
+                self.SetUpParam(p, "Res_Bool", "B", "if the original curve can be extended to the target curve，then True、or else False")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Extend_Type", "E", "原始曲线两侧都能延伸至目标曲线则为BothExtend；只能起点位置延伸则为StartExtend；只能终点位置延伸则为EndExtend；如果两侧都不能延伸则为NoneExtend")
+                self.SetUpParam(p, "Extend_Type", "E", "If both sides of the original curve extend to the target curve,it is BothExtend；If only the starting position is extended, it is StartExtend；If extended only by the end position，it is EndExtend ；If neither side can extend, it is NoneExtend")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -3274,14 +3273,14 @@ try:
 
                     return Res_Curve, Res_Bool, Extend_Type
                 finally:
-                    self.Message = '曲线延伸至目标曲线'
+                    self.Message = 'The curve extends to the target curve'
 
 
         # 物体确定曲线方向
         class CurveDirGroupByGeo(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_CurveDirGroupByGeo", "W22", """将曲线最接近的物体的一端作为曲线的起点或终点""", "Scavenger", "B-Curve")
+                                                                   "RPP_CurveDirGroupByGeo", "W22", """Take the end of the object closest to the curve as the start or end of the curve""", "Scavenger", "B-Curve")
                 return instance
 
             def get_ComponentGuid(self):
@@ -3299,25 +3298,25 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Curve()
-                self.SetUpParam(p, "Curve", "C", "待确定方向的曲线")
+                self.SetUpParam(p, "Curve", "C", "orientation of Curve to be determined")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Geometry()
-                self.SetUpParam(p, "Geometry", "G", "一组影响曲线方向的物件")
+                self.SetUpParam(p, "Geometry", "G", "A set of objects A that affect the direction of a curve")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Boolean()
                 default_bool_x = False
                 p.SetPersistentData(gk.Types.GH_Boolean(default_bool_x))
-                self.SetUpParam(p, "Reverse", "R", "True靠近物件的一端为终点，False靠近物件的一端为起点")
+                self.SetUpParam(p, "Reverse", "R", "The end of true near the object is the end，The end of False near the object is begin")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Curve()
-                self.SetUpParam(p, "Curve", "C", "确定方向后的曲线")
+                self.SetUpParam(p, "Curve", "C", "The curve's direction is determined")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -3436,14 +3435,14 @@ try:
                     return rcurve
 
                 finally:
-                    self.Message = '物件确定曲线方向'
+                    self.Message = 'The object determines the direction of the curve'
 
 
         # 边界矩形
         class BoundingRectangle(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP-BoundingRectangle", "W41", """为一组几何物体创建边界矩形""", "Scavenger", "B-Curve")
+                                                                   "RPP-BoundingRectangle", "W41", """Creates a boundary rectangle for a set of geometric objects""", "Scavenger", "B-Curve")
                 return instance
 
             @property
@@ -3461,12 +3460,12 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Object", "O", "一组几何物体")
+                self.SetUpParam(p, "Object", "O", "A set of geometric objects")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Plane()
-                self.SetUpParam(p, "Plane", "Pl", "原始的平面")
+                self.SetUpParam(p, "Plane", "Pl", "Original plane")
                 ORIGIN_PLANE = rg.Plane.WorldXY
                 p.SetPersistentData(gk.Types.GH_Plane(ORIGIN_PLANE))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
@@ -3474,15 +3473,15 @@ try:
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Rectangle()
-                self.SetUpParam(p, "Bounding", "B", "生成的边界矩形")
+                self.SetUpParam(p, "Bounding", "B", "resulting boundary rectangle")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Dim-X", "X", "矩形平面的X方向尺寸")
+                self.SetUpParam(p, "Dim-X", "X", "X dimension of the rectangular plane")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Dim-Y", "Y", "矩形平面的Y方向尺寸")
+                self.SetUpParam(p, "Dim-Y", "Y", "Y dimension of the rectangular plane")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -3611,13 +3610,13 @@ try:
                     self.ref_plane = Plane
 
                     trunk_object, trunk_path = self.Branch_Route(Object)
-                    o_len = len(trunk_object)
+                    o_len = len(list(filter(None, (chain(*trunk_object)))))
 
                     if o_len:
                         iter_ungroup_data = zip(*ghp.run(self.do_main, zip(trunk_object, trunk_path)))
                         Bounding, X, Y = ghp.run(lambda single_tree: self.format_tree(single_tree), iter_ungroup_data)
                     else:
-                        self.message2("O端为空！")
+                        self.message2("The O terminal is empty！")
 
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
@@ -3625,7 +3624,7 @@ try:
 
                     return Bounding, X, Y
                 finally:
-                    self.Message = '边界矩形'
+                    self.Message = 'Boundary rectangle'
 
 
     else:
