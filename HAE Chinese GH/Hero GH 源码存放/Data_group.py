@@ -36,7 +36,7 @@ try:
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
                                                                    "RPP_list_values", "D1",
-                                                                   """列表根据下标取值，取值下标空格间隔""",
+                                                                   """The value of the list is based on the subscript，value subscript interval""",
                                                                    "Scavenger", "G-Data")
                 return instance
 
@@ -55,18 +55,18 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "List", "L", "列表输入")
+                self.SetUpParam(p, "List", "L", "List input")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Index", "I", "取值下标")
+                self.SetUpParam(p, "Index", "I", "Value subscript")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "List", "L", "获取的值列表")
+                self.SetUpParam(p, "List", "L", "Get a list of values")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -103,7 +103,7 @@ try:
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
                                                                    "RPP_Subscript_Value", "D5",
-                                                                   """多下标取值，最多取到六组数据""", "Scavenger", "G-Data")
+                                                                   """multiple subscript values, can obtain six groups of data at maximum""", "Scavenger", "G-Data")
                 return instance
 
             def get_ComponentGuid(self):
@@ -121,38 +121,38 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "List", "L", "原始的数据列表")
+                self.SetUpParam(p, "List", "L", "The original data list")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Index", "I", "将要取值的下标")
+                self.SetUpParam(p, "Index", "I", "The subscript to be valued")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "D1", "D1", "第一组数据")
+                self.SetUpParam(p, "D1", "D1", "First set of data")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "D2", "D2", "第二组数据")
+                self.SetUpParam(p, "D2", "D2", "Second set of data")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "D3", "D3", "第三组数据")
+                self.SetUpParam(p, "D3", "D3", "Third set of data")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "D4", "D4", "第四组数据")
+                self.SetUpParam(p, "D4", "D4", "Fourth set of data")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "D5", "D5", "第五组数据")
+                self.SetUpParam(p, "D5", "D5", "Fifth set of data")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "D6", "D6", "第六组数据")
+                self.SetUpParam(p, "D6", "D6", "Sixth set of data")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -199,8 +199,8 @@ try:
         class List_Cut(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_List_Cut", "D2", """在列表指定下标处切割列表，树形结构输出；
-                （原电池最后一个下标不做参考，已改）""", "Scavenger", "G-Data")
+                                                                   "RPP_List_Cut", "D2", """Cuts the list at the specified subscript，output data tree；
+                （The last cell is not for reference and has been changed）""", "Scavenger", "G-Data")
                 return instance
 
             def get_ComponentGuid(self):
@@ -218,18 +218,18 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "List", "L", "需要切割的列表")
+                self.SetUpParam(p, "List", "L", "list need to be cut")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
-                self.SetUpParam(p, "Index", "I", "切割下标")
+                self.SetUpParam(p, "Index", "I", "Cut subscript")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "DataTree", "DT", "切割完成的列表为树形数据")
+                self.SetUpParam(p, "DataTree", "DT", "The cut list is data tree")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -279,14 +279,14 @@ try:
                         DataTree = self.ListToTree(List, Index)
                         return DataTree
                 finally:
-                    self.Message = '列表切割'
+                    self.Message = 'List cutting'
 
 
         # 求列表极值
         class ListExtremum(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_ListExtremum", "D3", """求一组数据中的极值，{1:最大值，2:最小值，3:平均值，4:求和，5:累乘}""", "Scavenger", "G-Data")
+                                                                   "RPP_ListExtremum", "D3", """Find an extreme value in a set of data，{1:Maximum，2:Minimum，3:Mean value，4:summation，5:multiplicative}""", "Scavenger", "G-Data")
                 return instance
 
             def get_ComponentGuid(self):
@@ -304,19 +304,19 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "List", "L", "一组数据")
+                self.SetUpParam(p, "List", "L", "Set of data")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
-                self.SetUpParam(p, "Extremum", "E", "极值的类型")
+                self.SetUpParam(p, "Extremum", "E", "Type of extreme value")
                 p.SetPersistentData(Grasshopper.Kernel.Types.GH_Integer(1))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Result", "R", "极值结果")
+                self.SetUpParam(p, "Result", "R", "Extremum result")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -369,18 +369,18 @@ try:
                         command = eval('self.{}(List)'.format(instruct))
                         return command
                 finally:
-                    self.Message = '列表极值'
+                    self.Message = 'list extremum'
 
 
         # 列表数据删除
         class Data_Delete(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_DeleteListFirstLast", "D4", """删除列表第一个值
-                删除列表最后值
-                删除列表第一个和最后的值
-                列表的第一个值
-                列表的最后值
+                                                                   "RPP_DeleteListFirstLast", "D4", """Deletes the first value in the list
+                Delete the last value of the list
+                Deletes the first and last values in the list
+                The first value of the list
+                The last value of the list
                 """, "Scavenger", "G-Data")
                 return instance
 
@@ -399,29 +399,29 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "List", "L", "需要操作的列表")
+                self.SetUpParam(p, "List", "L", "A list of required actions")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Cull_First", "CF", "删除列表第一个值之后")
+                self.SetUpParam(p, "Cull_First", "CF", "After deleting the first value in the ")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Cull_Last", "CL", "删除列表最后一个值之后")
+                self.SetUpParam(p, "Cull_Last", "CL", "After deleting the last value in the list")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Cull_First_Last", "FL", "删除列表第一个和最后一个值")
+                self.SetUpParam(p, "Cull_First_Last", "FL", "Deletes the first and last values in the list")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Frist", "F", "删除的第一个值")
+                self.SetUpParam(p, "Frist", "F", "Delete the first value")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Last", "L", "删除的最后一个值")
+                self.SetUpParam(p, "Last", "L", "Delete the last value")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -458,14 +458,14 @@ try:
                     else:
                         return List[1:], List[:-1], List[1:-1], List[0], List[-1]
                 finally:
-                    self.Message = '列表首尾删除'
+                    self.Message = 'The beginning and end of the list are deleted'
 
 
         # 树形取值
         class PickingFruit(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_PickingFruit", "D21", """取树形数据的分支，输入要取的分支标数""", "Scavenger", "G-Data")
+                                                                   "RPP_PickingFruit", "D21", """Take branches of tree data，enter the number of branches""", "Scavenger", "G-Data")
                 return instance
 
             def get_ComponentGuid(self):
@@ -483,63 +483,63 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
-                self.SetUpParam(p, "Index", "I", "树形数据的树枝")
+                self.SetUpParam(p, "Index", "I", "Data Tree branches")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "D1", "D1", "一组数据")
+                self.SetUpParam(p, "D1", "D1", "Set of data")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "D2", "D2", "一组数据")
+                self.SetUpParam(p, "D2", "D2", "Set of data")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "D3", "D3", "一组数据")
+                self.SetUpParam(p, "D3", "D3", "Set of data")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "D4", "D4", "一组数据")
+                self.SetUpParam(p, "D4", "D4", "Set of data")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "D5", "D5", "一组数据")
+                self.SetUpParam(p, "D5", "D5", "Set of data")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "D6", "D6", "一组数据")
+                self.SetUpParam(p, "D6", "D6", "Set of data")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "R1", "R1", "得到的数据")
+                self.SetUpParam(p, "R1", "R1", "Obtained data")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "R2", "R2", "得到的数据")
+                self.SetUpParam(p, "R2", "R2", "Obtained data")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "R3", "R3", "得到的数据")
+                self.SetUpParam(p, "R3", "R3", "Obtained data")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "R4", "R4", "得到的数据")
+                self.SetUpParam(p, "R4", "R4", "Obtained data")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "R5", "R5", "得到的数据")
+                self.SetUpParam(p, "R5", "R5", "Obtained data")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "R6", "R6", "得到的数据")
+                self.SetUpParam(p, "R6", "R6", "Obtained data")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -597,7 +597,7 @@ try:
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
                                                                    "RPP_TreeData", "D35",
-                                                                   """树形数据处理的问题，B有多长A就会有多长""",
+                                                                   """Data Tree processing problems，A is going to be as long as B is""",
                                                                    "Scavenger", "G-Data")
                 return instance
 
@@ -616,18 +616,18 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Geometry()
-                self.SetUpParam(p, "A_Brep", "A", "A的Brep集")
+                self.SetUpParam(p, "A_Brep", "A", "The Brep set of A")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Geometry()
-                self.SetUpParam(p, "B_Brep", "B", "B的Brep集")
+                self.SetUpParam(p, "B_Brep", "B", "The Brep set of B")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Result_list", "R", "对应结果")
+                self.SetUpParam(p, "Result_list", "R", "Corresponding result")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -661,7 +661,7 @@ try:
         class Simplify_Data(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_Simplify_Data", "D24", """将所有传进来的树形结构简化至最简状态""", "Scavenger", "G-Data")
+                                                                   "RPP_Simplify_Data", "D24", """Reduce all incoming tree structures to their simplest state""", "Scavenger", "G-Data")
                 return instance
 
             def get_ComponentGuid(self):
@@ -679,13 +679,13 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Data_Tree", "DT", "树形数据")
+                self.SetUpParam(p, "Data_Tree", "DT", "Data Tree")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Result_Tree", "RT", "最简后的结果")
+                self.SetUpParam(p, "Result_Tree", "RT", "The simplest result")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -737,7 +737,7 @@ try:
         class TrimTree(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_TrimTree", "D15", """树形修剪插件，Depth为树形修剪深度""", "Scavenger", "G-Data")
+                                                                   "RPP_TrimTree", "D15", """Tree trimmer plug-in，Depth is indicates the pruning depth of the tree""", "Scavenger", "G-Data")
                 return instance
 
             def get_ComponentGuid(self):
@@ -755,18 +755,18 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Data_Tree", "T", "待修剪的树形数据")
+                self.SetUpParam(p, "Data_Tree", "T", "Tree data to be trimmed")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
-                self.SetUpParam(p, "Depth", "DP", "修剪深度")
+                self.SetUpParam(p, "Depth", "DP", "trim depth")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Result", "R", "修剪后的结果")
+                self.SetUpParam(p, "Result", "R", "The result after trimming")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -866,7 +866,7 @@ try:
                             if self.origin_data and len(self.origin_data) > 1:
                                 result_boolean = self._deepest_length(Data_Tree, Depth)
                                 if result_boolean is False:
-                                    Message.message3(self, "修剪已达最深！")
+                                    Message.message3(self, "trimming has been completely！")
 
                                 new_depth = Data_Tree.Paths[0].Length - 1 if result_boolean is False or result_boolean == -1 else Depth
                                 depth_cull = ['.CullElement()' for _ in range(new_depth)]
@@ -896,7 +896,7 @@ try:
                     if -1 >= Depth:
                         self.Message = 'Simplest'
                     else:
-                        self.Message = '修剪深度：{}'.format(Depth)
+                        self.Message = 'trim degree：{}'.format(Depth)
 
 
         # RPP_数据结构对比
@@ -904,7 +904,7 @@ try:
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
                                                                    "RPP_Data structure", "D31",
-                                                                   """对两组数据进行对比，一样则输出True，反之False。\n注：此插件仅对数据结构进行比较，与数据内容无关""",
+                                                                   """Compare the two sets of data，if same,then output True，or else False。\nps：This plug-in only compares data structures，it has nothing to do with data""",
                                                                    "Scavenger", "G-Data")
                 return instance
 
@@ -923,18 +923,18 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "DataA", "A", "第一组对比数据")
+                self.SetUpParam(p, "DataA", "A", "The first set of comparative data")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "DataB", "B", "第二组对比数据")
+                self.SetUpParam(p, "DataB", "B", "The second set of comparative data")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Boolean()
-                self.SetUpParam(p, "verdict", "V", "对比结果")
+                self.SetUpParam(p, "verdict", "V", "Comparison result")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -989,7 +989,7 @@ try:
                         Boolean_tree = self.Compare(Data_[0], Data_[1])
                     return Boolean_tree
                 finally:
-                    self.Message = 'HAE 结构对比'
+                    self.Message = 'HAE Structural comparison'
 
 
         # 数据清洗
@@ -998,7 +998,7 @@ try:
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
                                                                    "RPP_Data_rinse", "D34",
-                                                                   """去除空值和空格值""",
+                                                                   """Remove null and space values""",
                                                                    "Scavenger",
                                                                    "G-Data")
                 return instance
@@ -1018,13 +1018,13 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Data", "D", "需要清洗的数据")
+                self.SetUpParam(p, "Data", "D", "Data that needs to be cleaned")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Data", "D", "清洗后的数据.")
+                self.SetUpParam(p, "Data", "D", "The data after cleaning.")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -1070,14 +1070,14 @@ try:
                                 continue
                         return New_Tree
                 finally:
-                    self.Message = '数据清洗'
+                    self.Message = 'Data cleaning'
 
 
         # 数据对比
         class DataComparison(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_Data Comparison", "D32", """Group根据条件分组.""",
+                                                                   "RPP_Data Comparison", "D32", """Group based on conditions.""",
                                                                    "Scavenger",
                                                                    "G-Data")
                 return instance
@@ -1097,22 +1097,22 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "GroupByData", "G", "分组依据 list or tree")
+                self.SetUpParam(p, "GroupByData", "G", "Grouping basis list or tree")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "GroupData", "D", "分组列表 list or tree")
+                self.SetUpParam(p, "GroupData", "D", "Grouping list list or tree")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "ByTree", "G", "分组依据所得结果 tree")
+                self.SetUpParam(p, "ByTree", "G", "results from the group tree")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "DaTree", "D", "分组列表所得结果 tree")
+                self.SetUpParam(p, "DaTree", "D", "results from the list tree")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -1207,17 +1207,16 @@ try:
                                     for j in range(len(ggdata)):
                                         GroupData2.Add(ggdata[j], GH_Path(i))
                         gbdata, data = self.indextree(GroupByData, GroupData2)
-                        # return outputs if you have them; here I try it for you:
                         return gbdata, data
                 finally:
-                    self.Message = '数据对比'
+                    self.Message = 'Data comparison'
 
 
         # 数据比较
         class CompareSize(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_CompareSize", "D33", """数据比较，用于比较长度和面积的取值（几何物体），也可纯数据比较""", "Scavenger", "G-Data")
+                                                                   "RPP_CompareSize", "D33", """Data comparison，used to compare the length and area（Geometric object），only data comparison is also available""", "Scavenger", "G-Data")
                 return instance
 
             def get_ComponentGuid(self):
@@ -1235,33 +1234,33 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Geometry", "G", "对比的几何物体，可以是线段或者是Brep")
+                self.SetUpParam(p, "Geometry", "G", "geometric object for comparision,can be line or Brep")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Specifylen", "T", "指定的数据切")
+                self.SetUpParam(p, "Specifylen", "T", "cut by specific data")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Boolean()
-                self.SetUpParam(p, "Closed", "C", "是否闭合区间，默认闭合")
+                self.SetUpParam(p, "Closed", "C", "the range is closed or not,default is closed")
                 p.SetPersistentData(Grasshopper.Kernel.Types.GH_Boolean(True))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Compare", "S", "选择大于区间还是小于区间，默认大于")
+                self.SetUpParam(p, "Compare", "S", "Select range greater or less than ，default is greater than")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Result", "G", "最终的数据")
+                self.SetUpParam(p, "Result", "G", "final data")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Excluded_Data", "E", "被剔除的数据")
+                self.SetUpParam(p, "Excluded_Data", "E", "Deleted data")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -1315,7 +1314,7 @@ try:
                                 Excluded_Data = eval('[e for e in Geometry if e {} Specifylen]'.format(compare_symbols[1]))
                             return Result, Excluded_Data
                 finally:
-                    self.Message = '数据比较'
+                    self.Message = 'Data comparison'
 
 
         # Python列表数据转
@@ -1323,7 +1322,7 @@ try:
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
                                                                    "RPP pydata", "D25",
-                                                                   """将Python的list类型转为正常数据""", "Scavenger",
+                                                                   """Converts Python's list type to normal data""", "Scavenger",
                                                                    "G-Data")
                 return instance
 
@@ -1342,13 +1341,13 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "PyData", "P", "Python列表格式数据")
+                self.SetUpParam(p, "PyData", "P", "Python list data")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "GhData", "D", "GH数据格式.")
+                self.SetUpParam(p, "GhData", "D", "GH data.")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -1376,7 +1375,7 @@ try:
                         tree_Data = [list(data_) for data_ in Data.Branches]
                         return ght.list_to_tree(tree_Data)
                 finally:
-                    self.Message = 'PyList转Tree'
+                    self.Message = 'PyList to Tree'
 
 
         # 通过真假值筛选元素
@@ -1384,7 +1383,7 @@ try:
 
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_PickFactor", "D23", """树形数据批量选取，通过因子（True，False）筛选""", "Scavenger", "G-Data")
+                                                                   "RPP_PickFactor", "D23", """data tree select in batches,by （True，False）""", "Scavenger", "G-Data")
                 return instance
 
             def get_ComponentGuid(self):
@@ -1402,23 +1401,23 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Boolean()
-                self.SetUpParam(p, "Factor", "F", "控制因子")
+                self.SetUpParam(p, "Factor", "F", "Control Factor")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "T_Factor", "TF", "正确因子数据")
+                self.SetUpParam(p, "T_Factor", "TF", "True Factor Data")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "F_Factor", "FF", "错误因子数据")
+                self.SetUpParam(p, "F_Factor", "FF", "Faulse Factor Data")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Result", "R", "结果列表")
+                self.SetUpParam(p, "Result", "R", "Result List")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -1491,10 +1490,10 @@ try:
                     else:
                         len_factor, len_t, len_f = len(factor_trunk_list), len(t_trunk_list), len(f_trunk_list)
                         if len_t != len_f:
-                            Message.message1(self, "筛选数据不一致！")
+                            Message.message1(self, "Filtering data is inconsistent！")
                         else:
                             if len_factor < len_t:
-                                Message.message2(self, "筛选因子与数据树不匹配！")
+                                Message.message2(self, "The filter factor does not match with data tree！")
                                 place_char = [[None]] * (len_t - len_factor)
                                 new_factor = factor_trunk_list + place_char
                             elif len_factor > len_t:
@@ -1509,14 +1508,14 @@ try:
                     sc.doc = ghdoc
                     return Result
                 finally:
-                    self.Message = '树形数据批量筛选'
+                    self.Message = 'data tree filtering in batches'
 
 
         # 树形数据同步
         class TreeSynchronization(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_TreeSynchronization", "D22", """树形数据同步，匹配两树形数据所缺失的部分（类似于空占位符）""", "Scavenger", "G-Data")
+                                                                   "RPP_TreeSynchronization", "D22", """Tree data synchronization，match the missing parts of the two data tree（Similar to an empty placeholder）""", "Scavenger", "G-Data")
                 return instance
 
             def get_ComponentGuid(self):
@@ -1534,18 +1533,18 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "A_Tree", "A", "A树形数据，可以是目标树也可以是同步树")
+                self.SetUpParam(p, "A_Tree", "A", "A data tree，can be a target tree or a synchronization tree")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "B_Tree", "B", "B树形数据，可以是目标树也可以是同步树")
+                self.SetUpParam(p, "B_Tree", "B", "B data tree，can be a target tree or a synchronization tree")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Result_Tree", "RT", "配对后对应的缺失部分的树，可能是A树也可能是B树")
+                self.SetUpParam(p, "Result_Tree", "RT", "After pairing,the tree related to missing part,can be A or B")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -1605,7 +1604,7 @@ try:
                         sc.doc = ghdoc
                         return Result_Tree
                 finally:
-                    self.Message = '树形数据同步'
+                    self.Message = 'Tree data synchronization'
 
 
         # 树性数据插入
@@ -1613,7 +1612,7 @@ try:
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
                                                                    "RPP_TreeAdd", "D13",
-                                                                   """将Data_b的数据根据path的属性路径添加到Data_a中返回""",
+                                                                   """Add data of Data_b to Data_a based on the path attribute information and return""",
                                                                    "Scavenger", "G-Data")
                 return instance
 
@@ -1632,23 +1631,23 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Data_a", "DA", "原始树形数据")
+                self.SetUpParam(p, "Data_a", "DA", "original data tree")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Data_b", "DB", "插入的树形数据")
+                self.SetUpParam(p, "Data_b", "DB", "insected data tree")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Path", "P", "树形路径\n如果数据短为字符串，请先连接Path插件")
+                self.SetUpParam(p, "Path", "P", "Tree path\nIf the data is short as a string，connect the Path plug-in first")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "return", "RE", "返回值")
+                self.SetUpParam(p, "return", "RE", "Returned value")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -1695,17 +1694,17 @@ try:
                                 else:
                                     DataTree.Add(_j, paths[_i])
                     else:
-                        Message.message2(self, "添加的数据和路径数据不匹配，请检查")
+                        Message.message2(self, "The added data does not match with data path,please check")
                     return DataTree
                 finally:
-                    self.Message = '树性数据插入'
+                    self.Message = 'data tree insertion'
 
 
         # 数据偏移
         class DataShift(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_DataShift", "D12", """通过偏移数据列表的方式将数据一一组合""", "Scavenger", "G-Data")
+                                                                   "RPP_DataShift", "D12", """The data is grouped one by one by offset data list""", "Scavenger", "G-Data")
                 return instance
 
             def get_ComponentGuid(self):
@@ -1719,33 +1718,33 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Data_List", "L", "偏移前的数据")
+                self.SetUpParam(p, "Data_List", "L", "Data before offset")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
-                self.SetUpParam(p, "Shift", "S", "需要偏移的量，不输入默认为1")
+                self.SetUpParam(p, "Shift", "S", "The amount to be offset,If no input, the default value is 1")
                 shift_data = 1
                 p.SetPersistentData(gk.Types.GH_Number(shift_data))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
-                self.SetUpParam(p, "Eliminate", "E", "剔除不需要的下标（可选）")
+                self.SetUpParam(p, "Eliminate", "E", "Eliminate unwanted subscripts（selectable）")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Result_List", "RL", "偏移后的数据")
+                self.SetUpParam(p, "Result_List", "RL", "The offset data")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Right_Scissor", "RS", "去除每组树枝最末位的偏移数据")
+                self.SetUpParam(p, "Right_Scissor", "RS", "Remove the last offset data of each branches group")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Left_Scissor", "LS", "去除每组树枝第一位的偏移数据")
+                self.SetUpParam(p, "Left_Scissor", "LS", "Remove the first offset data of each branch group")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -1844,7 +1843,7 @@ try:
         class GetTreeDataByIndex(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_GetTreeByIndex", "D14", """树形数据根据下标提取的方式；支持多下标（树形路径的模式为{0; 第N列表 - 1; 果实数据}排列）""", "Scavenger", "G-Data")
+                                                                   "RPP_GetTreeByIndex", "D14", """The way data tree is extracted according to subscripts；Multiple subscripts are supported（The mode of the tree path is{0; NTH list - 1; Fruit data}permutation）""", "Scavenger", "G-Data")
                 return instance
 
             def get_ComponentGuid(self):
@@ -1862,18 +1861,18 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Tree_Data", "T", "原始树形数据")
+                self.SetUpParam(p, "Tree_Data", "T", "Original tree data")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Index", "I", "下标")
+                self.SetUpParam(p, "Index", "I", "subscript")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Result", "R", "最终数据")
+                self.SetUpParam(p, "Result", "R", "Final data")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -1908,7 +1907,7 @@ try:
                             try:
                                 Result.append([leaf_result[_] for _ in new_index_list[single_index]])
                             except IndexError:
-                                self.message1('超出索引范围！第{}列表数据错误,原数据列表从0开始到{}结束'.format(single_index + 1, len(leaf_result) - 1))
+                                self.message1('Out of index range！{} List data is error,the original data list start from 0 to {}'.format(single_index + 1, len(leaf_result) - 1))
                                 Result.append(None)
                         return ght.list_to_tree(Result)
                 finally:
@@ -1919,7 +1918,7 @@ try:
         class LenTree(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_LenTree", "D11", """列表长度转树形""", "Scavenger", "G-Data")
+                                                                   "RPP_LenTree", "D11", """List length to tree""", "Scavenger", "G-Data")
                 return instance
 
             def get_ComponentGuid(self):
@@ -1937,18 +1936,18 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "List", "L", "一组数据")
+                self.SetUpParam(p, "List", "L", "A Set of data")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
-                self.SetUpParam(p, "Spilt", "S", "以几组数据分割开（不输入则直接转成单一树）")
+                self.SetUpParam(p, "Spilt", "S", "Divided by several sets of data（If no input,then converted to a single tree directly）")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Tree", "T", "分割后的数据（多树）")
+                self.SetUpParam(p, "Tree", "T", "Split the data（multi-tree）")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -1979,7 +1978,7 @@ try:
                         Tree = ght.list_to_tree(New_list)
                         return Tree
                 finally:
-                    self.Message = '定义长度树'
+                    self.Message = 'Definition length tree'
 
     else:
         pass
