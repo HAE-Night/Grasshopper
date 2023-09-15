@@ -30,7 +30,7 @@ try:
         class ShowPointLine(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_ShowPointLine", "Z2", """显示点序与线指向""", "Scavenger", "I-Display")
+                                                                   "RPP_ShowPointLine", "Z2", """Show point order and line orientation""", "Scavenger", "I-Display")
                 return instance
 
             def get_ComponentGuid(self):
@@ -48,12 +48,12 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Geo", "G", "需要分析的点序列")
+                self.SetUpParam(p, "Geo", "G", "Sequence of points to be analyzed")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Boolean()
-                self.SetUpParam(p, "Format", "F", "是否格式化点序")
+                self.SetUpParam(p, "Format", "F", "Whether to format the dot order")
                 Factor = True
                 p.SetPersistentData(gk.Types.GH_Boolean(Factor))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
@@ -61,7 +61,7 @@ try:
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "_place", "*", "占位符（各中心点）")
+                self.SetUpParam(p, "_place", "*", "placeholder（Each center point）")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -149,7 +149,7 @@ try:
                     if origin_data:
                         list_pts, list_line, cen_pts = zip(*ghp.run(self._do_main, origin_data))
                     else:
-                        self.message2("待解析的点序列为空！")
+                        self.message2("The sequence of points to be parsed is empty！")
                         list_pts, list_line, cen_pts = (None for _ in range(3))
 
                     self.pts = list_pts
@@ -164,7 +164,7 @@ try:
                     sc.doc = ghdoc
                     return _place
                 finally:
-                    self.Message = '显示点序'
+                    self.Message = 'Display point order'
 
             def DrawViewportWires(self, args):
                 try:
@@ -187,7 +187,7 @@ try:
         class CurvesDirection(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_Crv Dir", "Z1", """显示曲线方向""",
+                                                                   "RPP_Crv Dir", "Z1", """Display curve direction""",
                                                                    "Scavenger", "I-Display")
                 return instance
 
@@ -206,7 +206,7 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Curve()
-                self.SetUpParam(p, "Curve", "C", "显示方向的曲线")
+                self.SetUpParam(p, "Curve", "C", "showing Curve direction")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
@@ -268,7 +268,7 @@ try:
         class BrepDirection(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_BrepDirection", "Z3", """显示面（多重曲面）的朝向""", "Scavenger", "I-Display")
+                                                                   "RPP_BrepDirection", "Z3", """show Orientation of surface (multiple surfaces)""", "Scavenger", "I-Display")
                 return instance
 
             def get_ComponentGuid(self):
@@ -282,13 +282,13 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Brep()
-                self.SetUpParam(p, "Brep", "B", "要显示方向的面或者多重曲面")
+                self.SetUpParam(p, "Brep", "B", "A surface or multiple surface to show direction")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "*", "*", "占位符，输出物体中心点")
+                self.SetUpParam(p, "*", "*", "A placeholder ,output the center point of the object ")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -344,7 +344,7 @@ try:
                         center_pts = list(chain(*_cen_pt))
                         _cen_pt = ght.list_to_tree(_cen_pt)
                     else:
-                        Message.message2(self, "B端为空！！")
+                        Message.message2(self, "End B is empty！！")
 
                     self.vector_surface = temp_pt_vect
                     self.bb_pts = rg.BoundingBox(center_pts) if center_pts else rg.BoundingBox.Empty
@@ -355,7 +355,7 @@ try:
                     sc.doc = ghdoc
                     return _cen_pt
                 finally:
-                    self.Message = '显示面朝向'
+                    self.Message = 'Display face orientation'
 
             def DrawViewportWires(self, args):
                 material = Rhino.Display.DisplayMaterial(Rhino.DocObjects.Material.DefaultMaterial)
