@@ -1372,12 +1372,12 @@ try:
 
                 p = Grasshopper.Kernel.Parameters.Param_Point()
                 self.SetUpParam(p, "Point A", "A", "初始的点")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Point()
                 self.SetUpParam(p, "Point B", "B", "移动到的点")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
@@ -1461,47 +1461,45 @@ try:
 
             def convert_goo(self, geo):
                 if 'List[object]' in str(geo):
-                    return True, [list(_) for _ in geo]
+                    return True, [_ for _ in geo]
                 else:
                     return False, geo
 
-            def goo_object_move(self, goo_object):
-                s_new_obj_list, s_vector_list, s_xform_list = ([] for _ in range(3))
-                for obj in goo_object:
-                    obj.Transform(self.xform)
-                    s_new_obj_list.append(obj)
-                gh_Geos = [gk.GH_Convert.ToGeometricGoo(_) for _ in s_new_obj_list]
-                ghGroup = gk.Types.GH_GeometryGroup()
-                ghGroup.Objects.AddRange(gh_Geos)
-                s_vector_list = self.diff_vector
-                s_xform_list = self.xform
-                return ghGroup, s_vector_list, s_xform_list
-
-            def list_object_move(self, list_object):
-                s_new_obj_list, s_vector_list, s_xform_list = ([] for _ in range(3))
-                for obj in list_object:
-                    obj.Transform(self.xform)
-                    s_new_obj_list.append(obj)
-                    s_vector_list.append(self.diff_vector)
-                    s_xform_list.append(self.xform)
-                return s_new_obj_list, s_vector_list, s_xform_list
-
-            def is_goo_list(self, turn_bool, turn_obj_list):
+            def is_goo_list(self, turn_data_list):
+                turn_bool, new_obj_list, vector, xform = turn_data_list
                 if turn_bool:
-                    return map(self.goo_object_move, turn_obj_list)
+                    x_object_list = []
+                    for obj in new_obj_list:
+                        obj.Transform(xform)
+                        x_object_list.append(obj)
+                    gh_Geos = [gk.GH_Convert.ToGeometricGoo(_) for _ in x_object_list]
+                    ghGroup = gk.Types.GH_GeometryGroup()
+                    ghGroup.Objects.AddRange(gh_Geos)
+                    return ghGroup, vector, xform
                 else:
-                    return self.list_object_move(turn_obj_list)
+                    obj = new_obj_list
+                    obj.Transform(xform)
+                    return obj, vector, xform
+
+            def get_xform(self, set_pt):
+                a_pt, b_pt = set_pt
+                diff_vector = rg.Vector3d(b_pt) - rg.Vector3d(a_pt)
+                xform = rg.Transform.Translation(diff_vector)
+                return diff_vector, xform
 
             def object_move(self, tuple_data):
-                obj_list, origin_path = tuple_data
+                obj_list, init_pt_list, move_pt_list, origin_path = tuple_data
 
-                bool_reslut, turn_to_object_list = self.convert_goo(obj_list)
-                if bool_reslut:
-                    new_obj_list, vector_list, xform_list = zip(*self.is_goo_list(bool_reslut, turn_to_object_list))
-                else:
-                    new_obj_list, vector_list, xform_list = self.is_goo_list(bool_reslut, turn_to_object_list)
+                init_pt_list = init_pt_list + [init_pt_list[-1]] * (len(obj_list) - len(init_pt_list)) if len(obj_list) > len(init_pt_list) else init_pt_list
+                move_pt_list = move_pt_list + [move_pt_list[-1]] * (len(obj_list) - len(move_pt_list)) if len(obj_list) > len(move_pt_list) else move_pt_list
 
-                ungroup_data = map(lambda x: self.split_tree(x, origin_path), [new_obj_list, vector_list, xform_list])
+                dif_vector, xform = zip(*map(self.get_xform, zip(init_pt_list, move_pt_list)))
+
+                bool_reslut, turn_to_object_list = zip(*map(self.convert_goo, obj_list))
+                new_tuple_data = zip(bool_reslut, turn_to_object_list, dif_vector, xform)
+                group_obj, vector_list, xform_list = zip(*map(self.is_goo_list, new_tuple_data))
+
+                ungroup_data = map(lambda x: self.split_tree(x, origin_path), [group_obj, vector_list, xform_list])
                 Rhino.RhinoApp.Wait()
                 return ungroup_data
 
@@ -1510,18 +1508,24 @@ try:
                     sc.doc = Rhino.RhinoDoc.ActiveDoc
                     Moved, Vector, Transform = (gd[object]() for _ in range(3))
                     trunk_geo, trunk_path = self.Branch_Route(Geometry)
+                    init_pt_trunk, init_trunk_path = self.Branch_Route(Point_A)
+                    move_pt_trunk, move_trunk_path = self.Branch_Route(Point_B)
+
+                    trunk_path_list = [len(trunk_path), len(init_trunk_path), len(move_trunk_path)]
+                    target_trunk_path = [trunk_path, init_trunk_path, move_trunk_path][trunk_path_list.index(max(trunk_path_list))]
+
+                    g_len, i_len, m_len, target_len = len(trunk_geo), len(init_pt_trunk), len(move_pt_trunk), len(target_trunk_path)
 
                     re_mes = Message.RE_MES([Geometry, Point_A, Point_B], ['G', 'A', 'B'])
                     if len(re_mes) > 0:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
                     else:
-                        init_pt = Point_A
-                        move_pt = Point_B
-                        self.diff_vector = rg.Vector3d(move_pt) - rg.Vector3d(init_pt)
-                        self.xform = rg.Transform.Translation(self.diff_vector)
-                        zip_list = zip(trunk_geo, trunk_path)
-                        ghp.run(self.object_move, zip_list)
+                        trunk_geo = trunk_geo + [trunk_geo[-1]] * (target_len - g_len) if target_len > g_len else trunk_geo
+                        init_pt_trunk = init_pt_trunk + [init_pt_trunk[-1]] * (target_len - i_len) if target_len > i_len else init_pt_trunk
+                        move_pt_trunk = move_pt_trunk + [move_pt_trunk[-1]] * (target_len - m_len) if target_len > m_len else move_pt_trunk
+
+                        zip_list = zip(trunk_geo, init_pt_trunk, move_pt_trunk, target_trunk_path)
                         iter_ungroup_data = zip(*ghp.run(self.object_move, zip_list))
                         Moved, Vector, Transform = ghp.run(lambda single_tree: self.format_tree(single_tree), iter_ungroup_data)
 
