@@ -35,7 +35,7 @@ try:
         class CreateView(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_CreateView", "V3", """创建新视图.""", "Scavenger", "L-Others")
+                                                                   "RPP_CreateView", "V3", """Create a new view.""", "Scavenger", "L-Others")
                 return instance
 
             def get_ComponentGuid(self):
@@ -53,25 +53,25 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Boolean()
-                self.SetUpParam(p, "Create", "C", "创建视图的开关（Ture开启）")
+                self.SetUpParam(p, "Create", "C", "The switch for creating a view（Ture On）")
                 p.PersistentData.Append(Grasshopper.Kernel.Types.GH_Boolean(False))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Name", "N", "视图的名称")
+                self.SetUpParam(p, "Name", "N", "Name of view")
                 p.SetPersistentData(Grasshopper.Kernel.Types.GH_String('HAE'))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Wide", "W", "窗口宽度")
+                self.SetUpParam(p, "Wide", "W", "Window width")
                 p.SetPersistentData(Grasshopper.Kernel.Types.GH_Number(500))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "High", "H", "窗口的高度")
+                self.SetUpParam(p, "High", "H", "Height of window")
                 p.SetPersistentData(Grasshopper.Kernel.Types.GH_Number(500))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
@@ -112,14 +112,14 @@ try:
                     if self.factor is True:
                         Rhino.RhinoDoc.ActiveDoc.Views.Add(element, Rhino.Display.DefinedViewportProjection.Perspective, System.Drawing.Rectangle(600, 300, Wide, High), True)
                 finally:
-                    self.Message = '视图创建'
+                    self.Message = 'View creation'
 
 
         # 字符串处理
         class StrHandle(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_StrHandle", "V1", """字符串处理插件,处理存在的符号信息""", "Scavenger", "L-Others")
+                                                                   "RPP_StrHandle", "V1", """String handling plug-in,dealing with existing symbolic information""", "Scavenger", "L-Others")
                 return instance
 
             def get_ComponentGuid(self):
@@ -137,17 +137,17 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Text", "T", "文本信息")
+                self.SetUpParam(p, "Text", "T", "Text information")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Symbol", "C", "要处理的符号, 不输入会默认全部清理")
+                self.SetUpParam(p, "Symbol", "C", "Symbols to be processed, if you do not input this parameter, all the entries will be cleared by default")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
-                self.SetUpParam(p, "Index", "I", "选取列表中指定下标的字符串")
+                self.SetUpParam(p, "Index", "I", "Selects the string with specified subscript in the list")
                 TARGET_INDEX = -1
                 p.SetPersistentData(Grasshopper.Kernel.Types.GH_Integer(TARGET_INDEX))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
@@ -155,23 +155,23 @@ try:
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "a", "A", "字符串处理掉符号后所有的字符串")
+                self.SetUpParam(p, "a", "A", "All strings after the symbols are processed")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Start", "S", "头字符串")
+                self.SetUpParam(p, "Start", "S", "Start string")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "End", "E", "尾字符串")
+                self.SetUpParam(p, "End", "E", "End string")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Result", "O", "指定的字符串,若Index没输入,和End一样")
+                self.SetUpParam(p, "Result", "O", "Specified string,if Index is not entered,same as End")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Rest", "R", "从原列表中将指定字符串的删除的剩余列表")
+                self.SetUpParam(p, "Rest", "R", "The remaining list of deleted strings from the original list")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -216,7 +216,7 @@ try:
         class StrHandle_02(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_StrHandle_02", "V2", """字符集的拆分""", "Scavenger", "L-Others")
+                                                                   "RPP_StrHandle_02", "V2", """Splitting of character sets""", "Scavenger", "L-Others")
                 return instance
 
             def get_ComponentGuid(self):
@@ -234,18 +234,18 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Text", "T", "字符串")
+                self.SetUpParam(p, "Text", "T", "Text string")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Symbol", "S", "符号")
+                self.SetUpParam(p, "Symbol", "S", "Symbol")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Result", "R", "结果数据，列表形式")
+                self.SetUpParam(p, "Result", "R", "Result data，list form")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -277,7 +277,7 @@ try:
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
                                                                    "RPP_TranslateByMODU", "V5",
-                                                                   """通过某度API接口进行翻译，需要ID和密钥""",
+                                                                   """Translation through a certain API interface，ID and key required""",
                                                                    "Scavenger", "L-Others")
                 return instance
 
@@ -296,28 +296,28 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Text", "T", "待翻译的文本")
+                self.SetUpParam(p, "Text", "T", "Text to be translated")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Appid", "ID", "翻译的API接口ID，不输入会有默认ID")
+                self.SetUpParam(p, "Appid", "ID", "Translated API interface ID，if no input,there is default ID")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Appkey", "KEY", "翻译的API接口密钥，不输入会有默认Key")
+                self.SetUpParam(p, "Appkey", "KEY", "Translate the API interface key，if no input,there is default Key")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
-                self.SetUpParam(p, "To_lang", "L", "翻译成哪种语言 0 -> 英文，1 -> 中文，2 -> 粤语，默认为英文")
+                self.SetUpParam(p, "To_lang", "L", "Translated into which language 0 -> English，1 -> Chinese，2 -> Cantonese，Default to English")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Result", "R", "翻译最后的结果")
+                self.SetUpParam(p, "Result", "R", "Translate the final result")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -364,9 +364,9 @@ try:
                         result = urllib.urlopen(url, form_data).read()
                         return [_['dst'] for _ in json.loads(result)['trans_result']]
                     else:
-                        Message.message2(self, "字符不能为空！！！")
+                        Message.message2(self, "The character cannot be empty！！！")
                 finally:
-                    self.Message = '某度翻译'
+                    self.Message = 'translation by Baidu'
 
 
         # 图层重命名
@@ -374,7 +374,7 @@ try:
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
                                                                    "RPP_LayerRename", "V4",
-                                                                   """重命名图层，需要csv文件数据导入，会自动重命名图层""",
+                                                                   """Rename layer，csv file data needs to be imported，the layer is automatically renamed""",
                                                                    "Scavenger", "L-Others")
                 return instance
 
@@ -393,12 +393,12 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Boolean()
-                self.SetUpParam(p, "Button", "B", "开启翻译按钮")
+                self.SetUpParam(p, "Button", "B", "Turn on the Translate button")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "CSV_File", "P", "csv文件路径")
+                self.SetUpParam(p, "CSV_File", "P", "csv file path")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
@@ -476,13 +476,13 @@ try:
                         tips_tranl_info = set(list(chain(*temp_info)))
                         if len(tips_tranl_info) != 0:
                             for tip in tips_tranl_info:
-                                Message.message2(self, "“{}”没有对应的翻译".format(tip))
+                                Message.message2(self, "“{}”There is no corresponding translation".format(tip))
                         else:
-                            Message.message3(self, "图层名已全部替换！")
+                            Message.message3(self, "Layer names have all been replaced！")
                     else:
-                        Message.message3(self, "开启按钮替换图层名")
+                        Message.message3(self, "Open button to replace layer name")
                 finally:
-                    self.Message = '图层名称替换'
+                    self.Message = 'Layer name replacement'
 
 
         # 获取文件路径
@@ -490,7 +490,7 @@ try:
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
                                                                    "RPP_ActiveFile", "V11",
-                                                                   """获取犀牛，Gh文件路径以及当前时间""", "Scavenger",
+                                                                   """Get Rhinos，Gh file path and current time""", "Scavenger",
                                                                    "L-Others")
                 return instance
 
@@ -509,21 +509,21 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Boolean()
-                self.SetUpParam(p, "x", "U", "更新时间的按钮")
+                self.SetUpParam(p, "x", "U", "Update time button")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "RP", "RP", "犀牛文件路径")
+                self.SetUpParam(p, "RP", "RP", "Rhino file path")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "GP", "GP", "Gh文件路径")
+                self.SetUpParam(p, "GP", "GP", "Gh file path")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Time", "T", "当前时间（打开Gh的时间）")
+                self.SetUpParam(p, "Time", "T", "Current time（Time when turn on Gh）")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -568,10 +568,6 @@ try:
                     return RP, GP, Time
 
 
-        """
-            切割 -- tertiary
-        """
-
     else:
         pass
 except:
@@ -579,4 +575,3 @@ except:
 
 import GhPython
 import System
-
