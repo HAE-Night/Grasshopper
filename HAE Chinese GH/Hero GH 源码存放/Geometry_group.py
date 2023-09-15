@@ -30,7 +30,7 @@ try:
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
                                                                    "RPP_GeoCenter",
                                                                    "A1",
-                                                                   """求几何物体的中心点""",
+                                                                   """Find the center point of geometric object""",
                                                                    "Scavenger",
                                                                    "E-Geometry")
                 return instance
@@ -50,13 +50,13 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Geometry", "G", "几何物体")
+                self.SetUpParam(p, "Geometry", "G", "Geometric object")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Point()
-                self.SetUpParam(p, "Center", "C", "中心点")
+                self.SetUpParam(p, "Center", "C", "Central point")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -154,7 +154,7 @@ try:
                         sc.doc = ghdoc
                         return Cenp
                 finally:
-                    self.Message = 'HAE中心点'
+                    self.Message = 'HAE center point'
 
 
         # 几何排序
@@ -162,7 +162,7 @@ try:
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
                                                                    "RPP_Value_And_Sort", "A4",
-                                                                   """几何物体的排序，排序完成进行才会进行取值，支持面积和长度的排序，但是同一组数据必须是一样的；增加点序的排序，在点序排序时输入要作为参考的坐标轴（默认为X轴对比）""",
+                                                                   """Ordering of geometric objects ，value is selected after the sorting finished, support area and length sorting，but data must be the same in same set；add dot order sort ，enter the axis to be used as a reference in the point order sort （The default is X-axis comparison）""",
                                                                    "Scavenger",
                                                                    "E-Geometry")
                 return instance
@@ -182,29 +182,29 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Geometry()
-                self.SetUpParam(p, "Geometry", "G", "几何物体")
+                self.SetUpParam(p, "Geometry", "G", "Geometric object")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
-                self.SetUpParam(p, "Index", "I", "提取下标，不输入默认全部输出")
+                self.SetUpParam(p, "Index", "I", "Extract subscript，if no input, default is output all ")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Boolean()
-                self.SetUpParam(p, "Loop", "L", "遍历取值，默认开启，会取0到index的值，Float关闭，此时只会取第index+1个的值")
+                self.SetUpParam(p, "Loop", "L", "Ergodic value，on by default，it's going to take a value from 0 to index ，Float close ，in this case, only the value of index+1 will be taken")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 p.PersistentData.Append(Grasshopper.Kernel.Types.GH_Boolean(True))  # 将默认值设为True
                 self.Params.RegisterInputParam(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Boolean()
-                self.SetUpParam(p, "Sort", "S", "选择排序方式，默认降序，升序选择Float")
+                self.SetUpParam(p, "Sort", "S", "Select sort mode，descending by default，select Float in ascending order")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 p.PersistentData.Append(Grasshopper.Kernel.Types.GH_Boolean(True))  # 将默认值设为True
                 self.Params.RegisterInputParam(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Axis", "A", "在点序排序时输入，其他几何物体的排序不用输入")
+                self.SetUpParam(p, "Axis", "A", "Enter when ordering dots，other geometric objects are sorted without input ")
                 DEFAULTAXIS = 'x'
                 p.SetPersistentData(gk.Types.GH_String(DEFAULTAXIS))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
@@ -212,19 +212,19 @@ try:
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Geometry()
-                self.SetUpParam(p, "A_Objects", "AO", "若输入下标则取出0到index的几何物体，不输入默认全部输出")
+                self.SetUpParam(p, "A_Objects", "AO", "If subscript is entered, the geometric object from 0 to index is retrieved ，if no input, Default is output all ")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
-                self.SetUpParam(p, "A_Values", "A", "若输入下标则取出0到index的值，不输入默认全部输出")
+                self.SetUpParam(p, "A_Values", "A", "If subscript is entered, the value from 0 to index is retrieved，if no input, Default is output all")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Geometry()
-                self.SetUpParam(p, "B_Objects", "BO", "若输入下标则取出index到末端的几何物体，不输入默认全部输出")
+                self.SetUpParam(p, "B_Objects", "BO", "If a subscript is entered, the geometric object at the end of index is retrieved，if no input, Default is output all")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
-                self.SetUpParam(p, "B_Values", "B", "若输入下标则取出index到末端的值，不输入默认全部输出")
+                self.SetUpParam(p, "B_Values", "B", "If a subscript is entered, the geometric object at the end of index is retrieved，if no input, Default is output all")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -286,7 +286,7 @@ try:
                         if len(temp2) == 1:
                             return True, type(list_data[0])
                         else:
-                            return False, '数据类型不一致！！'
+                            return False, 'The data type is inconsistent！！'
 
             def switch_handing(self, array_data, index, loop):
                 if index is None:
@@ -316,7 +316,7 @@ try:
                         A_Values, B_Values = self.switch_handing(vals, Index, Loop)
                     return A_Objects, A_Values, B_Objects, B_Values
                 finally:
-                    self.Message = '几何排序'
+                    self.Message = 'Geometric ordering'
 
 
         # 几何体的中心平面
@@ -324,7 +324,7 @@ try:
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
                                                                    "RPP_GeometryPlane", "A2",
-                                                                   """求几何物体的中心平面""",
+                                                                   """Find the central plane of a geometric object""",
                                                                    "Scavenger", "E-Geometry")
                 return instance
 
@@ -343,13 +343,13 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Geometry", "G", "几何物体")
+                self.SetUpParam(p, "Geometry", "G", "Geometric object")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Plane()
-                self.SetUpParam(p, "Plane", "P", "几何物体平面（曲线在起始点、面在中心、几何体在最大面的中心点）")
+                self.SetUpParam(p, "Plane", "P", "Geometric object plane（The curve is at the starting point, the surface is at the center, and the geometry is at the center of the largest surface ）")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -454,7 +454,7 @@ try:
                         sc.doc = ghdoc
                         return Plane
                 finally:
-                    self.Message = '几何中心平面'
+                    self.Message = 'Geometric central plane'
 
 
         # Geo|Plane分隔
@@ -462,7 +462,7 @@ try:
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
                                                                    "Geo_PLane_Group", "A3",
-                                                                   """根据Plane对几何体进行分组，所有Z轴方向需要跟第一个Plane一样，并且第一个plane必须Z轴朝外""",
+                                                                   """Groups geometry according to Plane，all Z-axes direction need to be the same as the first Plane，and the first plane must face outward with its z-axis""",
                                                                    "Scavenger", "E-Geometry")
                 return instance
 
@@ -481,22 +481,22 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Brep", "G", "几何物体")
+                self.SetUpParam(p, "Brep", "G", "Geometric object")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Plane()
-                self.SetUpParam(p, "PLane", "P", "分隔平面-第一个分隔平面的Z轴朝外")
+                self.SetUpParam(p, "PLane", "P", "Dividing plane-The Z axis of the first dividing plane faces outward")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Geometry()
-                self.SetUpParam(p, "Brep", "G", "分隔后的几何物体")
+                self.SetUpParam(p, "Brep", "G", "Separated geometric objects")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
-                self.SetUpParam(p, "Index", "I", "几何体原下标")
+                self.SetUpParam(p, "Index", "I", "Original subscript of geometry")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -632,7 +632,7 @@ try:
                         Rhino.RhinoApp.Wait()
                         return Geo_Dtree, index_Dtree
                 finally:
-                    self.Message = 'Geo|Plane分组'
+                    self.Message = 'Geo|Plane group'
 
 
         # 分解几何物体
@@ -640,7 +640,7 @@ try:
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
                                                                    "RPP_DestructionGeometry", "A12",
-                                                                   """多个几何物体的分解（Brep，Curve等），注意直线的平面输出与曲线不一致""", "Scavenger",
+                                                                   """Decomposition of multiple geometric objects（Brep，Curve etc），noted that the flat output of the line is inconsistent with the curve """, "Scavenger",
                                                                    "E-Geometry")
                 return instance
 
@@ -659,33 +659,33 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Geometry()
-                self.SetUpParam(p, "Geometry", "G", "几何物体，支持多个不同的几何物体")
+                self.SetUpParam(p, "Geometry", "G", "Geometric object，Supports multiple different geometric objects")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Point()
-                self.SetUpParam(p, "Vertex", "V", "物体分解后得到的点")
+                self.SetUpParam(p, "Vertex", "V", "The point from decomposed object ")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Curve()
-                self.SetUpParam(p, "Edge", "E", "物体分解后得到的边")
+                self.SetUpParam(p, "Edge", "E", "The edge obtained by the decomposition of the object")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Face", "F", "Brep分解后得到的面，曲线返回空")
+                self.SetUpParam(p, "Face", "F", "The face obtained from Brep decomposition ，curve return null")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Plane()
-                self.SetUpParam(p, "PlaneA", "PA", "几何物体的标准中心坐标")
+                self.SetUpParam(p, "PlaneA", "PA", "The standard central coordinate of a geometric object ")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Plane()
-                self.SetUpParam(p, "PlaneB", "PB", "几何物体中心坐标沿X轴向量确定坐标")
+                self.SetUpParam(p, "PlaneB", "PB", "The center coordinates of a geometric object determine the coordinates within the X-axis vector")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Plane()
-                self.SetUpParam(p, "PlaneC", "PC", "几何物体中心坐标沿Y轴向量确定坐标")
+                self.SetUpParam(p, "PlaneC", "PC", "The center coordinates of a geometric object determine the coordinates within the Y-axis vector")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -788,14 +788,14 @@ try:
                         PlaneA, PlaneB, PlaneC = Plane, self.base_rotate(Plane, 1), self.base_rotate(Plane, 2)
                         return Vertex, Edge, Face, PlaneA, PlaneB, PlaneC
                 finally:
-                    self.Message = '几何分解'
+                    self.Message = 'Geometric decomposition'
 
 
         # 数据类型分类
         class TypeClassification(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_TypeClassification", "A11", """GH几何数据类型分类""", "Scavenger", "E-Geometry")
+                                                                   "RPP_TypeClassification", "A11", """GH geometric data type classification""", "Scavenger", "E-Geometry")
                 return instance
 
             def get_ComponentGuid(self):
@@ -813,37 +813,37 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Geometry()
-                self.SetUpParam(p, "Geo", "G", "Grasshopper实例化的数据类型列表")
+                self.SetUpParam(p, "Geo", "G", "List of data types instantiated by Grasshopper")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Guid()
-                self.SetUpParam(p, "Id", "ID", "物体ID（包含引用类型的物体）")
+                self.SetUpParam(p, "Id", "ID", "Object ID（Contains objects of reference type）")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Point()
-                self.SetUpParam(p, "Point", "P", "点类型")
+                self.SetUpParam(p, "Point", "P", "Point type")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Vector()
-                self.SetUpParam(p, "Vector", "V", "向量类型")
+                self.SetUpParam(p, "Vector", "V", "Vector type")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Curve()
-                self.SetUpParam(p, "Curve", "C", "线段类型")
+                self.SetUpParam(p, "Curve", "C", "Line type")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Plane()
-                self.SetUpParam(p, "Plane", "P", "平面类型")
+                self.SetUpParam(p, "Plane", "P", "Plane type")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Brep()
-                self.SetUpParam(p, "Brep", "B", "Brep类型")
+                self.SetUpParam(p, "Brep", "B", "Brep type")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Surface()
-                self.SetUpParam(p, "Surface", "S", "面类型")
+                self.SetUpParam(p, "Surface", "S", "Surface type")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -897,12 +897,12 @@ try:
                             elif isinstance(_, (rg.Surface, rg.SumSurface, rg.NurbsSurface)) is True:
                                 Surface.append(_)
                             else:
-                                Message.message3(self, "数据组未添加")
+                                Message.message3(self, "The data group is not added ")
                     else:
-                        Message.message2(self, "数据列表为空！")
+                        Message.message2(self, "The data list is empty ！")
                     return Id, Point, Vector, Curve, Plane, Brep, Surface
                 finally:
-                    self.Message = "GH数据类型分类"
+                    self.Message = "GH data type classification "
             # 物体跟随线排序
 
 
@@ -910,7 +910,7 @@ try:
         class GeoSortedByCurve(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_ObjectSortedByCurve", "A5", """通过曲线的方向确定一组杂乱几何物体集合的排序""", "Scavenger", "E-Geometry")
+                                                                   "RPP_ObjectSortedByCurve", "A5", """The order of a set of chaotic geometric objects is determined by the direction of the curve """, "Scavenger", "E-Geometry")
                 return instance
 
             def get_ComponentGuid(self):
@@ -928,22 +928,22 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Geometry()
-                self.SetUpParam(p, "Geo", "G", "需要排序的物体")
+                self.SetUpParam(p, "Geo", "G", "Objects that need to be sorted")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Curve()
-                self.SetUpParam(p, "Curve", "C", "指引的曲线")
+                self.SetUpParam(p, "Curve", "C", "Guided curve ")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Geometry()
-                self.SetUpParam(p, "Result", "R", "排序后的物体")
+                self.SetUpParam(p, "Result", "R", "Sorted objects")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
-                self.SetUpParam(p, "Index", "i", "排序后物体在原列表中的下标")
+                self.SetUpParam(p, "Index", "i", " The subscript of the sorted object in the original list")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -1035,14 +1035,14 @@ try:
                         sc.doc = ghdoc
                     return Result, Index
                 finally:
-                    self.Message = '物体跟随曲线排序'
+                    self.Message = 'Objects follow the curve in order '
 
 
         # 多重向量偏移
         class Skewing(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_Skewing", "A13", """多向量位移""", "Scavenger", "E-Geometry")
+                                                                   "RPP_Skewing", "A13", """Multivector displacement""", "Scavenger", "E-Geometry")
                 return instance
 
             def get_ComponentGuid(self):
@@ -1060,39 +1060,39 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Geometry()
-                self.SetUpParam(p, "Geo", "G", "需移动的几何物体")
+                self.SetUpParam(p, "Geo", "G", "A geometric object to be moved ")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Plane()
-                self.SetUpParam(p, "Plane", "P", "参考平面")
+                self.SetUpParam(p, "Plane", "P", "Reference plane")
                 REF_PLANE = rg.Plane.WorldXY
                 p.SetPersistentData(gk.Types.GH_Plane(REF_PLANE))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "XVector", "X", "X轴向量")
+                self.SetUpParam(p, "XVector", "X", "X-axis vector")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "YVector", "Y", "Y轴向量")
+                self.SetUpParam(p, "YVector", "Y", "Y-axis vector")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "ZVector", "Z", "Z轴向量")
+                self.SetUpParam(p, "ZVector", "Z", "Z-axis vector")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Geometry()
-                self.SetUpParam(p, "Res_Geo", "G", "位移后的物体")
+                self.SetUpParam(p, "Res_Geo", "G", "The object after displacement")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Vector()
-                self.SetUpParam(p, "Transform", "T", "偏移后的向量总量")
+                self.SetUpParam(p, "Transform", "T", "The total number of vectors after the shift ")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -1157,17 +1157,17 @@ try:
                             New_Objcet = Object
                             return New_Objcet, Transform
                     else:
-                        self.message2("物体为空！！")
+                        self.message2("Object null！！")
                     return New_Objcet, Transform
                 finally:
-                    self.Message = "多向量位移"
+                    self.Message = "Multivector displacement"
 
 
         # 多向量位移
         class SuperSkewing(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_SuperSkewing", "A14", """多向量位移（叠加态）""", "Scavenger", "E-Geometry")
+                                                                   "RPP_SuperSkewing", "A14", """Multivector displacement（Superposition state）""", "Scavenger", "E-Geometry")
                 return instance
 
             def get_ComponentGuid(self):
@@ -1185,37 +1185,37 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Geometry()
-                self.SetUpParam(p, "Geo", "G", "需移动的几何物体")
+                self.SetUpParam(p, "Geo", "G", "A geometric object to be moved ")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Plane()
-                self.SetUpParam(p, "Plane", "P", "参考平面")
+                self.SetUpParam(p, "Plane", "P", "Reference plane")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "XVector", "X", "X轴向量")
+                self.SetUpParam(p, "XVector", "X", "X-axis vector")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "YVector", "Y", "Y轴向量")
+                self.SetUpParam(p, "YVector", "Y", "Y-axis vector")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "ZVector", "Z", "Z轴向量")
+                self.SetUpParam(p, "ZVector", "Z", "Z-axis vector")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Geometry()
-                self.SetUpParam(p, "Res_Geo", "G", "位移后的物体")
+                self.SetUpParam(p, "Res_Geo", "G", "The object after displacement")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Vector()
-                self.SetUpParam(p, "Transform", "T", "偏移后的向量总量")
+                self.SetUpParam(p, "Transform", "T", "The total number of vectors after the offset ")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -1335,20 +1335,20 @@ try:
                         Res_Geo = self.iter_offset(Geo, total_vector, [])
                         Transform = copy_total_vec
                     else:
-                        self.message2('G端数据为空！')
+                        self.message2('Data on the G end is empty！')
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
                     sc.doc = ghdoc
                     return Res_Geo, Transform
                 finally:
-                    self.Message = '多向量位移（叠加态）'
+                    self.Message = 'Multivector displacement（Superposition state）'
 
 
         # 通过点移动物体
         class MoveByPoint(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_MoveByPoint", "A15", """两点之间移动物体""", "Scavenger", "E-Geometry")
+                                                                   "RPP_MoveByPoint", "A15", """Move objects between two points""", "Scavenger", "E-Geometry")
                 return instance
 
             def get_ComponentGuid(self):
@@ -1366,31 +1366,31 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Geometry", "G", "几何物体")
+                self.SetUpParam(p, "Geometry", "G", "Geometric object")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Point()
-                self.SetUpParam(p, "Point A", "A", "初始的点")
+                self.SetUpParam(p, "Point A", "A", "Initial point")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Point()
-                self.SetUpParam(p, "Point B", "B", "移动到的点")
+                self.SetUpParam(p, "Point B", "B", "Move to the point")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Moved", "M", "移动之后的物体")
+                self.SetUpParam(p, "Moved", "M", "The object after moving")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Vector()
-                self.SetUpParam(p, "Vector", "V", "移动的向量")
+                self.SetUpParam(p, "Vector", "V", "Moving vector")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Transform()
-                self.SetUpParam(p, "Transform", "X", "转换数据")
+                self.SetUpParam(p, "Transform", "X", "Transform data")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
