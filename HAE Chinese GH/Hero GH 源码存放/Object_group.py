@@ -2,6 +2,7 @@
 # @ModuleName: Object_group
 # @Author: invincible
 # @Time: 2022/7/8 11:10
+import time
 
 import Rhino
 import scriptcontext as sc
@@ -29,7 +30,7 @@ try:
         class Data_message(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_Data_message", "C3", """获取数据详细信息.""", "Scavenger",
+                                                                   "RPP_Data_message", "C3", """Get data details.""", "Scavenger",
                                                                    "K-Object")
                 return instance
 
@@ -48,13 +49,13 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Data", "D", "数据")
+                self.SetUpParam(p, "Data", "D", "Data")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Group", "G", "信息结果")
+                self.SetUpParam(p, "Group", "G", "Information result")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -65,7 +66,7 @@ try:
                     self.marshal.SetOutput(result, DA, 0, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAJmSURBVEhLtVZPSzpRFJ2dBn6EzO+gGPYFJEVpabSJ/tEfRENwI1i5EGuyNEgXbZRaCWm4KdRCRVA0UHBhfoYIFNoUYae5w/sNTJZW+jtwdM513ju+d9+9M9zb25vl/f09SIzH48G1tbXg6uqq+P1b0rj19fVgIpEQ5yNywkcEAgKBAI6OjpBOp3F9ff1nXl1dYX9/H6FQiKYF1+v1eAHiD+NELBZDNBoFF4lEeLr4Hzg8PARntVr5crnMQuMFbRk3OzvL12o1FupHs9nExcUFzs/P+0jxdrvN7uxHNpsFZzKZ+Gq1ykJy0D9QKpVQq9WYmpqSUaPRYHJyEiqVCt/tQCaTGWxgsViwsrLC1NeYm5vD8vIyU3IMNTCbzfD5fBCOMl5eXvD6+iqRNGFrawuLi4vi9Wf8aAVUH6VSCQ6HA06nUyJpys/29jaWlpbYCDl+ZLC7u4unpyc0Gg3U63WJpLvdLjY3N0czoLOcSqVgMBgwMzMjkXSxWITb7R7NYGdnB51OB61WCw8PDxJJPz8/Y2NjYzSDg4MD5HI5zM/PY2FhQSLp+/t7uFyu0XPw+PgIuocK8h9J08qG5oAqedgKqCJtNlsfyWjoCgYZUB1QDgZB6P+D62CQgbB9sNvtTH0NWsmfDS4vL6FQKKDT6aDX62Wcnp6GVqvFxMQE7u7u2Ag5RAOj0Tiwm1IVh8Nh8Qn1mScnJ+JJ+g5SN61UKiw0Xtzc3IDz+/382dkZC40Xx8fH4IRq5L1eL25vb1l4PEgmk2Kj5IS2K75VeDwenJ6eilVbKBSQz+d/TRpH+0752dvbE2YFPgDn94A0immrtQAAAABJRU5ErkJggg=="
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAKZSURBVEhL3VRLTxNRFGaj0UYSo0IgbAlxoYkxGkU0EHHPwkfiom2gCJ1HpzOdlk5LH+CLtqEqFBFsabEqj1IQ2qIkgl24cu1GE3f+kM97b0fFqEmZ7jjJyb13Mueec77vO7du39sBU/1xc1PLSaWxqe3f3tKmnGhulcm/pyshe7CDh4/0XLfEYB9aQ7+yqPsCbPISbM5l9Ek59Il5cJ4Szlzo+ayHVW+m+obeXmcWjsAWeG8RvK8AjqxiaBX+bBxa+gk8U7MIzuVwudv+TQ+r3ig8Fj4NMVAAH1jGgFzCoLoOfjjHzo57WaiJKbijJbR39X/Rw6q3nwm05DS0F2MYSsYxlIqD0/IkWZEk22CrHPqAjm6bwQRiCsIwqdy9DulhhlXO+VbgjKVg964SyFah3t9Cx1WjHQhzEPwlRjSr2FWAPJ5knWiZKOksAs94Ae2dd4xDxGtvWQcMFtcGBj1vGB+cjyiIwGUcIlOD2Uog8mUS8JJqXZNPoU4lKglIJ3ay0r0S3jHOgdWRhDSyBiG8AJUkEEdfsb0cf844oIpSH7yrjQPet1mBSKlA5JqYhmfmMbT5CHNPjMi0Fg6E4SIjecBZUVNFnoQD0gH9XhsHDsLB/CSpNAr3swm4pyfZpbtdGdmujQM2yf4cFIK7EFr8JVfmCpFtsFzDoNE5IBxQxdALKQfiyGvWEVWU8mgWWmKlBg4oybvmgLoQXGJJqJIYbJFN42+RmcvAOzMLX3aMzQG9kPOv/IaJvUWG5+CYxSqmIY0SvZM3iMpTGsswuP4i+Zrtqx5WvR0yHbX0Ol9CvfsRztA2JH8ZUmAHcvj9H65FPuFil/m7HrYna2471Zk/f+V2+Wz7jf/4zfK5S7fKjU2tdj1mX1ld3Q+GSA0b1KgHdwAAAABJRU5ErkJggg=="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def RunScript(self, Objects):
@@ -79,14 +80,14 @@ try:
                         Group = Objects.TopologyDescription
                         return Group
                 finally:
-                    self.Message = '数据详情'
+                    self.Message = 'Data detail'
 
 
         # 键值对赋值
         class DATAKEY(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_DATAKEY", "C4", """对物件的键值对进行f赋值，当多个物件赋值时，注意键值对顺序和数据结构；""", "Scavenger", "K-Object")
+                                                                   "RPP_DATAKEY", "C4", """Performs an f assignment to the key-value pair of object,when multiple objects are assigned values,pay attention to key-value pair order and data structure；""", "Scavenger", "K-Object")
                 return instance
 
             def get_ComponentGuid(self):
@@ -104,22 +105,22 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Guid()
-                self.SetUpParam(p, "Objects", "O", "物件集合列表")
+                self.SetUpParam(p, "Objects", "O", "Object set list")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Keys", "K", "Key-键,")
+                self.SetUpParam(p, "Keys", "K", "Key-key,")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Values", "V", "Value-值")
+                self.SetUpParam(p, "Values", "V", "Value-value")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Toggle", "T", "是否赋值")
+                self.SetUpParam(p, "Toggle", "T", "Assignment or not")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
@@ -134,7 +135,7 @@ try:
                 result = self.RunScript(p0, p1, p2, p3)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAQUSURBVEhLrZVdTJNnFMdbFOMWswxxi0MWl2WJyzYudrVkN9vFFiIZy5Il+8CbuQsNuMQFgbYU+gmlfQvFUtqC0NZ+sFSkiDh12uIHMj4ECS0MRFCgRXCgwFg7Wdz23/O8nZWuVUzk4p8+fc/p88v5n/Oeclytpt0Wm44x1DLrLnovx3RUp9Ub9FAxqnUXvZdTb6lWMAwDsVi87qL3RgFEYtG6KS6gWFSEomLhY0XjEqkobmy1aI5YsgpA/aKBc1e0GJqywnvTBu84+Vwt8mxg3IwWjwTXRuvhuxUnh2gk0ABPjxoiSQEYtQqcOlMYIBQK4Rt3YSZ0DJNLNkwtOaI0E3LC3S2H3cXH/MpZTCxaY3L8yw2YWLChxr4fRaJD0YBCoQC+sRaS2IDxewZM/2HGzQVj5Dz3lxUWVw5MP/AwF3Lj1mINAiETxu4aWAVCdbh934z+CTXkmq8hlvJiAd7RFtwOOjE6p8fFfgVuzNdi9k8bOZeia1gN55lcmJ083F1pQ+ewCp1DDPy/m1h1jzDovVGB4VkdFNo9jwfMP2jChWsyJCVvwfVZI35sF4HD4eBo00GcvMRjAUF0QsJ8hR2pyZgOWUh1dux6KwVFii/ZqtYEtPXJkPzSC7g6Wo5XUrbi86z3sQAXHK0HWcDyP5fh7pEiYUMCfh5SYihQjeee34TzXTLW1jUBF/vlePW1bfjw43ewPSWJ9MCCXx/YIwBqkT9Yh5TUJFRb9sF5uiCcR6r5ZeYpLLriU2Bj4gbWGlrJoF9HbHBEALTJ9+DAZ1+8h6y9H+C7vE+QnvkuqbIRvoA2DkAVDWj3loKbwEWJZg/xNhV7sz/CIprhOPkIMP+3HTrTPux8/WW8+fYOMPpvCMAZCzhiqooB0B68uHULAkEzyo3fgsPlkMky4vi58BRRgD9oQu9YBRI3bQSXyyVTxrA2PhXA0yvB5s2J6BurxNSyibUrJ3c3TncIIgDaTHrhG7u2I3XnNnacA0HL2oA7K41k/vVodgvIS1ZLLnGw03GmQxT1Hkz+dgSzKza09crhuSpjATP3rWyTSw/HAdBVMTjeCu+kEV0jCgxOH0b3dSV5oRTwTlVi5E4V6o/th61JiOmlU+gYkrOxgSkNiWvYc8+oEpcGZCiryloFqA8D6Ir1dFXiVDsfzR4eTrT9X3w0/vQ9jp/l4UJfGVzu/Jgc+rvWywJYT2RDJM17BGDXNVmvJUo+GI0QqgoqQYxoTFnOQ5maT77Hz6HPGU0hWdnF4XX9ECCRSNg9XiwqJNUICbDoCXpS/L/Ywz8ci7VGQf3PyMiATCZDeno6cnNz2TNNehZFAPkF+cj8NBN5eXlIS0tDzoFsyEvWCVBn1mp1Oh2kMimUKiWxScI2XF2uZpv0LDIY9fgXDacNWwRC6S4AAAAASUVORK5CYII="
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAALgSURBVEhLYxgFIwswaRl65ti4pFdbOcSTjW1ckqsNLAKrgOYJQ4xFAFbv8IbPJS1H/ufWbCcbFzbu+x+TOfs/0DwtiLEIwBoY2/GguOnQ/5yqLWCMzQBcGKQ+G4gL6nf/j86YCbJAHWIsArA6eec9iM2a+z88eRIUT/4RkTL1c0TKlC8QDGQnT/6G4EMxUAykPiJlMthwr5BarBYw2LikXE/MWwRWBNT0X0JKIwsoLATEYkDMC6U9gJgPiEHiEkDMBcSmPqF1/+Oz5/9PyF3w382/FLsF7kEV14qbDv7Prd72P6Ns/X9pDUvvDv+yxonR9TJt/hVezf4VXawMrAa13gVLJ4U0K4L0dARVl0WZ+LeHpk79WFC3+39hw97/QbGd2C0A2nytoH7P/6yKjf9Ti1f9l1Qz82/2LdlY7VPQA8QXmvzLdIHKVCo88z4A+ZPr7etZ6n1L/gcZedUHJ096D3JYXu2O/wHRbcRZIK5i4tvkU7ysN6zpf6VnnitUmWK5R05FjXfhnXKv/FKgBY942Ng0QxMn/CXZAil1cz+QBUBD9tV4Fe5eFbqKGahMLdc+RabKu/AzMMh+tgCDECgmFJ40ERy0pFvgW7yn0iPXvtqrcG6Nb9EaNjY2sMZq78JtIJ/NCG9WBnJliLYAFEnZlZv+pxWv/s8nKu8xxzJIHirN0GEfbwGkwBpvMTCwt9pE6IHYQCAeljjhf17Njv/5dTuBFrRit8DaOfl6dPqM/6EJff+D47r/27qmb7fzLmh28i3qcvIt7Lb1LWywckpc6uyTP8HBr6jNxqeg3sW3sA9YPCwEJVOQPpBPgGL/YT5FAb4RzTdALkgvXQPEa//n1+4E50xicGb5erC+7MrN/0GO5OUVxrQgILr9Xnn7MWA47iQbFzce+J+Yu/A/D4+wBtRYBLB3yzgVmTr1XXB8D9k4LGniO4+gqnd8fHwqUGNRAKgIEKQSBiXpUUAIMDAAACzLMF4ss44GAAAAAElFTkSuQmCC"
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def Set_values_Greater_one(self, Objects, Keys, Values):  # 当key大于1时调用
@@ -179,7 +180,7 @@ try:
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
                     sc.doc = ghdoc
                 finally:
-                    self.Message = '键值对赋值'
+                    self.Message = 'Key-value pair assignment'
 
 
         # 物件键值对提取
@@ -187,7 +188,7 @@ try:
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
                                                                    "RPP_Data_KV", "C2",
-                                                                   """对物件的键值对进行提取，当Key没有值输入时。提取所有的键值对.""", "Scavenger",
+                                                                   """Extracts key-value pairs for objects,when no value is inputted for Key.Extract all key-value pairs.""", "Scavenger",
                                                                    "K-Object")
                 return instance
 
@@ -206,22 +207,22 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Guid()
-                self.SetUpParam(p, "Object", "O", "物件集合列表")
+                self.SetUpParam(p, "Object", "O", "Object set list")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Key", "K", "需要提取的Key-键,支持多键查询")
+                self.SetUpParam(p, "Key", "K", "The Key to be extracted,supporting multi-key query")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Keys", "KS", "提取的键；当Key没有值，它提取所有的key。反之只有Key")
+                self.SetUpParam(p, "Keys", "KS", "Extracted key；When Key has no value,it extracts all the keys.Otherwise only Key")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Value", "VS", "所提取的键")
+                self.SetUpParam(p, "Value", "VS", "The extracted key")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -237,7 +238,7 @@ try:
                         self.marshal.SetOutput(result[1], DA, 1, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAALaSURBVEhLtZbBSxtBFMYXL1ZRqIbERulFiaDgSYIELVQToqX0YFsNJfageJGCOcSqTUwaY7IJ29pSNOIfIIIgCNJLESlK0YPY0ksPeggEqUcxYklU/LrvOaltkaVL4w9edt+8ee+bnZmdjXR6enr//PxcIUskEkpLS4vS1GRVbLYm9arPrFYr51OdXE1J/UlAZWjIi+5uF16GQpBjMcTicUQmJjA6OoKRkX83j8eD9vZ2vhIkoATGxnDnrh3D/jAi8UnEXr1DMBzH+w8fuZNeDg8P0dXVxYLS3NycQiN/5hmGwVAOk9HIZii/iQrzbXz++k2k6SOTyaCjowOS0+FQIhEZwy+CqDAZUVtbK8wCc2UVPm1uiRT98BPYbDZl8s1bPPeFUFx8A1WVZjbzLRPKDUZsbn0R3fUTCAQgNTc3K7IcRTL1HQ9dT9H5+Akeudy496AToehr/MhkRXf9jKlrywKkdB2wAE1RMBgUTflFU2B9fR2Li4vCA6anp7G0tCQ8YG1tDeoOFB6QSqUwNTXFWzSHpkBfXx8sFgvf9/f3Q5IkLC8vs0/Mz89z297eHvterxeFhYVIp9PsE5oCg4ODaG1tRTQaRVFREVZWVkTkgmw2i9LSUszMzLBfU1PDOb+jKeD3+1FSUsKjbGhoEK1/4na74XA4eHoKCgqwsbEhIhdoCvh8Pk6iEZaVlUGWZRG5ZHV1FSaTiaezrq4O6sEpIhdoCgwMDKC+vp7vZ2dn+Ul2dnbYz0EFq6urORZSD8m/0RSgIK2Behiy39jYCJfLdeUo6Qm3t7dFyyWaAsfHx9jf3/8lQIfX7u4uTk5O2M9BgrSTzs7ORMslmgL5gAXoS3StAurcKlctUD6ggUtOp1Oht/A6oLrSwsKCYrfbcXBwIJrzA9WjuvxNHh8fR1tbG5LJpAj/H1SH6tHUS0dHR/yvIhwO877v6enhN7O3t1e3UR7lUx2qBwA/AdFfSvBR19pyAAAAAElFTkSuQmCC"
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAANDSURBVEhL7VVZaBNBGF5EVHyxKF4P+tCiLagPCoIIUlSwbTaJ1ip4QZU2m03aZGc3e+8m28OmFkU8QLxARLSHTZrG4oG1HlBBBEVfBGnrswpFiqC0lfGfdStL6QXx0Q8+8v//fDPfP7PDhPqPOcGyns5n5RSq0XuuBuX0tVwYUjPXIsb9c2wstdFZnqJYOR2Sky9xWMvikJLJmbGGZxgaHjhodSywDYJS1/mo+QAzWmcRx3XlMUrHEkZ5vITEE3mlE89GogtKqVs10CyJ/xjI6TOwLVyjppfZhRwREuGolC5MGrMLEwZVWvdKkuse1G3QSCaxXBLe0FRuvNI8/E6SE4ie8KpkuSGafq7QKVFqmbC+eb8pWdsOLA3KmUtTGrDWoxUkN7wCNrzoZqQ0srDBr3yu80uDWmlkuS0GGB5h+4XDzRga6XVKlObhshePNOPGLfsKGP3e2ZkNPGhYo9GNOM13NexTR1BJYLUtdGAVW/Nh8U8JX2yM28vlWcWVi0xv7AepkXFY78qMBiAcqvfLozBplN9ds8kWTYLu4VrOHTqJ495YmU5zJSSGxpJkjJXS12c2oPmBpnIdJ3ziT7E0UmCLJiHujW49VRHHOo3ugEH7qQoTm35hMxmb1cCg+S/AHujufZ1fHiJHYAtdsChrnuZBHy2fNA6N/IIdfXCG5mKARuCYrqo0ym85kIAPLrTawkmAnTa3VCQwIcw56ZTntINxYJbEaimHyO2ADo+T3A2zjN+U8ItjsINR04c2OOXpDQJ6yr4tcEX3uCfAMXjduRsSHV1H6KQ2pjX4W8gRYHCZvElugwtc/BFmpbs7WClTyAidRYS1WrYoILZOeYsIYIG1RDOhJ2Sl9sKglO4kD2cld8N5i6TUUbHxORbq+zBf1+viE/u3WmiL2EIXqvi2E9H4wynm9GI52U9e09fkb8CRg4mYKo+Y9xVWSv0lAwyp3W9jYF6NWnc4Uqoa3dklNDzFYaV70K0nDCsZtVbviQbQn+85KyrFjlXQ6XDEfPCVYbKLjwutayD/Dvx2At3Od2S5gXQsNr4gHfeF1ew7cnTuHf0TBIQ22Tj9BstN/biKbz/mlP8tWCXdwogdyEnnAIr6DXgFXcbMTo/FAAAAAElFTkSuQmCC"
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def KeyisNone(self, Object):  # 当Key值为空时，提取所有的Key值和Value
@@ -287,14 +288,14 @@ try:
                         sc.doc = ghdoc
                         return Keys, Value
                 finally:
-                    self.Message = '键值对查询'
+                    self.Message = 'Key-value pair query'
 
 
         # 拾取图层物体
         class PickItems(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_PickItems", "C12", """拾取犀牛子图层的物件""", "Scavenger", "K-Object")
+                                                                   "RPP_PickItems", "C12", """Pick up the objects of the Rhino sublayer""", "Scavenger", "K-Object")
                 return instance
 
             def get_ComponentGuid(self):
@@ -312,28 +313,28 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
-                self.SetUpParam(p, "Father_Keys", "K", "父图层的下标")
+                self.SetUpParam(p, "Father_Keys", "K", "Subscript of the Father layer")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Unique_ID", "U", "唯一标识")
+                self.SetUpParam(p, "Unique_ID", "U", "Unique_ID")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Boolean()
-                self.SetUpParam(p, "Switch", "S", "插件运行按钮，输入‘True’执行，默认不执行")
+                self.SetUpParam(p, "Switch", "S", "Plug-in run button,input 'True' to run,default is no execution")
                 p.PersistentData.Append(Grasshopper.Kernel.Types.GH_Boolean(False))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Geometry()
-                self.SetUpParam(p, "Data", "D", "拾取的物件")
+                self.SetUpParam(p, "Data", "D", "Picked up objects")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Info", "I", "拾取图层的信息")
+                self.SetUpParam(p, "Info", "I", "Pick up the layer information")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -350,7 +351,7 @@ try:
                         self.marshal.SetOutput(result[1], DA, 1, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAJNSURBVEhLzdXfa09xHMfxj99hmCJtWIsoU27Ijwtbm5UfNb8mUkuROz+SCCG5k2T/gVwoLTQpsrTtbtSauFNucUUuhMTi+fwcn2w5zvf7HRde9eh73ufH53w+53zO5xv+t0zHXEyL1T/KTJzEc3zFd3zBUxzFX91sM97BRntwGgdxFn1w/2s0oeLsgg08wmJ35GQZBuB5G91RbmzQi27FKksHuvAAN2EHUhydj60mVmXERt5icqyyGz3ETqzCbvTjOswMfMKNWJVILez9kViFcAm3s83fYs/PZJvhArxudqwKkp79Ajgth+BMyouPZBAT0QCva0VhnJLfss2wGveyzT/GR7cUTldvcACFOYZhjMcK2EBRelEHR+kN9qEwTjdPdApOgB/UEuRlJR5nm2EdvG5NrApiT3xEV2KVDdmveE6sfmU+XqA9ViFcwwdMiVWJdMLeOHRzCo7kMg7jKp7hEIyj9fzzsSojVXiFl3BxM4vgjWz8BJxlZiHewNGU1fsUe+U69B573ZGT/fgMO1PvjkpjL+/D4d+FM8vYU2eP++8gjXLM2Q4b68Y8pJW0ogWuVLbARj/+/G3EmDMOfv5T4QuvhtkBX3xaDlx3PO55fjNelxsPuERvQDP8o9mKbbDRNizHyFh73BXWc7UJLbADo166vXiC43A1vQhP3ANv6qI2C5NgZ1zGrT3XRr2JnToHP0BXVpfzUdPW4fq5+/fn8/WZe7E9cwSp9sX6a+1+j9u49Xp4/VrYgZLxudrb9C5cRrzQ3/TsPe55OQnhB3JubI7cUR5DAAAAAElFTkSuQmCC"
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAARvSURBVEhL5VVraBxVFI5a6osWhFalIiiKomhEml+CBMGCFFssGmyTNpvsbOY9+5qdxz6SSVtDEtLUZzEbkyabZDfZzc7uZje7adKmaZXGVGmhvqCg6B9Rq9hYsLS+xu8uQyE/JBv0nx9c7txzzj3n3nO+c6fq/wPaH98kRIov8qG8WwjlXUKoWGOr/h1qa411vJ7vEkLTfwYOvm952uYsX/sJK3DwtCWGpj9rCUw8b5uuHZJUulUMTi/oXUsWr+dGWf/k007nwIZmKbmZVbP1CPC12nHGcslJyt6yNtDK5JDW+aHFaOYussZN9iE1A7hNB+NL3kdkCFKUcRtOTm0l64rBBHOPk40tcuoAWcPRJ3D8JadmB3l9qiSGi9dYNV0P1U1iuHSFCaRPEbuKgRS0knw7jKHbGCUzDqcrHHBafgen5SxOj99FByb3S+GSJQWTm2316mAVM4kU/SAZpY2skll2yuYTtuoGGCX9EauZAqtkn/UfWECwbOVpYtVMjFHMnyl34h5WNS9TvuTDtuoGIF/g1IyfUc1tvv0nLUHNPmmrVgcCcKQGYMiDcDTLgkW2qgwuMFlNUiQouS20nOrntdxvsjxyp61eHaxs3o28/s7puXSDNLoRRf4WYw638nH61GExUrqKwN7dwsAWkh4mYEbtrZXD5Z+Qwj3nLLCn+1XuyP0I8IYYnv5YDBXmUPQXnJ7RR6XWY9+LkZlLtD+/yd62NoBBbXrXWQu0PF9VV3eLLa5yecfLhXVHjn1HecYfs8VrgyzPlnMKtmwnzwM5fXmNJvO0zl0XwzMX9tDRTbWGsY7IKwKKVoMcdwrB/JK3/cSPjJYrd7HLl9ildS5aKOwIHywsuttmrzba3cyomXl36+xFdHqMC+Zfqqsz1hP5CtDeRI0ULp4VQ8U/BD3/DeE4RgmpOLSbOlJdtpHTSvjQeUt57QOL8ie3EdleJhqgvPEUq+XOgEmfol7X4OcnRs0yRF8Gp6SfwwmuuyMzJ52+RKRJGu5vEoffbcYMpxhJlnQ0scVGtcWfcpFv6Ha4vIm3Kc/YWw5xuLdJjEUdUkwSQ6Ve0hdo0B5iRxrmlBAqXCDf9XTf503CcIDVMgqC8lrn0lMeY+EBX+/i7YZh3VzeABgpaz1o/JDeubQVBFAZJdveyB+NNjDRGaJvUdKyp23WKhvTqtnsNY7jfS/2OIShl3H613GiwSYplnZ64yZOOE55EzGkYoDyYHjHYk5PfNLpHStizDmlkRK5tYMbpB380L2cnm+G82V0eKEcgIDTzEYpUrqCIL+iUAW8Rd2ULyEjoLSXf8/dQPf569k+mcwY0j6mv6WR79/TKAzvpHwT29GADUKw8CYycYkcFnOfYaRWFnuns3sD+R2CJfNg0i9gDOnkZRTwK1bLnsMLexrjOGTzWC+xau4ibC6j6Qi7/sL8BQjS4fKPP2K7/GfQRv4OLjhVzQdzr8CZBseHUbSjeNzioOUI/gvv4C9ncGqumQtPPyMFS5U/1f8dqqr+Bl7RUaDZ9ES5AAAAAElFTkSuQmCC"
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
@@ -407,17 +408,17 @@ try:
                             sc.doc = Rhino.RhinoDoc
                             Data = [_ for _ in ghpara.run(self._get_rhino_objects, Data_list)]
                     else:
-                        Message.message2(self, '程序默认不运行')
+                        Message.message2(self, 'The program does not run by default')
                     return Data, Info
                 finally:
-                    self.Message = '拾取图层物体'
+                    self.Message = 'Pick up layer objects'
 
 
         # 提取指定图层的物体
         class ExtractObject(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_ExtractObject", "C5", """提取图层信息，拿到指定图层物体""", "Scavenger", "K-Object")
+                                                                   "RPP_ExtractObject", "C5", """Extract layer information,get the specified layer object""", "Scavenger", "K-Object")
                 return instance
 
             def get_ComponentGuid(self):
@@ -435,25 +436,25 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "LayerName", "L", "图层全名")
+                self.SetUpParam(p, "LayerName", "L", "LayerName")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
-                self.SetUpParam(p, "Layer_Type", "T", "默认拿图层全部的物体，输入数字去选择{0：全部物体，1：父图层物体，2：子图层物体}")
+                self.SetUpParam(p, "Layer_Type", "T", "By default, take all objects in the layer,input number to select{0：all object，1：Father layer object，2：Sublayer object}")
                 p.SetPersistentData(Grasshopper.Kernel.Types.GH_Integer(0))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
-                self.SetUpParam(p, "Geo_Type", "GT", "指定要选择输出的物体类型，{0：几何物体（默认），1：点，2：面，3：线，4：Brep}")
+                self.SetUpParam(p, "Geo_Type", "GT", "Specifies the type of object to select for output.{0：Geometric object（Default），1：point，2：surface，3：line，4：Brep}")
                 p.SetPersistentData(Grasshopper.Kernel.Types.GH_Integer(0))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Geometry()
-                self.SetUpParam(p, "Geo", "G", "提取的数据（Rhino真实存在过的物体）")
+                self.SetUpParam(p, "Geo", "G", "Extracted data（Rhino real existing object）")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -466,7 +467,7 @@ try:
                     self.marshal.SetOutput(result, DA, 0, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAGJSURBVEhL7dTJK0VhHMbxlzJkKEqGkqmsTKWk7CxY2FHKioWUMkR22LJRVgiJDEtDkSFjMo9l49/h+5xzz+ae9w7dexYWnvp0f+977z3vub/33Nf8tWSgzy2DTxpu8YN9TQSZTDzhDFeh13MEkix8YQE5uIOyixukOKMEU4RvLDsjY0rxgVRnZMwe7pHrjBJIA6bc0kkF3qHN9jKJErdMPrYFAs3/AjFTiU8kvEAeit3SmnLoMU13RvbkI+I1RrDhlhGjNkWLrrHulv6MY9MtTQEa0YYOtKIGOjaiRdfYdkt/hqEFlqDjQefPNS6gY+EF2oMHHEK/dhG64xMcYw7eP9+XUWyhHoWasETzzeiB7nYaE+iGfqHmIrZ5DOFv6phWW7zzJ1aG4LXZF2+TB3GER+i5l1foJD3APNTOLrSjE7rzmZBVWKMFtEH6ci+aUIUyVKMFmp/FDtT3S5xCrfVatgZr1MuIq8eZAWhxa/rxBm1yXZxqw8bq/wqsyYY+8JwEtSvWnzGoGPMLn8hXlhxAzR8AAAAASUVORK5CYII="
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAMQSURBVEhL5VVLSFRhFJ4eFEGLwMoeKFkYQguhRVgRgfagXRCTK4maae5rZnScuc+Z8YYEQYtCCgOjh4Wm49x756lm1oglBQpRkAi2sk0SlG2Coub23ZnfwpyC0kXRB4f7n3P+/3znnP9xbX8daME47PR1VRF1ccHI8RZ/85BZ3zRgMpLBEvPCUedtL/WE+kY5JTlDCfoULRqTbiVteoKpS2TKn4OR9EPI+JM33Dfm8HYW07yWoXjtnCug7/aG737xhvoeOOR4MZn++6CEqMMb6m8hqo0RtDFa0K5Y4xPujgpv08CEi4/W5pyLAQQfnSWYhWmaS8hw4ShEsKj4jwloQT9CBaJ7ifpT4JiOU4J2i6gFgbtynOWNGqLmgUVP6YDWZY3tdvsyRoodYKT4BXzvM2J8mJMSraycqKECPQHar1XnFhUAy0ZWo8IXlKjfIaY8QDCEC9SBDEW3kpqGmIxoTKCyLthvM0LsuXV7OTk5DrKAS45WqGpm+X5VXU6JxhYkcpJTUsOIM0Xz+itG0C+T0HmAdRCBeuEccMvJs+5gvIy4voHio+UgOA+Zhpggfwd5y0oxE9V94ORUAgQHEWcEbbpKluXh4vVHyP4GUXOglORmvDd73EpyV71qrCHmHGglXuWWUw5ONJxIaJ/P172KuGy0qI8gmetEzQOsD0HQdorv3MTIiWZkOMmIsSwyzKJVJislPsJ2D76jZMkcqKq6lFPSx9CaRorXH8+rAIHSKG8CL+V79PI1Sr5Ii1q1S4yUMlJ0K57nWtj63cE02hF/A9KbNB/1o7VhWogl4JvxhvtNKqBdyyUram0kdB7ofYbmexKckthJTAWBE7QewXwgyaDCl6wYG2eluIF1Tldjx1prDhIdxima16InKE9nA5ENVsacpG//USg+Wc40GiV1XHvR6QZtoyfYu83p7y7zyN3rOE4vYoJGiXUQsOnP0JE5+2kRtFp/KqvnEOv7S8H8LKr+jDEE4+++rO/MoIk9kEnoPOxqZEVDqG8HJSYrKVFbgCQrWcTxeHpXktD/NGy2r6dE2YUM/0/UAAAAAElFTkSuQmCC"
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
@@ -506,14 +507,14 @@ try:
                         Geo = Bulk_Geo if Geo_Type is rg.GeometryBase else [_ for _ in Bulk_Geo if type(_) is Geo_Type or type(_) in Geo_Type]
                         return Geo
                 finally:
-                    self.Message = '提取图层物体'
+                    self.Message = 'Extract layer object'
 
 
         # Rhino文本物体提取
         class PickText(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_PickText", "C11", """提取Rhino物件（可单独选择）中所有的文字""", "Scavenger", "K-Object")
+                                                                   "RPP_PickText", "C11", """Extract all the words in Rhino objects（Select separately）""", "Scavenger", "K-Object")
                 return instance
 
             def get_ComponentGuid(self):
@@ -531,25 +532,25 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Guid()
-                self.SetUpParam(p, "Objects", "O", "Rhino物体")
+                self.SetUpParam(p, "Objects", "O", "Rhino object")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Text_Entity", "TE", "文本实体")
+                self.SetUpParam(p, "Text_Entity", "TE", "Text entity")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Text", "T", "文字")
+                self.SetUpParam(p, "Text", "T", "Text")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Point()
-                self.SetUpParam(p, "Center_Pt", "C", "文本实体中心点")
+                self.SetUpParam(p, "Center_Pt", "C", "center point of Text entity")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Curve()
-                self.SetUpParam(p, "Contour_Line", "CL", "文本实体轮廓线")
+                self.SetUpParam(p, "Contour_Line", "CL", "Text entity outline")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -566,7 +567,7 @@ try:
                         self.marshal.SetOutput(result[3], DA, 3, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAFUSURBVEhL5dXNK0RRGMfxKxLyWv4NCy9l5WXhH2A1ZaG8/Auy4s+QLSUba6WUt7IiC/IHYIUFK2z4/p45Z0Inc7rPZONXn6bnmTP3uTNz7r3FX6YXFSxhwUGfn0YLaunHNT4aaA+tsMxCzWccOZ3gDTreCCyLUOPQKn9uoeNNWEXmocaxVb604Q463pgaSmpAE7rRk6ETMe3IGtCFGzzgKXgMtV6/1geIyR6gs3+B+vVcISZ7gL76K9SfwxD2Q72BQayGWt80JnuALhTtgik0q0G2oHUrVlVPQu+PWlVN9oBUdqB1a1al888HbELrlq1Kp/QA/eFn0LpdaFelUnrAJbQm2kYqpQes4wLn4TVu1Z9x/Qc5+XWA7ufe6AKNt+vaAD3m1DiFbrcefbiHjjcJywzUeIeme8SfRwZg6YCeofGNRtCm0DPlW4ah/T7uoM+HMy+KT1711l2S3UdKAAAAAElFTkSuQmCC"
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAHISURBVEhL7ZNbKwRhGMdXXJIbRMoVKSUXbkTSOizWoUTZwlI0O7Mzs2fGsmstCoU7pZwj5cb5mEO58il8lr/nfXecdles7IXy1O9i5n2e/2+aecbwX9+tAkJLAoUELxOBJNBF8DISKClrQFf/Atos4R/TaV1AaXnri6CdhbPigqq6QYzOPcIRvIYzeAU1dAM1fP81oVuaueJz2uwjjM1KfEFFTR/ck7cQRw5gGz2GKm/AS0/kGVj6FHbukFap/4jPuUhW3SB8LRDGTuHrnUeoVkCwUdZRopAxUS9g2DINm/8kcYHXusiDxs2uCC3uN/R7gSYFvp7ZxAWidgjJuw/ZuQvZtQenbQUBs5PCKbTZAdfQMmT3Hj+3e/Zp5jBBgS5h30IYO6OgnQ8CRdmEMH7Oz0Ut8v4TF+iwEEXd/iBQ7euvr+U9/4IkCpQtvvdsLYMmO1Rp7ScCKzzhO0hsRd8hkoCtpGaZwgj9VFr3FBRaT5EE0b3uyTtUm2zxBZXGAfhmHiD7T2OhVbUHLnQu+XW8Pu/0A2oapRhBPYH0jCzk5hcjJ6/wE4qiiO1h8xmZ2S+CDhbOqoJ4SgJ1BK8UIvWXSSNY7p8ug+EZvk7wXVu18vsAAAAASUVORK5CYII="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
@@ -590,17 +591,17 @@ try:
                         Text = [_.PlainText for _ in filter_t_list]
 
                         Center_Pts, Contour_Line = zip(*[_ for _ in ghp.run(self.get_center_pt, Text_Entity)])
-                        Message.message3(self, "已选择{}个Rhino物件，提取{}个文字！".format(len(temp_geo), len(filter_t_list)))
+                        Message.message3(self, "{} Rhino objects have been selected,extract {} text！".format(len(temp_geo), len(filter_t_list)))
                         return Text_Entity, Text, Center_Pts, ght.list_to_tree(Contour_Line)
                 finally:
-                    self.Message = 'Rhino物件提取'
+                    self.Message = 'Rhino Object extraction'
 
 
         # 按对象的用户属性筛选对象
         class FilterByAttr(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_FilterByAttr", "C1", """按对象的用户属性筛选对象，或在没有对象的情况下并行筛选属性""", "Scavenger", "K-Object")
+                                                                   "RPP_FilterByAttr", "C1", """Filter objects by their user properties,or filter attributes in parallel without objects""", "Scavenger", "K-Object")
                 return instance
 
             def get_ComponentGuid(self):
@@ -618,31 +619,31 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Guid()
-                self.SetUpParam(p, "Attributes", "A", "物件集合列表")
+                self.SetUpParam(p, "Attributes", "A", "Object set list")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Key", "K", "参与筛选的Key")
+                self.SetUpParam(p, "Key", "K", "Key that participate in the filtering")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Val", "V", "参与筛选的Value")
+                self.SetUpParam(p, "Val", "V", "Value that participate in the filtering")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Objects", "O", "筛选出的物件Guid")
+                self.SetUpParam(p, "Objects", "O", "Filtered object Guid")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Key", "K", "筛选的Key")
+                self.SetUpParam(p, "Key", "K", "Filtered Key")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Val", "V", "筛选的Value")
+                self.SetUpParam(p, "Val", "V", "Filtered Value")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -660,7 +661,7 @@ try:
                         self.marshal.SetOutput(result[2], DA, 2, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAPISURBVEhLrZV9TFtVGMbxj2nURE0WE+NfbMGNizhAsNJ10sIY0DjmJAXG6AeDtthSYLIvGUJBaDfEkvFlx/xYZCoWkCl0pYXxJVQ+OyJJY1wTlshMpzEjMmWrsPt4bnP+cMkcc+sveXJOzvu+z3PuzU1uUCAA8AjdPhjEYAPRc0SRLMu+TqQlqiX6imVvTZB1nmgjbV8f0ixh2ducQTvL+px/Ll9dWPC4bkw6+2DtOYdPztTBWF2Cg7ostJi0JBcgvZl0fH1Is5kbOlmlwtAFI86e1kEpi8PRohR8UJ2Bz1vz4eg+iomBKswOVuD6dQ8X0EnH14d4R3MBl0ZrMdJzHDe8bfjOVomuthKY65WoOp6BEt1uaJVJKFDuwuz4R1zAEhl5mlqsDxlw/3p1GJrceHgvn0FNeRZOVmajpV6Fj5s1+NSsxekGNUwGmb+2urbKhaTR8btzuTDlMbSqN3B70mwEfGg07IO94xg8M/UoVidDLY8nr0sEHbl5WcleNNfmoPeLIrBri1yAhZvlPDr06Y9y+zuYPiLZ6ioSuZyqqIWR/JjF6dJUnN0TjO5sBhfzo/Bl2mYMaaMxVybETzXJ8JwQ40eDGHP6RAwdToD9YMpatyzqStcBwZRFl7qJ2t7JiE4s/l4j8E3mhaM3PRiDcgYD0q3oz96CIQXjX21ZL6A3MwTn00PQJQlBe1oI2t7YjG/2haFTHrt8Lm+niNrdncG334xwagSLE6oI9ElDYZcxcJCgfnkoEQM70QVy9i15sq+zGLRnMLDKI9Gp4Hs+U4q3UJt74zgk2eTUbHdPkhAbCXH4Q8hKA6xSBuf3M7BkhsKqiESH/FVXU+6e5+n4/WErlTw7ns+fnVJv8wdcJK+IU788jDxBmP/2NmJukceOtarT7/8T/TfDxYpnxtS8qWkSMpjDYORAGFlfhJUEOHIiYJHxRuuk0idp+4MxULB347gqxj2jfglOZThGyQcwnLcNFmn0XENh9lO07eGYPrQr/AddzE13YQTmdZGw5768ZFYIg2k5MPxSHnfl92OvwPsODz25PD09Dhw365LmYRTgj3I++t8SxtLjwOEzJdnQlAD2/Th4qxMK6HHg8BkTm2FOxO3GeFyrFLpZk+RxWgoMtwxJFWjeCZ9xB/4yiHCpVCSkpcDgq06uYRsTsPzeDqzUCDFz+LVyWgoMf59IsbH18fitgg/vuwKMFQpqaenhWWmS8PFhKmASYkm/HT+XCdCni7v3D+b/sHIqbf9qg7jlmp7f6CrmnepWxBzpUe9+gpb/g6CgfwBBDUUSb4DINAAAAABJRU5ErkJggg=="
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAMfSURBVEhL5ZRbSBRhFMeFXiooCB96KugpH3oR6i16iCiiqKx86aKy7mVmx73P7rqzrqtWZnhDC5MupJnWbjuzq+6uWi4E2h0NKyiIXqKyC1FEkbW4/87YZxEma61v/eDwzXDO+Z/55pzvy/o/ALCYbGUqlVpH6y5azWS1qVQyQOsNsg0sND0UnE1WRsktqdTXaHLi9ejTJ/deXB/qm4h2d+B8WxOaGnyo9BlxyFdI9T6C4s+y9PRQ8FKyL+9f30SVtB/PHrbCZdmOw9JuHD+2Hx2tOkQuWNAfciEesGFspEMt8ErdJZNIDyU0J5NvEDyrw6PbdXh8px6nm/RorC6govnwinmQHLvgJes8ZSRtqEW2sfT0UHwOJUy2nyyB3GbCg5s1aKkrwJlmDdpaDFRMi/ojB+B374aV24wHY8P49PnbRZb+ZzTOyBLOrdTypd0NBpdyuropkTxx5gqONspobFFQWdOOIr4OewtrsWXPIWzcUYmt+dUoNJ6EWCFDrIpNGpyhqNnXL3NORcNkf2GzBRZxLuWSVDsCqz+BIksQRVYFGnuE1jC0Yg94TwyCFIeprI8sTs8xcO5eFNtl6BwyHFXXIB4eAn2gjsnOhHPJPkv5FQieXtAzmZLWDE4ZZioqeGMTWjGQx6Rmx+AOFwlSdNLkjYOj5D+J/jTyW+mDSqToC709uJ5JpEcnhjYJUu8H+qdTXziruH8QRk/vfa0jsIqlzh2NvStX8ESfW8oHZhahd1sFiZf23D0otGezlL9HYwmsFjw9L9XG/uwJiat9MpZ2j+7jO5ex0H9Hbw/lUNPfGj09UwVKvDHQOI8Xm7uWs5DM0TtDCYtvALw7DJM3ltI5AnM/uXOBdymdVv/VqfGlfrwr9J9byFzzA+cKNfxoajcdrvAEbw+vYK75gRorqQXUHqg7obWZueYHgxjJUydnqsnqFeFSxvnSaOYTNA2NqHV6B7w7QoeLJsp9OZe5M4duyj71wP1WwCOvYe7MMIjKTifdkraKBKy0C+eRYXWSbuUHgwtYSGbonZG1Zv9gCYkaOXdEMElxzdz+f1bWdy0JSlUMibMiAAAAAElFTkSuQmCC"
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
@@ -730,15 +731,15 @@ try:
                     attr_str = [str(_) for _ in attr]
 
                     if len(attr) == 0:
-                        self.message2("A端为空!")
+                        self.message2("End A is empty!")
                         return Obj, Keys, Value
 
                     if key == None:
-                        self.message2("K端为空!")
+                        self.message2("The K terminal is empty!")
                         return Obj, Keys, Value
 
                     if len(val.AllData()) == 0:  # 判断是否为空树
-                        self.message2("V端为空!")
+                        self.message2("The V end is empty!")
                         return Obj, Keys, Value
 
                     value, value_path = self.Branch_Route(val)  # 得到输入的value和path
@@ -765,7 +766,7 @@ try:
         class Add_Layer(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_AddLayer", "C13", """生成未存在的图层（只考虑最优时间，除图层名和颜色之外全为默认值）""", "Scavenger", "K-Object")
+                                                                   "RPP_AddLayer", "C13", """Generates layers that do not exist（Only the optimal time is considered，all are default values except layer name and color）""", "Scavenger", "K-Object")
                 return instance
 
             def get_ComponentGuid(self):
@@ -783,30 +784,30 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Full_Name", "F", "需要生成的图层全名")
+                self.SetUpParam(p, "Full_Name", "F", "The full name of the layer to be generated.")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Colour()
-                self.SetUpParam(p, "Color", "C", "图层颜色")
+                self.SetUpParam(p, "Color", "C", "Layer color")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "LineType", "LT", "线型名称")
+                self.SetUpParam(p, "LineType", "LT", "Line name")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Boolean()
                 SWITCH = False
                 p.SetPersistentData(gk.Types.GH_Boolean(SWITCH))
-                self.SetUpParam(p, "Switch", "S", "输入True按钮，生成图层")
+                self.SetUpParam(p, "Switch", "S", "Input the True button,generate layer")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Layer", "L", "创建的图层")
+                self.SetUpParam(p, "Layer", "L", "Created layer")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -820,7 +821,7 @@ try:
                     self.marshal.SetOutput(result, DA, 0, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAGeSURBVEhL5dVJKEVRHMfxZyhTyZCpbAyZNpQoU2yUjaJMyYKNnbBQUrK2EVlIlnaShYUSsbAylSKsDEspkZUyfX+5p2638+7zXi8bv/rU63/v/b9z7znn3sC/Syyqf35GP004whcOUIuoJA0LUGO3D8wiBRGnG7fwNne7RjvCSiHWYWsYzCry4Zs4jOIZtiahPGIYMbCmE7YLw9UKayqhUdgu+q0HVCBoErEC28WhLCMBQZOJSWShEZewNfI6Rz1yMYFUWNMPXfCEASRhGlrz3qbyjinovCG8QPUOWJOHXZgGOyhCCfacmvdYKfadmmwjG77RnZjJ/oQZ5SDUTHeXjBmYxprcXvimCqfogZ6ne7Iv0AClBdrB5tgScqCBHaMc1rj3wSa0o5tx5dTkzvVbk6s/LcaWU5M2WKOdPI5X6MQ3jCEDmmzTQI9Nq011rRpNtup6A4xAr3XfaEQbMA1PUANtIDUuQx3OYM5ZQwHCSh/uYZrMQR+cRVftBl2IOOlwN3Sbh74XUYkmW49KjQ9hVlRUEw99KkNO4h8lEPgG/yjLPxScSSkAAAAASUVORK5CYII="
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAPPSURBVEhL7ZRbTJtlGMdRL9QLk3njhcbopfHCaGLUS403BpTD+m1IS9u1tIUVKLQIlBbW0vO5fC2FDnvipICTJQhZlmFQx2KyucxjwAF2hbGNw4LDuJio+ft8X7/ZLCGLBy73T57ke7+87+/9P4e8Rfe17wolci+zg9fYYPKKjpYP5v/+T/n7lp8Ip3K1wVRuPpxZQ//4LfSN/Yxgeu1iILnytrDt3yuYyb4RSudSgVTuZmxsB5GRTfgTWfgGVviIDG8iOrJFF61OBRKXXxKO3VvudPbZQHK1jaBfs0M3EPtwB8HU2t/QQizz4X9/Bb0f3EQotfoHZdnrjS48KaDullhsfPyYf36SHdq43T++C3bwOn/4DujesYQAZcaVjS7aDpFBAI8I6LzESvszqvoojPZT8MR/pI13XO8F3Dv8iZ8QHd1CfOIXtNpOZxmZ6SkBn5fsqO8FVUNsWdUQRYdzFsFkjo+9YIVYoRKuIpy5CmfsezR2fIxKmfvPskPG9RJGX7hA1dT7oje+eC4ysv1rp+dzHKkNQKOLw9bzFULpq0JzC2DOLQflDHT6zkFRH0f5u52Q10XRbJ6cTZ/cOSCg85IonW9qDQlyfoaAawgkr9DGjyBVuaEzjlHZFvmyccBwZh2e/kXouz5B5REPygisbBiANXSBpmqT+neNzpz4grAP5emCSpnG51X1kcXapuOwBL6kMdyCI/otNLSWa/zocM2iu+ci1M1plFd1gZE6oDNN8hlx42pjL0HdlAIj6d4tZVonCPlAnkzSm8ZfiQ5vTEWGNm5xIK5E2vcyfMNpsmD2zEFRF0IFuZXWRmD2nqX/1/ls2hyzENcEIZJ0o84w/HuLdVovYAuSqz1tXe4zsEcu8UDv8SU0to+Scx9ardM8iHPq7P2Od8uVSNs2BlG1DYdkTmruCd4MN6qRoRu/6cwnWQGdl1LpfUyisJkJeLvdNkMXXOZLZA2dB00WamiEuW9L8Dzk2j5UUImqNSyMrjm+2dHRbbj6FtBimYGSa3ilaUZA3y25xvmcVGmfOqofQJfvLO88nF5Hu+0UZGofDoqtUOsH0U31jlAmPVQmS/gC6tvHwVA2JQcNn75T3nyYYfSPCsi9JVHYq6QqT9ZgnqBGfwOW3h1X7Ae4qTTc08CNrdH1GWp0CZQdNu0WV+iTpaKWV4Xj/0xyueVAtdIZVtQFYXScho+eDlf/AvTHplGtDqNE1LpUXG4wl1UanhaO/DfJVY7XZCr3vNaQooa6UFxhmCsWGareamQfFrbsj6pkVkWJqOV1YXlf+6Gior8AECXdwdGsNN0AAAAASUVORK5CYII="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
@@ -869,14 +870,13 @@ try:
                                 zip_list_two = zip(Full_Name, LineType)
                             map(self.change_line_type, zip_list_two)
                     else:
-                        self.message2("图层名为空！")
+                        self.message2("Layer name is null！")
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
-                    Rhino.RhinoApp.Wait()
                     sc.doc = ghdoc
                     return Full_Name
                 finally:
-                    self.Message = '图层生成'
+                    self.Message = 'Layer generation'
     else:
         pass
 except:

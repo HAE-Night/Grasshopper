@@ -30,7 +30,7 @@ try:
         class ShowPointLine(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_ShowPointLine", "Z2", """显示点序与线指向""", "Scavenger", "I-Display")
+                                                                   "RPP_ShowPointLine", "Z2", """Show point order and line orientation""", "Scavenger", "I-Display")
                 return instance
 
             def get_ComponentGuid(self):
@@ -48,12 +48,12 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Geo", "G", "需要分析的点序列")
+                self.SetUpParam(p, "Geo", "G", "Sequence of points to be analyzed")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Boolean()
-                self.SetUpParam(p, "Format", "F", "是否格式化点序")
+                self.SetUpParam(p, "Format", "F", "Whether to format the dot order")
                 Factor = True
                 p.SetPersistentData(gk.Types.GH_Boolean(Factor))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
@@ -61,7 +61,7 @@ try:
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "_place", "*", "占位符（各中心点）")
+                self.SetUpParam(p, "_place", "*", "placeholder（Each center point）")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -73,7 +73,7 @@ try:
                     self.marshal.SetOutput(result, DA, 0, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAFUSURBVEhLzdY7SwNBFIbh0XjBeBdiChEUxFKwCBKQFBF/gI2ljYKlhZ1YWNgo2NsJghYigsRCIgEvmCaCnRaChYX/wFrfb1bNKljs7gn4wQM7S9iZzJmzifvPaUMH+v6QQuw04RwPOEH5lwrO0IzYKeAFRbQiHTKEm8/rRJnAM0b9qJ4e6JskniCHGjJ+VE8/Ek+gVT5iyo9+ZgCJJzjCenD5Ha1c26XiXiD2BEvQSQlHxb7DE2ZxjE5Ezhj0EJ2Ur2zhHqrJJF6hz7QgcqqYDy7dOK6xj/B25KH+iNwH29gNLt0yVOQFPzLIDC7RhUOoBiMwSTeusIpbbMA0e3iDzva0blhmEe/YQbtuWEbHTKdhzo+Mov1uSIZxCrW4Vp2FWdQQJaygF2tQq+uHxSQ62+rQcDQ2K6pWqm3RygexCTWTafRgvYJVgwPo1duQ6N+CUZz7AGLYNfv2JbNQAAAAAElFTkSuQmCC"
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAJCSURBVEhLYxiSYLdLKP8CY+u4fn3TVqgQ5eD///+M882tHaYamM2coGv8fJGh1f9WbcP5UGnywWRTG7XZhpatE3VNrkzWNf0/FYj7tY3+9+kY/683NDWBKiMftBiZWXTpGP2YrGPyv0vLEIwnAg1v1TK4BpRmhKiiEDQZmwVM1jX53w21YBrQF03aho1QacrAHEtH+cn6ppcnaBv/B1kConu0jf7W6JtqQ5WQD2bZ28tM0jO9DXJxPzBY6rQM+ju0DV+2ahvchiohH8yxcpGaqG92E2Q4KHLrdAwqQeJl+sZmdbrGkWBF5IL59vYSk/RNr4EMnwIyXMugFipFOZhr4yE6Sd/s8nSgwaAkWUetyASBhc7OwsAIvQA3XEufejl1qbe34BR9s7MzgAaDgqZR26ADKkU5WOXiwj9Z3+wU2HA90//12oY9UCnKQZ+trSQwQi/CDdcynACVog6YAbSgU8vw0TwDC2DuNJgMFSYbiAHxBA4BufPsPJKngGxQ8mOqNzaWa9IxAqdzSoAYG5fIbR3PSf9tUk7+t04+9l/VruY/Ewvbbqg8xaBf273vv3PBw/+2aaeB+Ox/l8JH/xXMsv8D5RIgSigA7DwSF0Cutk07A/TBCTC2z7z43yR8HdACxmVQZeQDYPCctEo89N8u/SzCgqwr/41CVoAsmAdVRhEoVbYqAQeLfeYlsOHO+ff/S2oGg4LIE6KEMsDGyMiyRd4k879J2FqwyyW1wIZPhEhTD8QCMaiyngnE3iAB8gEDAwAN2OWI7onDpQAAAABJRU5ErkJggg=="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
@@ -149,7 +149,7 @@ try:
                     if origin_data:
                         list_pts, list_line, cen_pts = zip(*ghp.run(self._do_main, origin_data))
                     else:
-                        self.message2("待解析的点序列为空！")
+                        self.message2("The sequence of points to be parsed is empty！")
                         list_pts, list_line, cen_pts = (None for _ in range(3))
 
                     self.pts = list_pts
@@ -164,7 +164,7 @@ try:
                     sc.doc = ghdoc
                     return _place
                 finally:
-                    self.Message = '显示点序'
+                    self.Message = 'Display point order'
 
             def DrawViewportWires(self, args):
                 try:
@@ -187,7 +187,7 @@ try:
         class CurvesDirection(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_Crv Dir", "Z1", """显示曲线方向""",
+                                                                   "RPP_Crv Dir", "Z1", """Display curve direction""",
                                                                    "Scavenger", "I-Display")
                 return instance
 
@@ -206,7 +206,7 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Curve()
-                self.SetUpParam(p, "Curve", "C", "显示方向的曲线")
+                self.SetUpParam(p, "Curve", "C", "showing Curve direction")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
@@ -218,7 +218,7 @@ try:
                 result = self.RunScript(p0)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAFlSURBVEhL3ZW7SgNRFEU3IQQfiNqLCrGyCH6AD7SztUntB4iIAW2irfj4D9FPEKKdoLYhRdCgjWUKiSEQGNdxzsg0NjO30Q2bO3POZS/umRlG/0dH0iPu4faxdMlaZS15O78Ie8JR2jvS24TUpN3Ht3jW9mbWoTRN8BKucYLmHBAtnEda60cqn0ZsacQ7AwhIsSANtPoRaT2KtNI1QDfuhlND5ZM4fL4ejfF8vB5MNvObovQ5w7hGpeG4tBG3AsrGxTNpbQMBZmNajjsBBWDP3qyqdMftOw4LIXzRAICeubXwsBDCpxxg34QpPITwnkEM5qWwEBuPAypeMqUhHStkFoBrH9O+lxIlEPsYs4vwLQe0WHljf/SKLXz4fZdVhJYI7/xyijBKnWJQlza9HFaEXyQQvMt1elz5RWCB4DODOKjJWsOVA2nSt+UXwfbXe0lAKT/4lvwibMRBV6xtbL/de2//eUlfCm+BqTOvCJUAAAAASUVORK5CYII="
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAIbSURBVEhL7ZRLaBNRFIZ/sKUFWx+INJm5SYq29pF53JkJTWgjbZCYRUFxoS7FVxFLUSjFZdE+YqZpmyJVK1a7c9WFiEHoouBGkSLuu3DdjWtd2OtJPAjuUjMb0Q8Oc+ecn/k59565+M8/wHPEmgvQbhQhrhQQObmOaJjSqcaWkE/Py1VRPeTR1j4PoVYRU2SmxtGi9PgFNXD9g+o9Pa/QcOAmS/+cPKLHFiFyyxBjOTSV4+fWVO7OF5W5ta1EVL5nWWA0HBapj8bwI9XpXFJnoh3KtazXnX3uMNcDoZki0wgYJWhvpluPq3RX/F2vI19JKa96IyNUCggfmnyKiHqI0KRImaa0rGdkskkx7nneQZYhm83u5+XeyUPbzkPf4VcYhtFt2+aStO23juPcSyaTbUND6VOOlCss2Ruz0Kee0ITRGCc4VcW2bd2yrCmKsuc4JTLcpR7Pcrl2ZqBbjxFV9Fzm1G8M9vcnyOCz60hFZsp13QyXaoe2aasE8W0SR0Oc+kVfIjFqm+aLnp7uomHEF0zTnOBS7cxADFa2if74zTF0NHE6WKYRvruG9orJp/sIpzkdLHTgt0s0tit0JnPQN+geu/gA2hEuB8MstBP08VXqpHqHFaDvUmzMQUz4CA8sInaIpfXhIxYik2s+RJkMvla6qgStvy9AbNFgjLK0fgroai0ikv7Zhf5yCWKHDNa5HDzngX28/KsBfgDbzJHADW3KrgAAAABJRU5ErkJggg=="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
@@ -268,7 +268,7 @@ try:
         class BrepDirection(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_BrepDirection", "Z3", """显示面（多重曲面）的朝向""", "Scavenger", "I-Display")
+                                                                   "RPP_BrepDirection", "Z3", """show Orientation of surface (multiple surfaces)""", "Scavenger", "I-Display")
                 return instance
 
             def get_ComponentGuid(self):
@@ -282,13 +282,13 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Brep()
-                self.SetUpParam(p, "Brep", "B", "要显示方向的面或者多重曲面")
+                self.SetUpParam(p, "Brep", "B", "A surface or multiple surface to show direction")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "*", "*", "占位符，输出物体中心点")
+                self.SetUpParam(p, "*", "*", "A placeholder ,output the center point of the object ")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -299,7 +299,7 @@ try:
                     self.marshal.SetOutput(result, DA, 0, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAFYSURBVEhL7ZA/S0JRHIafq4j9MQzJP0NBRC0tDQ1BBA2JhZkSJE1tfYM+QFvRIEhD0tJQ0NIYNTQ0V5NTYNHSGhiYpEXc0089kF6u0qUp8IEXLuf83ueec+jSpcs/ZVvhWq4wlqwyqZfgGMYLkHmA/XZ5hFwG0jLubrRaSSj6lkyCqyah1DsjaYVfb+F+NsgrUJ3yCpUTGNadOiL0xkwCcUUkUWJozaRXb/1wBrN2Qmvkhru1eTmZO1rEHy8TWXkjnHxhAHmWusyOPGzZCa25GGU9qPDVxCnF4LTCoxWdkZNl7YS1fHpR5YA8TwR1sEhUTvo7aTMFg5xVXOlHFcMiDsm3D/VloM5hSlecITfYs/7go0eknta1S5jTFWfcwmazqF3uYENXnJGFiaqN0Jong1Ndcc69wZGdtDklySHMy7jRaDnDdSXla1holxuI7cBMbbZR6fJn4BupPe5Ox3M8wgAAAABJRU5ErkJggg=="
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAIwSURBVEhLYxgFgw90Msia9DPInOtkkLrQQQKexCB7o51BOg1qDG4AVLRnBoPcf6AlROE+IJ7CIAumWxkkbaHGYAedDNKOE4CKgfT/DiJxN9SSFgYJT6gxuEEbg/RuoFexGoQLTwaqB7o8F2oEbgBUpNHFIPOvC4shuDDIMcAg3Qw1Aj9oZ5AqBoUlNoOwYZBDehikf7cyyGlBjcAPgClhCSnBA4pgoKMuQrUTBkBNGyeSYAEoYtsYpC5BtRMGwLCcBoowbIZhw6CUBgyiP+0MMrpQI/ADoKYQUlMQyMfAYNoGNQI/qGcQ5QH64mUv0OvYDMOFIclUOh9qDH4AzAeVU4G5GJtBuDAso7UxSHhAjcENZjJIcgHLoMegFIJsCCi88WGQBcD4+NbBIGkDNQo3ABoYAvIFKHzRyxwYBgUjDAMNBvqC9+tUBlFQfKyHGoMfAOPCqZtB2rODQcYd6CpXoK+cgS51BIo7tDLI2IMKNSC2BiZTy2Z+fYdM32mzKiwq4v8zMLBAjaAusMs5Uu9Z+fh5UO2rmsLef0JQYQSIj9/PEVF1JyOq7klxePX9IpJx1e0cz6yjj/xLH/z3KbjyIqTq8bSQ8jtOUOMZGLwztwi6pe094J5++Ixb2n7COBUZHzjtlrpvr1fmkVfeBdf++xbd/O+eefyra8qudqjxlIPEumuRQaW3/rulHbnlGLsuSVxPjxsqRTmon3KFxzfn+CbnxN2tkpKSXFBhKGBgAAC+mdcMRIBuXAAAAABJRU5ErkJggg=="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
@@ -344,7 +344,7 @@ try:
                         center_pts = list(chain(*_cen_pt))
                         _cen_pt = ght.list_to_tree(_cen_pt)
                     else:
-                        Message.message2(self, "B端为空！！")
+                        Message.message2(self, "End B is empty！！")
 
                     self.vector_surface = temp_pt_vect
                     self.bb_pts = rg.BoundingBox(center_pts) if center_pts else rg.BoundingBox.Empty
@@ -355,7 +355,7 @@ try:
                     sc.doc = ghdoc
                     return _cen_pt
                 finally:
-                    self.Message = '显示面朝向'
+                    self.Message = 'Display face orientation'
 
             def DrawViewportWires(self, args):
                 material = Rhino.Display.DisplayMaterial(Rhino.DocObjects.Material.DefaultMaterial)

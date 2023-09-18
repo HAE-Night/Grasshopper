@@ -26,7 +26,7 @@ try:
         class RotatePlane(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_RotatePlane", "S2", """平面旋转以及跟随平面旋转的两个物体，Direction（旋转的轴方向）""", "Scavenger", "F-Plane")
+                                                                   "RPP_RotatePlane", "S2", """The plane rotation and the two objects that follow the plane rotation ，Direction（Direction of the axis of rotation）""", "Scavenger", "F-Plane")
                 return instance
 
             def get_ComponentGuid(self):
@@ -44,42 +44,42 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Plane()
-                self.SetUpParam(p, "Rotated_Plane", "P", "原始平面")
+                self.SetUpParam(p, "Rotated_Plane", "P", "Original plane")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Angle", "A", "旋转的角度，不输入默认为0.5*pi")
+                self.SetUpParam(p, "Angle", "A", "Angle of rotation，default value is 0.5*pi")
                 p.SetPersistentData(Grasshopper.Kernel.Types.GH_Number(math.radians(90)))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Direction", "D", "旋转轴方向")
+                self.SetUpParam(p, "Direction", "D", "Direction of rotation axis")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Geometry()
-                self.SetUpParam(p, "Follow_rotation1", "F1", "跟随旋转的几何物体之一")
+                self.SetUpParam(p, "Follow_rotation1", "F1", "No.1 geometric objects that follows rotation ")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Geometry()
-                self.SetUpParam(p, "Follow_rotation2", "F2", "跟随旋转的几何物体之二")
+                self.SetUpParam(p, "Follow_rotation2", "F2", "No.2 geometric objects that follows rotation")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Plane()
-                self.SetUpParam(p, "New_Plane", "P", "旋转后平面")
+                self.SetUpParam(p, "New_Plane", "P", "plane after rotation")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Geometry()
-                self.SetUpParam(p, "Rotated_object1", "R1", "旋转后的几何物体之一")
+                self.SetUpParam(p, "Rotated_object1", "R1", "No.1 geometric objects that follows rotation")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Geometry()
-                self.SetUpParam(p, "Rotated_object2", "R2", "旋转后的几何物体之二")
+                self.SetUpParam(p, "Rotated_object2", "R2", "No.2 geometric objects that follows rotation")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -99,7 +99,7 @@ try:
                         self.marshal.SetOutput(result[2], DA, 2, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "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"
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAWtSURBVEhLrZQJUFR1HMfX1NRMFC1xOJbdhT3Y5e3u23vf230sIAu4y+kiaUrjWR6kYqZNFJbKeExjMZORjCEWImZYo2bmgYh4gxwCiYr3AaJueFUI3x7Lm3EmddTqM/ObefM7vt/3+7//PN7zsmnTpt5paWl+Lle8PD4mRu5wOPxSUlJ6d9fS09O97Ha71tP4orw/b45j8sS09amu5NMJcY4/HLHRiI4aiZGREffDw8NPMwyzLjIy8ggTZgNFWbK4sWezYkW2+Z2pkw+6khMxMsIGo14HUqWESkmAVKug12lhMhphs9lA0xaYKRpW1sRksizmJJ7O/IzZkxLjndBpSAiFggaBQLBKIOBPEPH5EewzEyQQxAcGBs4xGvS17BYwcwYmMw3aGgajkUrlpB5ndGLiGMZCQyQUNrIiiWzqpZ7K4ygJxXapRAqCIKDVGVgD1ohmYDBRt8xm83Cu7REmk0ZDhCoQHCwq9vf3H8Cln0Yv30G+w4YO5Y/s12/EqoEDfRv9A8RQk1p2C1u30VdcXw8ul2tAaIjsoooIPcWlnpfe5eVMUmGhcVVKqqTIa7D/fqk0BCq1BmFhYa/xeCk8z1WTB8sWGNgP6XQ6u4/lmawuNGoryuhvrzRHtKEjFkA0urrC22sr9Jt5PN+4YT5BNtagP883Q0oJv6G3SYRB1wyhmlKWPpzGk3jVe/S7i2Xh9MKLZWQXMArojAKuW9F1iQIumoHbFlRuJ3dlTRws8kx4yb2CFcecUJTY4RchivUkn8CgqLjxQcu+P6M/1gnhooKWRU7eh8WfBh9+UK0DWih0NRnRWW8C6liTWxE4WEDs5EZ5/SQ/RVxUt6Ui5Mgot1+WOo3Le+gvlVKimbl7yYKzMJR1QFN6G9rSdvDsGdO76wvHBuTcPEgCp9gNatioZqOBxr3j5q7P3xMqPSLBG5hy1TkXlKeToWxMgjA/ZBmbFouSlq1Vf7AfzEetYCY2wrDiDMhfW6A79BekOTsfsD1D2Hh5yxLR/bsVBqCefmRyOxJHC4m93fo8Ya45X305BcTJBISecEKUOxbBS0r+tGZeAzP9LJjRVQizH4NlXDVMWU3Q/HAVqoqH0KbPLWs+JN2yba3yZkORAh1V7PE0WYBLYTi7S3e5cLlkiseAv1KfqT7vQmiVA4ojTih/rIeuFKBn1oOJr4TVdQKWN2tgTa0Gk1AJ87xGqPe0gyiqwe58EnePG3GsQI7WMg1a6403N6yXLGVl+3rEu/HNUFB+mcRs3/kRe9RXnFAdXwly2z1QcxpgTaoClVYLemKdx4RJqIJ19AloN16G+ijg+3b2hTQVb+7SNMGOollBD3L1QWvLvIn51wj95m0SxTrOooe+g0NISUkClM2xUO87Av2aG6Bm1YOeXAd6fK1HmHGyG7Gb6AouQVPmBn/r1Y4pZNS+G0JF6zmJtstNGAGTFa2kAYsDAuyc9CN83rLlqc7Fg6iaC/JnNwyrzsMyqQ7WMdWgxtXAksyasFsZvmgGsacNAdWAIzOv45ZY/PB3jQHtGiPcbKwWBqdwkv/EZ7hoTZxbdSkKqgNboS2+4zkqJq4SFHtM1Ix6UNNOQrzJDdWem8jO/BptYXY8ZMXvaE3o1FMoFElWcmJPxjuayiDqkkDUTQC56xoMyy94bhI9/SQUeS2QlrgxPWc7GqKTAJkMv7FvvEBG7KgICXXvlikOsxK9epSeTh/+klGn1FfsUB5aA23JPSjzryKouB0J31Vi5/gZgFyBO2otckhTk1hMjO0eesP79ZjwIUMCPQrP4hWZyiEvTQbRnABFZTOs21uQNycbXezvGIQSxaSxPUau+ZhtHdgz8S8YsSDqF7IqGfZPpuKcNQ4IkaOcNGIaoV/PG87v+Zn9J8TiEDVj6lCJJNioNeAztfEAL1Bq46r/DwIf/pcyQnl9qEQxmUu9ADze3/VYyPId7vVHAAAAAElFTkSuQmCC"
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
@@ -153,7 +153,7 @@ try:
                                                                                          center_point)
                         return New_Plane, Rotated_object1, Rotated_object2
                 finally:
-                    self.Message = '平面旋转'
+                    self.Message = 'Plane rotation'
 
 
         # 重构XY轴平面
@@ -161,7 +161,7 @@ try:
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
                                                                    "RPP_Refactoring_Plane", "S4",
-                                                                   """输入代替XY轴的轴向量来重构XY轴平面""", "Scavenger", "F-Plane")
+                                                                   """Reconstruct the XY axis plane by entering an axis vector to reconstruct the XY axis """, "Scavenger", "F-Plane")
                 return instance
 
             def get_ComponentGuid(self):
@@ -179,51 +179,51 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Plane()
-                self.SetUpParam(p, "Plane", "P", "原始的平面")
+                self.SetUpParam(p, "Plane", "P", "Original plane")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "New_Axis", "A", "需要重构成XY轴的向量轴，输入的是原平面的轴向量名称")
+                self.SetUpParam(p, "New_Axis", "A", "You need to reconstruct the vector axis of the XY axis,input the name of the original plane axis vector")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Switch", "S", "是否翻转重构后的向量轴,t为翻转所有向量，t1，t2为翻转X轴向量和Y轴向量")
+                self.SetUpParam(p, "Switch", "S", "Whether to flip the reconstructed vector axis ,t is flipping all the vectors,t1 and t2 are flipped X-axis vectors and Y-axis vectors ")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Plane()
-                self.SetUpParam(p, "Symmetry_Plane", "P", "重构后的平面")
+                self.SetUpParam(p, "Symmetry_Plane", "P", "The reconstructed plane")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Point()
-                self.SetUpParam(p, "Origin_Point", "O", "平面的中心点")
+                self.SetUpParam(p, "Origin_Point", "O", "The center point of the plane")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Vector()
-                self.SetUpParam(p, "Origin_XAxis", "OX", "原平面的X轴向量")
+                self.SetUpParam(p, "Origin_XAxis", "OX", "Original plane X vector")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Vector()
-                self.SetUpParam(p, "Origin_YAxis", "OY", "原平面的Y轴向量")
+                self.SetUpParam(p, "Origin_YAxis", "OY", "Original plane Y vector")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Vector()
-                self.SetUpParam(p, "Origin_ZAxis", "OZ", "原平面的Y轴向量")
+                self.SetUpParam(p, "Origin_ZAxis", "OZ", "Original plane Y vector")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Vector()
-                self.SetUpParam(p, "a", "NX", "新平面的X轴向量")
+                self.SetUpParam(p, "a", "NX", "New plane X vector")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Vector()
-                self.SetUpParam(p, "b", "NY", "新平面的Y轴向量")
+                self.SetUpParam(p, "b", "NY", "New plane Y vector")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Vector()
-                self.SetUpParam(p, "c", "NZ", "新平面的Z轴向量")
+                self.SetUpParam(p, "c", "NZ", "New plane Z vector")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -246,7 +246,7 @@ try:
                         self.marshal.SetOutput(result[7], DA, 7, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAR9SURBVEhLnVVtTFtlFD6Igl8zmYsf8Yf//WFmMjXZGNucC21hlG6Ujba0DCiwjYAD2k1E0wCDMXrL2skUdIkzamI02w+jPzTBJW41EfyBzs0NJpvDEZxkTkmm20qOz3nvvdJCmYsnObn39rzvc57nnPO+pf+0taG7yXfwefLF/OSNdlBZtAfeBq+g8r5njFX/w5ydj5AvGiJvbJTKX2eq7GeqGsATrp749sUY8VN4BsgeXGLsvANz93rBepL8b7ECL+tl8kQWuvxe3oeEsu7geXKFCw2E25gnElbsBDgdqFtjKg0v/H0bElW8gaSRPQZSGnNpGvkPY9GBhQDiLgBv7eH7K1AaeZ8f90Z1Ne6egIGYZKWaS9V2UXAwL+rk/sHv+JerM7y0Goy39MzFVRnhkmTbIVG53kCGVUUeRnB68bJEOKN4H4eOfs1iF678wcv8WFvQrpdLwLd2YZ3xLgnc2hjVx7L1BG4tRP6304OLF3fz0y3vKnCxG4lZvgwVoY/jnC1xJ5Q4WpEwoJdOqiCl8mh+opqBe/BycVH24ijPA2D32bdnVYI/r//NV67NqPfhn6b40WowtgDcUs+U3ww1+/QxdmtDmJrwcxgxo4ZpwMVVCcJ8X1ErD5+7yInZWX6irI07j8VVkvjYJGdam5jyGpisLzHZGtEflMwbTchY1qrDkw5YXMBLu+Fg5Wjnpc4WzmkGofV1TDk7+fDxUypJZfRDfNfo4NZdeqLS/Syj2bUggcy6fS9TCRbIVBS+DPlgtzmEJ5iu2a4DrdvBy8o6+MatBA+PXmJ6AUkFXGLi9hYk8PRqKQkAnuU7wI3vHeflre+DdZshW1jJZiQwAcRzt/OJ0+OqbA85X2HaACJmrAjfGMG9KQmc3fxU8B0lewAzT7nzWM33nFo+Fv9erX/cA4UvotFmTE8QrlIdNxNs2c+P1fWrDYMjo0yra1MBk10SoxdnLk2pybrXHtQbbcbtKC3ujuXqVjSnSOoPFUPjU5xIJPhJHw4TykD580oj36tqeEVDryIjKlLIyLjaGm8ShUJ3QcU5dVmZKhyd7NCOqo2iInMDZMuEWNALYZ2H58pqXrKxmUfGL6t1q5pA0my+uLC3NX5lnORwc8pJFhWbuvjIyTNqc/zHC7waTDMtAMekZAEgb3cf//DzlIp3fzQ4N6Km48xApUtPUBJ6EM2e+FeFlGtzO2fYdvOhT04oELHJ6Ws8MjbBv/2un2Kxjg8+Z1q7Q1dlgst4WneNUElJpp5AzB22qftc5l5uRRfOgJzOHD+vgfwjX3zD5yen+erMdT478Su/+elJXlGHe8csnQlegEYXBGYx1s8ayEnmCu9Rl5QkMZsuo5YLEGkgSpRViDtH2Arwup1zwAocMWGf11BhIKYxTziorltxUSI346bXdJbiAi69SAYWF+CNwVs4lJUG0m3MpVnwn3xaqZGyyRgXGyc6+dDJKMq0iMqC4BAIrDQQ7sCs9dlUHqtBueJQcVP923mhxvGqDijA+U1/oSxfUn6gDDsy9I3JRvQPzTPPJGihTfIAAAAASUVORK5CYII="
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAASjSURBVEhLrZJrTFNnHMb5sK2JizKggEApoND7OW1poZQeLoVCW8qlXGRDuYhzLopDxjaWTIbicNNsSDRz3r7IpjJNBurwQoFNLkq5TZ3T7MOEFaLlotsHo+jM9uyFnph5gWjGL3nyP+f/nvM85z3v3+2/8DYq8nzz6VfZ2/nFnfFZIu0wI6BKtYxtzS9B21TV6jsrsPRgbDPbmlc4YUfjHYqbuRD9YHrgTvuGsP35wXd5aCp1OR2yKxlQDOeAV6Xcyi7ND0v3RjcqRpdBdjEd8uFshDbE/U7aL7lWnw//hf5e7OXjeEZ68sTtxgf0b1kzAdRVK+irmfApEljZR+akRFoSfzi+4cRHisoOtvU4gRVUGfVTOqR9FlBXrJDYzRB1MvDZ4D992NMj+ywtrAqvWrGPOTBgM7XhovUyCsMK3yf9p/FIXcL3Tg1kAj6kncqxbAgOpSFs4yYI3q7+h7Lsc4ozap0C0xanzLrfKS6odKZHvencp9kz3mHpwoW0XvQQ7dLuvkWsFrkcZ8GvjBpW3EyHpKkISdeB5MYpGEpGYCi7AUPxKHSrHCgrbEe/pRvdlgtoMbbirNGG86k9eI/6oJK1mRWOfzlNxjQD4qYC6AfGoT80hNiVA4jN60dcdh9iswahLLKhNvUwOpLbZ8w7UrpwNOHYJN+d78H6zIorwJkBiW0dIqv3QCZTgpIzoCgGtDwGwZQC2do1OGm2odPUhXPmLtgtdqwJXf0j6zEnbAA55Nb1UL2zGcLXOBCHLSbyQ6DAB5lKC1qNLehLuoBt0Z9is24Tmi1t8BWGP3t6nuBRgPj7YuiOdCJq3VfQmvdDYqpFunot2oxnifl51GUehlCrgYDni6wNO+H31voXCxA1Lof+2kMY6u9DnvYdck3foiWpFf2mHnyRUA/NiT7IMq0Qei6CquoThJTOMv9P4AoYy4SkMR+az75BaIIZVtoEm+EkmZxB1DG1EIZHQZJohFQogMiXi9gjpxFUUvECAZPLIK3PQBBNwypORJuZjGWKHTuit0Ag9ENoiBdE3h4Q+y+Gel05TJN/IzB/zTnWY044/u/SDiXZAa85DzkVx9CacAZ9yV3YoTsIpa4SCnUFIlOqoPn4czANZ2AYnoJpAvB7o/j5dyC6Y4XpwGqc0ZyaOdDt+gNQV3aDqRhDfOEI9HW3YRgFDJNA4tA9MOOAMSf/bicvqLWGH7Ka+Hi67J6GE0B2ILlmwdbK3eiP+Rk1+i8h/7oF0b/+AebsEJjTQ4jpHQUzMELkgM5+HYqLN5CVmg2IKdxVaTEoVY6fEEh3lvrxVazvIzhyLe1Qx2mxSpsDR9Ra2CMZ9BjN6IszoDeBKDEJvfok2Bk97NFx6NEwOB+hxSW5CreVkTO6r9YCETo4FBEYlCm7j4sk5ay/G4fmh/y5VCxFMSUB1HJAFQGQl5+SYlpql4jpQ1UUJkidJLpFNEV2AvJx90hYU5hkkvV3ezl4wYJDXlwvWwyXayv08ra9Ppu405U7U3NJreEF/fLXzJdHk98UhUsy5cRxgXhvgY+Pgfi+4rL/H+xaErbSGR6JUwLJQDU/uJS0uK6Vadzc/gXoYYETw49/PAAAAABJRU5ErkJggg=="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
@@ -308,7 +308,7 @@ try:
         class OffsetPlane(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_OffsetPlane", "S1", """通过X、Y、Z端选项去偏移平面""", "Scavenger", "F-Plane")
+                                                                   "RPP_OffsetPlane", "S1", """Offset the plane with the X, Y, and Z terminal options""", "Scavenger", "F-Plane")
                 return instance
 
             def get_ComponentGuid(self):
@@ -322,33 +322,33 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Plane()
-                self.SetUpParam(p, "Plane", "P", "平面")
+                self.SetUpParam(p, "Plane", "P", "Plane")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Distance", "D", "偏移距离")
+                self.SetUpParam(p, "Distance", "D", "Offset distance")
                 distance = 10
                 p.SetPersistentData(gk.Types.GH_Number(distance))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Boolean()
-                self.SetUpParam(p, "Offset_X", "X", "按X方向偏移")
+                self.SetUpParam(p, "Offset_X", "X", "Offset in the X direction")
                 bool_x = False
                 p.SetPersistentData(gk.Types.GH_Boolean(bool_x))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Boolean()
-                self.SetUpParam(p, "Offset_Y", "Y", "按Y方向偏移")
+                self.SetUpParam(p, "Offset_Y", "Y", "Offset in the Y direction")
                 bool_y = False
                 p.SetPersistentData(gk.Types.GH_Boolean(bool_y))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Boolean()
-                self.SetUpParam(p, "Offset_Z", "Z", "按Z方向偏移")
+                self.SetUpParam(p, "Offset_Z", "Z", "Offset in the Z direction")
                 bool_z = True
                 p.SetPersistentData(gk.Types.GH_Boolean(bool_z))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
@@ -356,7 +356,7 @@ try:
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Offset", "O", "生成偏移平面")
+                self.SetUpParam(p, "Offset", "O", "Generated offset plane")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -371,7 +371,7 @@ try:
                     self.marshal.SetOutput(result, DA, 0, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAOISURBVEhL7ZRfiFRVHMcnWTUsUEyoB7USfKioe869M7N/dBOMqJeIBMVKpIdY6tEHCREdl5X+YEEWPYSEZT7ElL4EMtu2ze78uTN3vP90Z9udiXZtqV1X2Fxn9s69M3Pv/PqdO0fbdVdUCALxCx/O+f3O78+5B+4v8L/LyoptdV38ztWJ5mYFFUxB9UaRgqA1xugvjb/I6xj2QDP6LlRRaLuri2fgAgUoSgB5tiJncP9xEOA4IwRwOgTuBapXDfFNuJNGtVywwzXpWb9wQQRQBfByTUAT4Oy5rVD6hkL1NAHnFIHaDwTg1+YlXJ0aVY3uiUQiy3i5pkCVVjmK+Jqr0TRM4K2uhAF+x5uym/82D7R/nNgOMIG3n0Cbcanp988nWW4ruCb5o6bRfXNK6DG/wdTPbWFLDX/o5IKfWynpfSsl9lip4CJsRJfbeso3+ZuwHLGnnBSPzqVCX9ha8Phssn2n3+C/lnOg81T5nc7t3Ly94vH4E4qi7BwYGNh1nWQyuSuTyeyIxWJreZiveCTSUune8v3f3Z2vctetNTg4+GQ2m/0UKQ8NDYFpmgtgPjybxEYH+/r6HuFpAevI1p65ox2Em4uFt9uESZ8hc/l8HnAF9C1JLpcDHjOFHIrF5LXuvg17nf2bNvNy/woTnsGgE4hXLBZB0zTAp7kj2BexnEw2e1WW5Q/wizbysv4br0ulUofT6fQwrpVEIjGDz3MZ17uC58zKcsbBRhdx/67foLe39yFVVTdOT0+/VSiME2z48HxOxuFBqQuWS1/C8i4O20eisCJ6UywjGo2ydV1/f//jfoPrsu1qt2XVwtxcILi6eg0Y8xhfvaZRDKzkx7cX+70tyz5WLtsvcFcAok+vwHn0tmfQIVcjpboilBqaUHJNoeRdJCVvhEx6I+JHVja8nqfcWvhJLbbjKjPVxu54JNBS08Qu1yAj/ghgg07HmTNMoPS1BM4BCaoRCeqH8OyrMBsNs3WDHqvkght4uaX157hBKsaL+z3jueEbhc8L0OCwwfdt6nmwYhS8nwi4vUg/NjYRnF2eQa7VdfJJJU0Xvn050/po7bz0nqs+NeYPsHEcZnmcpIzheaB9rrANYBRjRtFmjDT9PmzoTYaxEYW6Rk+UZfFZv8G1gdbNVTO428nRHXaCvmynxZdsZTF1ZEwJLXl2A8x1ZPpKVRffKCWkLX6D+7qXFQj8A01+NViTqfE/AAAAAElFTkSuQmCC"
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAROSURBVEhLpZV/TFNXFMcLmyOTbVToBlaHQUFXIJJMgw6N6WBmy7JJlhFYYP3Na0u7CBOy/cE61CndmIv8gaIiLBObuBJgjRXdMmwLDErWQKGlW4g4dVNGC122AQaKPTv3vbciBIPiN/nk3ffuOd9733333cN5BG1ANnF2cdLwKkC2ItHIY4u/RSJpzzx3bmZPfd1cals5YBteb2mBtAMHrmP/K0zYypSx/dChm4V374IaAKjADGR6TaCcnQXl3Byo8Nnumprp8FWr3mfjH14R0dFyYUPDLDGW+f0gGfMio7DrDyPkTU9B3tQkvDc9DVLsz7RYIEwo/IxNXV6xO3d+tc9qpWct8flA4kVzrw8K/OPwtuMEVDU1g77VxNBiguMdXXC4phZ2b0j4FtMjGZelFZNYUNBWcOMGvQS0MRmARYRvov7FCUfMbXD4yg/zXP4eqmyd8KF7CJK1Ggf6bGLs5hUWyednvazT+cisi5BCfH2y9vdD4TNF4B6IsF+8CPKsENEiO6q+mHkmIeFd4svYczhRETExF5I1mqsCijJvFonMm8XieSSSi1tkslYaubyFpRnvv1sQJxaZBQqFObW4+MfVfH4r+q5h7FemJ9nrYysiIyOjvrS09Nb+4v233ziaP1pWVubV6XT+nJycbuzfyIStTAm5ubl2m80GniEP9A/0w1FPHTgHBsDlcoHT6YSSkpIxjHuVCX80ZWHyn319fWC328GK29Zis0B5TzVYOzrAioN2dnWBy+2GysrKuTU8HsXmLa/Y2NgP9Hp9kMyyC03IGxDIAB/1fAm29nboCHEVXP398M3Zs5CWknKMtXignkhPT681GAwwODgYMg4N0P0T1DcfA/fH5eD6pCLEYHkF/H7kc7CcPAV7s7NN6PMcY3efeDxekkQi+dnhcMDIyAi9vosZQDxON/0NFtOPfcPDw+DxeECj0VyPj4/fxlrTiuJyuZdkMtlNrVbrlkqlbmyHUCgUTqVS2auiVHYalapHrVJ1UxTlCMXJZW4pXrHPrVarf4uLi7OgL5ex53DCkaeY5pIif2QSQupAKkJqwnbkBeRBIv8J8V1WLwrU6s69TU2BTENjcOuFcsA2vHn5CqTr9bexf0Vb9H9l7dDrR6lAgD77C7EeZP1lBgrrAYGcW1kGQ/BpPr+IjX94Ra5fr808fz5ITKSkHuDJKvaNwZ5bRhBNTNCIESX278P/5Hmh8DibuqzC1wqFJ9/p7aVnveC4HvfCa79+DZpr16AIdxpBje2SCT9QuJOSs7PNmB/6sEtp7UtyuUV05w5TD4jx+HiIgn/+Bt0lIzRU18CZ2jMhTp84DY11DVDh6APBp7oh9Elm7OYVhsfrW9sOHvyXLIkqGATF5CQopqYWMjkF8tl7IMbBxXOBheB3UmAeqQcZ1dXwbGIiqdOhXRSFNbhRoFReTBKJjBvz8oyJK4DOy883pmg0ptXr1mH55HD/Az7pJ4gb7t4rAAAAAElFTkSuQmCC"
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
@@ -449,7 +449,7 @@ try:
                         else:
                             Offset.append(Plane)
                     else:
-                        self.message2("平面为空！")
+                        self.message2("null plane！")
                     return Offset
 
                 finally:
@@ -460,7 +460,7 @@ try:
         class ConstructionPlane(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_ConstructionPlane", "S3", """构造工作平面""", "Scavenger", "F-Plane")
+                                                                   "RPP_ConstructionPlane", "S3", """construct working plane""", "Scavenger", "F-Plane")
                 return instance
 
             def get_ComponentGuid(self):
@@ -478,28 +478,28 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Point()
-                self.SetUpParam(p, "Origin", "O", "平面原点")
+                self.SetUpParam(p, "Origin", "O", "Plane origin")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Vector()
-                self.SetUpParam(p, "X-Axis", "X", "X轴方向")
+                self.SetUpParam(p, "X-Axis", "X", "X-axis direction")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Vector()
-                self.SetUpParam(p, "Y-Axis", "Y", "Y轴方向")
+                self.SetUpParam(p, "Y-Axis", "Y", "Y-axis direction")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Vector()
-                self.SetUpParam(p, "Z-Axis", "Z", "Z轴方向")
+                self.SetUpParam(p, "Z-Axis", "Z", "Z-axis direction")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Plane()
-                self.SetUpParam(p, "Plane", "P", "平面")
+                self.SetUpParam(p, "Plane", "P", "Plane")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -513,7 +513,7 @@ try:
                     self.marshal.SetOutput(result, DA, 0, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAMfSURBVEhLvZRrSFNhGMcXXYwKoisFoa3S3Kam2MYWhQ26QijlpaAg0VNBlln2IYqgsj74peiGZkZENyhKorxitTlnllFaQpB9CU0F8doHNef59393jjnTrRXVD368z3vgPP9znhdezf9kK72glBqJ3lTKv4eWNtB82kjXUV/Mo2XUoa6V9Dr1yQYKmu3e+WYSNdEoGk/FeweoVyJoMxXNxRpH/WEiFX9+zL3zwRF6Rik126j45XHunXdm0jp6173TaKZSEegXk9XVFylUjKaGiqB6mkW902S1Lv0cYF2sbn+FOAdx2EF0obrOoN7pCLGkNWdYHj6TI1Lt/eHSaCOlSjlUsrsMqS3yWjGS36Nrvvlaf9YK1GIZ3iOSitWzDsYHmPAWZtj6FgWrr/kHEhMntRuMjd2rzXB+jYADYagcFIajEktRhSA4XyfBlnUe9o5olwOBi9RX/eOTxTK3VW+sbY0zwdnEANmgBMg6ONssqLiUhZLIN3j6YC+fBbkcveG/FyDonrhiR9M9E2xQm1Mnv/zp5eMoXtiAoh13UOXS87nOn4AJ6jpMzxSz9OWWCfahADGaAQPKD+XhsbUU5YXJqIYWjoEwzwAjvaSUP5hNq5TSgxEB0HHuwXiWmY+Sk9mwdYXD8S0CL3g2PwWIZp00yb1TyKGFSunBcIBoroXt9DkU78/lgS/hqEIYamAAg0YGCDbRDjqezqVdVFygI3EH3DaiAoGw55xA0c5bqOjjIXNUQ2fiJUDwhJ6lV6i4lUfTE2CWmgt1eF56EEUJD2DvjGTzYDZmUzZ/BT3eiPGNHSBG1U3F188SD0bRq9VK7SlpsCU/Qk2LSa6TtXKtrKc6uV4Ole/3LkfBgBGvBg0uYMxr4RQduvxG0xATta/g8GnsepeC9K+rkN62ga53m9m2DtaGWBg+xiOpOw7WT5svmuq2L1BfHWIPzVXKMbiYtjFkdc3a1ID3a6TpZQnS9PJhp5UnpIZWxzrD6jd/CareclX/Mi45+vkmMRZP0mmeUv4BK4sS5sTcS5ymbscig4pD/mccpTeU8t8QS3crpUbzHdgixmO91slmAAAAAElFTkSuQmCC"
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAPQSURBVEhLrVJrTFtlGO4PoybGLKIpm3aF0VKh13N6OC29nZqxbJTVQsbGZRcGZlN3yUBnjDplENu5RDOjZgnRPxNj5ozdhgOjY24z2cbmgEK5yJQEKmEHCv5wkymiPr5tT9hiHCFrn+TJd877fnme9/LJ7oRiH1OZvtn4kPSbWixxyrN033nwRD23QQqlFhkHuca8m5ugOiK0SqGU4oHsY09FmOtlyDlbOLvEmL5CiqcG6RvVXkOvD/q+YjAj66GoZwNSKjVQNdmPM2MboA/5YBophfqoe5TC9yWySSLNkqbI/XbNrHF4XdzAMFBMLIF8q6ZEupIclr9sqDN0+6C7UgRDXwm0l9dA2yFgae3jsWXHnuzD0nk3Pki8Ox7xZinTSzOtSr9zlBn3QfvVc1AHPkbWmx/+k13bLGo3fzqh2dEsanY3i+q9n4hZDc1EOhvp/+0T4qOeqqAktTCU/oJB01ghTB1+cOeAvPOzcL4VhXtXBMIbItwvjUPYJ8J25FfwlOM75mAbBJbXHbooSSwMZaBgyDTmgfHifrDf/Ab+o5/hquyBq4K4sReCrxvuwk7Y6wZhbhHBno6SyV9Q7D54TpJYGPMGHfthbr0B22vX4qKudSG4ShN0F3XC8Ww/uM/GkzQ4dQNW/zCcW8OwV4Xh2BKGs6YPrjLqZlMv8ut/pDsT4K8k0YHl3RE4dvTDvr0fjuo+OKvDcXGBOnHWhGEOXgf//d/3YHBJMnh/FI7n++GMVU87iFdfFoLwdFf8mzs2Dv7qvRjc0UF8LOtDcFSQAVUuFHfHDey1tOikRtR2E9bAMAQSj43ERiOyV9J4vFQ9vSq+KQL2zPySz0oSC+O/HeTTkoXYCyrvge2FH+K7iHXg2DkA7nN6Re1RWMhg6c4Di+zgQMGQMeqB4XIDTF/PgPliApaGYVhe/wl5h0ZgpdO69xq4wxGY2qIwtU8h59IcCqtfmbmgULT7lSu2kUxaQu1/kBFYNcR3eWA+3wDm9C0wZ6bBnoqC/ZLYGoX5+CTYlknKTc9TTQYVNa8CObmY4Wzo0rGTLRrde3uWKTlJ9jbMK61DvGBH+eqVCK+tQKioDN1rid7y22eMsbjETm8lBhwFmDZx+IW14I88G8A7EGF4dOnZCydztC9K8jIZk60RVToDtusZgOEAk3lRnCPhKHGKOE38nTqBxYlbZHYiWzslyctkmoyMD+SZyuBq9ZPBXWptcNsi+IxaH3xHlXP1z3jldhpTPnr0bPSkJrdpi1y+imTvT6gngcOZqirRbEGbRtvZqMzcQ6HHEpkYZLJ/ATSQkFQMCKhjAAAAAElFTkSuQmCC"
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
@@ -627,7 +627,7 @@ try:
                     self.origin = origin if origin else self.origin
                     if x == None and y == None and z == None:
                         plane = rg.Plane.WorldXY
-                        self.message2("你不给轴，我就输出XY平面喽!")
+                        self.message2("If you don't input axis,I will output XY plane!")
                         plane.Origin = self.origin
                         return plane
                     else:
@@ -639,7 +639,7 @@ try:
 
                     return plane
                 finally:
-                    self.Message = '构建工作平面'
+                    self.Message = 'Construct a work plane'
 
     else:
         pass

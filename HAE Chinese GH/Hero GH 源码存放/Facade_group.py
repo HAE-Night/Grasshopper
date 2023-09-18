@@ -32,7 +32,7 @@ try:
         class SurfaceKeyPoints(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_SurfaceKeyPoints", "F1", """获取曲面板关键点，角点、中心点、线中心点""", "Scavenger", "H-Facade")
+                                                                   "RPP_SurfaceKeyPoints", "F1", """Obtain the key points, corner points, center points, line center points of the surface plate""", "Scavenger", "H-Facade")
                 return instance
 
             def get_ComponentGuid(self):
@@ -46,26 +46,26 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Brep()
-                self.SetUpParam(p, "Surface", "S", "待获取关键点的曲面")
+                self.SetUpParam(p, "Surface", "S", "The surface of the key point to be obtained")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Boolean()
-                self.SetUpParam(p, "Center", "C", "是否需要中心点")
+                self.SetUpParam(p, "Center", "C", "Whether a central point is needed")
                 bool_center = True
                 p.SetPersistentData(gk.Types.GH_Boolean(bool_center))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Boolean()
-                self.SetUpParam(p, "Corner", "Co", "是否需要角点")
+                self.SetUpParam(p, "Corner", "Co", "Whether corner points are needed")
                 bool_corner = True
                 p.SetPersistentData(gk.Types.GH_Boolean(bool_corner))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Boolean()
-                self.SetUpParam(p, "Line_Center", "LC", "是否需要线中心点")
+                self.SetUpParam(p, "Line_Center", "LC", "Whether a line center point is required")
                 bool_line_center = True
                 p.SetPersistentData(gk.Types.GH_Boolean(bool_line_center))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
@@ -73,15 +73,15 @@ try:
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Center_Pt", "CP", "曲面板的中心点")
+                self.SetUpParam(p, "Center_Pt", "CP", "The center point of the curved plate")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Corner_Pt", "COP", "曲面板的角点")
+                self.SetUpParam(p, "Corner_Pt", "COP", "Corner point of a curved plate")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Line_Center_Pt", "LCP", "曲面板的线中心点")
+                self.SetUpParam(p, "Line_Center_Pt", "LCP", "The line center point of the curved plate")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -100,7 +100,7 @@ try:
                         self.marshal.SetOutput(result[2], DA, 2, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAJPSURBVEhLY6AL+BcXof3P2+/YVzuXBQJsbH5AIazYqn9zqtvzfxs0JhzIwiYPwu4SEkH/vHx3/nNw3/bEOUAYKMbA8NDFpfq/vdP/R6ZW/0U5OP4DhbBiw/Zt/y2u/v+v0bIPqzwIu4qJ/geZ9dPS7v82K1s3oBgDQ6KCgn6BjOy/QDHx54yMjL1AIaxY0j1pmlbTrhNS7qkzscmDMB8ra3+GlPSXeEmpj85SUhAfAIEsEINccAzMoxw8BeKPQMwF5gGBIhCDLDgF5lEGWIH4ORCDLOABCYDAqAXIYGAskABialnACMSgVPQBiDlBAgyeWx8Hm28/+1+hePZpsAAOEPEzS9vrf+EC22/J4VAhDBC99oGk6ZLjH7WmH/xmWL9LCixov/TeOvMz//8bLXt3y96+ngUsiAU4nQlZY/s/7b/+Yb9voaGhbFBhFOAx74Kv1UGgWdv//zfvOecKFlSKqHaSDq74L2jgchIsgAMYzrDz1VricFmzx6oNyAUFBQbQj88XkPDMeCfmFP9FytQZnpNBXqFWHDABMSwORnMyVjBMLZABYpAFJ8A8ysEzIAalIm4wb4uDg/lCQ5P/ZbKK54FcaVzYftYWA6/Xf0p15pw0wSYPwjZyYkrdWtpvWpVUP6cpKfEDxRgY3rq4zv3v7PH/ponlf1ZmZpBPsGKj9s3/7Z7//6/eRqBOdvX4/9/W+f9+G3sXoBgDwxo9I/e9OvqX8+TkTwPrZFB5hBXLBhVf1Ow981k2uOwyNnkQlubgOL1OU/vGck2d8z0mJrIA06wTFc2Sb4EAAAAASUVORK5CYII="
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAMzSURBVEhLzVV/TIxhHH/5o5l/zB+2/sA14VBkiaZdnLk1K0RFibbYUX7VLHYYa7RhO3O5kz/0G0fXVchFfszK/BgnNq5xpRYtP8ZFPxyd7v34Pu8bC9fVa/7ou3327H2e7/v5PN/v8zzfLzfcbfoCRWDa9i2Rxfs1cVWaHdHm+NiwQz4+PpG0NgaJ6yeJbkM0PiZGxkcsjZ8yalR4+taoymuV+9xdb08DrouAuxLovQR0lKL+mQHV6uXve2aEurhelWo1r1xSx48PCezjGdAaZAEGp18Q7h3dDKBKJP1sAu84B/fHc+AJaD9Pa5eBRydQowoH9zg4ZGebIhwHw0MqiMNfpPrLxs0KlG0o3rumxXYkBXwb7bqzVCD1iA9GIRrbk+NgP4/MPZLc1NlZDotJ06PNWvdgizqiKClhgVadtMiQuTvuemnRjvZ3jacAnnbspnR8LhFIPJL3Ac5y2K06QYDLzUm1A9ViDll4XyuEHaK7TEwDT3NdZo9EA4EJvHh4TIwgT7+pAbD8WuQdlEeWS8LPOanoLzDiT4H/AekCHwidJrhdFeLIvj359UG6AJ0J35gP3nQAsOeBZ7fIi8hvAvn6FDpkLwLs1rQWA6uiAf85cEZF4ltLIfgOisSTP0GSAP/FjG9WPeyTZ6Jp6kzUTpgGx/1sIinz6M8gTYBulZterHVPEs7Ip6NmVyK+fyoB7+WWSUsRgZGh2wzn6yJh9EbOIFlAAHsfQu0Z/H38m4AE9BfgCgwpL4alANpLqG6Vi/WK1TBWs1hvYHWM5p/XZYsCufpNQxNguae7LxCQPzuPp3e1uHg2o8t4atsbc2G6o8aSiY/NebR+BS9va0WBbJ26nlXTwUqwUASbC+F4VYD8nM2tCXFhWvpdSfAljCaMJQQGz/ZXG9NiHiF2JTiXUrWwIyLiK+7qKbwLHonBiHEVqDwEKBbjpGIea05jCANaGcfJrAFB9ZwtNDTZJpvReyF1RW8P3W8hdJZP1htYg2GtkfpDzc0s6JYpbtVOlD+84Tt1bh/P0Ewjl/vRMC1SNTvz8MG1d4wF6e8spt3OcmNGR45uoy05SXmS1ucLzpKM434Av7PL/RH3tGgAAAAASUVORK5CYII="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
@@ -189,14 +189,14 @@ try:
                     sc.doc = ghdoc
                     return Center_Pt, Corner_Pt, Line_Center_Pt
                 finally:
-                    self.Message = '曲面关键点'
+                    self.Message = 'Surface key point'
 
 
         # 物件粗略范围
         class SmallestRegion(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_SmallestRegion", "F3", """以中心物件为中心，寻找一组物件中粗略最小范围""", "Scavenger", "H-Facade")
+                                                                   "RPP_SmallestRegion", "F3", """Centered on the central object，find a rough minimum range in a set of objects""", "Scavenger", "H-Facade")
                 return instance
 
             def get_ComponentGuid(self):
@@ -210,17 +210,17 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Main_Item", "M", "中心物件")
+                self.SetUpParam(p, "Main_Item", "M", "Central object")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Order_Item", "O", "查找范围物件")
+                self.SetUpParam(p, "Order_Item", "O", "Find range object")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
-                self.SetUpParam(p, "Count", "C", "范围物件的数量")
+                self.SetUpParam(p, "Count", "C", "The number of objects in Range ")
                 count = 6
                 p.SetPersistentData(gk.Types.GH_Integer(count))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
@@ -228,15 +228,15 @@ try:
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Res_Order_Item", "R", "取得的范围物件")
+                self.SetUpParam(p, "Res_Order_Item", "R", "Gets the object in Range")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Order_Index", "i", "取得物件在原列表中的下标")
+                self.SetUpParam(p, "Order_Index", "i", "Gets the subscript of the object in the original list")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Distance", "D", "取得物件的粗略距离")
+                self.SetUpParam(p, "Distance", "D", "Gets the rough distance of the object")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -254,7 +254,7 @@ try:
                         self.marshal.SetOutput(result[2], DA, 2, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAQ0SURBVEhLvZUJTBxlFMenHm002CZFQwPYaLnm+Oae2dnd2UNYVERKCrI2ttjiSjZq08SW1DY1BtMjqUmNJlVbaixYYgrLvQ3UQpXWVCpIPJJSxWirtMQaCPbYIgXc5zfDGEE0FDD+kped+f/f997M7Mz7iP+NgoKChHVrn9peHCjakZOd/TKWFk44s2P16lVJD/t8b7jd7mctiSCCgYBS9HThheeCxeB/Ih8URYUUll1h2bdMMBhc4nHpPyqybNZw6HqAkGX5ToddveBx66CpKiCOB44XQBRFn7VuMhyOz3B04tAMYTKPPeJbpyoyJCUlNVNk2i+CIH5rGviki6ZIINNSgWVZXFwClmFeMM2prMEBVjxvCJNx2m17REEwPMKmSK/zPG8eEwxDlXMsAoamcAMEEs8CLwn7TXMqi3H04ujDEWsIk1FXxBVJkgRer3eX2+k4yzBMv2mwDPUSbzRIeQA4Xy5Ih3uAf6e70TT/RuL6nXsSinZOa25rHEhX9zbnUKnJEfzYQRJFoCjqVdNECD1u3AEikwEpWgTVjQDbGo2ItUMrzQQLf2looRgebefDv/fklIXvtmRiY0t0kdAUGWTD491MQmw6mZLSnpaaus/4f82ErOTkRYIg0FgglaT4+7n9Z3ej2mu/CicApLora80kC1Q1VMMcGeqwTolSKL1NPHqjRToNwB76qdKSZ4bZ0Uqh0NBF6RMAvubKBksmljWOlcc33DxuHAMQC8RwJCSfAaAPfr9L3lx2r5l0q9Cl4eVs9cA56VMApml4+6bqvrt6C4NN3zxZ3BHNzb2Haho+KHfh4u/+8Ka1ZPaQ296PRVUDXyQ0jMO5wIat4MsAcKVDVOJfXNowWonK++qs1LlDb6peGlNxOe9qhvftqO6B31QdvhKVP9+yBdbv/LBFo4tPqmrJd4IMXzIclHmzqh7sjOZY9tzxtV2KFVtGPqDrh69uCWyJryTJjyuWJ3Q8urdtM98JwNVff81KnT225mur+OaxfqkDAB3qO020Q4xlEUQ3LEGVP7fJRpPGyIFQyH+75fwz+POOcTgcHiUxDtmP3siTj42GxFO4cM11QAd6S6y0KXgJ4g7mcH+N8Q0I4ZHPtSODlGVNJz832+NyaMBxXA/fOHZexIuYysunyN3HkZXyrzAVF99Tv8YXE775zPpMmz0vL2+j3+9fZtkT+PNXBj1OO/CuzG5UG+lCFZc+tKwZce5rjeeqBstQYclWlaPGH/J6QXd5z2dlFdxnJui6zmRmZPQ6dTcIHHrF0NRt9dOm5UzQibFrWETjqUzizcYNuttr1iLsmnLCpTtBlBTA45Y1xTmAhyZpFKepVGPDAsWmHTMNh6ae9OIdjUPcW6YwDxiK/Mi4CyPwAJ14zE6nqui6/a9Neh6wLCkjhgIRb1q4Qakl/7fQdFoRxzFnNE2L+wNK5J0lyms/VAAAAABJRU5ErkJggg=="
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAQ7SURBVEhLvZULTFtlFMcvDzcjNZhhMpQFdKna9d62dAI6hdUNXEqCS7aIWyqEFFCBCRvKkDEHGY/BEGKh8hDksZVuK48xKk6JQDsmWKDsEVcYTjayIDj3opN0LCM9nu/2QjIfS53TX3Jy7/f/n+87ud8997vU/0b0ltd2t7cVHT7ZpTrU31VwSN+SUfv2JtFqznYWN0VMjL9CoVzJjRfx0FVvm7XfaAPrr71gsw7CHVsfDPTW3s3dm5jF5/OXcnlPYGzAIIXDMFwwWN5UhIvMw5rTs1Yj3LjWNd/TU95OeXqSfBYfy3eFc/BbIwx8lQVfHtkNJzryYHSgHI41Ztzx8vJ6nCSlvR9hsJxVw9dNGXBuoATCw/wz2dkUtdRkUo0B9IKpMwfOm0oAoB+6O4sqOZ96+uJQyRzcbAQzJvR9kwenjPvhJ3MZ1JS+dxl9d5KUkxmJixhx8nGAeT1sjggqI3pC9FopzOhgfLgMcCh7d+uaj2HuKJwbVF8hPpWavHGd/WojwHQd9OqzwfRtAZh7CuECFqj+9J1JTFlC8tzdqZdbG1KtAN2QnhxxFqVlRA958dmgyTNlcNvaDtV1uR8YjOoqAAN0HMn8hfjUhymbmFPG/AtwUwvD3YUwNljKxsxEA7Q0pPazSRwr/ZYrE5Rho3i7wqGwLCnNieqyzzTj05nY7Zk6XwNJsfJ9nM+yrKJIuU+VH2M6pk2/XPFJ/M916oSJpLjQRM6nxGKxx6oXVnXibYBDuQfPwl1v1bfVb59qrd8xEhe1vgg1N4f1Z0jXPIbxHIY3EQhSqdRPIhaP43UtJ1ESicQH4xluSCDznAMXChCLRHdFIhFpSRYxw6iEQiG79/6oY0HAJwtmzQdBRNN7GZpuZxhmORnj4jXkuwgMDPRGTc8IhRkoL34PDwQu9DoWOU75+j7lgwVRENA03YHF1nMp/x6+QCArCgkpvy1/Y6gy8JU2P4FgDWc9PH4IDi6AV2VgWB3UwkkPD9ym8pdoeotOKNwYilchw9RERkb+bRs6TXZ2tquIYSpwzxfOHRbspmQseoDPly8chE7hiuHBxaOkv7FNp3ChLGL+ESySgv5VzKM56f4EB/kKB4350xZL9bS2dqfB29s3Chdowpb04lLuQSaT8bCIFls5npMW+Mt8SqPZuR3gNJ4lJ6D54EcjKD3icO7PwrvI26MI/77/i8FLl7pnzObaBpQc8+Uy0QqNVpV07frJWwBDYLtyGPakb01nTScpLU5Mu4U/G4AfMcZgcqIJAsR8KfFczfpdA2RhADPAbCvUqbeRY3bxb+QEvBGLZh5gAuz2Prg+qYODVTusPB7vSWJ6jPfm2cDWBBfPfAaVxfEzEtpvHTvNedyONud+PjGKx71hP+g1aZAYK0/jPMqlvjhGq6tKGo2PDlXh+HmH/I9xSVHKMiqKY3WJSnkcp/3XUNTv1/bgR7VU1H4AAAAASUVORK5CYII="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
@@ -345,14 +345,14 @@ try:
                     sc.doc = ghdoc
                     return Res_Order_Item, Order_Index, Distance
                 finally:
-                    self.Message = '粗略最小范围'
+                    self.Message = 'Rough minimum range'
 
 
         # 沉头螺钉
         class CounterBore(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_CounterBore", "F2", """输入规格自动生成沉头螺钉（包含M4、M5、M6、M8、M10、M12、M16、M20）""", "Scavenger", "H-Facade")
+                                                                   "RPP_CounterBore", "F2", """Input specifications automatically generate countersunk screws (including M4, M5, M6, M8, M10, M12, M16, M20)""", "Scavenger", "H-Facade")
                 return instance
 
             def get_ComponentGuid(self):
@@ -366,19 +366,19 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Code", "C", "螺丝编号")
+                self.SetUpParam(p, "Code", "C", "Screw number")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Deep1", "D1", "深度1")
+                self.SetUpParam(p, "Deep1", "D1", "Depth 1")
                 DEEP_LENGTH_1 = 5
                 p.SetPersistentData(gk.Types.GH_Number(DEEP_LENGTH_1))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Deep2", "D2", "深度2")
+                self.SetUpParam(p, "Deep2", "D2", "Depth 2")
                 DEEP_LENGTH_2 = 10
                 p.SetPersistentData(gk.Types.GH_Number(DEEP_LENGTH_2))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
@@ -386,11 +386,11 @@ try:
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Brep()
-                self.SetUpParam(p, "Alum_Material", "AL", "铝料螺钉")
+                self.SetUpParam(p, "Alum_Material", "AL", "Aluminum screw")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Brep()
-                self.SetUpParam(p, "Iron_Material", "FE", "铁料螺钉")
+                self.SetUpParam(p, "Iron_Material", "FE", "Iron screw")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -407,7 +407,7 @@ try:
                         self.marshal.SetOutput(result[1], DA, 1, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAGQSURBVEhL7dVLK0RhHMfxmbFh61bEwm0oCcmlRhLjMmnIrTAoZmHFhpUsZGVhZ+EFsLCRW7wNL8DCba0UQojv75yZKZc5Mw+y4VefzvM/c+Z5njPPmfO4fjO5yP8heUhFLFm4wT0e8fINd3jGKmJJwTJ0wSaCGDI0gBFcQYM04kM06gNqrco8G7hGvVXFyTp0J5/OIE7cOIS+16ATibKDW+jW25OwC/3uSXWuaEaniC5cMlphlGOsoDyBfujJy4FRzjFjNx1TiicUWpVBzjBnNx1Thf8BHPPHB5i1m46pxJcGuMC03XSMFxqgwKoMcoJLHCWgf7xeFWUwSghb0FvyAPvYi7Sj53TcxhrSETclmEKFVZklG2+2x/dJwyS0bWpfHoMPWrRidKIXYY/Ho7tSuwODUMeqtVZa7GHUoA8tkdqViVE1SABNWICfDjWYOupCiHqco56sMHSd0o2A2+1e5KjOl9CGeegz690fjMyuDjr6qCd0HkXQAmrWfvSgGhlQNEttOtoBtUE1Q5PmvMv7CqrUfBXPGH/jAAAAAElFTkSuQmCC"
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAN0SURBVEhL7ZZrbExBFMcvRcRuQkO9H6lI2Tt35j732rVsPeqLFKW79KGsNqSKCBIVr6JtImmi4pFNxCf1aCtU4pUQkfhSJBKJRPggfPEKVYIEXT3O3DttVUW3X3zyS/7ZmXPOzJkz596blf450NiYAgD9o5KUIkzJ0k/8/p01c8LFq8Mzt6WnpeWujc17eDy+/k5t5Yrm2uqinqosaj52eG3zvu2Rh17v4N1ii16hqIWoAbH8zBNfW85iQbcA2i/h7+VfxOfXUdegfNOiux6PZ5SzujfGpqbOGO7xFOBKp+SsMDn47FEcEh8b4fubU51qw8QfXtdBSeHsGxg2mMf2Ct80NjNYNo/4jj6oqfEIszR/FmloaiiHC3Vb4fzJLY6amnZCaSzrObqT2/wXxqGWukOXyCL/LvjQANDaAO0tZxwBXIGjB1bfFyF9YjJquTt0ycsNVjkJ3tfDj3dnHPE+YKPvipA+kXSCg1VFd0RIn/ifoFcmoSLu0KUgggk+nQPAdwFa613BVThUvbJvCQCkfmZ6uj3c6y0VJoel2f7ajgoSb0+j3Aoqd0SfiJDk2Zubk79qbngr7tD5sRs/elhmTrZ/+/Kc6euiSwKbly32b4xEgpuoPCEmQpJDUZQNMiGPKaWvNI09s20bP6pdZGSQsmnTyG3UxaEjJprCLAWDll9V2WlJMgfyuW1bcdxjm+PsAA2rDF0HpihVPp8viyrKCcZYnXBLus62MKoA+kox9giqRrgkwzAKVcaAjwO2vUfXNCCEzHacnIqKiv4KIa9USm8KUw8oIacYpS/EtBumaUaJLLeGQoESvjkeYplwuaiqOo6fwLKMMmHqAVYznTH6Tde1p4FAoFCYHTBBjspoQlNVkGW5XJi7wICJPAHeebEw/RHsEcNKrxq6BpqmxoXZSYBXmkC1Y0y1MHeBWQdhiZ8xsF6Y/gojpIQfCO9+DJ+bphbFxJ+wymJux/50e48csCn7LdOEYDC4OxwOzbct47BpGCeFW/L7zX2hUKhgwYIsn21ZcdywDQ80lPssS8/D/jhNppQcEEmm8nkn0Wg0BRt5BMv8gsEJ1HMqy52PKfr4wjYu9L3Eq1giXPgUsWxc1yLLmV4+p1S5hwe+6Dh/B081RNO0NDHthqZNScNryOBXKkwOzuEoTcVhxz+LFIwbKUmS9BOlob6a9irK0QAAAABJRU5ErkJggg=="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
@@ -487,15 +487,15 @@ try:
                             Alum_Material = self.counter_bore(order_sp_al)
                             Iron_Material = self.counter_bore(order_sp_fe)
                         else:
-                            Message.message1(self, '未包含此螺丝规格！')
+                            Message.message1(self, 'This screw specification is not included！')
                     else:
-                        Message.message2(self, '螺丝规格未输入！')
+                        Message.message2(self, 'Screw specifications are not inputted！')
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
                     sc.doc = ghdoc
                     return Alum_Material, Iron_Material
                 finally:
-                    self.Message = '沉头螺丝（孔）'
+                    self.Message = 'Countersunk head screw（hole）'
 
     else:
         pass
