@@ -1236,7 +1236,7 @@ try:
                 except Exception as e:
                     Message.message1(self, "run error：\n{}".format(str(e)))
                 finally:
-                    self.Message = '长度排序'
+                    self.Message = 'Length Sorting'
 
 
         # 曲线取值
@@ -1494,12 +1494,15 @@ try:
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
                 self.SetUpParam(p, "Axis", "A", "Axis")
+                AXIS = 'X'
+                p.SetPersistentData(gk.Types.GH_String(AXIS))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Plane()
                 self.SetUpParam(p, "CP", "CP", "XY Sort by axis XYZ, world XY by default")
-                p.SetPersistentData(Grasshopper.Kernel.Types.GH_Plane(rg.Plane.WorldXY))
+                PLANE = rg.Plane.WorldXY
+                p.SetPersistentData(gk.Types.GH_Plane(PLANE))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
@@ -1522,50 +1525,42 @@ try:
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
-                self.dict_axis = {'X': 'x_coordinate', 'Y': 'y_coordinate', 'Z': 'z_coordinate'}
+                pass
 
-            def _sort_by_length(self, list_data):
-                for f in range(len(list_data)):
-                    for s in range(len(list_data) - 1 - f):
-                        first_line = list_data[s].GetLength()
-                        second_line = list_data[s + 1].GetLength()
-                        if first_line > second_line:
-                            list_data[s], list_data[s + 1] = list_data[s + 1], list_data[s]
-                return list_data
+            # def _sort_by_length(self, list_data):
+            #     for f in range(len(list_data)):
+            #         for s in range(len(list_data) - 1 - f):
+            #             first_line = list_data[s].GetLength()
+            #             second_line = list_data[s + 1].GetLength()
+            #             if first_line > second_line:
+            #                 list_data[s], list_data[s + 1] = list_data[s + 1], list_data[s]
+            #     return list_data
 
-            def _other_by_xyz(self, data, axis, coord_pl):
-                for index1 in range(len(data)):
-                    min_index = index1
-                    for index2 in range(min_index + 1, len(data)):
-                        first = ghc.PlaneCoordinates(ghc.CurveMiddle(data[min_index]), coord_pl)[self.dict_axis[axis]]
-                        second = ghc.PlaneCoordinates(ghc.CurveMiddle(data[index2]), coord_pl)[self.dict_axis[axis]]
-                        if first > second:
-                            min_index = index2
-                    if min_index != index1:
-                        data[index1], data[min_index] = data[min_index], data[index1]
-                return data
+            def _sort_by_xyz(self, data, axis, coord_pl):
+                xform = rg.Transform.PlaneToPlane(coord_pl, rg.Plane.WorldXY)
+                pt_list = map(lambda x: rs.CurveMidPoint(x), data)
+                copy_pt = [rg.Point3d(_) for _ in pt_list]
+                [_.Transform(xform) for _ in copy_pt]
+                X, Y, Z = zip(*pt_list)
+                target_axis = eval(axis)
+                tuple_data = zip(target_axis, range(len(target_axis)))
+                index_list = [_[1] for _ in sorted(tuple_data)]
+                new_data = [data[_] for _ in index_list]
+                return new_data
 
             def RunScript(self, Curve, Axis, CP):
                 try:
                     re_mes = Message.RE_MES([Curve], ['Curve'])
+                    Sort_Curve = gd[object]()
                     if len(re_mes) > 0:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
-                        return gd[object]()
                     else:
-                        if Axis is None:
-                            Message.message3(self, "if no input axis coordinates,it will be sorted by length！")
-                            Sort_Curve = self._sort_by_length(Curve)
-                            return Sort_Curve
-                        else:
-                            Axis = Axis.upper()
-                            if Axis in ['X', 'Y', 'Z']:
-                                Sort_Curve = self._other_by_xyz(Curve, Axis, CP)
-                                return Sort_Curve
-                            else:
-                                Message.message2(self, "please input correct axis coordinates！")
+                        Axis = Axis.upper()
+                        Sort_Curve = self._sort_by_xyz(Curve, Axis, CP)
+                    return Sort_Curve
                 finally:
-                    self.Message = "sort curve"
+                    self.Message = "Sort Curve"
 
 
         # 均分曲线
@@ -2222,7 +2217,7 @@ try:
 
                     return Relationship, In_Curve_Index, Outside_Curve_Index, Inside_Curve_Index
                 finally:
-                    self.Message = '点与封闭曲线关系'
+                    self.Message = 'Points and Closed Curves'
 
 
         # 线与指定向量的关系
