@@ -95,7 +95,7 @@ try:
                             List.append(Lists[int(i)])
                     return List
                 finally:
-                    self.Message = '多下标取值'
+                    self.Message = 'Multiple subscript values'
 
 
         # 列表多下标取值
@@ -1836,7 +1836,7 @@ try:
                         sc.doc = ghdoc
                         return Result_List, Right_Scissor, Left_Scissor
                 finally:
-                    self.Message = '数据偏移'
+                    self.Message = 'Data Offset'
 
 
         # 通过下标取树形数据
@@ -1911,7 +1911,7 @@ try:
                                 Result.append(None)
                         return ght.list_to_tree(Result)
                 finally:
-                    self.Message = '树形数据取值'
+                    self.Message = 'Tree data values'
 
 
         # 长度转树形数据
