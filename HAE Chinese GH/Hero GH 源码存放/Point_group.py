@@ -268,7 +268,7 @@ try:
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Point()
                 self.SetUpParam(p, "Points", "P", "Point list")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
@@ -309,11 +309,43 @@ try:
                 o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAALpSURBVEhLxVVLbExRGL7nNe9hYlSrHp1pqSn1atIOaUu6aiJFaMQrDerVUqysbMTKQmJnJRE2VmyRNJogIRIWSDRBLCwEDSEioqnr+8+5dzpze+fOdOVLvvTMf77/+8/5zzm31v9EAmwww6pQC9aYYWUIluWjvFV+wjhjQoFI8ZwY583iFcZzTCgArJ7fUoMxW52O2yjyFqHFZsYXSdYknqjhuK2GYjbGjxCLmykfsDpxUx2A+QkkHDN/+Uo5jqk6oyhBjGXFQ62DueZRFMnwMcxFjGQaEVYvrquBqDE/AjHxOIjV8RXiJTTzjVQjDKP7WkPGrn4YPIwiWX4PmpSREqQ1IndGbHUG5hAUEohUZAhFmsVzKPX22VJ+V+vIsFhLsVPwwEKxv0ukdZFmjfyO7r03iUirRCGsbIzV8tvqEH5T3706WgzIW8QzeC4x1tMIswY+WjD0JlPsIEht9JvX7YR5TryAV9pYzkSMZcQDOixfEzpQMvLGtTna2CJew4PeRCASuG6PC7fDa+ale9tWyTfIXWQsKiPFl4uneidk4GdMdHbK1+j3MpuXr5HAG/isTvocpkvMiXb1C9plJmU2SLGLsj8y6dtzl5iTe6NTbKG45mRVibkw34XbMhKwepf0MHGz2AJ2w8mugCS7gJWXN6e+F/+mx4VWyf0oUsOuOi5lEOPn5I4y5u7VJZYrsg9F5rErjpsHSX5Wboc5PfXiZCIZIo4D/cZXy4/64L23yy2yG0XS7LLj6kBZg7KvzLeISOadod9Q5sFG3qa+6F367QRaKmJF2XntraGsVr5Ovit8pouT8H9BdIf+QNVrxBrrebv6qndbXITGKCzyagIf7G5HW0ADtv++ZPtkvjk0hbmtRlKCDhh9LxQpaiPm2oxkJpr4WvlBF0G7RE/YRqzfTPmiU2xUP2khejF59QMxamMgcqJDTYhebb7HhALRIzaF/oqu0CTGXSZUGRvAATOsCtvALWbowrL+AVSqihre6oZOAAAAAElFTkSuQmCC"
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
-            def __init__(self):
-                self.tol = None
-                self.copy_pts = None
+            def Branch_Route(self, Tree):
+                """分解Tree操作，树形以及多进程框架代码"""
+                Tree_list = [list(_) for _ in Tree.Branches]
+                Tree_Path = [list(_) for _ in Tree.Paths]
+                return Tree_list, Tree_Path
 
-            def remove_duplicate_points(self, points):  # 删除重复的点
+            def split_tree(self, tree_data, tree_path):
+                """操作树单枝的代码"""
+                new_tree = ght.list_to_tree(tree_data, True, tree_path)  # 此处可替换复写的Tree_To_List（源码参照Vector组-点集根据与曲线距离分组）
+                result_data, result_path = self.Branch_Route(new_tree)
+                if list(chain(*result_data)):
+                    return result_data, result_path
+                else:
+                    return [[]], result_path
+
+            def format_tree(self, result_tree):
+                """匹配树路径的代码，利用空树创造与源树路径匹配的树形结构分支"""
+                stock_tree = gd[object]()
+                for sub_tree in result_tree:
+                    fruit, branch = sub_tree
+                    for index, item in enumerate(fruit):
+                        path = gk.Data.GH_Path(System.Array[int](branch[index]))
+                        if hasattr(item, '__iter__'):
+                            if item:
+                                for sub_index in range(len(item)):
+                                    stock_tree.Insert(item[sub_index], path, sub_index)
+                            else:
+                                stock_tree.AddRange(item, path)
+                        else:
+                            stock_tree.Insert(item, path, index)
+                return stock_tree
+
+            def __init__(self):
+                self.tol, self.format_put = None, None
+
+            def remove_duplicate_points(self, tuple_data):  # 删除重复的点
+                points, origin_path = tuple_data
                 new_points = []
                 index_groups = []  # 点分组后的下标
                 for i, p in enumerate(points):
@@ -326,37 +358,54 @@ try:
                     if not flag:
                         new_points.append(p)  # 添加唯一点
                         index_groups.append([i])
-                return new_points, index_groups
+
+                if self.format_put == 1:
+                    index_groups = index_groups
+                elif self.format_put == 0:
+                    index_groups = [_[0] for _ in index_groups]
+                else:
+                    index_groups = index_groups
+                    self.message2("Please input the correct data type！！")
+                ungroup_data = map(lambda x: self.split_tree(x, origin_path), [new_points, index_groups])
+                Rhino.RhinoApp.Wait()
+                return ungroup_data
 
             def RunScript(self, Points, Tolerance, Output_Format):
                 try:
+                    sc.doc = Rhino.RhinoDoc.ActiveDoc
                     re_mes = Message.RE_MES([Points], ['Points'])
+                    Reuslt_Pt, Index_Pt = (gd[object]() for _ in range(2))
+                    self.format_put = Output_Format
+                    self.tol = Tolerance
+
                     if len(re_mes) > 0:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
-                        return gd[object](), gd[object]()
                     else:
-                        sc.doc = Rhino.RhinoDoc.ActiveDoc
+                        pt_trunk, pt_trunk_path = self.Branch_Route(Points)
+                        zip_list = zip(pt_trunk, pt_trunk_path)
 
-                        if Output_Format > 1:
-                            Message.message2(self, "Please input the correct data type！！")
-                            return gd[object](), gd[object]()
-                        self.tol = Tolerance
-                        new_cull_pts, Index = self.remove_duplicate_points(Points)
-                        if Output_Format:  # 判断输出方式
-                            group_points = [[] for _ in range(len(Index))]
-                            for i in range(len(Index)):
-                                for j in Index[i]:
-                                    group_points[i].append(Points[j])
-                            Reuslt_Pt = ght.list_to_tree(group_points)  # 将重复点列表转化为树
-                        else:
-                            Reuslt_Pt = new_cull_pts
-                        Index_Pt = ght.list_to_tree(Index)  # 将下标列表转化为树
+                        iter_ungroup_data = zip(*ghp.run(self.remove_duplicate_points, zip_list))
+                        Reuslt_Pt, Index_Pt = ghp.run(lambda single_tree: self.format_tree(single_tree), iter_ungroup_data)
+                        # if Output_Format > 1:
+                        #     Message.message2(self, "Please input the correct data type！！")
+                        #     return gd[object](), gd[object]()
+                        # self.tol = Tolerance
+                        # new_cull_pts, Index = self.remove_duplicate_points(Points)
+                        # if Output_Format:  # 判断输出方式
+                        #     group_points = [[] for _ in range(len(Index))]
+                        #     for i in range(len(Index)):
+                        #         for j in Index[i]:
+                        #             group_points[i].append(Points[j])
+                        #     Reuslt_Pt = ght.list_to_tree(group_points)  # 将重复点列表转化为树
+                        # else:
+                        #     Reuslt_Pt = new_cull_pts
+                        # Index_Pt = ght.list_to_tree(Index)  # 将下标列表转化为树
 
-                        sc.doc.Views.Redraw()
-                        ghdoc = GhPython.DocReplacement.GrasshopperDocument()
-                        sc.doc = ghdoc
-                        return Reuslt_Pt, Index_Pt
+                    sc.doc.Views.Redraw()
+                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                    sc.doc = ghdoc
+                    return Reuslt_Pt, Index_Pt
                 finally:
                     self.Message = 'Remove duplicate points'
 
@@ -454,7 +503,7 @@ try:
                             Sort_P = zip(*sorted(zip_list_sort))[1]
                             return Sort_P
                 finally:
-                    self.Message = '点排序'
+                    self.Message = 'Sort Point'
 
 
         # 点依次排序
@@ -634,7 +683,6 @@ try:
                     if len(re_mes) > 0:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
-                        return gd[object](), gd[object]()
                     else:
                         dict_pt_data = dict()
 
@@ -656,10 +704,10 @@ try:
                         Index = [_[-1] for _ in sorted(w_sort_pts)]
                         Sort_P = [Pts[_] for _ in Index]
 
-                        sc.doc.Views.Redraw()
-                        ghdoc = GhPython.DocReplacement.GrasshopperDocument()
-                        sc.doc = ghdoc
-                        return Sort_P, Index
+                    sc.doc.Views.Redraw()
+                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                    sc.doc = ghdoc
+                    return Sort_P, Index
                 finally:
                     self.Message = '-'.join(self.h_sort)
 
