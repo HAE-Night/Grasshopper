@@ -602,10 +602,10 @@ try:
                         Floor = math.floor(Decimal)
                         Ceil = math.ceil(Decimal)
                     else:
-                        self.message2('D端未输入数据！')
+                        self.message2('No data input for D-end!')
                     return Result, Floor, Ceil
                 finally:
-                    self.Message = '四舍五入'
+                    self.Message = 'Half Adjust'
 
 
         # 数字格式化
