@@ -750,13 +750,18 @@ try:
                     surface_cut = rg.Brep.CreatePlanarBreps(single_event[1])[0]
                     cutts.append(surface_cut)
                 res_breps = self._recursive_cutting(item, cutts, [])
-                return res_breps
+                sort_breps = self.sort_brep(res_breps)
+                return sort_breps
 
             def _handle_brep(self, breps):
                 for brep in breps:
                     if brep.SolidOrientation == rg.BrepSolidOrientation.Inward:
                         brep.Flip()
                 return breps
+
+            def sort_brep(self, temp_breps):
+                brep_list = self.sort_by_xyz([_.GetBoundingBox(True).Center for _ in temp_breps], temp_breps)
+                return brep_list
 
             def _get_surface(self, surf, pln_list):
                 cutts = []
@@ -766,7 +771,8 @@ try:
                         cutts.append(single_event[1][0])
                 cut_breps = surf.Split.Overloads[IEnumerable[Rhino.Geometry.Curve], System.Double](cutts, self.tol)
                 res_breps = self._handle_brep(cut_breps)
-                return res_breps
+                sort_breps = self.sort_brep(res_breps)
+                return sort_breps
 
             def temp(self, tuple_data):
                 breps, planes, origin_path = tuple_data
@@ -1206,7 +1212,7 @@ try:
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
                                                                    "RPP_Mapping&Extrusion", "R14",
-                                                                   """Map an object to specific plane and then extrude the solid through a line or vector映射一个物体到指定平面，之后通过线段或者向量来挤出实体""",
+                                                                   """Map an object to specific plane and then extrude the solid through a line or vector""",
                                                                    "Scavenger", "D-Brep")
                 return instance
 
@@ -1415,6 +1421,9 @@ try:
                             New_Brep = self.polyhedral(Brep, Line_list, Vector, Tolerance)
                         elif Distance:
                             New_Brep = self.offset(Brep, Distance, Tolerance)
+
+                        if New_Brep.SolidOrientation == rg.BrepSolidOrientation.Inward:
+                            New_Brep.Flip()
 
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
