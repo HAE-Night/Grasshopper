@@ -24,6 +24,7 @@ clr.AddReference("System.Management")
 import System.Management
 from itertools import chain
 import math
+import copy
 
 Result = initialization.Result
 Message = initialization.message()
@@ -302,7 +303,7 @@ try:
 
                     return Result_Curve
                 finally:
-                    self.Message = 'trim curve'
+                    self.Message = 'Extend Trim Curve'
 
             def DrawViewportWires(self, args):
                 try:
@@ -1780,20 +1781,20 @@ try:
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
-                p = Grasshopper.Kernel.Parameters.Param_Boolean()
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
                 self.SetUpParam(p, "Direction", "G", "The true value is the curve with the highest center point, and the false value is opposite（ture by default）\
                                    If it is a curve, use the curve to unify the direction\
                                    ")
                 p.SetPersistentData(Grasshopper.Kernel.Types.GH_Boolean(True))
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                p = Grasshopper.Kernel.Parameters.Param_Curve()
                 self.SetUpParam(p, "Curves", "C", "The curve after reversal")
                 self.Params.Output.Add(p)
 
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                p = Grasshopper.Kernel.Parameters.Param_Boolean()
                 self.SetUpParam(p, "Flag", "F", "flip or not")
                 self.Params.Output.Add(p)
 
@@ -1820,12 +1821,37 @@ try:
                 return rs.MessageBox(info, button, title)
 
             # 根据树分支和路径还原树形
-            def Restore_Tree(self, Before_Tree, Tree):
-                Tree_Path = [i for i in Tree.Paths]
-                After_Tree = gd[object]()
-                for i in range(Tree.BranchCount):
-                    After_Tree.AddRange(Before_Tree[i], Tree_Path[i])
-                return After_Tree
+            def Branch_Route(self, Tree):
+                """分解Tree操作，树形以及多进程框架代码"""
+                Tree_list = [list(_) for _ in Tree.Branches]
+                Tree_Path = [list(_) for _ in Tree.Paths]
+                return Tree_list, Tree_Path
+
+            def split_tree(self, tree_data, tree_path):
+                """操作树单枝的代码"""
+                new_tree = ght.list_to_tree(tree_data, True, tree_path)  # 此处可替换复写的Tree_To_List（源码参照Vector组-点集根据与曲线距离分组）
+                result_data, result_path = self.Branch_Route(new_tree)
+                if list(chain(*result_data)):
+                    return result_data, result_path
+                else:
+                    return [[]], result_path
+
+            def format_tree(self, result_tree):
+                """匹配树路径的代码，利用空树创造与源树路径匹配的树形结构分支"""
+                stock_tree = gd[object]()
+                for sub_tree in result_tree:
+                    fruit, branch = sub_tree
+                    for index, item in enumerate(fruit):
+                        path = gk.Data.GH_Path(System.Array[int](branch[index]))
+                        if hasattr(item, '__iter__'):
+                            if item:
+                                for sub_index in range(len(item)):
+                                    stock_tree.Insert(item[sub_index], path, sub_index)
+                            else:
+                                stock_tree.AddRange(item, path)
+                        else:
+                            stock_tree.Insert(item, path, index)
+                return stock_tree
 
             # 曲线高度排序
             def Curve_Height(self, Curve_Bool):
@@ -1838,7 +1864,6 @@ try:
                         Max_Value = Value
                     if Curve_Height[Min_Value].Z > Curve_Height[Value].Z:
                         Min_Value = Value
-                Curve_Bool[1], type(Curve_Bool[1])
                 return Curve_list[Max_Value] if Curve_Bool[1] else Curve_list[Min_Value]
 
             # 曲线反转
@@ -1858,48 +1883,51 @@ try:
                         Flag.append(False)
                 return Curve_list, Flag
 
-            # 操作多进程
-            def Curve_Multiprocess(self, Curve, Guide):
-                Curve_Tree = [list(i) for i in Curve.Branches]
-                Guide_Curve = [Guide]
-                # 判断是否为曲线，不为曲线就拿本身的曲线
-                # 为曲线可以直接进入方向统一方法
-                if 'Curve' not in str(Guide):
-                    # 得到曲线中心点 最高或最低 的曲线（根据 Guide 真假值判断高低曲线）
-                    Guide_Curve = list(ghp.run(self.Curve_Height, zip(Curve_Tree, [Guide] * len(Curve_Tree))))
-                # 数据匹配
-                if len(Curve_Tree) != len(Guide_Curve):
-                    Guide_Curve = [Guide] * len(Curve_Tree)
-
-                Curve_list, Flag = zip(*ghp.run(self.Curve_Flip, zip(Curve_Tree, Guide_Curve)))
-
-                # 转树形
-                Curve_list = self.Restore_Tree(Curve_list, Curve)
-                Flag = self.Restore_Tree(Flag, Curve)
-
-                return Curve, Flag
+            def do_main(self, tuple_data):
+                curve_list, guide_list, origin_path = tuple_data
+                ref_bool = tuple_data[1][0]
+                if type(ref_bool) is bool:
+                    temp_curve = self.Curve_Height(tuple_data[0: 2])
+                    res_curve_list, bool_list = zip(*ghp.run(self.Curve_Flip, zip([curve_list], [temp_curve])))
+                else:
+                    new_curve_list = [copy.deepcopy(curve_list) for _ in range(len(guide_list))]
+                    temp_curve_list, temp_bool_list = zip(*ghp.run(self.Curve_Flip, zip(new_curve_list, guide_list)))
+                    res_curve_list = list(chain(*temp_curve_list))
+                    bool_list = list(chain(*temp_bool_list))
+                ungroup_data = map(lambda x: self.split_tree(x, origin_path), [res_curve_list, bool_list])
+                Rhino.RhinoApp.Wait()
+                return ungroup_data
 
             def RunScript(self, Curve, Guide):
                 try:
-                    re_mes = Message.RE_MES([Curve], ['Curve'])
+                    Curve_Tree, Flag_Tree = gd[object](), gd[object]()
+                    re_mes = Message.RE_MES([Curve], ['C end'])
                     if len(re_mes) > 0:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
-                        return gd[object](), gd[object]()
                     else:
-                        sc.doc = Rhino.RhinoDoc.ActiveDoc
-                        sc.doc.Views.Redraw()
-                        # 默认有值都为真
-                        Value = True
-                        # 传入 假值
-                        if Guide == False:
-                            Value = False
-                        # 传入曲线
-                        elif 'Curve' in str(type(Guide)):
-                            Value = Guide
-                        Guide = Value
+                        curve_trunk, curve_path = self.Branch_Route(Curve)
+                        guide_trunk, guide_path = self.Branch_Route(Guide)
+                        len_c, len_g = len(curve_trunk), len(guide_trunk)
 
-                        Curve_Tree, Flag_Tree = self.Curve_Multiprocess(Curve, Guide)
+                        if len_c > len_g:
+                            new_curve_trunk = curve_trunk
+                            new_guide_trunk = guide_trunk + [guide_trunk[-1]] * abs(len_c - len_g)
+                            curve_path = curve_path
+                        elif len_c < len_g:
+                            new_curve_trunk = curve_trunk + [curve_trunk[-1]] * abs(len_g - len_c)
+                            new_guide_trunk = guide_trunk
+                            curve_path = guide_path
+                        else:
+                            new_curve_trunk = curve_trunk
+                            new_guide_trunk = guide_trunk
+                            curve_path = curve_path
+
+                        zip_list = zip(new_curve_trunk, new_guide_trunk, curve_path)
+                        iter_ungroup_data = zip(*ghp.run(self.do_main, zip_list))
+                        Curve_Tree, Flag_Tree = ghp.run(lambda single_tree: self.format_tree(single_tree), iter_ungroup_data)
+
+                        sc.doc.Views.Redraw()
                         ghdoc = GhPython.DocReplacement.GrasshopperDocument()
                         sc.doc = ghdoc
                     return Curve_Tree, Flag_Tree
@@ -3543,10 +3571,22 @@ try:
                             stock_tree.Insert(item, path, index)
                 return stock_tree
 
+            def _get_vertex(self, data_list):
+                pts_list = []
+                for item_data in data_list:
+                    if type(item_data) is rg.Point3d:
+                        pts_list.append([item_data])
+                    elif isinstance(item_data, (rg.Curve)):
+                        pts_list.append(rg.Box(self.ref_plane, item_data.ToNurbsCurve()).GetCorners())
+                    elif type(item_data) is rg.Brep:
+                        pts_list.append(item_data.GetBoundingBox(True).GetCorners())
+                    elif type(item_data) is rg.Rectangle3d:
+                        box_line = item_data.ToNurbsCurve()
+                        pts_list.append(rg.Box(self.ref_plane, box_line.ToNurbsCurve()).GetCorners())
+                return pts_list
+
             def get_boxegde(self, obj):
-                if type(obj) is rg.Rectangle3d:
-                    obj = obj.ToNurbsCurve()
-                pts_list = [[_] if type(_) is rg.Point3d else rg.Box(self.ref_plane, _.ToNurbsCurve()).GetCorners() for _ in obj]
+                pts_list = self._get_vertex(obj)
                 box_egde = rg.Box(self.ref_plane, list(chain(*pts_list)))
                 return box_egde
 
@@ -3620,6 +3660,247 @@ try:
                     return Bounding, X, Y
                 finally:
                     self.Message = 'Boundary rectangle'
+
+
+        # 获取一组曲线集的轮廓曲线
+        class PlanarCurveContour(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP_PlanarCurveContour", "W52", """Gets the contour curve of a set of curves""", "Scavenger", "B-Curve")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("67a4091c-f26f-4d39-980e-fdae9e01df4e")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.quarternary
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Curve()
+                self.SetUpParam(p, "Curve_List", "C", "Curve set")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Plane()
+                self.SetUpParam(p, "Plane", "P", "Plane")
+                NORMAL_PLN = rg.Plane.WorldXY
+                p.SetPersistentData(gk.Types.GH_Plane(NORMAL_PLN))
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Number()
+                self.SetUpParam(p, "Tolerance", "T", "Tolerance")
+                NUM_TOL = sc.doc.ModelAbsoluteTolerance
+                p.SetPersistentData(gk.Types.GH_Number(NUM_TOL))
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Curve()
+                self.SetUpParam(p, "Res_Curve", "R", "Result curve")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                p1 = self.marshal.GetInput(DA, 1)
+                p2 = self.marshal.GetInput(DA, 2)
+                result = self.RunScript(p0, p1, p2)
+
+                if result is not None:
+                    self.marshal.SetOutput(result, DA, 0, True)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAS3SURBVEhLxZV5bBRVHMeH4hZLbWnrVW3pgT1Q0FqRXrQ7u9vdndmj2wOQSIJXQKrEmHjGqG2kRo3BEGOkwahERAP6hyhGKYFUiPa+thQWW9qipYootnSDIGif3+/bWYsNHv/5ST7J+/3ezHszb97vjfJ/MRO2wadkdAmsmj9bdfVUq3r3dourK6C6Ok9ZXD0nre6+3SWOr8zGZX/LDPg6FHAlE8Ts8t9cWnb0WZv7UMDuOyps3oDA4MNmvWOnqre9ana21VtcvUMO35Cw6F2qcds/Uh81O2Uyz7KrTqsY3e8oHxZWt1+UaK17KlZOeh94UcQb111EbQSuCahae5eRuDSeO4L2xCTfB4nJPuGsPC5yC7aIxCSvMJnm8K2+ga/AG3ntdMxayxMWV7co8n0ZY6SmyFc/T8M67vUsnxCJyeUiIsIUiI7J6kHXr7AKLoNb4FnIyd6AUfBPVK1tldXTJ1S9JdlIhVhibywo9X4dtHkCY1rliGfGzFnbkW6F18ATsBmGmQNrICfxw2uhBMuz2uo+KFR3a6KRwmvZv8jExwmWlvW3FzoaOCD5EAZCTWUB5GD7ZDTFEsi364WXM2HW22pVvf28qjbKGNRGWNwH/cX2AyIlZc11RpK8B7nei2SkKA7ISbbKaIpCyPxbDDD4DrPePsy2RNU67tGqvhcJVxc3IuQah3kX8ka6jQlwF2T8goymeA4yn2nzHunCJB/LLMGa9+XkbWanCz4E06EHXoBc34ch+0sheRoyXiejEPzQ4yZT3G7Uymk89OMyqzo75rNo0jOqNyNcCu+Ea+A5yEE6IBmFH4WaknrI/koZhdgUl3CbcPgGsYP8BTLDLcWKXLVu8kqZCMEP2wk3wnEmANtnoElGIT6BnITfgKxIy6wWdt/gjw5HQ7TMoMxrsK3O63r/LJlQFL4Jb0qC4fWOgE6jvRCGiYR8Q9bE9TBrUdE2TDDwGdoh8LXXm7U2LgfhunOQR2WkKD7IOBVy37O9Gl5MAvwW9sfG36Jb3b04n/oekT2kRGtfy6IwQnbsDDUlWZB94XVmsb0faipcY9YAuQEGr0q0Bx3lxyatzpacUBqY9a7FPP2SUpe9ifAdyEHD8NjmNwjvew4+AudBTsxtHCYje2HNmRJnczA1VQ0XmKLctLwv0uoJnFiQu+EnhMchb3wbcquSl+Ek5DbMhez/GfbDyyC5Ha7HuTUWHZPB/tdkNkyJ1vK8s2L0l5z8jWkIH4MsfV64AfKNhmAT5AR8S1bpg5DFNQiFKTJOzJ13t7giNpv9vPcZGCJPb4nFCTpR6j2yx0jxnH8J8sIJ2ACD8Dd4Gv4O2ccH2TE7JvU+q8s/4awc3YuY1EH23ysjYnY0u/SqH4TF3cvjNwy36ibIiubgHIAboQIuhhJ96cl9dt/QeIlz/1wjRVg3f91xWKq1nMSG/4HqbMow0oTnOuuD25lHx61QcZYfK8K5M1JaNnCu2HEgn7l/xexoKrN5D4/bywawn7u3WvVu5/1PCtaAEhWTmR8Vnd6dlLKiG8W0S6v8Dv/lQz2FauN8efN/pbj403j8vOuwXKfw6oJ/J7PeedbmOTyG/8UFHAX4N/f2qy7/9KKbhqL8AUkUrA5Nwo8/AAAAAElFTkSuQmCC"
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def __init__(self):
+                self.tol, self.pln = (None for _ in range(2))
+
+            def message1(self, msg1):  # 报错红
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
+
+            def message2(self, msg2):  # 警告黄
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
+
+            def message3(self, msg3):  # 提示白
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
+
+            def mes_box(self, info, button, title):
+                return rs.MessageBox(info, button, title)
+
+            def Branch_Route(self, Tree):
+                """分解Tree操作，树形以及多进程框架代码"""
+                Tree_list = [list(_) for _ in Tree.Branches]
+                Tree_Path = [list(_) for _ in Tree.Paths]
+                return Tree_list, Tree_Path
+
+            def split_tree(self, tree_data, tree_path):
+                """操作树单枝的代码"""
+                new_tree = ght.list_to_tree(tree_data, True, tree_path)  # 此处可替换复写的Tree_To_List（源码参照Vector组-点集根据与曲线距离分组）
+                result_data, result_path = self.Branch_Route(new_tree)
+                if list(chain(*result_data)):
+                    return result_data, result_path
+                else:
+                    return [[]], result_path
+
+            def format_tree(self, result_tree):
+                """匹配树路径的代码，利用空树创造与源树路径匹配的树形结构分支"""
+                stock_tree = gd[object]()
+                for sub_tree in result_tree:
+                    fruit, branch = sub_tree
+                    for index, item in enumerate(fruit):
+                        path = gk.Data.GH_Path(System.Array[int](branch[index]))
+                        if hasattr(item, '__iter__'):
+                            if item:
+                                for sub_index in range(len(item)):
+                                    stock_tree.Insert(item[sub_index], path, sub_index)
+                            else:
+                                stock_tree.AddRange(item, path)
+                        else:
+                            stock_tree.Insert(item, path, index)
+                return stock_tree
+
+            def _planr_curve_box(self, curve_list):
+                init_box = rg.BoundingBox.Empty
+                cur_box = [_.GetBoundingBox(True) for _ in curve_list]
+                for single_box in cur_box:
+                    init_box.Union(single_box)
+                return init_box
+
+            def _curve_stitching(self, origin_curves, rest_curve):
+                origin_curves = list(origin_curves)
+                single_curve = rest_curve[0]
+
+                for origin_c in origin_curves:
+                    _event = rg.Intersect.Intersection.CurveCurve(origin_c, single_curve, self.tol, self.tol)
+                    _list_event = list(_event)
+                    if _list_event:
+                        new_origin_c = rg.Curve.JoinCurves([origin_c, single_curve])[0]
+                        origin_curves.remove(origin_c)
+                        origin_curves.append(new_origin_c)
+
+                rest_curve.remove(single_curve)
+                if rest_curve:
+                    return self._curve_stitching(origin_curves, rest_curve)
+                else:
+                    return origin_curves
+
+            def connect_start_end(self, single_cuvre):
+                start_pt = single_cuvre.PointAtStart
+                end_pt = single_cuvre.PointAtEnd
+                line_curve = rg.Line(start_pt, end_pt).ToNurbsCurve()
+                single_region = rg.Curve.JoinCurves([single_cuvre, line_curve])[0]
+                return single_cuvre if not single_region.IsClosed else single_region
+
+            def intersect_curve(self, region_curve, disjoint_list):
+                region_curve = region_curve if type(region_curve) is list else [region_curve]
+                region_curve = rg.Curve.CreateBooleanUnion(region_curve, self.tol)[0]
+
+                intersect_pts = []
+                others_region_list = map(self.connect_start_end, disjoint_list)
+                a_part = [_ for _ in others_region_list if _.IsClosed]
+
+                b_part = [_ for _ in others_region_list if _ not in a_part]
+
+                if b_part:
+                    for curve in b_part:
+                        pts, cur_list = [], []
+                        curve_intersections = rg.Intersect.Intersection.CurveCurve(region_curve, curve, self.tol, self.tol)
+                        if list(curve_intersections):
+                            for i in curve_intersections:
+                                if i.IsPoint:
+                                    pts.append(i.PointA)
+                            intersect_pts.append(pts)
+                    intersect_pts = list(chain(*intersect_pts))
+                    if intersect_pts:
+
+                        import Point_group
+                        sorted_indexes = Point_group.SortPointByRightHand().right_hand_rule(intersect_pts, rg.PointCloud(intersect_pts).GetBoundingBox(True).Center, self.pln.XAxis, self.pln)
+
+                        sorted_pts = [intersect_pts[_] for _ in sorted_indexes]
+                        sorted_pts.append(sorted_pts[0])
+                        poly_line_curve = rg.PolylineCurve(sorted_pts)
+                        poly_line_curve = poly_line_curve if poly_line_curve.IsClosed else None
+                    else:
+                        poly_line_curve = None
+                else:
+                    poly_line_curve = None
+                temp_curve = rg.Curve.CreateBooleanUnion([region_curve, poly_line_curve] + a_part, self.tol)
+                if temp_curve:
+                    interval_curve = temp_curve
+                else:
+                    interval_curve = [region_curve]
+                return interval_curve
+
+            def _curved_profile(self, tuple_data):
+                curves, origin_path = tuple_data
+                nur_cur_list = [_.ToNurbsCurve() for _ in curves]
+                res_box = self._planr_curve_box(nur_cur_list)
+                frame_curve = rg.Curve.JoinCurves([_.ToNurbsCurve() for _ in res_box.GetEdges() if _.IsValid is True])[0]
+
+                new_nur_list = []
+                disjoint_line = []
+                for _ in nur_cur_list:
+                    curve_event = rg.Intersect.Intersection.CurveCurve(frame_curve, _, self.tol, self.tol)
+                    turn_list_curve = list(curve_event)
+                    if turn_list_curve:
+                        new_nur_list.append(_)
+                    else:
+                        disjoint_line.append(_)
+                join_curve_arr = rg.Curve.JoinCurves(new_nur_list)
+
+                factor_closed = [_.IsClosed for _ in join_curve_arr]
+                if any(factor_closed):
+                    first_closed = [_ for _ in join_curve_arr if _.IsClosed]
+                    closed_curve = [_ for _ in disjoint_line if _.IsClosed]
+                    if closed_curve:
+                        temp_curve = rg.Curve.CreateBooleanUnion(first_closed + closed_curve, self.tol)[0]
+                        res_curve = self.intersect_curve(temp_curve, disjoint_line + [_ for _ in new_nur_list if _.IsClosed is False])
+                    else:
+                        no_join_curves = [_ for _ in nur_cur_list if _.IsClosed is False]
+                        res_curve = self.intersect_curve(first_closed, no_join_curves)
+                else:
+                    interface_curve = join_curve_arr
+                    disjoint_join_line = rg.Curve.JoinCurves(disjoint_line)
+                    repair_line = list(chain(*[_.DuplicateSegments() for _ in disjoint_join_line]))
+                    repair_line = [_ for _ in repair_line if _.IsValid]
+                    stitching_curve = self._curve_stitching([interface_curve[0]], repair_line + list(interface_curve[1:]))
+                    res_curve = rg.Curve.JoinCurves(stitching_curve, self.tol)
+
+                ungroup_data = self.split_tree(res_curve, origin_path)
+                Rhino.RhinoApp.Wait()
+                return ungroup_data
+
+            def RunScript(self, Curve_List, Plane, Tolerance):
+                try:
+                    sc.doc = Rhino.RhinoDoc.ActiveDoc
+                    self.tol = Tolerance
+                    self.pln = Plane
+                    Res_Curve = gd[object]()
+
+                    re_mes = Message.RE_MES([Curve_List], ['C end'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                    else:
+                        curve_trunk, curve_trunk_path = self.Branch_Route(Curve_List)
+                        zip_list = zip(curve_trunk, curve_trunk_path)
+                        iter_ungroup_data = ghp.run(self._curved_profile, zip_list)
+                        Res_Curve = self.format_tree(iter_ungroup_data)
+
+                    sc.doc.Views.Redraw()
+                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                    sc.doc = ghdoc
+                    return Res_Curve
+                finally:
+                    self.Message = 'Curve plane profile'
 
 
     else:
