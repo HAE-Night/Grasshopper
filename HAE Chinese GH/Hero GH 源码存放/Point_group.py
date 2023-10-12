@@ -1350,6 +1350,226 @@ try:
                 finally:
                     self.Message = 'Points are sorted by the right hand rule'
 
+
+        # 在指定平面内找出共面点
+        class CopPoints(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP_CopPoints", "Q21", """Find coplanar points in the specified plane""", "Scavenger", "A-Point")
+                return instance
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.tertiary
+
+            def get_ComponentGuid(self):
+                return System.Guid("dc315fbd-b47a-442e-8b6e-e9db4b621900")
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Point()
+                self.SetUpParam(p, "Pts", "P", "Set of points")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Plane()
+                self.SetUpParam(p, "Plane", "Pl", "Specified plane")
+                NORMAL_PL = rg.Plane.WorldXY
+                p.SetPersistentData(gk.Types.GH_Plane(NORMAL_PL))
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Number()
+                self.SetUpParam(p, "Tolerance", "T", "The distance from the point to the plane")
+                NUM = 0.0
+                p.SetPersistentData(gk.Types.GH_Number(NUM))
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Point()
+                self.SetUpParam(p, "Coplanar_Pt", "P", "A point in the specified plane")
+                self.Params.Output.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Point()
+                self.SetUpParam(p, "Non_Coplanar_Pt", "N", "A point that is not in the specified plane")
+                self.Params.Output.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Integer()
+                self.SetUpParam(p, "Index1", "I1", "Subscript of the point in the specific plane at the origin set")
+                self.Params.Output.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Integer()
+                self.SetUpParam(p, "Index2", "I2", "The subscript of a point in a nonspecified plane in the origin set")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                p1 = self.marshal.GetInput(DA, 1)
+                p2 = self.marshal.GetInput(DA, 2)
+                result = self.RunScript(p0, p1, p2)
+
+                if result is not None:
+                    if not hasattr(result, '__getitem__'):
+                        self.marshal.SetOutput(result, DA, 0, True)
+                    else:
+                        self.marshal.SetOutput(result[0], DA, 0, True)
+                        self.marshal.SetOutput(result[1], DA, 1, True)
+                        self.marshal.SetOutput(result[2], DA, 2, True)
+                        self.marshal.SetOutput(result[3], DA, 3, True)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAPSSURBVEhLzVVLaFVHGJ56Z+acmbk38UUXxSLWV33gworWhRRBaBXEKoiPKMk9c07uI4kxQUQ3LbSUQhZtF3bTquAD0a0oqOBCV6JSFAQ1Ii1FcaEuBFF84PX7/zMmBnJFIQs/GM6Zf+b/55v/NeKd6BRKVd1GVXNb8G+DdIzQIyKVmjOq1zXUdgxvL4i6KIbVD0OcxFNVxR6XdfeP9HYnyWQWf6O6YTi1+djmGtqbdaxAaBMturc0O8xGor84WawXOp/8KCQMXGKW9ZytTs3aKIumqy7MKzDeidHjGoXELScV+sJtd1TNvlKZPSc6YZCwRTiZ2WOqah/Jqr1FJOHn4mRmSEYCU5mav2m/SsyvMPISCq/goj0QfQJmBenNdToQxhuqr0ju+5324/a7eB4IydT+SzcYx77ugwK5hJh6s5oUCLpSmqk7i1+GKe3X2P8Qh5LhBsUIBx6hJSLGMSOidHNvn7GO2FqahFP/hEtOqsS15cLmgBt2c0zIWMU+kUm8lOX4Yv7ircSgW78HcMvwN4SCt6tkt+vT5eLcIGKA/Vfwws9wXxJEzRH5aIaquNOqbgeVNwPk/7A0BoAxsLnAVyV/I0bwcVdYbQrs+ZpuIDNTH0kIVSvaRRxmgooKBzzlYA1n16GwynGTvaWlYv2E1iDJa4fIYG8gtI8XEIx25O1tjP9lYnpYCCDNjqp+bKaUxEB9rGF52SyB6+5x1lXsf8q7Bfl+s5+ND2fRc6FTPYvzto5Roy9OTswiUqD+ozLzi+5C8fh4A8sAKJ4fMkQZ480pksvU9XO6k3G6sTeDlA3fMUPaTHnNivEmttQEYHqF2dN+0sWBvID+xbeo2QfwxlUcsFiI9tbxCMhNDiaN1N4VVfcpKzQBuQpd9gXXQdU+LWRuRVjK0ds6PvwFJOYz9JYBbP4tKkdfBOk7gYKcD0JtOtGjN7yPAqpsveqy5+DPw3FH/HkQD6OB5jcayMW+ZWKYjQ6dmO85gNSy89hcftPjdVKajUw5i8y7qb39gRUC0Ah/gqsfYTxAkLtzKU6E4A9ZcwdlR7yMRCNymtoyUs+kZgr1Jaxd5fSktM6bWpl0CmW7kklRmlLB1Vwjfxq9vcj5SwYr9mWURtPo0Rkygi+K7gZX++bWCXzo2+9HZv7KScX9eV1AHlIeV3Lz6CRmOdTf4/zZ9Ha3rNlrSMkT2hfnkCy8HyeYUHBhIbXf0hI3x8w+ZqJ0UIaUzxmZ+7yZ2OL7RqEpeia2qMwNUIVTrIKUoTrsQll1B2TV7NUdeiYLcbVl8NlFsB3Eo7GDhWMCIV4DUCZZvLJ5OWoAAAAASUVORK5CYII="
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def __init__(self):
+                self.ref_plane, self.tol = (None for _ in range(2))
+
+            def message1(self, msg1):  # 报错红
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
+
+            def message2(self, msg2):  # 警告黄
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
+
+            def message3(self, msg3):  # 提示白
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
+
+            def mes_box(self, info, button, title):
+                return rs.MessageBox(info, button, title)
+
+            def Branch_Route(self, Tree):
+                """分解Tree操作，树形以及多进程框架代码"""
+                Tree_list = [list(_) for _ in Tree.Branches]
+                Tree_Path = [list(_) for _ in Tree.Paths]
+                return Tree_list, Tree_Path
+
+            def split_tree(self, tree_data, tree_path):
+                """操作树单枝的代码"""
+                new_tree = ght.list_to_tree(tree_data, True, tree_path)  # 此处可替换复写的Tree_To_List（源码参照Vector组-点集根据与曲线距离分组）
+                result_data, result_path = self.Branch_Route(new_tree)
+                if list(chain(*result_data)):
+                    return result_data, result_path
+                else:
+                    return [[]], result_path
+
+            def format_tree(self, result_tree):
+                """匹配树路径的代码，利用空树创造与源树路径匹配的树形结构分支"""
+                stock_tree = gd[object]()
+                for sub_tree in result_tree:
+                    fruit, branch = sub_tree
+                    for index, item in enumerate(fruit):
+                        path = gk.Data.GH_Path(System.Array[int](branch[index]))
+                        if hasattr(item, '__iter__'):
+                            if item:
+                                for sub_index in range(len(item)):
+                                    stock_tree.Insert(item[sub_index], path, sub_index)
+                            else:
+                                stock_tree.AddRange(item, path)
+                        else:
+                            stock_tree.Insert(item, path, index)
+                return stock_tree
+
+            def coplanar_pts(self, sub_tuple_data):
+                pts, plane = sub_tuple_data
+                xform = rg.Transform.PlaneToPlane(self.ref_plane, plane)
+                copy_pt = [rg.Point3d(_) for _ in pts]
+                [_.Transform(xform) for _ in copy_pt]
+
+                z_list = [abs(_) for _ in zip(*copy_pt)[-1]]
+                need_data_index = []
+                no_data_index = []
+                for z_index, z_item in enumerate(z_list):
+                    if z_item <= self.tol:
+                        need_data_index.append(z_index)
+                    else:
+                        no_data_index.append(z_index)
+
+                need_data = [pts[_] for _ in need_data_index]
+                no_data = [pts[_] for _ in no_data_index]
+                return need_data_index, no_data_index, need_data, no_data
+
+            def _coplanar(self, pts, pln):
+                copy_pln = rg.Plane(pln)
+                copy_pln.Origin = pts[0]
+                xform = rg.Transform.PlaneToPlane(self.ref_plane, copy_pln)
+                copy_pt = [rg.Point3d(_) for _ in pts]
+                [_.Transform(xform) for _ in copy_pt]
+                z_list = [abs(_) for _ in zip(*copy_pt)[-1]]
+
+                total, count, need_index = 0, 0, []
+                while len(z_list) > total:
+                    flatten_list = list(chain(*need_index))
+                    if count not in flatten_list:
+                        sub_index = []
+                        for _ in range(len(z_list)):
+                            if abs(z_list[count] - z_list[_]) <= self.tol:
+                                sub_index.append(_)
+                        need_index.append(sub_index)
+                        total += len(sub_index)
+                    count += 1
+
+                coplar_pt = map(lambda x: [pts[_] for _ in x], need_index)
+                return coplar_pt, need_index
+
+            def _do_main(self, tuple_data):
+                pts_list, plane_list, origin_path = tuple_data
+                if len(plane_list) == 1:
+                    need_list, need_indexes = self._coplanar(pts_list, plane_list[0])
+                    no_indexes, no_list = [], []
+                else:
+                    set_pts_list = [pts_list] * len(plane_list)
+                    sub_zip_list = zip(set_pts_list, plane_list)
+                    need_indexes, no_indexes, need_list, no_list = zip(*map(self.coplanar_pts, sub_zip_list))
+                ungroup_data = map(lambda x: self.split_tree(x, origin_path), [need_indexes, no_indexes, need_list, no_list])
+                Rhino.RhinoApp.Wait()
+                return ungroup_data
+
+            def RunScript(self, Pts, Plane, Tolerance):
+                try:
+                    sc.doc = Rhino.RhinoDoc.ActiveDoc
+                    self.ref_plane = rg.Plane.WorldXY
+                    self.tol = Tolerance
+                    Coplanar_Pt, Non_Coplanar_Pt, Index1, Index2 = [gd[object]() for _ in range(4)]
+
+                    re_mes = Message.RE_MES([Pts, Plane], ['P', 'Pl'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                    else:
+                        pts_trunk, pst_trunk_path = self.Branch_Route(Pts)
+                        plane_trunk, plane_trunk_path = self.Branch_Route(Plane)
+                        pts_len, plane_len = len(pts_trunk), len(plane_trunk)
+
+                        if pts_len > plane_len:
+                            new_pts_trunk = pts_trunk
+                            new_plane_trunk = plane_trunk + [plane_trunk[-1]] * (pts_len - plane_len)
+                            target_trunk_path = pst_trunk_path
+                        elif pts_len < plane_len:
+                            new_pts_trunk = pts_trunk + [pts_trunk[-1]] * (plane_len - pts_len)
+                            new_plane_trunk = plane_trunk
+                            target_trunk_path = plane_trunk_path
+                        else:
+                            new_pts_trunk = pts_trunk
+                            new_plane_trunk = plane_trunk
+                            target_trunk_path = pst_trunk_path
+
+                        zip_list = zip(new_pts_trunk, new_plane_trunk, target_trunk_path)
+                        iter_ungroup_data = zip(*ghp.run(self._do_main, zip_list))
+                        Index1, Index2, Coplanar_Pt, Non_Coplanar_Pt = ghp.run(lambda single_tree: self.format_tree(single_tree), iter_ungroup_data)
+
+                    sc.doc.Views.Redraw()
+                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                    sc.doc = ghdoc
+                    return Coplanar_Pt, Non_Coplanar_Pt, Index1, Index2
+                finally:
+                    self.Message = 'Grouping of coplanar points'
+
+
     else:
         pass
 except:
