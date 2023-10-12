@@ -1302,6 +1302,7 @@ try:
                 return matched_elements
 
             def iter_offset(self, origin_object, vector_list, new_object_list):
+                origin_object = rg.Point(origin_object) if type(origin_object) is rg.Point3d else origin_object
                 origin_vector = vector_list[0]
                 copy_object = origin_object.Duplicate()
                 copy_object.Translate(origin_vector)
