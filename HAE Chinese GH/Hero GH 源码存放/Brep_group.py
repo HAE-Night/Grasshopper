@@ -2465,19 +2465,19 @@ try:
                     self.Message = 'Brep is closed or not'
 
 
-        # 面板折边（规整铝板）
-        class Surface_flanging(component):
+        # 沿向量两侧拉伸集合物体
+        class BOPP(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_Surface_flanging", "R15", """Panel folding, suitable for regular aluminum plate, special plate need semi-manual work""", "Scavenger", "D-Brep")
+                                                                   "RPP_BOPP", "R34", """Stretch the object along both sides of the vector""", "Scavenger", "D-Brep")
                 return instance
-
-            def get_ComponentGuid(self):
-                return System.Guid("4ffb7d64-abfe-46ec-95af-f2de4fb17088")
 
             @property
             def Exposure(self):
-                return Grasshopper.Kernel.GH_Exposure.secondary
+                return Grasshopper.Kernel.GH_Exposure.primary
+
+            def get_ComponentGuid(self):
+                return System.Guid("2fc1ad34-d653-4a44-88b1-5999a8057347")
 
             def SetUpParam(self, p, name, nickname, description):
                 p.Name = name
@@ -2486,52 +2486,31 @@ try:
                 p.Optional = True
 
             def RegisterInputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_Brep()
-                self.SetUpParam(p, "fold_surface", "S", "original surface")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Base", "B", "Curve or surface")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
-                p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "fold_size", "S", "Universal folding width")
-                p.SetPersistentData(Grasshopper.Kernel.Types.GH_Number(20))
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
-                self.Params.Input.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_Curve()
-                self.SetUpParam(p, "Edge_Tree", "EL", "Curve list, enter the edges that need to be defined,if no input,make folding uniformly")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
-                self.Params.Input.Add(p)
-
-                p = GhPython.Assemblies.MarshalParam()
-                self.SetUpParam(p, "Size_Tree", "SL", "folding width list, control the list of curve value, quantity must be consistent with curve list")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+                p = Grasshopper.Kernel.Parameters.Param_Vector()
+                self.SetUpParam(p, "Direction", "D", "Stretch vector")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Fill_Brep", "R", "Combine face after offset folding")
-                self.Params.Output.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Folded_Surface", "S", "edge after offset make up of face偏移的边写组成的面")
+                p = Grasshopper.Kernel.Parameters.Param_Brep()
+                self.SetUpParam(p, "Extrusion", "E", "Stretched solid")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
                 p0 = self.marshal.GetInput(DA, 0)
                 p1 = self.marshal.GetInput(DA, 1)
-                p2 = self.marshal.GetInput(DA, 2)
-                p3 = self.marshal.GetInput(DA, 3)
-                result = self.RunScript(p0, p1, p2, p3)
+                result = self.RunScript(p0, p1)
 
                 if result is not None:
-                    if not hasattr(result, '__getitem__'):
-                        self.marshal.SetOutput(result, DA, 0, True)
-                    else:
-                        self.marshal.SetOutput(result[0], DA, 0, True)
-                        self.marshal.SetOutput(result[1], DA, 1, True)
+                    self.marshal.SetOutput(result, DA, 0, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAPISURBVEhLrVVtbBRVFB2DJhpNdna6s/Ox64DYph80MST+wp/4xxi1Il9FKElVoqSKGq1UQaBgtQVDAesH1MWGSA1WpdFo0oJtoYR2urhb2q5rt5ZWxVWoMTVNU0i9xzvlVQ2MuxviSW4mefPeuW/OPfeOlAlw0vI6T4qaC2lAWzCz+H+CurQIndWfn7L9YRoxiRJmJ/qNjdQXuEtsuX5Qt343zplIfKbilQdkCpV7YTdmgfo1IGGAhowIDehVFDHuQZt0oziWOahbq8OvAewt8+CHddkYfToHzSuDqF3uwzvPyTjZoOBSlJMNc7KEMUgxvZZs/T6EpZsExX+DotqtdEa/+Funit1FPqAyH9iWB1Txc2s+fuJkXxTfjn3LVewr8+LYfi8n0UFRvVNQpAZ1+YuRDOCTnTKOF1tXiLfk/hOzyTjxLxty0LLGQs2DPhzc7mmmwcCzaSVj/VsxYqCmRMbEi0y49V/kV4fzblchPnrYxPkWH9fIOAZJukFQXQvqUe/kTdPxo1moL2KNqwrciWeDE0yW56JmtQx8z/Xo9i8WVO7gQm3BxQAOVHjQV3oHsJ3lcCOejdfy0b7Kwld7uQ5xI4Ej0hxBdS0AaQ4nGLrcq6FmmQLafJX2blFZMGOESxE/qFffJKjcAdt/L0YDaK/3omlpIL08lXn4cX026jbIjlUv47Q2T1C5g7r0RiRN1D7lQbIs+4pb3Ihngy/QuMRE7FNuwJjxpaBxB8KGj74xJi60q9hTpLL2aW7PMf1yHqpXeLmzuQfO6EsElTtY+/VO5x55Q0bHo+x9Lp4b6d+xIx92yTw0vc7yfGf8jLa5Nwsqd/Bg68EQe5/t5tgupfed2FGAtx7yY/y0Cuoz3hQ07qBT5kLETfQ1KQgV6emLuy0XY9zBu9ex953BZ2uFgsodLM8eXAjgvXIPYo/PT+99vkDzsiC6D7GV48YpQeMOnLW8FNanpiLs/UcU4NUMvM97ZvZ+6ww4rVRQuQNhr4dvEfr6XS9aV3Jxdy1IrT9/3cBj89GwmYs7aPyONo8sqFKjovS2UH2xHx1r5mLyJSZy6uAmFa8f4BmVPD4z2N4Xx9ODhs21523/ny37Fbz9pIKGpQb6n+B6OJI5o9lpOv6yiRdysXMtF5cdR7a6SBzPDDRiFdBYcNN0TIv2fp6Fj6sV1JX4cHRFEMlncoDqQpxYbSH8IXdu3IiLY9cHGrcWUdKsHbPVc52HFXxQoeDgKh0bF8t/TPZorfz3St25mYIoeAtNWffTqHFo+IQ63hGSD4tXKSBJfwFJUlB3sB8X5AAAAABJRU5ErkJggg=="
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAL+SURBVEhL7ZbbSxRhGMbfyAOtus66J1udVVx13Z3zuLvaZi6oncNFwhJ0E8wKNLADGV2EdNFBaEHtogI7/AN6EbSQN4sIIhQR/QPlXRCrUIS5gW/fzkyt6zqY2F098MDM+3zv95vhY3gH1slJXLGF84iztM/nC/p8vnbtNlsnPYXRWC+9OhMpT870bO5Xfc7k5UbTLFmeq3YBhEKhUlkWJwSeR1EQkOf4OAH5tTit+23WBZzgEO969U3yF12OFYBiUyAQaJQE4bnAc2upjRmvVzHPcSqI52dFUewMBoNFCmC0zRrHUbLJiFvfJH/ZVbq421R1rF6WX4s8Py0IwvlQMOgjGyc4lkVJkiJ+We6QRPGZLMvvJEG6vi3A9GlHAgoKbEqTppGRkTyeZZdST8+KYkgrK+rs7FTP7E8BU6ccS2Q5pTRpCofD1C8AeaNDWjlT2wSY1C5V/wFp6wDGY7H8Kp5PVPIccsHgAa2cqZ0AwGCQ2m2l37rtDrRS1KBWzdTYEVscx1jEOx59kzzWXbYRYBwuMn3E8mrE8hqcNNl/GAAkLUtrwE/F5wcrcb7fqe+LlXi71bIR0DBnd+Ka041f6BpcJiB3Tt41LUsrAIb4JbDhBbDqeojkB6FoI8Byy2heQroWkXbjlMWBFORkn8MJMMYfgROjUK7rhyTvBXPWGeTn57f2W+wrV217sbrQeFMrZ+ooATwAGu9Bma4nSN4DJVmAx/gml2bZRBnLYG1j436tnKmdAMLh0Nbfwb8D6IaSZbLcqHap+stvYPpMVZZWRCIRs9YKiLiLbJ5IARiG+X3IZE4UtrS02JWbPwX0ArVodLsOy5L0nkyst2R0RpubmzvINFtmyURr8PuvNDc1DQf8/jlfff0HWRDUj+44FC88gQocJ5voeZLkZ6DkO1leSNO0w1tXd4PM4U8EhhzDKDNZuSYgkk26XC5Z2TwlDvZEz4Fl9SyYk32bOFUfAGuyCQpSfxXrf11yPB7PEMswXzmORcbjeep2ux1aRgTwE9f/qK4AhlbxAAAAAElFTkSuQmCC"
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
@@ -2540,103 +2519,83 @@ try:
             def mes_box(self, info, button, title):
                 return rs.MessageBox(info, button, title)
 
-            # 数据转换成树和原树路径
-            def Restore_Tree(self, Before_Tree, Tree):
-                Tree_Path = [_ for _ in Tree.Paths]
-                After_Tree = gd[object]()
-                for i in range(Tree.BranchCount):
-                    After_Tree.AddRange(Before_Tree[i], Tree_Path[i])
-                return After_Tree
+            def Branch_Route(self, Tree):
+                """分解Tree操作，树形以及多进程框架代码"""
+                Tree_list = [list(_) for _ in Tree.Branches]
+                Tree_Path = [list(_) for _ in Tree.Paths]
+                return Tree_list, Tree_Path
 
-            # 重新定义向量的长度
-            def ver_lenght(self, vec_size):
-                vector, size = vec_size
-                unit_vector = vector / vector.Length  # 将原向量单位化
-                new_vector = []
-                if "float" in str(type(size)):
-                    new_vector.append(unit_vector * size)  # 创建新的向量，长度为new_length
-
-                elif len(size) >= 1:
-                    for i_vce_ in size:
-                        if i_vce_ != 0:
-                            new_vector.append(unit_vector * i_vce_)
-                        else:
-                            new_vector.append(0)
-                return new_vector
-
-            # 数据自动补齐
-            def data_polishing_list(self, data_a, data_b):
-                fill_count = len(data_a) - len(data_b)
-                # 补齐列表
-                if fill_count > 0:
-                    data_b += [data_b[-1]] * fill_count
-                return data_b
-
-            def add_fillet_to_edges(self, fillet):
-                brep_surface, fillet_vector = fillet
-                # 获取曲面的边界
-
-                edges = [cur for cur in brep_surface.DuplicateEdgeCurves()]
-                one_surface = [brep_surface]
-                one_surface2 = []
-                if len(fillet_vector) == 1:
-                    for edge_g in edges:
-                        one_surface.append(rg.Surface.CreateExtrusion(edge_g, fillet_vector[0]).ToBrep())
-                        one_surface2.append(rg.Surface.CreateExtrusion(edge_g, fillet_vector[0]).ToBrep())
+            def split_tree(self, tree_data, tree_path):
+                """操作树单枝的代码"""
+                new_tree = ght.list_to_tree(tree_data, True, tree_path)  # 此处可替换复写的Tree_To_List（源码参照Vector组-点集根据与曲线距离分组）
+                result_data, result_path = self.Branch_Route(new_tree)
+                if list(chain(*result_data)):
+                    return result_data, result_path
                 else:
-                    if len(edges) == len(fillet_vector):
-                        for i_num_ in range(len(edges)):
-                            if fillet_vector[i_num_] != 0:
-                                extrusion = rg.Surface.CreateExtrusion(edges[i_num_], fillet_vector[i_num_]).ToBrep()
-                                one_surface.append(extrusion)
-                                one_surface2.append(extrusion)
-                    else:
-                        for i_num_ in range(len(fillet_vector)):
-                            extrusion = rg.Surface.CreateExtrusion(edges[i_num_], fillet_vector[i_num_]).ToBrep()
-                            one_surface.append(extrusion)
-                            one_surface2.append(extrusion)
-                Brep = rg.Brep.CreateBooleanUnion(one_surface, 0.01)[0]
-                Brep2 = rg.Brep.CreateBooleanUnion(one_surface2, 0.01)[0] if one_surface2 else None
-                return Brep, Brep2
+                    return [[]], result_path
 
-            def RunScript(self, fold_surface, fold_size, Edge_Tree, Size_Tree):
+            def format_tree(self, result_tree):
+                """匹配树路径的代码，利用空树创造与源树路径匹配的树形结构分支"""
+                stock_tree = gd[object]()
+                for sub_tree in result_tree:
+                    fruit, branch = sub_tree
+                    for index, item in enumerate(fruit):
+                        path = gk.Data.GH_Path(System.Array[int](branch[index]))
+                        if hasattr(item, '__iter__'):
+                            if item:
+                                for sub_index in range(len(item)):
+                                    stock_tree.Insert(item[sub_index], path, sub_index)
+                            else:
+                                stock_tree.AddRange(item, path)
+                        else:
+                            stock_tree.Insert(item, path, index)
+                return stock_tree
+
+            def RunScript(self, Base, Direction):
                 try:
-                    # 传参判断
-                    re_mes = Message.RE_MES([fold_surface], ['fold_surface'])
+                    sc.doc = Rhino.RhinoDoc.ActiveDoc
+                    Extrusion = gd[object]()
+                    tol = sc.doc.ModelAbsoluteTolerance
+
+                    re_mes = Message.RE_MES([Base, Direction], ['B端', 'D端'])
                     if len(re_mes) > 0:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
-                        return gd[object](), gd[object]()
                     else:
-                        sc.doc = Rhino.RhinoDoc.ActiveDoc
-
-                        # 参数定义处理
-                        fold_vector_count = []
-                        for surface in fold_surface:  # 面法线获取
-                            fold_vector_count.append(-(surface.Faces[0].NormalAt(0.5, 0.5)))
-
-                        # 根据参数输入进行向量生成
-                        if (Edge_Tree.DataCount == 0) or (Edge_Tree.BranchCount >= 0 and Size_Tree.DataCount == 0):
-                            ver_zip = list(zip(fold_vector_count, self.data_polishing_list(fold_surface, fold_size)))
-                            fold_size_count = ghp.run(self.ver_lenght, ver_zip)
-                            fold = list(zip(fold_surface, fold_size_count))
-                        elif Edge_Tree.BranchCount >= 0 and Size_Tree.DataCount > 0:
-                            if Size_Tree.BranchCount == 1:
-                                ver_zip = list(zip(fold_vector_count, self.data_polishing_list(ght.tree_to_list(Edge_Tree), [ght.tree_to_list(Size_Tree)])))
+                        contour_line = None
+                        if 'Curve' in str(Base):
+                            contour_line = Base
+                        elif 'Brep' in str(Base):
+                            face_list = [f for f in Base.Faces]
+                            if len(face_list) == 1:
+                                line_list = [_ for _ in Base.Edges]
+                                contour_line = rg.Curve.JoinCurves(line_list, tol)[0]
                             else:
-                                ver_zip = list(zip(fold_vector_count, self.data_polishing_list([data_ for data_ in Edge_Tree.Branches], [data_ for data_ in Size_Tree.Branches])))
-                            fold_size_count = ghp.run(self.ver_lenght, ver_zip)
-                            fold = list(zip(fold_surface, fold_size_count))
+                                Message.message2(self, "This stretch only supports surface or line stretching！")
+                        else:
+                            Message.message2(self, "This stretch only supports surface or line stretching！")
 
-                        Fill_Brep, Folded_Surface = zip(*ghp.run(self.add_fillet_to_edges, fold))
+                        if contour_line:
+                            ext_1 = ghc.Extrude(contour_line, Direction)
+                            ext_2 = ghc.Extrude(contour_line, Direction * -1)
 
+                            union_brep = rg.Brep.JoinBreps([ext_1, ext_2], tol)[0]
+                            cap_brep = union_brep.CapPlanarHoles(tol)
+                            if cap_brep:
+                                cap_brep.MergeCoplanarFaces(tol)
+                                Extrusion = cap_brep
+                            else:
+                                union_brep.MergeCoplanarFaces(tol)
+                                Extrusion = union_brep
+                        if Extrusion.SolidOrientation == rg.BrepSolidOrientation.Inward:
+                            Extrusion.Flip()
+
+                    sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
                     sc.doc = ghdoc
-                    return Fill_Brep, Folded_Surface
+                    return Extrusion
                 finally:
-                    self.Message = 'HAE surface folding'
-
-
+                    self.Message = 'BOPP'
 
     else:
         pass
@@ -2655,13 +2614,13 @@ class AssemblyInfo(GhPython.Assemblies.PythonAssemblyInfo):
         Grasshopper.Instances.ComponentServer.AddCategoryShortName('Scavenger', 'Save')
 
     def get_AssemblyName(self):
-        return "Tradition v4.3(Test)"
+        return "Tradition v4.4"
 
     def get_AssemblyDescription(self):
         return """HAE plug-in"""
 
     def get_AssemblyVersion(self):
-        return "4.3"
+        return "4.4"
 
     def get_AuthorName(self):
         return "HAE Development Team"
