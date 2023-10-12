@@ -59,6 +59,13 @@ try:
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
+                p = Grasshopper.Kernel.Parameters.Param_Boolean()
+                self.SetUpParam(p, "F_Center", "C", "Whether to arrange according to geometric center point")
+                Center_Factor = False
+                p.SetPersistentData(gk.Types.GH_Boolean(Center_Factor))
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
                 self.SetUpParam(p, "_place", "*", "placeholder（Each center point）")
@@ -67,7 +74,8 @@ try:
             def SolveInstance(self, DA):
                 p0 = self.marshal.GetInput(DA, 0)
                 p1 = self.marshal.GetInput(DA, 1)
-                result = self.RunScript(p0, p1)
+                p2 = self.marshal.GetInput(DA, 2)
+                result = self.RunScript(p0, p1, p2)
 
                 if result is not None:
                     self.marshal.SetOutput(result, DA, 0, True)
@@ -77,7 +85,7 @@ try:
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
-                self.pts, self.lines, self.bbox, self.factor = (None for _ in range(4))
+                self.pts, self.lines, self.bbox, self.factor, self.show_cen = (None for _ in range(5))
 
             def message1(self, msg1):
                 return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
@@ -93,7 +101,10 @@ try:
 
             def _get_lines(self, pts):
                 new_pts, line_list = None, None
-                if pts:
+                if type(pts) is not list:
+                    new_pts = pts
+                    return new_pts, line_list
+                else:
                     ply_line = rg.PolylineCurve(pts)
                     center_pt = ght.tree_to_list(Geometry_group.GeoCenter().RunScript(ght.list_to_tree([ply_line])))[0]
                     sc_trf = rg.Transform.Scale(center_pt, 0.8)
@@ -108,16 +119,20 @@ try:
                 return new_pts, line_list
 
             def _get_all_pts(self, obj):
-                _obj_pts = []
+                _obj_pt = []
                 if isinstance(obj, (rg.Curve, rg.Line)):
-                    _obj_pts = [_.Location for _ in obj.ToNurbsCurve().Points]
+                    _obj_pt = [_.Location for _ in obj.ToNurbsCurve().Points]
                 elif isinstance(obj, (rg.Brep)):
-                    _obj_pts = [_.Location for _ in obj.Vertices]
+                    _obj_pt = [_.Location for _ in obj.Vertices]
                 elif isinstance(obj, (rg.Point3d)):
-                    _obj_pts = obj
+                    _obj_pt = obj
                 elif isinstance(obj, (rg.Point)):
-                    _obj_pts = obj.Location
-                return _obj_pts
+                    _obj_pt = obj.Location
+
+                if self.show_cen:
+                    _obj_pt = ght.tree_to_list(Geometry_group.GeoCenter().RunScript(ght.list_to_tree([obj])))[0]
+
+                return _obj_pt
 
             def _do_main(self, data):
                 _gener = map(self._get_all_pts, data)
@@ -132,19 +147,21 @@ try:
                             pt_list.append(_)
 
                 set_of_pts, set_of_line = self._get_lines(pt_list)
+                set_of_pts = set_of_pts if type(set_of_pts) is not rg.Point3d else [set_of_pts]
                 if set_of_pts:
                     center_pt = rg.PointCloud(set_of_pts).GetBoundingBox(True).Center
                 else:
                     center_pt = rg.Point3d(0, 0, 0)
                 return set_of_pts, set_of_line, center_pt
 
-            def RunScript(self, Geo, Format):
+            def RunScript(self, Geo, Format, F_Center):
                 try:
                     sc.doc = Rhino.RhinoDoc.ActiveDoc
 
                     origin_data = [list(_) for _ in Geo.Branches]
                     _place = gd[object]()
                     self.factor = Format
+                    self.show_cen = F_Center
 
                     if origin_data:
                         list_pts, list_line, cen_pts = zip(*ghp.run(self._do_main, origin_data))
@@ -164,7 +181,10 @@ try:
                     sc.doc = ghdoc
                     return _place
                 finally:
-                    self.Message = 'Display point order'
+                    if not self.show_cen:
+                        self.Message = 'Display point order'
+                    else:
+                        self.Message = 'Display Geometry order'
 
             def DrawViewportWires(self, args):
                 try:
@@ -175,7 +195,7 @@ try:
                     for f_items in self.pts:
                         if f_items:
                             for sub_index in range(len(f_items)):
-                                args.Display.Draw2dText(str(sub_index), System.Drawing.Color.Green, f_items[sub_index], True, 100)
+                                args.Display.Draw2dText(str(sub_index), System.Drawing.Color.Green, f_items[sub_index], True, 40)
                 except:
                     pass
 
