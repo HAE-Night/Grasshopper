@@ -81,6 +81,12 @@ try:
                 o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAJLSURBVEhLYxgFFIOkDEf1smzd+LxkDTguy9aKz0y1coMqIQ38//9f4N+/f+xQLkNeslrhxAL2/+3pzHA8MY/5f0mixEmgYkZfX1/X/v5+d6A+ZqgW3GDv3r3aBgYGbysrK3dDhRjyk1UyOzKY/9cnMMBxRxrD/4okwU2Vcz+JcnJw/I+JifkPdJQ+VAtucPv2bZWGhoZ/y5Yt2wkVwmtByZQvEkAl/wMCAkAWmEF04AFPnz6VMzU1/VNbW0ucD2Z/FmdkYPgXGBgIssAEqgU3uHr1qqqYmNj/7Ozs41Ah6loACiJpaen/eXl5R6FCBC0AKvkXFhYGskAVogMPuHfvnrqMjMz/3Nzcy1AhoiywtLT8X15eXuHq6hq6atUqY4hOLACY1JgmT568+OjRo8VQIYbmMq34ifnM/zvSgQZD8cRchv/N2YJrgepZ9PT0/khISPxXUFD4r6am9n/RokXnoFoxgCUQJ3FwcIQB6UggTgVhXWW2JaFWwJRiisBhlgz/7fQYrrCzs6cDwaXMzMynqampT7Oysp6WlZXNBurDCkCGzkPHAnK6x5SdU/8r2MXBsZJTyn9JA89nUDXdQNyJhOOAmHiQselLbNaWH/+Tlj+D48xN3/4nLH28HaqEMhAy8Xhm0vKn/6NnX4XjxKWP/4dNPbMHqoQyMGoBQUB7CyYdz0pe+eJ/zNwbcAxKSeHTzu6DKqEMhEw4mpW47PH/qFmX4ThhycP/YZNP7YUqoQx4t28RDJl4Qsuvew8cg/hezVvkoUoGEjAwAACkarXImiYxrAAAAABJRU5ErkJggg=="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
+            def Branch_Route(self, Tree):
+                """分解Tree操作，树形以及多进程框架代码"""
+                Tree_list = [list(_) for _ in Tree.Branches]
+                Tree_Path = [list(_) for _ in Tree.Paths]
+                return Tree_list, Tree_Path
+
             def RunScript(self, Lists, Index):
                 try:
                     List = gd[object]()
@@ -89,6 +95,7 @@ try:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
                     else:
+                        Lists = self.Branch_Route(self.Params.Input[0].VolatileData)[0][self.RunCount - 1]
                         index_list = Index.split(" ")
                         List = []
                         for i in index_list:
@@ -244,6 +251,12 @@ try:
                 o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAATRSURBVEhLlZQNUFRVGIaFBKUgwdT4S3SbiRUFTBQMCIap0WCMMZB1VsHAAB3QQYhaoJkoGAVWfkQUkpV1RcFNVEBWkVRIWDZ+lASWAM0JJQJjJARRcZb79t3dW9M4TCzvzDP33Hu/93v3nD3nzplOAPhjAz2iP+qLkx8osveyDDWcSv9LfeOQRqPZxpXpL4ZhTAjbw4cPf5iQkLCBxu/frzl2sy/uHXTv5eEXlkhLDEvCMMVMHeNs+qutrW2dQCBoNDc3h6+vLyjA8W5RtLjzs0VQCs10BL4C9bcb2Xezn0F6enp1UFAQ7Ozs4OXlxTbx7i6KSu8MX4LG7QsIcyi3GKMzRRvgxNn0V19fn4iMVd7e3lNubm5sE48eKc3gpQB16kfsu/c42+xERisPDw84OzuzTTIHao93NG2dD9U2My3KwLno3u/LaBjmC84yO1FTW09PTzg6OrIBkt+vFjb/xK79dgstDQITmsFGDe2wIM6ivwYHB18bHh7e5u7uDj5/BfNkfLz8dtvP7Yey8pGTdVRLduYRlBSfeabRTEZwNv2VkZFxnM/nw9jYGIaGhli8eBFzorSCOSCrwzeF1Vq+yq+C/GoHOzs/zqa/aJuKy8rKhktKSvpLS0v7S04X99cqb42kFlxEakGFlq+PnMeZyy1swLucbXYi4+vEPFpjI2JBU/u9S2JpDRdQieSj5ThRfuMp1cQSAkJIrCc+YJgJa67N9KKGFgSPu2XDbPqGHv96UHYNYtlVLWlFVyC71Do5xjDXRhlGwV4fM0wz7apy8m7mrNOLCiwrKir20598lnbSueDg4NY9++I0foGf4uOgUPgLQrGJroEhu7EzPhWhcSladiVm4MsD+dgXG98VEBDwvVAovBAREfFDeHh4CvU059prA0wlEkksew5cXFzg5uYKhxUOWMEnHAga29vzsWw5D7bW1rC1YbGisRWsLS3x1tKlcKC6lStXgsfjwc/PDxMTE2u59jqNj4+/2dTUtCctLc1FoagMuHipJq7murJKfr66kEVxpbZS8WNzV57iNjLPtyDzXAvEZ1twsrYH1+uVsry8vDVyuXxHTEzMVpVKlUXL7EXM49rPLCq2pnUXX/gNkLZrIGPpAMp62cPN5OwM3ZFrZGR0x8DAYGT16tXDFFZEz5dw9plFxckPhwZaK0/JUFZUiDKpBGePf4cq+WnmxbMnFyIiI5GUlIRIulI56Lv2gpbeU+fWQxQgHKqX53WELoQqwACqLXPR+MkctEe/jUf3e1JpGklU4zoyMiIxMTGBj48Pe2b8OfvMomLHB5cL4ruil6NRaKr9yiq3muBu0noM9dwK5mrmhYWFVdMQOTk5fXRvxz7XS1S8duC6NFEXYKb7hAteRW+iK0bvd+ym92/k5ubKqBRRUVHsrw/TOfXUPwHqaN6/AQ00g444JzCTY+JC6cl8U1NThISETFFtIWHDWfUTGdYMXpOKXg5oj3XC89FB2YKFi8eoDKtWrZqysLDotbe3v1dXVxeqc88g2g2GFLCpv6YgUR2xhP5gI6gE81G/eQ5ady3DxKOB2wezD00mJycjPj4eIpEI2dnZUKvVn3Mt/l9cQNrzP+887En3R6vIHTcTvdCdsgGDRZF4OjJwjN6vI9z/Ax00ZuHfi+JXnno5lNAAAAAASUVORK5CYII="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
+            def Branch_Route(self, Tree):
+                """分解Tree操作，树形以及多进程框架代码"""
+                Tree_list = [list(_) for _ in Tree.Branches]
+                Tree_Path = [list(_) for _ in Tree.Paths]
+                return Tree_list, Tree_Path
+
             def ListToTree(self, List, index):
                 DataTree = gd[object]()
                 for i in range(List.BranchCount):
@@ -270,14 +283,18 @@ try:
 
             def RunScript(self, List, Index):
                 try:
+                    DataTree = gd[object]()
                     re_mes = Message.RE_MES([List, Index], ['List', 'Index'])
                     if len(re_mes) > 0:
-                        for mes_i in re_mes:
-                            Message.message2(self, mes_i)
-                        return gd[object]()
+                       for mes_i in re_mes:
+                           Message.message2(self, mes_i)
                     else:
-                        DataTree = self.ListToTree(List, Index)
-                        return DataTree
+                        List_one = gd[object]()
+                        YList, YList_Path = self.Branch_Route(self.Params.Input[0].VolatileData)
+                        for _ in range(len(YList)):
+                            List_one.AddRange(YList[_], GH_Path(tuple(YList_Path[_])))
+                        DataTree = self.ListToTree(List_one, Index)
+                    return DataTree
                 finally:
                     self.Message = 'List cutting'
 
@@ -445,6 +462,12 @@ try:
             def __init__(self):
                 pass
 
+            def Branch_Route(self, Tree):
+                """分解Tree操作，树形以及多进程框架代码"""
+                Tree_list = [list(_) for _ in Tree.Branches]
+                Tree_Path = [list(_) for _ in Tree.Paths]
+                return Tree_list, Tree_Path
+
             def mes_box(self, info, button, title):
                 return rs.MessageBox(info, button, title)
 
@@ -456,6 +479,7 @@ try:
                             Message.message2(self, mes_i)
                         return gd[list](), gd[list](), gd[list](), gd[list](), gd[list]()
                     else:
+                        List = self.Branch_Route(self.Params.Input[0].VolatileData)[0][self.RunCount - 1]
                         return List[1:], List[:-1], List[1:-1], List[0], List[-1]
                 finally:
                     self.Message = 'The beginning and end of the list are deleted'
@@ -702,6 +726,38 @@ try:
             def __init__(self):
                 pass
 
+            def Branch_Route(self, Tree):
+                """分解Tree操作，树形以及多进程框架代码"""
+                Tree_list = [list(_) for _ in Tree.Branches]
+                Tree_Path = [list(_) for _ in Tree.Paths]
+                return Tree_list, Tree_Path
+
+            def split_tree(self, tree_data, tree_path):
+                """操作树单枝的代码"""
+                new_tree = ght.list_to_tree(tree_data, True, tree_path)  # 此处可替换复写的Tree_To_List（源码参照Vector组-点集根据与曲线距离分组）
+                result_data, result_path = self.Branch_Route(new_tree)
+                if list(chain(*result_data)):
+                    return result_data, result_path
+                else:
+                    return [[]], result_path
+
+            def format_tree(self, result_tree):
+                """匹配树路径的代码，利用空树创造与源树路径匹配的树形结构分支"""
+                stock_tree = gd[object]()
+                for sub_tree in result_tree:
+                    fruit, branch = sub_tree
+                    for index, item in enumerate(fruit):
+                        path = gk.Data.GH_Path(System.Array[int](branch[index]))
+                        if hasattr(item, '__iter__'):
+                            if item:
+                                for sub_index in range(len(item)):
+                                    stock_tree.Insert(item[sub_index], path, sub_index)
+                            else:
+                                stock_tree.AddRange(item, path)
+                        else:
+                            stock_tree.Insert(item, path, index)
+                return stock_tree
+
             def handle_list_data(self, data):
                 for single in data:
                     if isinstance(single, (list)) is True:
@@ -715,9 +771,12 @@ try:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
                     else:
-                        Data_Tree.SimplifyPaths()
-                        origin_data = [list(_) for _ in Data_Tree.Branches]
-                        path_list = [list(d.Indices) for d in Data_Tree.Paths]
+                        Tree, Tree_Path = self.Branch_Route(self.Params.Input[0].VolatileData)
+                        origin_tree = self.format_tree(map(lambda x: self.split_tree(x[0], x[1]), zip(Tree, Tree_Path)))
+                        origin_tree.SimplifyPaths()
+
+                        origin_data = [list(_) for _ in origin_tree.Branches]
+                        path_list = [list(d.Indices) for d in origin_tree.Paths]
                         minpath = set([_[0] for _ in path_list])
                         depest_list = []
                         for father_index in minpath:
@@ -1038,37 +1097,94 @@ try:
                 o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAOVSURBVEhL3ZVbaBRXGMenlF4pfRDRYqS0Raomu3Nd9jK7s7Mze012d+6TzdXE2GJrkdKX+hBFEu9JS1WMASXqaxAR2peKUTGhrqu7O2k0LU1M8YIPLQiFtoq0cHrOeBqUvmRjnvqDw57vO9/3/873zewu8f8ieNd6DW+XFvqGyjNT+nfsrHWZdfRPKEf7gqmYpHsIwAvu52JZM5N5hayqs4Gi0R0otqwMTGgRsqJeZEqmj5xSt7L3Cmfh+e76m/YblKNuY+81j5CTusxUtBAzbfbRs9YI+YPuwXJEmOPepijqHWwSBOXkG+iy+hM2XbxV9QxVUT8nHfUOM6n1eKfUX2HRTqaomtyM/Zm3qlwiq8pJ6nvtW+6G0QvtcziVkKLCVUmM3uc4brnroJxsHRS63XWy61XXAYHJo1DwCPTPeUu5Xmba6GVKSpR0lCFurnnQU1XGYDenPKV8c2hSXwE7vIzyRJ7fmknGQSaVAFEhPAZdLyI/QVaU4/SPxgX6lnmYva7vgLf/hrmqdsKbXWHv2N3Q3kyVFR3at6ibOuqgDH2nPdDvu6as9cxq58XVzJp4THyckGNAjkXdInww+IFbAEE7us1Nmx8Fx7J11Hg+LMKOqIl8Aztj7aaLuS3c17nX6bJiU46+jSmpcfqKkmCK2nr/TPub9HjWkiOCk0rIrjhaaA/HVcbyz4fs5Qcb04l5cbRQJ2I08gcOWTyhgG8jum1cEp8pgHywwCQOWxzwdZSg8MN/5/70Qs9AjPAf49DasdLS2jY99zAZl/4j7s5fFKbhq/oSDq+NALuOyyXknze12u6spafE0ahQUb/fL+Hw2uBZSuoysg+6LR0YTSnQmIqj284XQKPx+3zDOLw21Fwm3mHm/7KbEuDDFhO0a1mQfjKOefGYKIzC0JefZNRAnxFKH9iQ/P3TQhPY1GqBNk0BuUxyXjwNv8FQvLqoufdbIevL9ujfx3pk0GcE76tJ+UEBFpBiojv/VEJChX4jSfJ9nLJw+m2+42BnDBzdKIOBVuGXAbv+LSuffLenxZxrTCXdBwrXI5+PFnHKwum3eAWJH9oQA191iKBPDyTxEVFfv3qZwPOjjenUYz2fz2D3wtmphzxwLH8i8eGeONhlhbbjo2eQJKkBbxfOToVfNdAizB3pksBQtwz2FsKH8dHSsKcQPnFqcxocheL7CuEh7F469hmR9wZbheL+QgT93D7HfzJB/AP43Ixsj34I7QAAAABJRU5ErkJggg=="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
-            def fit_main(self, data):
-                if 'str' in str(type(data)):
-                    if " " != data:
-                        return data
-                elif data:
-                    return data
+            def Branch_Route(self, Tree):
+                """分解Tree操作，树形以及多进程框架代码"""
+                Tree_list = [list(_) for _ in Tree.Branches]
+                Tree_Path = [list(_) for _ in Tree.Paths]
+                return Tree_list, Tree_Path
 
-            def Data_cut(self, datalist):
-                # filter 过滤空值
-                dalist = list(filter(self.fit_main, datalist))
-                return dalist
+            def split_tree(self, tree_data, tree_path):
+                """操作树单枝的代码"""
+                new_tree = ght.list_to_tree(tree_data, True, tree_path)  # 此处可替换复写的Tree_To_List（源码参照Vector组-点集根据与曲线距离分组）
+                result_data, result_path = self.Branch_Route(new_tree)
+                if list(chain(*result_data)):
+                    return result_data, result_path
+                else:
+                    return [[]], result_path
+
+            def format_tree(self, result_tree):
+                """匹配树路径的代码，利用空树创造与源树路径匹配的树形结构分支"""
+                stock_tree = gd[object]()
+                for sub_tree in result_tree:
+                    fruit, branch = sub_tree
+                    for index, item in enumerate(fruit):
+                        path = gk.Data.GH_Path(System.Array[int](branch[index]))
+                        if hasattr(item, '__iter__'):
+                            if item:
+                                for sub_index in range(len(item)):
+                                    stock_tree.Insert(item[sub_index], path, sub_index)
+                            else:
+                                stock_tree.AddRange(item, path)
+                        else:
+                            stock_tree.Insert(item, path, index)
+                return stock_tree
+
+            # def fit_main(self, data):
+            #     if isinstance(data, str):
+            #         # 去除左右两侧的空格，并判断是否为空字符串
+            #         if data.strip():
+            #             return data
+            #     elif data:
+            #         return data
+            #
+            # def Data_cut(self, datalist):
+            #     data_list, origin_path = datalist
+            #     # filter 过滤空值，并保留整数类型的0值
+            #     dalist = [data for data in data_list if self.fit_main(data) is not None or data == 0]
+            #     ungroup_data = self.split_tree(dalist, origin_path)
+            #     Rhino.RhinoApp.Wait()
+            #     return ungroup_data
+
+            def cut_data(self, tuple_data):
+                new_data, new_index = [], []
+                data_list, path = tuple_data
+                # 循环遍历待清洗的数据
+                for index, data in enumerate(data_list):
+                    # 判断数据是否为文字或者数字
+                    if isinstance(data, (gk.Types.GH_String, gk.Types.GH_Number)):
+                        if data.Value != '':  # 判断是否为空字符串
+                            new_str = str(data).strip()  # 去除左右两侧的空格
+
+                            new_data.append(new_str)
+                            new_index.append(path)
+                    else:
+                        # 排None
+                        if data:
+                            new_data.append(data)
+                            new_index.append(path)
+                if new_data:
+                    return new_data, new_index
+                else:
+                    return None
 
             def RunScript(self, Data):
                 try:
-                    re_mes = Message.RE_MES([Data], ['Data'])
+                    New_Tree = gd[object]()
+                    re_mes = Message.RE_MES([Data], ['D end'])
                     if len(re_mes) > 0:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
-                        return gd[object]()
                     else:
-                        tree_Data = [list(data_) for data_ in Data.Branches]
-                        tree_path = [path_ for path_ in Data.Paths]
+                        # 输入端参数调整
+                        tree_Data, tree_path = self.Branch_Route(self.Params.Input[0].VolatileData)
+                        tree_zip_list = zip(tree_Data, tree_path)
 
-                        Datas = ghp.run(self.Data_cut, tree_Data)
-                        New_Tree = gd[object]()
-                        for tr_ in range(Data.BranchCount):
-                            if Datas[tr_]:
-                                New_Tree.AddRange(Datas[tr_], tree_path[tr_])
-                            else:
-                                continue
-                        return New_Tree
+                        # 数据清洗
+                        Datas_Trunk = filter(None, ghp.run(self.cut_data, tree_zip_list))
+
+                        New_Tree = self.format_tree(Datas_Trunk)
+
+                    return New_Tree
                 finally:
                     self.Message = 'Data cleaning'
 
@@ -1482,12 +1598,22 @@ try:
                 try:
                     sc.doc = Rhino.RhinoDoc.ActiveDoc
                     Result = gd[object]()
-                    factor_trunk_list, t_trunk_list, f_trunk_list = self.Branch_Route(Factor)[0], self.Branch_Route(T_Factor)[0], self.Branch_Route(F_Factor)[0]
+
                     re_mes = Message.RE_MES([Factor, T_Factor, F_Factor], ['Factor', 'T_Factor', 'F_Factor'])
                     if len(re_mes) > 0:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
                     else:
+                        T_Factor, F_Factor = gd[object](), gd[object]()
+                        TList, TList_Path = self.Branch_Route(self.Params.Input[1].VolatileData)
+                        for _ in range(len(TList)):
+                            T_Factor.AddRange(TList[_], GH_Path(tuple(TList_Path[_])))
+
+                        FList, FList_Path = self.Branch_Route(self.Params.Input[2].VolatileData)
+                        for _ in range(len(FList)):
+                            F_Factor.AddRange(FList[_], GH_Path(tuple(FList_Path[_])))
+
+                        factor_trunk_list, t_trunk_list, f_trunk_list = self.Branch_Route(Factor)[0], self.Branch_Route(T_Factor)[0], self.Branch_Route(F_Factor)[0]
                         len_factor, len_t, len_f = len(factor_trunk_list), len(t_trunk_list), len(f_trunk_list)
                         if len_t != len_f:
                             Message.message1(self, "Filtering data is inconsistent！")
@@ -1710,6 +1836,10 @@ try:
             def get_ComponentGuid(self):
                 return System.Guid("c331dd23-ac5f-4032-bffb-339f7e5a874e")
 
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.secondary
+
             def SetUpParam(self, p, name, nickname, description):
                 p.Name = name
                 p.NickName = nickname
@@ -1826,6 +1956,13 @@ try:
                         return gd[object](), gd[object](), gd[object]()
                     else:
                         sc.doc = Rhino.RhinoDoc.ActiveDoc
+
+                        Data_List = gd[object]()
+                        YList, YList_Path = self.Branch_Route(self.Params.Input[0].VolatileData)
+
+                        for _ in range(len(YList)):
+                            Data_List.AddRange(YList[_], GH_Path(tuple(YList_Path[_])))
+
                         self.shift = Shift
                         self.cull_list = Eliminate
                         origin_data, data_path = self.Branch_Route(Data_List)
@@ -1865,9 +2002,11 @@ try:
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
-                p = Grasshopper.Kernel.Parameters.Param_String()
+                p = Grasshopper.Kernel.Parameters.Param_Integer()
                 self.SetUpParam(p, "Index", "I", "subscript")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+                INT_NUMBER = 0
+                p.SetPersistentData(gk.Types.GH_Integer(INT_NUMBER))
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
@@ -1890,26 +2029,70 @@ try:
             def __init__(self):
                 pass
 
+            def Branch_Route(self, Tree):
+                """分解Tree操作，树形以及多进程框架代码"""
+                Tree_list = [list(_) for _ in Tree.Branches]
+                Tree_Path = [list(_) for _ in Tree.Paths]
+                return Tree_list, Tree_Path
+
+            def split_tree(self, tree_data, tree_path):
+                """操作树单枝的代码"""
+                new_tree = ght.list_to_tree(tree_data, True, tree_path)  # 此处可替换复写的Tree_To_List（源码参照Vector组-点集根据与曲线距离分组）
+                result_data, result_path = self.Branch_Route(new_tree)
+                if list(chain(*result_data)):
+                    return result_data, result_path
+                else:
+                    return [[]], result_path
+
+            def format_tree(self, result_tree):
+                """匹配树路径的代码，利用空树创造与源树路径匹配的树形结构分支"""
+                stock_tree = gd[object]()
+                for sub_tree in result_tree:
+                    fruit, branch = sub_tree
+                    for index, item in enumerate(fruit):
+                        path = gk.Data.GH_Path(System.Array[int](branch[index]))
+                        if hasattr(item, '__iter__'):
+                            if item:
+                                for sub_index in range(len(item)):
+                                    stock_tree.Insert(item[sub_index], path, sub_index)
+                            else:
+                                stock_tree.AddRange(item, path)
+                        else:
+                            stock_tree.Insert(item, path, index)
+                return stock_tree
+
             def RunScript(self, Tree_Data, Index):
                 try:
-                    re_mes = Message.RE_MES([Tree_Data, Index], ['Tree_Data', 'Index'])
+                    re_mes = Message.RE_MES([Tree_Data], ['T end'])
+                    Result = gd[object]()
                     if len(re_mes) > 0:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
-                        return gd[object]()
                     else:
-                        new_index_list = []
-                        for single_str in Index:
-                            new_index_list.append([int(_) for _ in single_str.split(',')])
-                        leaf_result = [list(_) for _ in Tree_Data.Branches]
-                        Result = []
-                        for single_index in range(len(new_index_list)):
-                            try:
-                                Result.append([leaf_result[_] for _ in new_index_list[single_index]])
-                            except IndexError:
-                                self.message1('Out of index range！{} List data is error,the original data list start from 0 to {}'.format(single_index + 1, len(leaf_result) - 1))
-                                Result.append(None)
-                        return ght.list_to_tree(Result)
+                        # 输入端参数构造
+                        structure_tree = self.Params.Input[0].VolatileData
+                        origin_data, origin_path = self.Branch_Route(structure_tree)
+                        # 判断输入端是否为列表
+                        if len(origin_data) != 1:
+                            origin_data = origin_data
+                        else:
+                            origin_data = list(chain(*origin_data))
+
+                        # 判断下标是否越界
+                        if Index >= len(origin_data):
+                            Message.message2(self, "Out of index range!")
+                        else:
+                            out_data = [origin_data[Index]]
+                            # 输出端的数据结构与输入端保持一致
+                            out_path = origin_path[0] if len(origin_path) <= 1 else origin_path[Index]
+
+                            zip_list = zip([out_data], [out_path])
+                            # 分割树
+                            ungroup_data = map(lambda x: self.split_tree(x[0], x[1]), zip_list)
+                            iter_ungroup_data = ungroup_data
+                            # 匹配树
+                            Result = self.format_tree(iter_ungroup_data)
+                    return Result
                 finally:
                     self.Message = 'Tree data values'
 
@@ -1965,6 +2148,12 @@ try:
             def __init__(self):
                 self.num = None
 
+            def Branch_Route(self, Tree):
+                """分解Tree操作，树形以及多进程框架代码"""
+                Tree_list = [list(_) for _ in Tree.Branches]
+                Tree_Path = [list(_) for _ in Tree.Paths]
+                return Tree_list, Tree_Path
+
             def RunScript(self, List, Split):
                 try:
                     re_mes = Message.RE_MES([List, Split], ['List', 'Split'])
@@ -1973,12 +2162,70 @@ try:
                             Message.message2(self, mes_i)
                         return gd[object]()
                     else:
+                        List = self.Branch_Route(self.Params.Input[0].VolatileData)[0][self.RunCount - 1]
                         self.num = len(List) if Split is None else Split
                         New_list = [List[_: _ + self.num] for _ in range(0, len(List), self.num)]
                         Tree = ght.list_to_tree(New_list)
                         return Tree
                 finally:
                     self.Message = 'Definition length tree'
+
+
+        # 获取数据详细信息
+        class Data_message(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP_Data_message", "D41", """Get data details.""", "Scavenger",
+                                                                   "G-Data")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("a946c7ad-a18f-471c-a9e7-038677fce6a4")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.tertiary
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Data", "D", "Data")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Group", "G", "Information result")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                result = self.RunScript(p0)
+
+                if result is not None:
+                    self.marshal.SetOutput(result, DA, 0, True)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAANUSURBVEhL3VRLTxtnFGXTDT8Aqet2kUSFhkUQqaxYSKhuCbExEEhTTRLSlKZqGwUIiBCwhbGMbXCxW4iIHR5JeIWWiqLaiRQ8DjOe99jGHgw2j1W2/IfTmZEVKTvbyxzpalbnO3PvuedWfPT4pK6ujrh29VrPj81dPW3mth6z2fxBWa3WHovFcr+qqqq6wCke1eerLa//fYW0tIspKQSO5ZBgJDAsA5Zl35eiKBgYGFAKtOLRYbR2/c4HcSf9EF9mLPhVtuOlsIm9pAKe55FIJCCKIk5OTjA5OXlcoBWPm4ZO4hHjwdlsE5qSd/CZYsJYdAoz3j8RiUTg8XjQ29uL+fl5eL3eXIFWPFqNFmJ+ZxnN6W50yL+hNfEL1tlNhGaC2kgQCARAkiQWFhYwMjJSuoDBaCB4koXA8lhlNsBTHERKgCiJkGUZkiQhHo/j6OiovA6ajCZifecfBMUXaEzdwlN2GSTzFpIggaIoCIKAZDKJg4MDjI+Ply5w03Cd6GPHUJNtwaXU9zifscJFBrDxbF03d3FxEXa7XfdDNbl0gU5jK+Gng6jda9VNrlUFnsSfw20fR19fnzZ3LC0taY+X50GDsYF4E9vGgrgKD/8YL9h10HEasiQjGo3qI9J8yOfz5Y2oURWIxF5ji4+gM3EPW/Ew2DijZ4Cmaf2rebC/v1++Bw9YJy7sXUX9bge+Sn8Hb2wG/73c0h9eW1uDy+XSV9Xn85UucN3YTnjpx/gia8Y3yR9wTmnGdHwOziGHnoPBwUGEQiG43W7YbLbSBUzqmm69DcMlT8Mh+DHFBRFlSciijHA4DI5Tb5N6LrQ1VTspXeCiGjSB5LDPKHjCPUeKSkCmRFA0BYZhdB+0yigZrYvSBdoNFsJHz+JuagQ1aQvuiw78xW3q11VLsLZBWqIPDw/LE9CO3UPGjTPZy/hW9eDzPfXYkVOYCwR1Y/1+P/r7+7GysoKJiYkyOrhkvTFHL+PrzG20JH/GldRPWGU3MO37Qw+aen/0FM/OzmpByxdoxaO+vv6GzMtI5dPYzu4graSRUw5wfHyMXC6nHzktA6enp3A6ne8KtOJRWVn5aXd3998uhyvmGBqN2YZtseHh4Q9K/fPY6OhozGQy3S3QPipUVPwPo2OA6KHbqXIAAAAASUVORK5CYII="
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def RunScript(self, Objects):
+                try:
+                    re_mes = Message.RE_MES([Objects], ['Objects'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                        return gd[object]()
+                    else:
+                        Group = Objects.TopologyDescription
+                        return Group
+                finally:
+                    self.Message = 'Data detail'
 
     else:
         pass
