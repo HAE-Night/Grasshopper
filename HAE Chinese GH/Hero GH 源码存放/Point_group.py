@@ -20,6 +20,7 @@ from itertools import chain
 
 Result = initialization.Result
 Message = initialization.message()
+TreeFun = initialization.TreeOperation()
 try:
     if Result is True:
         # 点序排序
@@ -345,16 +346,17 @@ try:
                 self.tol, self.format_put = None, None
 
             def remove_duplicate_points(self, tuple_data):  # 删除重复的点
-                points, origin_path = tuple_data
+                points, origin_pt_list, origin_path = tuple_data
                 new_points = []
                 index_groups = []  # 点分组后的下标
                 for i, p in enumerate(points):
                     flag = False
                     for j, np in enumerate(new_points):
-                        if p.DistanceTo(np) <= self.tol:  # 根据公差判断点是否重复
-                            index_groups[j].append(i)
-                            flag = True
-                            break
+                        if np:
+                            if p.DistanceTo(np) <= self.tol:  # 根据公差判断点是否重复
+                                index_groups[j].append(i)
+                                flag = True
+                                break
                     if not flag:
                         new_points.append(p)  # 添加唯一点
                         index_groups.append([i])
@@ -365,42 +367,33 @@ try:
                     index_groups = [_[0] for _ in index_groups]
                 else:
                     index_groups = index_groups
-                    self.message2("Please input the correct data type！！")
-                ungroup_data = map(lambda x: self.split_tree(x, origin_path), [new_points, index_groups])
+                    Message.message2(self, "Please input the correct data type！！")
+                new_ref_points = [origin_pt_list[_] for _ in index_groups]
+                ungroup_data = map(lambda x: self.split_tree(x, origin_path), [new_ref_points, index_groups])
                 Rhino.RhinoApp.Wait()
                 return ungroup_data
 
             def RunScript(self, Points, Tolerance, Output_Format):
                 try:
                     sc.doc = Rhino.RhinoDoc.ActiveDoc
-                    re_mes = Message.RE_MES([Points], ['Points'])
-                    Reuslt_Pt, Index_Pt = (gd[object]() for _ in range(2))
                     self.format_put = Output_Format
                     self.tol = Tolerance
+                    Reuslt_Pt, Index_Pt = (gd[object]() for _ in range(2))
 
+                    re_mes = Message.RE_MES([Points], ['Points'])
                     if len(re_mes) > 0:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
                     else:
-                        pt_trunk, pt_trunk_path = self.Branch_Route(Points)
-                        zip_list = zip(pt_trunk, pt_trunk_path)
+                        pt_trunk_path = self.Branch_Route(Points)[1]
+
+                        structure_tree = self.Params.Input[0].VolatileData
+                        origin_pts = self.Branch_Route(structure_tree)[0]
+                        gh_origin_pts = map(lambda x: map(TreeFun._trun_object, x), origin_pts)
+                        zip_list = zip(gh_origin_pts, origin_pts, pt_trunk_path)
 
                         iter_ungroup_data = zip(*ghp.run(self.remove_duplicate_points, zip_list))
                         Reuslt_Pt, Index_Pt = ghp.run(lambda single_tree: self.format_tree(single_tree), iter_ungroup_data)
-                        # if Output_Format > 1:
-                        #     Message.message2(self, "Please input the correct data type！！")
-                        #     return gd[object](), gd[object]()
-                        # self.tol = Tolerance
-                        # new_cull_pts, Index = self.remove_duplicate_points(Points)
-                        # if Output_Format:  # 判断输出方式
-                        #     group_points = [[] for _ in range(len(Index))]
-                        #     for i in range(len(Index)):
-                        #         for j in Index[i]:
-                        #             group_points[i].append(Points[j])
-                        #     Reuslt_Pt = ght.list_to_tree(group_points)  # 将重复点列表转化为树
-                        # else:
-                        #     Reuslt_Pt = new_cull_pts
-                        # Index_Pt = ght.list_to_tree(Index)  # 将下标列表转化为树
 
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
@@ -467,41 +460,37 @@ try:
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
-                self.dict_axis = {'X': 'x_coordinate', 'Y': 'y_coordinate', 'Z': 'z_coordinate'}
-
-            def mergesort(self, arr_list):
-                if len(arr_list) <= 1:
-                    return arr_list
-                middle = int(len(arr_list) / 2)
-                l_list, r_list = self.mergesort(arr_list[:middle]), self.mergesort(arr_list[middle:])
-                result = []
-                l_hand, r_hand = 0, 0
-                while l_hand < len(l_list) and r_hand < len(r_list):
-                    if r_list[r_hand] < l_list[l_hand]:
-                        result.append(r_list[r_hand])
-                        r_hand += 1
-                    else:
-                        result.append(l_list[l_hand])
-                        l_hand += 1
-                result += l_list[l_hand:] + r_list[r_hand:]
-                return result
+                pass
 
             def RunScript(self, Pts, Axis, CP):
                 try:
+                    Sort_P = gd[object]()
                     re_mes = Message.RE_MES([Pts], ['Pts'])
                     if len(re_mes) > 0:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
-                        return gd[object]()
                     else:
-                        Axis = Axis.upper()
-                        if Axis not in ['X', 'Y', 'Z']:
-                            Message.message1(self, "Please input the correct coordinate axis！")
+                        structure_tree = self.Params.Input[0].VolatileData
+                        origin_pts = TreeFun.Branch_Route(structure_tree)[0][self.RunCount - 1]
+                        gh_origin_pts = map(TreeFun._trun_object, origin_pts)
+
+                        if len(origin_pts) <= 1:
+                            Sort_P = origin_pts
                         else:
-                            sorted_pts_axis = ghc.PlaneCoordinates(Pts, CP)[self.dict_axis[Axis]]
-                            zip_list_sort = zip(sorted_pts_axis, Pts)
+                            Axis = Axis.upper()
+                            dict_pt_data = dict()
+                            from_plane = rg.Plane.WorldXY
+                            to_plane = CP
+                            xform = rg.Transform.PlaneToPlane(to_plane, from_plane)
+                            copy_pt = [rg.Point3d(_) for _ in gh_origin_pts]
+                            [_.Transform(xform) for _ in copy_pt]
+                            dict_pt_data['X'] = [_.X for _ in copy_pt]
+                            dict_pt_data['Y'] = [_.Y for _ in copy_pt]
+                            dict_pt_data['Z'] = [_.Z for _ in copy_pt]
+                            zip_list_sort = zip(dict_pt_data[Axis], origin_pts)
                             Sort_P = zip(*sorted(zip_list_sort))[1]
-                            return Sort_P
+
+                    return Sort_P
                 finally:
                     self.Message = 'Sort Point'
 
@@ -566,26 +555,62 @@ try:
             def __init__(self):
                 pass
 
-            def mes_box(self, info, button, title):
-                return rs.MessageBox(info, button, title)
+            def Branch_Route(self, Tree):
+                """分解Tree操作，树形以及多进程框架代码"""
+                Tree_list = [list(_) for _ in Tree.Branches]
+                Tree_Path = [list(_) for _ in Tree.Paths]
+                return Tree_list, Tree_Path
+
+            def split_tree(self, tree_data, tree_path):
+                """操作树单枝的代码"""
+                new_tree = ght.list_to_tree(tree_data, True, tree_path)  # 此处可替换复写的Tree_To_List（源码参照Vector组-点集根据与曲线距离分组）
+                result_data, result_path = self.Branch_Route(new_tree)
+                if list(chain(*result_data)):
+                    return result_data, result_path
+                else:
+                    return [[]], result_path
+
+            def format_tree(self, result_tree):
+                """匹配树路径的代码，利用空树创造与源树路径匹配的树形结构分支"""
+                stock_tree = gd[object]()
+                for sub_tree in result_tree:
+                    fruit, branch = sub_tree
+                    for index, item in enumerate(fruit):
+                        path = gk.Data.GH_Path(System.Array[int](branch[index]))
+                        if hasattr(item, '__iter__'):
+                            if item:
+                                for sub_index in range(len(item)):
+                                    stock_tree.Insert(item[sub_index], path, sub_index)
+                            else:
+                                stock_tree.AddRange(item, path)
+                        else:
+                            stock_tree.Insert(item, path, index)
+                return stock_tree
 
             def RunScript(self, Pts, first):
                 try:
+                    sc.doc = Rhino.RhinoDoc.ActiveDoc
                     re_mes = Message.RE_MES([Pts], ['Pts'])
                     if len(re_mes) > 0:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
                         return gd[object](), gd[object]()
                     else:
-                        sc.doc = Rhino.RhinoDoc.ActiveDoc
                         Pt_Result, Index = [], [first]
+
+                        structure_tree = self.Params.Input[0].VolatileData
+                        origin_pts = self.Branch_Route(structure_tree)[0][self.RunCount - 1]
+                        gh_origin_pts = list(map(TreeFun._trun_object, origin_pts))
 
                         def ptsort(pts, tag_ind):
                             pt_list = []
                             for _ in range(len(pts)):
-                                if _ not in Index:
-                                    dis = rg.Point3d.DistanceTo(pts[tag_ind], pts[_])
-                                    pt_list.append((dis, _))
+                                if not pts[_]:
+                                    pt_list.append((0, _))
+                                else:
+                                    if _ not in Index:
+                                        dis = rg.Point3d.DistanceTo(pts[tag_ind], pts[_])
+                                        pt_list.append((dis, _))
                             pt_list.sort()
                             Index.append(pt_list[0][1])
                             if len(Index) == len(pts):
@@ -595,11 +620,12 @@ try:
                             else:
                                 return ptsort(pts, Index[-1])
 
-                        ptsort(Pts, first)
+                        ptsort(gh_origin_pts, first)
+                        Origin_RPt = [origin_pts[_] for _ in Index]
                         sc.doc.Views.Redraw()
                         ghdoc = GhPython.DocReplacement.GrasshopperDocument()
                         sc.doc = ghdoc
-                        return Pt_Result, Index
+                        return Origin_RPt, Index
                 finally:
                     self.Message = 'sort point successively'
 
@@ -897,7 +923,7 @@ try:
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
-                pass
+                self.dis = None
 
             def mes_box(self, info, button, title):
                 return rs.MessageBox(info, button, title)
@@ -960,18 +986,19 @@ try:
                     return [[]], [tree_path]
 
             def on_curve_pts(self, tuple_data):
-                curve_list, pt_list, origin_path = tuple_data
+                curve_list, pt_list, origin_pt_list, origin_path = tuple_data
                 count = 0
                 index_list = []
                 while len(curve_list) > count:
                     sub_curve = curve_list[count]
                     for sub_index, sub_pt in enumerate(pt_list):
-                        res_bool = sub_curve.ClosestPoint(sub_pt, self.dis)[0]
-                        if res_bool and (sub_index not in index_list):
-                            index_list.append(sub_index)
+                        if sub_pt:
+                            res_bool = sub_curve.ClosestPoint(sub_pt, self.dis)[0]
+                            if res_bool and (sub_index not in index_list):
+                                index_list.append(sub_index)
                     count += 1
                 without_index = [_ for _ in range(len(pt_list)) if _ not in index_list]
-                res_pts, without_pts = [pt_list[_] for _ in index_list], [pt_list[_] for _ in without_index]
+                res_pts, without_pts = [origin_pt_list[_] for _ in index_list], [origin_pt_list[_] for _ in without_index]
 
                 ungroup_data = map(lambda x: self.split_tree(x, origin_path), [res_pts, without_pts, index_list, without_index])
                 Rhino.RhinoApp.Wait()
@@ -979,23 +1006,28 @@ try:
 
             def RunScript(self, Curves, Pts, Distance):
                 try:
+                    sc.doc = Rhino.RhinoDoc.ActiveDoc
+                    self.dis = Distance
                     Pts1, Pts2, Indexs1, Indexs2 = (gd[object]() for _ in range(4))
                     re_mes = Message.RE_MES([Curves, Pts], ['Curves', 'Pts'])
                     if len(re_mes) > 0:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
                     else:
-                        sc.doc = Rhino.RhinoDoc.ActiveDoc
-                        self.dis = Distance
-
                         curve_trunk_list, tree_path = self.Branch_Route(Curves)
                         pts_trunk_list = self.Branch_Route(Pts)[0]
+
+                        structure_tree = self.Params.Input[1].VolatileData
+                        origin_pts = self.Branch_Route(structure_tree)[0]
+
                         c_len, p_len = len(curve_trunk_list), len(pts_trunk_list)
                         if c_len > p_len:
                             new_pts_trunk_list = pts_trunk_list + [pts_trunk_list[-1]] * abs(c_len - p_len)
+                            new_origin_pts = origin_pts + [origin_pts[-1]] * abs(c_len - p_len)
                         else:
                             new_pts_trunk_list = pts_trunk_list
-                        distance_zip_list = zip(curve_trunk_list, new_pts_trunk_list, tree_path)
+                            new_origin_pts = origin_pts
+                        distance_zip_list = zip(curve_trunk_list, new_pts_trunk_list, new_origin_pts, tree_path)
                         iter_ungroup_data = zip(*ghp.run(self.on_curve_pts, distance_zip_list))
 
                         Pts1, Pts2, Indexs1, Indexs2 = ghp.run(lambda single_tree: self.format_tree(single_tree), iter_ungroup_data)
@@ -1102,63 +1134,114 @@ try:
                             stock_tree.Insert(item, path, index)
                 return stock_tree
 
+            def _trun_object(self, ref_obj):
+                """引用物体转换为GH内置物体"""
+                if 'ReferenceID' in dir(ref_obj):
+                    if ref_obj.IsReferencedGeometry:
+                        test_pt = ref_obj.Value
+                    else:
+                        test_pt = ref_obj.Value
+                else:
+                    test_pt = ref_obj
+                return test_pt
+
+            # def group_pts(self, tuple_data):
+            #     origin_pts, ref_origin_pts, origin_path = tuple_data
+            #     origin_pt_length = len(origin_pts)
+            #
+            #     point_list, group_list = [], []
+            #
+            #     for pt_index in range(origin_pt_length):
+            #         if not origin_pts[pt_index]:
+            #             continue
+            #
+            #         for sce_pt_index in range(pt_index + 1, origin_pt_length):
+            #             if origin_pts[pt_index].DistanceTo(origin_pts[sce_pt_index]) <= self.distance:
+            #                 current_pair_list = [origin_pts[pt_index], origin_pts[sce_pt_index]]
+            #
+            #                 for pair in current_pair_list:
+            #                     if not pair in point_list:
+            #                         point_list.append(pair)
+            #                         group_list.append(pt_index * sce_pt_index)
+            #                     else:
+            #                         index = point_list.index(pair)
+            #                         old_group = group_list[index]
+            #
+            #                         for k in range(len(group_list)):
+            #                             if group_list[k] == old_group:
+            #                                 group_list[k] = sce_pt_index * sce_pt_index
+            #
+            #     dup_list = [i for n, i in enumerate(group_list) if i not in group_list[:n]]
+            #     res_pt_indexes = []
+            #     for dup_index in dup_list:
+            #         sub_pt_indexes = []
+            #         for group_index, group_item in enumerate(group_list):
+            #             if dup_index == group_item:
+            #                 sub_pt_indexes.append(origin_pts.index(point_list[group_index]))
+            #         res_pt_indexes.append(sub_pt_indexes)
+            #
+            #     for rest_index in range(origin_pt_length):
+            #         if rest_index not in chain(*res_pt_indexes):
+            #             res_pt_indexes.insert(rest_index, [rest_index])
+            #
+            #     res_pt_list = map(lambda indexes: [ref_origin_pts[_] for _ in indexes], res_pt_indexes)
+            #     ungroup_data = map(lambda x: self.split_tree(x, origin_path), [res_pt_list, res_pt_indexes])
+            #     Rhino.RhinoApp.Wait()
+            #     return ungroup_data
+
             def group_pts(self, tuple_data):
-                origin_pts, origin_path = tuple_data
-                origin_pt_length = len(origin_pts)
+                # 解构参数
+                ref_origin_pts, origin_path = tuple_data
+                gh_pts = map(self._trun_object, ref_origin_pts)
+                origin_pt_length = len(gh_pts)
 
-                point_list, group_list = [], []
+                total, count, group_sub_list = 0, 0, []
+                # 循环分组点下标
+                while origin_pt_length > total:
+                    if not gh_pts[count]:
+                        total += 1
+                        continue
+                    flatten_list = list(chain(*group_sub_list))
 
-                for pt_index in range(origin_pt_length):
-                    for sce_pt_index in range(pt_index + 1, origin_pt_length):
-                        if origin_pts[pt_index].DistanceTo(origin_pts[sce_pt_index]) <= self.distance:
-                            current_pair_list = [origin_pts[pt_index], origin_pts[sce_pt_index]]
+                    if count not in flatten_list:
+                        sub_index = []
+                        # 第count个点与所有点循环比较距离
+                        for _ in range(len(gh_pts)):
+                            if gh_pts[count].DistanceTo(gh_pts[_]) <= self.distance:
+                                if _ not in flatten_list:
+                                    sub_index.append(_)
+                        group_sub_list.append(sub_index)
+                        # 条件长度增加
+                        total += len(sub_index)
 
-                            for pair in current_pair_list:
-                                if not pair in point_list:
-                                    point_list.append(pair)
-                                    group_list.append(pt_index * sce_pt_index)
-                                else:
-                                    index = point_list.index(pair)
-                                    old_group = group_list[index]
+                    count += 1
+                res_pts = map(lambda x: [ref_origin_pts[_] for _ in x], group_sub_list)
 
-                                    for k in range(len(group_list)):
-                                        if group_list[k] == old_group:
-                                            group_list[k] = sce_pt_index * sce_pt_index
-
-                dup_list = [i for n, i in enumerate(group_list) if i not in group_list[:n]]
-                res_pt_list, res_pt_indexes = [], []
-                for dup_index in dup_list:
-                    sub_pt_list, sub_pt_indexes = [], []
-                    for group_index, group_item in enumerate(group_list):
-                        if dup_index == group_item:
-                            sub_pt_list.append(point_list[group_index])
-                            sub_pt_indexes.append(origin_pts.index(point_list[group_index]))
-                    res_pt_list.append(sub_pt_list)
-                    res_pt_indexes.append(sub_pt_indexes)
-
-                for rest_index in range(origin_pt_length):
-                    if rest_index not in chain(*res_pt_indexes):
-                        res_pt_list.insert(rest_index, [origin_pts[rest_index]])
-                        res_pt_indexes.insert(rest_index, [rest_index])
-
-                ungroup_data = map(lambda x: self.split_tree(x, origin_path), [res_pt_list, res_pt_indexes])
+                ungroup_data = map(lambda x: self.split_tree(x, origin_path), [res_pts, group_sub_list])
                 Rhino.RhinoApp.Wait()
                 return ungroup_data
 
             def RunScript(self, Points, Distance):
                 try:
+                    sc.doc = Rhino.RhinoDoc.ActiveDoc
+                    self.distance = Distance
                     Point_Group, Index = (gd[object]() for _ in range(2))
                     re_mes = Message.RE_MES([Points], ['Points'])
                     if len(re_mes) > 0:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
                     else:
-                        sc.doc = Rhino.RhinoDoc.ActiveDoc
-                        self.distance = Distance
-
                         pt_trunk_list, pt_path_list = self.Branch_Route(Points)
-                        iter_ungroup_data = zip(*ghp.run(self.group_pts, zip(pt_trunk_list, pt_path_list)))
 
+                        # 构造输入端参数
+                        structure_tree = self.Params.Input[0].VolatileData
+                        origin_pts, path_trunk = self.Branch_Route(structure_tree)
+
+                        zip_list = zip(origin_pts, path_trunk)
+                        # 多进程
+                        ghp.run(self.group_pts, zip_list)
+                        iter_ungroup_data = zip(*ghp.run(self.group_pts, zip_list))
+                        # 匹配树形
                         Point_Group, Index = ghp.run(lambda single_tree: self.format_tree(single_tree), iter_ungroup_data)
 
                     sc.doc.Views.Redraw()
@@ -1202,6 +1285,8 @@ try:
 
                 p = Grasshopper.Kernel.Parameters.Param_Plane()
                 self.SetUpParam(p, "Plane", "P", "Sorting plane")
+                NORMAL_PLANE = rg.Plane.WorldXY
+                p.SetPersistentData(gk.Types.GH_Plane(NORMAL_PLANE))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
@@ -1319,7 +1404,6 @@ try:
                 try:
                     sc.doc = Rhino.RhinoDoc.ActiveDoc
                     Points_Result, index = (gd[object]() for _ in range(2))
-                    Plane = Plane if Plane else rg.Plane.WorldXY
                     base_pt, ref_vector = Plane.Origin, Plane.XAxis
 
                     if Points:
@@ -1328,20 +1412,23 @@ try:
                         # 投影点重排序并输出下标
                         temp_index = self.right_hand_rule(projected_point_set, base_pt, ref_vector, Plane)
 
+                        structure_tree = self.Params.Input[0].VolatileData
+                        origin_pts = self.Branch_Route(structure_tree)[0][self.RunCount - 1]
+
                         if FirstIndex is not None:
                             if 0 <= FirstIndex < len(temp_index):
                                 split_index = temp_index.index(FirstIndex)
                                 a_temp_list, b_temp_list = temp_index[split_index:], temp_index[:split_index]
                                 index = a_temp_list + b_temp_list
-                                Points_Result = [Points[single_index] for single_index in index]
+                                Points_Result = [origin_pts[single_index] for single_index in index]
                             else:
-                                self.message1('The index subscript is not in the range！')
+                                Message.message1(self, 'The index subscript is not in the range！')
                         else:
-                            Points_Result = [Points[single_index] for single_index in temp_index]
+                            Points_Result = [origin_pts[single_index] for single_index in temp_index]
                             index = temp_index
 
                     else:
-                        self.message2('The p-terminal cannot be empty！')
+                        Message.message2(self, 'The p-terminal cannot be empty！')
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
                     sc.doc = ghdoc
@@ -1428,7 +1515,7 @@ try:
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
-                self.ref_plane, self.tol = (None for _ in range(2))
+                pass
 
             def message1(self, msg1):  # 报错红
                 return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
@@ -1475,8 +1562,8 @@ try:
                 return stock_tree
 
             def coplanar_pts(self, sub_tuple_data):
-                pts, plane = sub_tuple_data
-                xform = rg.Transform.PlaneToPlane(self.ref_plane, plane)
+                pts, plane, origin_pts = sub_tuple_data
+                xform = rg.Transform.PlaneToPlane(plane, self.ref_plane)
                 copy_pt = [rg.Point3d(_) for _ in pts]
                 [_.Transform(xform) for _ in copy_pt]
 
@@ -1489,41 +1576,47 @@ try:
                     else:
                         no_data_index.append(z_index)
 
-                need_data = [pts[_] for _ in need_data_index]
-                no_data = [pts[_] for _ in no_data_index]
+                need_data = [origin_pts[_] for _ in need_data_index]
+                no_data = [origin_pts[_] for _ in no_data_index]
                 return need_data_index, no_data_index, need_data, no_data
 
-            def _coplanar(self, pts, pln):
+            def _coplanar(self, pts, origin_pts, pln):
                 copy_pln = rg.Plane(pln)
-                copy_pln.Origin = pts[0]
-                xform = rg.Transform.PlaneToPlane(self.ref_plane, copy_pln)
-                copy_pt = [rg.Point3d(_) for _ in pts]
-                [_.Transform(xform) for _ in copy_pt]
-                z_list = [abs(_) for _ in zip(*copy_pt)[-1]]
+                coplar_pt, need_index = [], []
+                pts = list(filter(None, pts))
 
-                total, count, need_index = 0, 0, []
-                while len(z_list) > total:
-                    flatten_list = list(chain(*need_index))
-                    if count not in flatten_list:
-                        sub_index = []
-                        for _ in range(len(z_list)):
-                            if abs(z_list[count] - z_list[_]) <= self.tol:
-                                sub_index.append(_)
-                        need_index.append(sub_index)
-                        total += len(sub_index)
-                    count += 1
+                if pts:
+                    copy_pln.Origin = pts[0]
+                    xform = rg.Transform.PlaneToPlane(copy_pln, self.ref_plane)
+                    copy_pt = [rg.Point3d(_) for _ in pts]
+                    [_.Transform(xform) for _ in copy_pt]
+                    z_list = [int(_.Z) for _ in copy_pt]
 
-                coplar_pt = map(lambda x: [pts[_] for _ in x], need_index)
+                    total, count = 0, 0
+                    while len(z_list) > total:
+                        flatten_list = list(chain(*need_index))
+                        if count not in flatten_list:
+                            sub_index = []
+                            for _ in range(len(z_list)):
+                                if abs(z_list[count] - z_list[_]) <= self.tol:
+                                    if _ not in flatten_list:
+                                        sub_index.append(_)
+                            need_index.append(sub_index)
+                            total += len(sub_index)
+                        count += 1
+
+                coplar_pt = map(lambda x: [origin_pts[_] for _ in x], need_index)
                 return coplar_pt, need_index
 
             def _do_main(self, tuple_data):
-                pts_list, plane_list, origin_path = tuple_data
+                pts_list, plane_list, origin_pts_list, origin_path = tuple_data
                 if len(plane_list) == 1:
-                    need_list, need_indexes = self._coplanar(pts_list, plane_list[0])
+                    need_list, need_indexes = self._coplanar(pts_list, origin_pts_list, plane_list[0])
                     no_indexes, no_list = [], []
                 else:
                     set_pts_list = [pts_list] * len(plane_list)
-                    sub_zip_list = zip(set_pts_list, plane_list)
+                    set_origin_list = [origin_pts_list] * len(plane_list)
+                    sub_zip_list = zip(set_pts_list, plane_list, set_origin_list)
                     need_indexes, no_indexes, need_list, no_list = zip(*map(self.coplanar_pts, sub_zip_list))
                 ungroup_data = map(lambda x: self.split_tree(x, origin_path), [need_indexes, no_indexes, need_list, no_list])
                 Rhino.RhinoApp.Wait()
@@ -1531,34 +1624,38 @@ try:
 
             def RunScript(self, Pts, Plane, Tolerance):
                 try:
-                    sc.doc = Rhino.RhinoDoc.ActiveDoc
                     self.ref_plane = rg.Plane.WorldXY
                     self.tol = Tolerance
-                    Coplanar_Pt, Non_Coplanar_Pt, Index1, Index2 = [gd[object]() for _ in range(4)]
+                    Index1, Index2, Coplanar_Pt, Non_Coplanar_Pt = (gd[object]() for _ in range(4))
 
+                    pts_trunk, pst_trunk_path = self.Branch_Route(Pts)
                     re_mes = Message.RE_MES([Pts, Plane], ['P', 'Pl'])
                     if len(re_mes) > 0:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
                     else:
-                        pts_trunk, pst_trunk_path = self.Branch_Route(Pts)
+                        structure_tree = self.Params.Input[0].VolatileData
+                        origin_pts_trunk = self.Branch_Route(structure_tree)[0]
                         plane_trunk, plane_trunk_path = self.Branch_Route(Plane)
-                        pts_len, plane_len = len(pts_trunk), len(plane_trunk)
 
+                        pts_len, plane_len = len(pts_trunk), len(plane_trunk)
                         if pts_len > plane_len:
                             new_pts_trunk = pts_trunk
+                            new_origin_pts_trunk = origin_pts_trunk
                             new_plane_trunk = plane_trunk + [plane_trunk[-1]] * (pts_len - plane_len)
                             target_trunk_path = pst_trunk_path
                         elif pts_len < plane_len:
+                            new_origin_pts_trunk = origin_pts_trunk + [origin_pts_trunk[-1]] * (plane_len - pts_len)
                             new_pts_trunk = pts_trunk + [pts_trunk[-1]] * (plane_len - pts_len)
                             new_plane_trunk = plane_trunk
                             target_trunk_path = plane_trunk_path
                         else:
                             new_pts_trunk = pts_trunk
+                            new_origin_pts_trunk = origin_pts_trunk
                             new_plane_trunk = plane_trunk
                             target_trunk_path = pst_trunk_path
 
-                        zip_list = zip(new_pts_trunk, new_plane_trunk, target_trunk_path)
+                        zip_list = zip(new_pts_trunk, new_plane_trunk, new_origin_pts_trunk, target_trunk_path)
                         iter_ungroup_data = zip(*ghp.run(self._do_main, zip_list))
                         Index1, Index2, Coplanar_Pt, Non_Coplanar_Pt = ghp.run(lambda single_tree: self.format_tree(single_tree), iter_ungroup_data)
 
