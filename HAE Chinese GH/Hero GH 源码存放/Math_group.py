@@ -159,7 +159,7 @@ try:
             def Branch_Route(self, Tree):
                 """分解Tree操作，树形以及多进程框架代码"""
                 Tree_list = [list(_) for _ in Tree.Branches]
-                Tree_Path = [_ for _ in Tree.Paths]
+                Tree_Path = [list(_) for _ in Tree.Paths]
                 return Tree_list, Tree_Path
 
             def split_tree(self, tree_data, tree_path):
@@ -170,6 +170,23 @@ try:
                     return result_data, result_path
                 else:
                     return [[]], result_path
+
+            def format_tree(self, result_tree):
+                """匹配树路径的代码，利用空树创造与源树路径匹配的树形结构分支"""
+                stock_tree = gd[object]()
+                for sub_tree in result_tree:
+                    fruit, branch = sub_tree
+                    for index, item in enumerate(fruit):
+                        path = gk.Data.GH_Path(System.Array[int](branch[index]))
+                        if hasattr(item, '__iter__'):
+                            if item:
+                                for sub_index in range(len(item)):
+                                    stock_tree.Insert(item[sub_index], path, sub_index)
+                            else:
+                                stock_tree.AddRange(item, path)
+                        else:
+                            stock_tree.Insert(item, path, index)
+                return stock_tree
 
             def get_tree(self, len_list_data):
                 index_list = [_ for _ in range(len(len_list_data)) if len_list_data[_] == self.len]
