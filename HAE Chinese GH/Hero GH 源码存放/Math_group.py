@@ -82,16 +82,24 @@ try:
                 o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAMtSURBVEhL7ZRJTBNRGMdr9GCMCeGmVzyYkM4+0wVbW2mpbFVWQVSWFKXAzFCm7FuDLKVDWxYRNO6akOjFRA1wQA0XJRg5qBdjkJviEbkgGD/fjIOyeDIkXvglX+bN/L/v/d+bed/odvj/BGyBPTzZE/DTfZMiEZranpCnapmBiSpCLtb56BDdxF0BH9m7KJKheZGUtyFC8xIVXUUGqzqJDCe0cFcBCQXaprYFAZf7/VQUdNV0xNSMdiBS8llFABja//VV+5HPk3WeldcB749PURYAdqlVm3h+q2jvj7dB9/JM26WFZ7XDi9OtNR/Gm2hFE4jQgERF/hj4qN5ziiDzmd1vHkgwO1oBL2974fGABzxuG69omzluYp19UjY8DBfCo2ghTN/hIVh+clrR0HfYaFBF9p1WhBQWu59xhIU0EwUpHAFOEgM7rg8o2mbSTFymDYuHJJTjoDBw0QQk0fp5RfPpBzr8awaN7AiIdOeF8nS2Lc/GQY6FhewEBgqO/hpnWQ0LDdmpRnVWDX9WkvuUzfglx2qA4kQTnLKycNpuhDNoXOwiXghc41MfEV1WDRqYEahk6uvTTIeHvClH56RMF0o0g8dpBiH9GGSY6Y9FTtP7fAfVVW5sxAusrsg5JzOekUBOVKbZ1bx8mxF4twOqTyQuJXFxYjndMFZNRFf+vCK8L09ZWdlx6xhayayDxkaSWSxclmwdr3RbBCzGEltBtcy0GK4COuNQGX9ZEPMpvCzZMuJi9SV2Mr4o1UgOFSeax5V5fPhg518/clxsbIxyXU86c3CfRPY/aeVuKMdZriLD9ztMd0EgesJayhZQww1uMJCYSK6mbYEn5PZO8z0Q8B5Je6SrpsK3L6om3We0RxtABhHUbKATmbClGTUa6rpm1As4TwaJtVDvia6MJg4dAlJ+otWq5OY+2I1W+K6G7v/G48HE9bXKGB3TUbXRBFo+hH4T3xWTRnZ4SwSMNwFNtFQRHzigzf0bL96lRwbQari+pa7VcA3QLubURJHs5uqYQY+PDJVujnr6UqmAByk18S/wWJe1jh48v7EuXFpH9Zf4sGCclrbDDv+MTvcTwSjMT0kDsa0AAAAASUVORK5CYII="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
+            def Branch_Route(self, Tree):
+                """分解Tree操作，树形以及多进程框架代码"""
+                Tree_list = [list(_) for _ in Tree.Branches]
+                Tree_Path = [_ for _ in Tree.Paths]
+                return Tree_list, Tree_Path
+
             def RunScript(self, List_Data, Start, End):
                 try:
+                    Result = gd[object]()
                     re_mes = Message.RE_MES([List_Data], ['List_Data'])
                     if len(re_mes) > 0:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
-                        return gd[object]()
                     else:
-                        Result = List_Data[Start: End + 1] if End is not None else List_Data[Start:]
-                        return Result
+                        structure_tree = self.Params.Input[0].VolatileData
+                        origindata_list = self.Branch_Route(structure_tree)[0][self.RunCount - 1]
+                        Result = origindata_list[Start: End + 1] if End is not None else origindata_list[Start:]
+                    return Result
                 finally:
                     self.Message = 'Get Date of Range'
 
@@ -148,25 +156,40 @@ try:
             def __init__(self):
                 self.len = None
 
+            def Branch_Route(self, Tree):
+                """分解Tree操作，树形以及多进程框架代码"""
+                Tree_list = [list(_) for _ in Tree.Branches]
+                Tree_Path = [_ for _ in Tree.Paths]
+                return Tree_list, Tree_Path
+
+            def split_tree(self, tree_data, tree_path):
+                """操作树单枝的代码"""
+                new_tree = ght.list_to_tree(tree_data, True, tree_path)  # 此处可替换复写的Tree_To_List（源码参照Vector组-点集根据与曲线距离分组）
+                result_data, result_path = self.Branch_Route(new_tree)
+                if list(chain(*result_data)):
+                    return result_data, result_path
+                else:
+                    return [[]], result_path
+
             def get_tree(self, len_list_data):
                 index_list = [_ for _ in range(len(len_list_data)) if len_list_data[_] == self.len]
                 return index_list
 
             def RunScript(self, Tree, Length):
                 try:
-                    re_mes = Message.RE_MES([Tree], ['Tree'])
-                    if len(re_mes) > 0:
-                        for mes_i in re_mes:
-                            Message.message2(self, mes_i)
-                        return gd[object]()
-                    else:
-                        self.len = Length
-                        leaf_list = [list(_) for _ in Tree.Branches]
+                    self.len = Length
+                    Result = gd[object]()
 
-                        length_list = map(lambda x: len(x), leaf_list)
-                        res_index = self.get_tree(length_list)
-                        Result = Message.message2(self, 'No Specific Length of Data Tree！') if len(res_index) == 0 else ght.list_to_tree([leaf_list[_] for _ in res_index])
-                        return Result
+                    structure_tree = self.Params.Input[0].VolatileData
+                    leaf_list, origin_path = self.Branch_Route(structure_tree)
+                    length_list = list(map(lambda x: len(x), leaf_list))
+                    res_index = self.get_tree(length_list)
+                    if len(res_index):
+                        tree_zip = self.split_tree(leaf_list[res_index[0]], origin_path[res_index[0]])
+                        Result = self.format_tree([tree_zip])
+                    else:
+                        Message.message2(self, 'No Specific Length of Data Tree！')
+                    return Result
                 finally:
                     self.Message = 'Get Tree Data as per Specific Length'
 
@@ -318,29 +341,34 @@ try:
             def __init__(self):
                 pass
 
+            def Branch_Route(self, Tree):
+                """分解Tree操作，树形以及多进程框架代码"""
+                Tree_list = [list(_) for _ in Tree.Branches]
+                Tree_Path = [_ for _ in Tree.Paths]
+                return Tree_list, Tree_Path
+
             def RunScript(self, Data, Random):
                 try:
+                    Result = gd[object]()
                     re_mes = Message.RE_MES([Data], ['Data'])
                     if len(re_mes) > 0:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
-                        return gd[object]()
                     else:
+                        structure_tree = self.Params.Input[0].VolatileData
+                        data_list = self.Branch_Route(structure_tree)[0][self.RunCount - 1]
                         if len(Random) == 0:
-                            index_list = random.sample([index for index in range(len(Data))], len(Data))
-                            Result = [Data[_] for _ in index_list]
-                            return Result
+                            index_list = random.sample([index for index in range(len(data_list))], len(data_list))
+                            Result = [data_list[_] for _ in index_list]
                         else:
                             if len(Random) == 1 and Random[0] == -1:
-                                Result = Data[::-1]
-                                return Result
-                            elif len(Random) == len(Data):
-                                Result = [Data[_] for _ in Random]
-                                return Result
+                                Result = data_list[::-1]
+                            elif len(Random) == len(data_list):
+                                Result = [data_list[_] for _ in Random]
                             else:
                                 Message.message3(self, "number in Random list should be same with original list!please check")
-                                Result = Data
-                                return Result
+                                Result = data_list
+                    return Result
                 finally:
                     self.Message = "random data"
 
