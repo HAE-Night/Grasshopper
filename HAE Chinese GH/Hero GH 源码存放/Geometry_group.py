@@ -251,14 +251,26 @@ try:
             def __init__(self):
                 self.axis = None
 
+            def _trun_object(self, ref_obj):
+                """引用物体转换为GH内置物体"""
+                if 'ReferenceID' in dir(ref_obj):
+                    if ref_obj.IsReferencedGeometry:
+                        test_pt = ref_obj.Value
+                    else:
+                        test_pt = ref_obj.Value
+                else:
+                    test_pt = ref_obj
+                return test_pt
+
             def get_value_sort(self, object_list, data_type, sorting):
+                temp_objects = map(self._trun_object, object_list)
                 origin_data = None
-                if data_type == rg.Brep:
-                    origin_data = [o.GetArea() for o in object_list]
-                elif data_type == rg.Curve:
-                    origin_data = [o.GetLength() for o in object_list]
-                elif data_type == rg.Point3d:
-                    origin_data = eval('[o.{} for o in object_list]'.format(self.axis))
+                if data_type == gk.Types.GH_Brep or data_type == gk.Types.GH_Surface:
+                    origin_data = [o.GetArea() for o in temp_objects]
+                elif data_type == gk.Types.GH_Curve or data_type == gk.Types.GH_Circle or data_type == gk.Types.GH_Arc:
+                    origin_data = [o.ToNurbsCurve().GetLength() for o in temp_objects]
+                elif data_type == gk.Types.GH_Point:
+                    origin_data = eval('[o.{} for o in temp_objects]'.format(self.axis))
                 values = sorted(origin_data)
                 temp_list = sorted(enumerate(origin_data), key=lambda x: x[1])
                 index_list = [t[0] for t in temp_list]
@@ -271,15 +283,14 @@ try:
                     return objects, values
 
             def is_sametype(self, list_data):
-                Curve = [rg.PolyCurve, rg.LineCurve, rg.Curve, rg.ArcCurve, rg.PolylineCurve, rg.Polyline, rg.Line,
-                         rg.NurbsCurve]
+                Curve = [rg.PolyCurve, rg.LineCurve, rg.Curve, rg.ArcCurve, rg.PolylineCurve, rg.Polyline, rg.Line, rg.NurbsCurve]
                 temp1 = [type(t) for t in list_data]
                 temp1 = set(temp1)
                 for x in temp1:
                     if x in Curve:
                         return True, rg.Curve
                     else:
-                        copy_list = copy.copy(list_data)
+                        copy_list = list_data[::]
                         for i in range(len(list_data)):
                             copy_list[i] = type(list_data[i])
                         temp2 = set(copy_list)
@@ -301,6 +312,7 @@ try:
 
             def RunScript(self, Geometry, Index, Loop, Sort, Axis):
                 try:
+                    sc.doc = Rhino.RhinoDoc.ActiveDoc
                     A_Objects, A_Values, B_Objects, B_Values = (gd[object]() for _ in range(4))
                     re_mes = Message.RE_MES([Geometry], ['Geometry'])
                     if len(re_mes) > 0:
@@ -308,12 +320,17 @@ try:
                             Message.message2(self, mes_i)
                     else:
                         self.axis = Axis.upper()
-                        g_bool, g_type = self.is_sametype(Geometry)
+                        structure_tree = self.Params.Input[0].VolatileData
+                        origin_geo = [list(i) for i in structure_tree.Branches][self.RunCount - 1]
+                        g_bool, g_type = self.is_sametype(origin_geo)
                         objs, vals = None, None
                         if g_bool is True:
-                            objs, vals = self.get_value_sort(Geometry, g_type, Sort)
+                            objs, vals = self.get_value_sort(origin_geo, g_type, Sort)
                         A_Objects, B_Objects = self.switch_handing(objs, Index, Loop)
                         A_Values, B_Values = self.switch_handing(vals, Index, Loop)
+                    sc.doc.Views.Redraw()
+                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                    sc.doc = ghdoc
                     return A_Objects, A_Values, B_Objects, B_Values
                 finally:
                     self.Message = 'Geometric ordering'
@@ -521,6 +538,23 @@ try:
             def mes_box(self, info, button, title):
                 return rs.MessageBox(info, button, title)
 
+            def Branch_Route(self, Tree):
+                """分解Tree操作，树形以及多进程框架代码"""
+                Tree_list = [list(_) for _ in Tree.Branches]
+                Tree_Path = [list(_) for _ in Tree.Paths]
+                return Tree_list, Tree_Path
+
+            def _trun_object(self, ref_obj):
+                """引用物体转换为GH内置物体"""
+                if 'ReferenceID' in dir(ref_obj):
+                    if ref_obj.IsReferencedGeometry:
+                        test_pt = ref_obj.Value
+                    else:
+                        test_pt = ref_obj.Value
+                else:
+                    test_pt = ref_obj
+                return test_pt
+
             # 数据转换成树和原树路径
             def Restore_Tree(self, Before_Tree, Tree):
                 Tree_Path = [_ for _ in Tree.Paths]
@@ -534,23 +568,31 @@ try:
                 _A_brep = []
                 brep_negative = []
                 for brep in range(len(_brep_dict)):
-                    if type(_brep_dict[brep][0]) == rg.Point3d:
-                        brep_centroid = _brep_dict[brep][0]
+                    if not _brep_dict[brep][0]:
+                        continue
                     else:
-                        brep_centroid = _brep_dict[brep][0].GetBoundingBox(True).Center  # 获取Brep物体的中心点
-                    projection = _pln_s.ClosestPoint(brep_centroid)  # 生成中心点在PLN的投影点，并生成两点向量
-                    normal = brep_centroid - projection
+                        if type(_brep_dict[brep][0]) == rg.Point3d:  # 判断物体的类型
+                            brep_centroid = _brep_dict[brep][0]
 
-                    # 判断法线向量是否与Plane法线向量同向
-                    if normal * _pln_s.Normal > 0:
-                        _A_brep.append(_brep_dict[brep])
-                    else:
-                        brep_negative.append(_brep_dict[brep])
+                        elif type(_brep_dict[brep][0]) == rg.Circle or type(_brep_dict[brep][0]) == rg.Arc \
+                                or type(_brep_dict[brep][0]) == rg.Rectangle3d:
+                            brep_centroid = _brep_dict[brep][0].Center
+
+                        else:
+                            brep_centroid = _brep_dict[brep][0].GetBoundingBox(True).Center  # 获取Brep物体的中心点
+                        projection = _pln_s.ClosestPoint(brep_centroid)  # 生成中心点在PLN的投影点，并生成两点向量
+                        normal = brep_centroid - projection
+
+                        # 判断法线向量是否与Plane法线向量同向
+                        if normal * _pln_s.Normal > 0:
+                            _A_brep.append(_brep_dict[brep])
+                        else:
+                            brep_negative.append(_brep_dict[brep])
                 return _A_brep, brep_negative
 
             # 主函数
             def Brep_Plane_split(self, BPSdatas):
-                _brep_list = BPSdatas[0]
+                _brep_list = list(map(self._trun_object, BPSdatas[0]))
                 _brep_dict = zip(_brep_list, range(0, len(_brep_list)))
                 _plane_list = BPSdatas[1]
 
@@ -580,6 +622,7 @@ try:
                             end_brep.append(brep_nega)
                         else:
                             continue
+                brep_positive = map(lambda x: [(BPSdatas[0][_[1]], _[1]) for _ in x], brep_positive)
                 return brep_positive
 
             # 数据整合
@@ -603,12 +646,11 @@ try:
                             Message.message2(self, mes_i)
                         return gd[object](), gd[object]()
                     else:
-                        sc.doc = Rhino.RhinoDoc.ActiveDoc
-                        # 属性取值
-                        breps_list = [list(_i) for _i in Breps.Branches]
-                        paths_list = [_i for _i in Breps.Paths]
-                        Planes_list = [list(_i) for _i in Planes.Branches]
-                        # 数据处理
+                        structure_tree = self.Params.Input[0].VolatileData
+                        breps_list = self.Branch_Route(structure_tree)[0]
+                        paths_list = [_i for _i in structure_tree.Paths]
+                        Planes_list = self.Branch_Route(Planes)[0]
+
                         new_data = self.data_settle(breps_list, Planes_list)
                         BPSdatas = ghp.run(self.Brep_Plane_split, new_data)
 
@@ -818,10 +860,6 @@ try:
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_Guid()
-                self.SetUpParam(p, "Id", "ID", "Object ID（Contains objects of reference type）")
-                self.Params.Output.Add(p)
-
                 p = Grasshopper.Kernel.Parameters.Param_Point()
                 self.SetUpParam(p, "Point", "P", "Point type")
                 self.Params.Output.Add(p)
@@ -860,7 +898,6 @@ try:
                         self.marshal.SetOutput(result[3], DA, 3, True)
                         self.marshal.SetOutput(result[4], DA, 4, True)
                         self.marshal.SetOutput(result[5], DA, 5, True)
-                        self.marshal.SetOutput(result[6], DA, 6, True)
 
             def get_Internal_Icon_24x24(self):
                 o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAASGSURBVEhLrZULUFRVGMevWDRD0EYqxENUGqQYRHmIINKEA4umxsOKxgnloRsa5CqaCMQrdt0Niikg6A3ZmE1jPjKmxNGpxkZikk1oh0ptTAWXx7Ysy2OF9vT/zt5d2BmckZl+M7/d833n7r3n3vudb4VZ8gj0hhIe/Q+4wR2wFfbBCfgvNMOb8BhMhU5w1uyDRkgnbYH74QYYDemkZfACZPBvmAbvCQ94FtJKy+F8aCd8iWe2OLTxGPwI0oU+hXPhXfGQLFx4M7WhjrkJzkvFnJ0nA33iGrKlbM1SnxAxNZ21cAB+B2e8CCU1c5ycNFUTY4o6i+WwNT1FXmJ40+81O1jJ5tXHxZQD8uMnZYHSBLqTD60ZRxSQJr0oKO/rbVKPjzTRmFjg4vLoB7LEyW5c4GxxGktbFfiUOMWpsUzKVUbDLyuzM3cipPMk8QkReu6UzOORSMVg3wnVmOktGkcs9kyry4y/Vp8t7fw45+lft6x54hA/CFSbx+sPXunWRO3Z4yOmPoe3oL26SiFVzH08msKp0jBwXjlqKrLF4jenizFn9ehwy6vdXV+LKRuLIC14HY/AH/A965DXPm0ojuzUKReFUd+uvjMmE1OcIxaLt9Jo6Mjv0tSIqYfhEuuQ0wGP0IAmqCRTKMhaG5KTk7CCNpCdAq12nsJk6FIOG3itv22xRFXqB67tbm+j5815KT40V74+4nsxJNTwLxoEQ7od+hbefDGu9fSBZ5n/fLcAim2U3rrqpzTqz9VO3imqGNS15/70Y7w4xanG784UPs+W+XosE1Nb4QgNIiGvHn/PBz0+y91ovlyVxQpTovjtTQcvvLqZMZbf0U472o6Xu7vf4dwN5k78riR19RdiOhlSSxGCIF3AuzA5qlSjzmRtinR2bG8yNpRXDB1AqMaHm8t1PUdfu3494dCosaP4xg37He5KDFNdUmWwi5Xp7Et5Ektd5U9zm6GJ5h+CkzApPTZoG1ZQtCsh7BX5+rDt/oIQoNLrJcqRofPl/b3v08GEesK0UTH8T7dcq+V7JiUyYGtRSvQ+WXxoTm5iWEZsiB+9bNpXV2ie0MJm63CKBsYWK02GzrJ+HTU6G770oRo1bascGtTkXWyhBc6EwzkPwDH4AI/A64O6dQrT0J8V/bfpWdrJSwz7OS3Guovx2PZin1wIl8nu55NTUB+jxx7HI+AOLbCAgrKB3jysXFuh1y2n2EaIr2fwmaI0VvlCrL2MVeYRRcXA7W/F0MZJeNU6nKJgrrMzQ3t4B3XeUm00OrRpIn/TyqoOdQY7unvTZPCieY+LaUFtNjWW6Xps1UMVRqt3KGOOxNf3B2lZCXMVXBeIKTt+Eol743YpL+Gu6mxWkBR1Guk51llB+MRiqd15rpX+D2jT1vLkDNALuwR7YAQlbNDG2/9M5LuoFuXB5OjiLTFBLyNt703o9UneK5bTyr+yZu6OK/wG0sH1cHp/mYlQeALS8VWUuFcyId0J/bANvgGz4HMwB9ZBKkWavwylcNZQ+6YmSP2dNg21dCpnA/wNNkKHPx5HBOE/kYKjrqTIRecAAAAASUVORK5CYII="
@@ -871,39 +908,33 @@ try:
 
             def RunScript(self, Geo):
                 try:
-                    Id, Point, Vector, Curve, Plane, Brep, Surface = (gd[object]() for _ in range(7))
-                    eliminate_list = [_ for _ in Geo if _ is not None]
-                    if len(eliminate_list) != 0:
-                        Id = []
-                        Point = []
-                        Vector = []
-                        Curve = []
-                        Plane = []
-                        Brep = []
-                        Surface = []
-                        for _ in eliminate_list:
-                            if isinstance(_, (System.Guid)) is True:
-                                Id.append(_)
-                            elif isinstance(_, (rg.Point, rg.Point3d, rg.PointCloud)) is True:
-                                Point.append(_)
-                            elif isinstance(_, (rg.Vector3d, rg.Vector2d, rg.Vector2f, rg.Vector3f)) is True:
-                                Vector.append(_)
-                            elif isinstance(_, (rg.Curve, rg.PolyCurve, rg.Polyline, rg.PolylineCurve, rg.Arc, rg.ArcCurve, rg.Circle, rg.Line, rg.LineCurve, rg.NurbsCurve)) is True:
-                                Curve.append(_)
-                            elif isinstance(_, (rg.Plane)) is True:
-                                Plane.append(_)
-                            elif isinstance(_, (rg.Brep)) is True:
-                                Brep.append(_)
-                            elif isinstance(_, (rg.Surface, rg.SumSurface, rg.NurbsSurface)) is True:
-                                Surface.append(_)
-                            else:
-                                Message.message3(self, "The data group is not added ")
+                    Point, Vector, Curve, Plane, Brep, Surface = (gd[object]() for _ in range(6))
+                    re_mes = Message.RE_MES([Geo], ['Geo'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
                     else:
-                        Message.message2(self, "The data list is empty ！")
-                    return Id, Point, Vector, Curve, Plane, Brep, Surface
+                        temp_point, temp_vetor, temp_curve, temp_plane, temp_brep, temp_surface = ([] for _ in range(6))
+                        structure_tree = self.Params.Input[0].VolatileData
+                        origin_geo = [list(i) for i in structure_tree.Branches][self.RunCount - 1]
+                        for geo in origin_geo:
+                            if isinstance(geo, (gk.Types.GH_Point)) is True:
+                                temp_point.append(geo)
+                            elif isinstance(geo, (gk.Types.GH_Vector)) is True:
+                                temp_vetor.append(geo)
+                            elif isinstance(geo, (gk.Types.GH_Curve)) is True:
+                                temp_curve.append(geo)
+                            elif isinstance(geo, (gk.Types.GH_Plane)) is True:
+                                temp_plane.append(geo)
+                            elif isinstance(geo, (gk.Types.GH_Brep)) is True:
+                                temp_brep.append(geo)
+                            elif isinstance(geo, (gk.Types.GH_Surface)) is True:
+                                temp_surface.append(geo)
+                        Point, Vector, Curve, Plane, Brep, Surface = temp_point, temp_vetor, temp_curve, temp_plane, temp_brep, temp_surface
+
+                    return Point, Vector, Curve, Plane, Brep, Surface
                 finally:
                     self.Message = "GH data type classification "
-            # 物体跟随线排序
 
 
         # 物体跟随线排序
@@ -997,6 +1028,17 @@ try:
                             stock_tree.Insert(item, path, index)
                 return stock_tree
 
+            def _trun_object(self, ref_obj):
+                """引用物体转换为GH内置物体"""
+                if 'ReferenceID' in dir(ref_obj):
+                    if ref_obj.IsReferencedGeometry:
+                        test_pt = ref_obj.Value
+                    else:
+                        test_pt = ref_obj.Value
+                else:
+                    test_pt = ref_obj
+                return test_pt
+
             def center_box(self, Box):
                 type_str = str(type(Box))
                 if 'List[object]' in type_str:
@@ -1009,30 +1051,45 @@ try:
                 return center
 
             def sort_points_on_curve(self, points, curve):
-                param_list = []
-                for point in points:
-                    param_list.append(curve.ClosestPoint(point)[1])
-                sorted_params, sorted_indexes = zip(*sorted(zip(param_list, range(len(param_list)))))
+                param_list, index_list = [], []
+                for pt_index, point in enumerate(points):
+                    if point:
+                        param_list.append(curve.ClosestPoint(point)[1])
+                        index_list.append(pt_index)
+                sorted_list = sorted(zip(param_list, index_list))
+                if sorted_list:
+                    sorted_params, sorted_indexes = zip(*sorted(zip(param_list, index_list)))
+                else:
+                    sorted_indexes = None
                 return sorted_indexes
 
             def RunScript(self, Geo, Curve):
                 try:
+                    sc.doc = Rhino.RhinoDoc.ActiveDoc
                     Result, Index = (gd[object]() for _ in range(2))
-                    re_mes = Message.RE_MES([Geo, Curve], ['Geo', 'Curve'])
+                    structure_tree = self.Params.Input[0].VolatileData
+                    re_mes = Message.RE_MES([structure_tree, Curve], ['G end', 'C end'])
                     if len(re_mes) > 0:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
                     else:
-                        sc.doc = Rhino.RhinoDoc.ActiveDoc
-                        center_pt_list = list(ghp.run(self.center_box, Geo))
-                        self.sort_points_on_curve(center_pt_list, Curve)
-                        sorted_indexes = self.sort_points_on_curve(center_pt_list, Curve)
+                        temp_geo = [list(i) for i in structure_tree.Branches]
+                        if self.RunCount - 1 >= len(temp_geo):
+                            origin_geo = temp_geo[-1]
+                        else:
+                            origin_geo = temp_geo[self.RunCount - 1]
 
-                        Result = [Geo[_] for _ in sorted_indexes]
-                        Index = sorted_indexes
-                        sc.doc.Views.Redraw()
-                        ghdoc = GhPython.DocReplacement.GrasshopperDocument()
-                        sc.doc = ghdoc
+                        gh_geo_list = map(lambda x: self._trun_object(x), origin_geo)
+                        if gh_geo_list:
+                            center_pt_list = ghp.run(GeoCenter().center_box, gh_geo_list)
+                            sorted_indexes = self.sort_points_on_curve(center_pt_list, Curve)
+                            if sorted_indexes:
+                                Result = [origin_geo[_] for _ in sorted_indexes]
+                                Index = sorted_indexes
+
+                    sc.doc.Views.Redraw()
+                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                    sc.doc = ghdoc
                     return Result, Index
                 finally:
                     self.Message = 'Objects follow the curve in order '
