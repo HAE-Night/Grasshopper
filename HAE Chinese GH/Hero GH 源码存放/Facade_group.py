@@ -25,6 +25,7 @@ import initialization
 import Geometry_group
 import copy
 import math
+import Object_group
 
 Result = initialization.Result
 Message = initialization.message()
@@ -306,9 +307,23 @@ try:
                             stock_tree.Insert(item, path, index)
                 return stock_tree
 
+            def _trun_object(self, ref_obj):
+                """引用物体转换为GH内置物体"""
+                if 'ReferenceID' in dir(ref_obj):
+                    if ref_obj.IsReferencedGeometry:
+                        test_pt = ref_obj.Value
+                    else:
+                        test_pt = ref_obj.Value
+                else:
+                    test_pt = ref_obj
+                return test_pt
+
             def closest_object(self, tuple_data):
-                main_object, other_object, origin_path = tuple_data
+                main_object, origin_object, origin_path = tuple_data
+                other_object = map(self._trun_object, origin_object)
                 new_object = [other_object[:] for _ in range(len(main_object))]
+                origin_new_object = [origin_object[:] for _ in range(len(main_object))]
+
                 total_object, total_index, total_dis = [], [], []
                 for obj_index, obj_item in enumerate(main_object):
                     if obj_item:
@@ -322,7 +337,7 @@ try:
                                 sub_tuple_list.append((dis, pt_index))
                         sort_split_list = sorted(sub_tuple_list)[:self.count]
                         sort_index_list = [_[1] for _ in sort_split_list]
-                        sort_object_list = [new_object[obj_index][_] for _ in sort_index_list]
+                        sort_object_list = [origin_new_object[obj_index][_] for _ in sort_index_list]
                         sort_dis_list = [sub_distance[_] for _ in sort_index_list]
                         total_object.append(sort_object_list)
                         total_index.append(sort_index_list)
@@ -340,17 +355,20 @@ try:
                 try:
                     sc.doc = Rhino.RhinoDoc.ActiveDoc
                     Res_Order_Item, Order_Index, Distance = (gd[object]() for _ in range(3))
-                    re_mes = Message.RE_MES([Main_Item], ['Main_Item'])
+                    re_mes = Message.RE_MES([Main_Item, Order_Item], ['M end', 'O end'])
                     if len(re_mes) > 0:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
                     else:
                         self.count = Count
+                        structure_tree = self.Params.Input[1].VolatileData
 
                         main_trunk_list, main_path_list = self.Branch_Route(Main_Item)
-                        order_trunk_list = self.Branch_Route(Order_Item)[0]
-                        iter_ungroup_data = zip(*ghp.run(self.closest_object, zip(main_trunk_list, order_trunk_list, main_path_list)))
+                        order_trunk_list = self.Branch_Route(structure_tree)[0]
+                        zip_list = zip(main_trunk_list, order_trunk_list, main_path_list)
+                        iter_ungroup_data = zip(*ghp.run(self.closest_object, zip_list))
                         Res_Order_Item, Order_Index, Distance = ghp.run(lambda single_tree: self.format_tree(single_tree), iter_ungroup_data)
+
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
                     sc.doc = ghdoc
@@ -1236,7 +1254,7 @@ try:
                 self.SetUpParam(p, "Height", "H", "Text height")
                 TEXT_HEIGHT = 1.5
                 p.SetPersistentData(gk.Types.GH_Number(TEXT_HEIGHT))
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
@@ -1301,10 +1319,7 @@ try:
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
-                self.height, self.ref_y, self.w_s, self.layer_index, self.factor, self.unrendered_rec3d, self.unrendered_text = (None for _ in range(7))
-
-            def mes_box(self, info, button, title):
-                return rs.MessageBox(info, button, title)
+                self.ref_h_scale, self.w_s, self.layer_index, self.factor, self.unrendered_rec3d, self.unrendered_text = (None for _ in range(6))
 
             def Branch_Route(self, Tree):
                 """分解Tree操作，树形以及多进程框架代码"""
@@ -1339,14 +1354,14 @@ try:
                 return stock_tree
 
             def new_text(self, new_tuple_data):
-                word_list, pln = new_tuple_data
+                word_list, pln, height_text = new_tuple_data
                 text_list, x_dir_list = [], []
 
                 def create_text(text, plane):
                     style = Rhino.RhinoDoc.ActiveDoc.DimStyles.FindIndex(0)
                     text = rg.TextEntity.Create(text, plane, style, True, 0, 0)
                     text.Justification = rg.TextJustification.MiddleCenter
-                    text.TextHeight = self.height
+                    text.TextHeight = height_text
 
                     copt_text = text.Duplicate()
                     box = rg.Box(copt_text.GetBoundingBox(True))
@@ -1362,7 +1377,7 @@ try:
                     else:
                         text_list.append(None)
 
-                sub_rec = rg.Rectangle3d(pln, rg.Interval(0, max(x_dir_list)), rg.Interval(0, self.ref_y))
+                sub_rec = rg.Rectangle3d(pln, rg.Interval(0, max(x_dir_list)), rg.Interval(0, self.ref_h_scale * -height_text))
 
                 return sub_rec, max(x_dir_list), len(word_list), text_list
 
@@ -1373,12 +1388,12 @@ try:
                 return final_data
 
             def iter_offset(self, tuple_num):
-                rec_obj, sub_x, len_num = tuple_num
+                rec_obj, sub_x, len_num, height_dub = tuple_num
 
                 obj_center = rec_obj.Corner(0)
                 obj_pln = rg.Plane.WorldXY
                 obj_pln.Origin = obj_center
-                ref_sub_y = self.num_count_add([self.ref_y] * len_num)[0: -1]
+                ref_sub_y = self.num_count_add([self.ref_h_scale * -height_dub] * len_num)[0: -1]
 
                 rec_curve = ghc.Move(rec_obj, rg.Vector3d(sub_x, 0, 0))['geometry']
                 new_rec_list = [rec_curve]
@@ -1417,7 +1432,7 @@ try:
 
             def _do_main(self, tuple_data):
 
-                str_list, origin_path, pln = tuple_data
+                str_list, origin_path, height, pln = tuple_data
                 str_list = map(lambda x: x.split(','), str_list)
                 str_len = map(lambda y: len(y), str_list)
                 max_len = max(str_len)
@@ -1430,14 +1445,15 @@ try:
                         new_str_list.append(sub_str)
                 str_zip_list = zip(*new_str_list)
                 pln_list = pln * len(str_zip_list)
-                str_pln_zip = zip(str_zip_list, pln_list)
+                height_list = height * len(str_zip_list)
+                str_pln_zip = zip(str_zip_list, pln_list, height_list)
 
                 one_rec_list, x_list, word_len, text_array = zip(*map(self.new_text, str_pln_zip))
 
                 x_list = list(x_list)
                 x_list.insert(0, 0)
                 x_dir_list = self.num_count_add(x_list)
-                new_zip_list = zip(one_rec_list, x_dir_list, word_len)
+                new_zip_list = zip(one_rec_list, x_dir_list, word_len, height_list)
 
                 rec_list = map(self.iter_offset, new_zip_list)
                 text_replace, pln_array = zip(*map(self.text_translate, zip(text_array, rec_list)))
@@ -1455,22 +1471,14 @@ try:
                 Rhino.RhinoApp.Wait()
                 return ungroup_data
 
-            def find_layer_index(self, layer_name):
-                if not rs.IsLayer(layer_name):
-                    rs.AddLayer(layer_name)
-                layer_index = rd.ActiveDoc.Layers.Find(layer_name, True)
-
-                return layer_index
-
             def RunScript(self, Str, Plane, Height, Height_Scale, Width_Scale, Layer, Bake):
                 try:
                     sc.doc = Rhino.RhinoDoc.ActiveDoc
                     Text_TEN, Cells, Pln = (gd[object]() for _ in range(3))
 
                     Layer = Layer if Layer else 'Table'
-                    self.height = Height
-                    self.ref_y = Height_Scale * -Height
                     self.w_s = Width_Scale
+                    self.ref_h_scale = Height_Scale
                     self.factor = Bake
 
                     re_mes = Message.RE_MES([Str], ['Str'])
@@ -1479,12 +1487,17 @@ try:
                             Message.message2(self, mes_i)
                     else:
                         if self.factor:
-                            self.layer_index = self.find_layer_index(Layer)
+                            Object_group.BakeGeometry().create_layer(Layer)
+                            self.layer_index = sc.doc.Layers.FindByFullPath(Layer, True)
 
                         str_trunk, str_trunk_path = self.Branch_Route(Str)
                         pln_trunk = self.Branch_Route(Plane)[0]
+                        h_text_trunk = self.Branch_Route(Height)[0]
+                        s_len, h_len = len(str_trunk), len(h_text_trunk)
+                        if s_len > h_len:
+                            h_text_trunk = h_text_trunk + [h_text_trunk[-1]] * (s_len - h_len)
 
-                        zip_list = zip(str_trunk, str_trunk_path, pln_trunk)
+                        zip_list = zip(str_trunk, str_trunk_path, h_text_trunk, pln_trunk)
                         iter_ungroup_data = zip(*map(self._do_main, zip_list))
                         self.unrendered_rec3d = list(chain(*zip(*iter_ungroup_data[1])[0]))
                         self.unrendered_text = list(chain(*zip(*iter_ungroup_data[0])[0]))
