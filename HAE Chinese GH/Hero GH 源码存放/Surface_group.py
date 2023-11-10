@@ -14,7 +14,13 @@ import initialization
 import math
 import scriptcontext as sc
 import Grasshopper.DataTree as gd
+import Grasshopper.Kernel as gk
+import ghpythonlib.treehelpers as ght
 import System.Collections.Generic.IEnumerable as IEnumerable
+
+from itertools import chain
+
+import Geometry_group
 
 Result = initialization.Result
 Message = initialization.message()
@@ -99,7 +105,7 @@ try:
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
                                                                    "RPP_Area sort",
                                                                    "E5",
-                                                                   """Sort by area of face """,
+                                                                   """Sort by area of face""",
                                                                    "Scavenger",
                                                                    "C-Surface")
                 return instance
@@ -153,13 +159,56 @@ try:
                 o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAARgSURBVEhL3ZVtTFtlFMdvQFcGYxSHvOiKbFEKvb1vbXmRAR0DWgrYoTEOcMbXD5tmyLLFD2Yf1C8zm8TE6TQh84O6jTIwgxZKgRYKyAqbM5uJi24xcdEQY9wSk8VkmR7Pee7T0o5Pzm/+k39yn3PPvb/znPPcVvj/yK4olQ6Ho1NV1Qd5KEWaJtU7HFqnJEm5PFSB/gz9OfoL9Cn0afQA2oc+iTaidUlW8apN00CW5SgPJYRgTZElsON9BLzKwx+XZG2BTlMXPGPaBV2mbnb9QsmLoBgVwPvX0GkskySKliuS1QqKLENNTY2Dh5nwpSdUjCuSBLLV2sPDsdcf64Ur7u/h3I6lhL/D9ZMPP0WA43oalyiWX8WX/yZL0h1FUWjrTBUVFZusongL712jAtTVHVw/LL0LCw2LMFE3yRyqm4Lo9nlQjRoBDuppXKLF8rOmqmGsdgAhtxsbGzdRHFvWoyoK2O3afkkUAWe0lz0gCDePaR/B3PaFFEDEOQtl2WUEeElP4yIAvmi62m7fZtNUsNlsr1Ecq/8RK/+hvqqqnNqnyfIe9oAg/HHc9gmr+G6AOdtMgOf1NC4GUNUldl1eviJJ1ouVlZV1uCuwKUqv0+nMo50ktWjlPaUP5hu+SgEQUMlhQ+7V07j4Di6wa1F8i6rFyn9B36aX41xKaNA45H3sAUG4eKD0IBtsHEBe3BEDV4GbAB/oaVzYihUEfE3XimIuwfXfVLEsS2MU0zSxXJUVkCyW/bRGfeopbEXAcgqAgHu27iXAnJ7GZbVYrmOLzvElrf2sPTZbO61L5eItbFeiGG/RroKMAhivnYCp+nACQEM/pn1IgFvofJZJwtOztaO2o3TSMxUNtk4+h/3faLfbyy63Xc6dbZtdOOv2e7FNotlszuaP5KBvHpVT5zBZP81syjQR5BWWGRcApM+2RcHvHnubh4SoO1q05F2GUXcwfnqSFegufnZNm2K47iruJkBQT+MK7Q5lTbhDdxDwJg8JQXewKNI6AyMt4y/zULLesBntrC10guIA+viOyEcJ8KuexnUPgNaijKI1c6Bv4WTVaViXto4gq7oHgLbhvg1w5vFhCDtnEgCCjW4LQJ4h7z8DLIZ0A6uWqk4GjNUGoTCjMBVAIsCoK5D4oRpsGswhwJctgd08lCwtMz0TfNVnUgDT9ZG1Owg1h7IWnz5fGXRP/BVujbwf3blsoljMG2sIeyIQbp8/RDGeHldzviGfzYAA8SNKPxcD1YNgSDOsAkbbR/NCnqnfI55ZWPJeoGPZE2gL5E56pv+cRkAMj+pIS+DuNu2zbrTCjDOacorou+Cn6IaexjXS7D/8TcclGHdN3Oh39T9AMb/L33+p41sYc43/1Ffdt54lrmqKWlSc+QhsXr85YVob7zcSIPXfcbh5OH+ubQFGXP4jPCT4XL5Hl7znMTZygIeS5UJ3oHdye9FPcNNPjBmdqqHmoUM+ty/lxlDT0Dunms4+xJf/QoLwD/EreY+V3S4zAAAAAElFTkSuQmCC"
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
-            def bubbling(self, Face):
+            def Branch_Route(self, Tree):
+                """分解Tree操作，树形以及多进程框架代码"""
+                Tree_list = [list(_) for _ in Tree.Branches]
+                Tree_Path = [list(_) for _ in Tree.Paths]
+                return Tree_list, Tree_Path
+
+            def split_tree(self, tree_data, tree_path):
+                """操作树单枝的代码"""
+                new_tree = ght.list_to_tree(tree_data, True, tree_path)  # 此处可替换复写的Tree_To_List（源码参照Vector组-点集根据与曲线距离分组）
+                result_data, result_path = self.Branch_Route(new_tree)
+                if list(chain(*result_data)):
+                    return result_data, result_path
+                else:
+                    return [[]], result_path
+
+            def format_tree(self, result_tree):
+                """匹配树路径的代码，利用空树创造与源树路径匹配的树形结构分支"""
+                stock_tree = gd[object]()
+                for sub_tree in result_tree:
+                    fruit, branch = sub_tree
+                    for index, item in enumerate(fruit):
+                        path = gk.Data.GH_Path(System.Array[int](branch[index]))
+                        if hasattr(item, '__iter__'):
+                            if item:
+                                for sub_index in range(len(item)):
+                                    stock_tree.Insert(item[sub_index], path, sub_index)
+                            else:
+                                stock_tree.AddRange(item, path)
+                        else:
+                            stock_tree.Insert(item, path, index)
+                return stock_tree
+
+            def _trun_object(self, ref_obj):
+                """引用物体转换为GH内置物体"""
+                if 'ReferenceID' in dir(ref_obj):
+                    if ref_obj.IsReferencedGeometry:
+                        test_pt = ref_obj.Value
+                    else:
+                        test_pt = ref_obj.Value
+                else:
+                    test_pt = ref_obj
+                return test_pt
+
+            def bubbling(self, Face, origin_geo):
                 # 面积质量属性
                 FaceAMP = [rg.AreaMassProperties.Compute(i) for i in Face]
 
                 Area_Arc = [ap.Area for ap in FaceAMP]  # 面积
                 Centroid = [ap.Centroid for ap in FaceAMP]  # 质心
-                nice = zip(Face, Area_Arc, Centroid)
+                nice = zip(origin_geo, Area_Arc, Centroid)
 
                 # 字典遍历元组排序
                 AREAS = sorted(nice, key=lambda x: x[1], reverse=False)
@@ -171,14 +220,18 @@ try:
 
             def RunScript(self, Geometry):
                 try:
+                    Face, Area, Centroid = (gd[object]() for _ in range(3))
                     re_mes = Message.RE_MES([Geometry], ['Geometry'])
                     if len(re_mes) > 0:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
-                        return gd[object](), gd[object](), gd[object]()
                     else:
-                        Face, Area_Arc, Centroid = self.bubbling(Geometry)
-                        return Face, Area_Arc, Centroid
+                        structure_tree = self.Params.Input[0].VolatileData
+                        origin_surface = self.Branch_Route(structure_tree)[0][self.RunCount - 1]
+                        gh_surface = map(self._trun_object, origin_surface)
+
+                        Face, Area, Centroid = self.bubbling(gh_surface, origin_surface)
+                    return Face, Area, Centroid
                 except Exception as e:
                     Message.message1(self, "Run error：\n{}".format(str(e)))
                 finally:
@@ -190,7 +243,7 @@ try:
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
                                                                    "RPP_Surface_Area2", "E4",
-                                                                   """Breps finds the area：Area divided by divisor，keep decimals in decimal place；""", "Scavenger",
+                                                                   """Breps finds the area：Area divided by divisor，keep decimals in decimal place""", "Scavenger",
                                                                    "C-Surface")
                 return instance
 
@@ -215,11 +268,15 @@ try:
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
                 self.SetUpParam(p, "Divisor", "D1", "divisor，Default million 1000000")
+                DIV_NUMBER = 1000000
+                p.SetPersistentData(gk.Types.GH_Number(DIV_NUMBER))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
-                p = Grasshopper.Kernel.Parameters.Param_Number()
+                p = Grasshopper.Kernel.Parameters.Param_Integer()
                 self.SetUpParam(p, "Decimals", "D2", "keep decimal place，default three place")
+                INT_NUMBER = 1
+                p.SetPersistentData(gk.Types.GH_Number(INT_NUMBER))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
@@ -243,11 +300,10 @@ try:
 
             def RunScript(self, Breps, Divisor, Decimals):
                 # 初始化参数
-                divisor = Divisor if Divisor else 1000000
-                digit = ".%uF" % Decimals if Decimals else ".3F"
+                digit = ".%uF" % Decimals if Decimals is not None else ".3F"
 
                 # 计算
-                Area = [format(rs.SurfaceArea(i)[0] / divisor, digit) for i in Breps]
+                Area = [format(rs.SurfaceArea(i)[0] / Divisor, digit) for i in Breps]
                 return Area
 
 
@@ -255,7 +311,7 @@ try:
         class BrepFilp(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_BrepFlip", "E1", """Invert surfaces by vectors """, "Scavenger", "C-Surface")
+                                                                   "RPP_BrepFlip", "E1", """Invert surfaces by vectors""", "Scavenger", "C-Surface")
                 return instance
 
             def get_ComponentGuid(self):
@@ -303,37 +359,29 @@ try:
                 self.set_vector = None
 
             def _get_normal_vector(self, _srf):
-                pts = [_.Location for _ in _srf.Vertices]
-                center_pt = reduce(lambda pt1, pt2: pt1 + pt2, pts) / len(pts)
-
-                single_vertex = list(zip(pts, pts[1:] + pts[:1]))
-                vector_list = [i - j for i, j in single_vertex]
-                axis_list = vector_list[2:]
-
-                return rg.Plane(center_pt, axis_list[0], axis_list[1]).ZAxis
+                _srf_list = [_ for _ in _srf.Faces]
+                return _srf_list[0].FrameAt(0.5, 0.5)[1].ZAxis
 
             def RunScript(self, Brep, Vector):
                 try:
+                    New_Brep = gd[object]()
                     re_mes = Message.RE_MES([Brep], ['Brep'])
                     if len(re_mes) > 0:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
-                        return gd[object]()
                     else:
                         if Vector:
                             normal_vector = self._get_normal_vector(Brep)
-                            self.set_vector = Vector
-                            angle = math.degrees(rg.Vector3d.VectorAngle(normal_vector, self.set_vector))
-                            if (90 >= angle >= 0) or (360 >= angle >= 270):
+                            if rg.Vector3d.VectorAngle(normal_vector, Vector) > sc.doc.ModelAngleToleranceRadians:
+                                Brep.Flip()
                                 New_Brep = Brep
                             else:
-                                Brep.Flip()
                                 New_Brep = Brep
                         else:
                             Message.message3(self, "Vector not set，Brep is reversed by default")
                             Brep.Flip()
                             New_Brep = Brep
-                        return New_Brep
+                    return New_Brep
                 finally:
                     self.Message = "Brep reversal"
 
@@ -665,6 +713,7 @@ try:
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
                 self.SetUpParam(p, "Axis", "A", "Axis (x, y, z)")
+
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
@@ -694,28 +743,66 @@ try:
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
-                self.dict_axis = {'X': 'x_coordinate', 'Y': 'y_coordinate', 'Z': 'z_coordinate'}
+                self.dict_axis = {'X': 0, 'Y': 1, 'Z': 2}
 
-            def _normal_fun(self, geo_list):
-                for f_index in range(len(geo_list)):
-                    min_index = f_index
-                    for s_index in range(min_index + 1, len(geo_list)):
-                        if geo_list[min_index].GetArea() > geo_list[s_index].GetArea():
-                            min_index = s_index
-                    if min_index != f_index:
-                        geo_list[f_index], geo_list[min_index] = geo_list[min_index], geo_list[f_index]
-                return geo_list
+            def Branch_Route(self, Tree):
+                """分解Tree操作，树形以及多进程框架代码"""
+                Tree_list = [list(_) for _ in Tree.Branches]
+                Tree_Path = [list(_) for _ in Tree.Paths]
+                return Tree_list, Tree_Path
 
-            def get_center_pt(self, pt_list):
-                center_pt = reduce(lambda pt1, pt2: pt1 + pt2, pt_list) / len(pt_list)
-                return center_pt
+            def split_tree(self, tree_data, tree_path):
+                """操作树单枝的代码"""
+                new_tree = ght.list_to_tree(tree_data, True, tree_path)  # 此处可替换复写的Tree_To_List（源码参照Vector组-点集根据与曲线距离分组）
+                result_data, result_path = self.Branch_Route(new_tree)
+                if list(chain(*result_data)):
+                    return result_data, result_path
+                else:
+                    return [[]], result_path
+
+            def format_tree(self, result_tree):
+                """匹配树路径的代码，利用空树创造与源树路径匹配的树形结构分支"""
+                stock_tree = gd[object]()
+                for sub_tree in result_tree:
+                    fruit, branch = sub_tree
+                    for index, item in enumerate(fruit):
+                        path = gk.Data.GH_Path(System.Array[int](branch[index]))
+                        if hasattr(item, '__iter__'):
+                            if item:
+                                for sub_index in range(len(item)):
+                                    stock_tree.Insert(item[sub_index], path, sub_index)
+                            else:
+                                stock_tree.AddRange(item, path)
+                        else:
+                            stock_tree.Insert(item, path, index)
+                return stock_tree
+
+            def _trun_object(self, ref_obj):
+                """引用物体转换为GH内置物体"""
+                if 'ReferenceID' in dir(ref_obj):
+                    if ref_obj.IsReferencedGeometry:
+                        test_pt = ref_obj.Value
+                    else:
+                        test_pt = ref_obj.Value
+                else:
+                    test_pt = ref_obj
+                return test_pt
 
             def _other_fun(self, data_list, axis, coord_pl):
+                xform = rg.Transform.PlaneToPlane(coord_pl, rg.Plane.WorldXY)
+
                 for f_index in range(len(data_list)):
                     for s_index in range(len(data_list) - 1 - f_index):
-                        first_center_pt = ghc.PlaneCoordinates(self.get_center_pt([_.Location for _ in data_list[s_index].Vertices]), coord_pl)[self.dict_axis[axis]]
-                        second_center_pt = ghc.PlaneCoordinates(self.get_center_pt([_.Location for _ in data_list[s_index + 1].Vertices]), coord_pl)[self.dict_axis[axis]]
-                        if first_center_pt > second_center_pt:
+                        if not data_list[s_index]:
+                            continue
+                        first_center_pt = Geometry_group.GeoCenter().center_box(self._trun_object(data_list[s_index]))
+                        second_center_pt = Geometry_group.GeoCenter().center_box(self._trun_object(data_list[s_index + 1]))
+                        first_center_pt.Transform(xform)
+                        second_center_pt.Transform(xform)
+
+                        first_center_axis = first_center_pt[self.dict_axis[axis]]
+                        second_center_axis = second_center_pt[self.dict_axis[axis]]
+                        if first_center_axis > second_center_axis:
                             data_list[s_index], data_list[s_index + 1] = data_list[s_index + 1], data_list[s_index]
                 return data_list
 
@@ -727,16 +814,24 @@ try:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
                     else:
-                        if Axis:
-                            Axis = Axis.upper()
-                            if Axis in ['X', 'Y', 'Z']:
-                                Sort_Geo = self._other_fun(Geo, Axis, CP)
-                                return Sort_Geo
-                            else:
-                                Message.message1(self, "Please input the correct axis coordinates！")
-                        else:
-                            Message.message3(self, "Axis coordinates not input，be sorted by area！")
-                            Sort_Geo = self._normal_fun(Geo)
+                        Axis = Axis.upper()
+
+                        structure_tree = self.Params.Input[0].VolatileData
+                        origin_surface = self.Branch_Route(structure_tree)[0][self.RunCount - 1]
+
+                        Sort_Geo = self._other_fun(origin_surface, Axis, CP)
+
+
+                        # if Axis:
+                        #     Axis = Axis.upper()
+                        #     if Axis in ['X', 'Y', 'Z']:
+                        #         Sort_Geo = self._other_fun(Geo, Axis, CP)
+                        #         return Sort_Geo
+                        #     else:
+                        #         Message.message1(self, "Please input the correct axis coordinates！")
+                        # else:
+                        #     Message.message3(self, "Axis coordinates not input，be sorted by area！")
+                        #     Sort_Geo = self._normal_fun(Geo)
                     return Sort_Geo
                 finally:
                     self.Message = 'Surface sort'
@@ -746,7 +841,7 @@ try:
         class ExtendSurface(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_ExtendSurface", "E2", """Extended surface（not contain irregular surfaces），extend the surface through inputting four sides of surface """, "Scavenger", "C-Surface")
+                                                                   "RPP_ExtendSurface", "E2", """Extended surface（not contain irregular surfaces），extend the surface through inputting four sides of surface""", "Scavenger", "C-Surface")
                 return instance
 
             def get_ComponentGuid(self):
