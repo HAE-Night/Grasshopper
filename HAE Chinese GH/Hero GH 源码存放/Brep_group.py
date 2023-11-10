@@ -500,25 +500,88 @@ try:
                 o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAANoSURBVEhL3ZRZSFRhFMcNeulBZ0adcsYmxmV2pITqIYiQdlo0AtGWMc1A6aGGJFqnMk2nDYtpWglNarTJzKXGTMpl1NGszFEKbaOINmghLZv0/jvfJWyha01v9cEfzuXe7/y++z/nfH7/x3pccTj0U0O+4ZnTKij2/qXziIzzVCm4rjLDp5YzguJuOQz9LXY1gBE8oDVNXdBj0qAtTSWo7rVquNNUh7yNhSWozcPHSxZBoWY/ep37HhFgJA9wJYhOdSUFoCnBX1CdRn/UxfvbvK78EtRQovKdgkJVDnorcr4BGpcE5XcmB6JxieQHNS+VoOlr7FkhQX2ixOp1FThwxYLesp34UJ6FPhKLv9egkwCVuQ9+C6hLDOQhvwL00UlZsrfndwzFPgFuLhcjb24ICmOluEHxzwBUW1BkTobneAa8F3f5DugwimCeLkfcRCVuU/wD4NpePCvaiqmTonH35Po/B7gosZssaVsmxp0VAbDNG4NgpRYFsaNxf6X4G6D5IDJT4xARGYk3JTuAK7v5pKwmwwKY35fjA3F2kRSli4NxJk4Kg1aFOdFh6EkRw0UA7obd8dKxDQplOFJiY3Dv1EZ0kk3Mqtcl23mIIIDZsjEmFPJwLTRqNfQaFXQk9nxsgYz+SmIdbC9ybEmaD6l8HKIMOmi1Gqjo24hImhebCVxVrjDAQwDTtLEYpdBjTJgWIZSYbWZxzuxQdKeIrANtpx0r6eQyhRLK8AgEyRSQhCggGh0Kt3UNcHkYQCt5bydbMmfIkTtLBgtpvE6FyYZItCfxc2HlOoocnmMZfGLj/Gk4l5mKws1JKNxkxFP7FvRXZgsDWJGvE4RZ1ZMcwMOkYTrsmS3Do1QRaqkGA01U5MYDSFkYg0kTojBIU8u6CjW78bEiC+8v+NCm26lNp0RF8NCu79u0fj9fVL1Oi+78Dfj8N3PQbhQje6acHzYW/2rQLOmLcfvour8bNNayzvggNFDM7qOfAczrF2fNeF5sxgeyxmcAExs6ocvuPSXqr8geGq5hAa5EcfHDVRLcojtHSA+oyPUJASfoui7FVQu8lVmCQjUBync9GQK0rtabu00Gd2u6RlB3TXq3O12X4W2xF3Cuo+/6qvMENVBre9dXY+sYAviyuFev/Glj8O/EcW8Dv275p5ef3xdPJW9bFlB5AgAAAABJRU5ErkJggg=="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
+            def Branch_Route(self, Tree):
+                """分解Tree操作，树形以及多进程框架代码"""
+                Tree_list = [list(_) for _ in Tree.Branches]
+                Tree_Path = [list(_) for _ in Tree.Paths]
+                return Tree_list, Tree_Path
+
+            def split_tree(self, tree_data, tree_path):
+                """操作树单枝的代码"""
+                new_tree = ght.list_to_tree(tree_data, True, tree_path)  # 此处可替换复写的Tree_To_List（源码参照Vector组-点集根据与曲线距离分组）
+                result_data, result_path = self.Branch_Route(new_tree)
+                if list(chain(*result_data)):
+                    return result_data, result_path
+                else:
+                    return [[]], result_path
+
+            def format_tree(self, result_tree):
+                """匹配树路径的代码，利用空树创造与源树路径匹配的树形结构分支"""
+                stock_tree = gd[object]()
+                for sub_tree in result_tree:
+                    fruit, branch = sub_tree
+                    for index, item in enumerate(fruit):
+                        path = gk.Data.GH_Path(System.Array[int](branch[index]))
+                        if hasattr(item, '__iter__'):
+                            if item:
+                                for sub_index in range(len(item)):
+                                    stock_tree.Insert(item[sub_index], path, sub_index)
+                            else:
+                                stock_tree.AddRange(item, path)
+                        else:
+                            stock_tree.Insert(item, path, index)
+                return stock_tree
+
+            def _trun_object(self, ref_obj):
+                """引用物体转换为GH内置物体"""
+                if 'ReferenceID' in dir(ref_obj):
+                    if ref_obj.IsReferencedGeometry:
+                        test_pt = ref_obj.Value
+                    else:
+                        test_pt = ref_obj.Value
+                else:
+                    test_pt = ref_obj
+                return test_pt
+
             # brep结合
-            def brepbp(self, Breps):
-                Result = rg.Brep.CreateBooleanUnion(Breps[0], Breps[1])
+            def brepbp(self, tuple_data):
+                brep_group, origin_path = tuple_data
+                temp_brep = rg.Brep.CreateBooleanUnion(brep_group, self.tol)
+                Result = rg.Brep.JoinBreps(brep_group, self.tol) if not temp_brep else temp_brep
+
                 Merge_Result = []
                 for Re_ in Result:
-                    Re_.MergeCoplanarFaces(0.02)
+                    Re_.MergeCoplanarFaces(sc.doc.ModelAbsoluteTolerance)
+                    if Re_.SolidOrientation == rg.BrepSolidOrientation.Inward:
+                        Re_.Flip()
                     Merge_Result.append(Re_)
-                return Merge_Result
+
+                ungroup_data = self.split_tree(Merge_Result, origin_path)
+                Rhino.RhinoApp.Wait()
+                return ungroup_data
 
             def RunScript(self, Breps, PRE):
-                Brep = gd[object]()
-                PRE = PRE if PRE else 0.02
-                if Breps.BranchCount == 0:
+                try:
+                    sc.doc = Rhino.RhinoDoc.ActiveDoc
+                    Brep = gd[object]()
+                    self.tol = PRE
+                    re_mes = Message.RE_MES([Breps], ['B end'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                    else:
+                        brep_trunk, brep_path = self.Branch_Route(Breps)
+
+                        zip_list = zip(brep_trunk, brep_path)
+                        iter_ungroup_data = ghp.run(self.brepbp, zip_list)
+                        Brep = self.format_tree(iter_ungroup_data)
+
+                    sc.doc.Views.Redraw()
+                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                    sc.doc = ghdoc
                     return Brep
-                if Breps.BranchCount > 0:
-                    breplist = zip([tb for tb in Breps.Branches], [PRE] * Breps.BranchCount)
-                    res = ghp.run(self.brepbp, breplist)
-                    Brep = ght.list_to_tree(res)
-                return Brep
+                finally:
+                    self.Message = 'Brep Union'
 
 
         # 合并以及封面
@@ -565,21 +628,38 @@ try:
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def RunScript(self, Suface_Or_Brep_List):
-                Brep = gd[object]()
-                if Suface_Or_Brep_List:
-                    # 封顶
-                    Brep_List = [i.CapPlanarHoles(0.1) for i in Suface_Or_Brep_List]
-                    # 封顶后列表去None的操作
-                    Bool_List = [i for i in Brep_List if i is not None]
-                    if len(Bool_List) != 0:
-                        # 缝合以及共面
-                        Brep = rg.Brep.CreateBooleanUnion(Bool_List, 0.1)
-                        Brep[0].MergeCoplanarFaces(0.1)
+                try:
+                    Result = gd[object]()
+                    Brep_List = []
+                    tol = sc.doc.ModelAbsoluteTolerance
+
+                    re_mes = Message.RE_MES([Suface_Or_Brep_List], ['M end'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
                     else:
-                        # 缝合以及共面
-                        Brep = rg.Brep.CreateBooleanUnion(Suface_Or_Brep_List, 0.1)
-                        Brep[0].MergeCoplanarFaces(0.1)
-                return Brep
+                        if Suface_Or_Brep_List:
+                            # 封顶
+                            for i in Suface_Or_Brep_List:
+                                cap_brep = i.CapPlanarHoles(tol)
+                                if not cap_brep:
+                                    Brep_List.append(i)
+                                else:
+                                    Brep_List.append(cap_brep)
+
+                            # 第一个合并的方法
+                            temp_brep = rg.Brep.CreateBooleanUnion(Brep_List, tol)
+                            # 若失败，使用第二个Join方法
+                            Result = rg.Brep.JoinBreps(Brep_List, tol) if not temp_brep else temp_brep
+                            # 去除结构线
+                            Result[0].MergeCoplanarFaces(tol)
+
+                            # 检查Brep是否翻转
+                            if Result[0].SolidOrientation == rg.BrepSolidOrientation.Inward:
+                                Result[0].Flip()
+                    return Result
+                finally:
+                    self.Message = 'Brep Join'
 
 
         # 分割Brep（面）
@@ -747,8 +827,12 @@ try:
 
                 for pl in new_pln:
                     single_event = rg.Intersect.Intersection.BrepPlane(item, pl, self.tol)
-                    surface_cut = rg.Brep.CreatePlanarBreps(single_event[1])[0]
-                    cutts.append(surface_cut)
+                    # 是否切到实体，未切到则不加入切割列表
+                    if single_event[1]:
+                        surface_cut = rg.Brep.CreatePlanarBreps(single_event[1])
+                        if surface_cut:
+                            cutts.append(surface_cut[0])
+
                 res_breps = self._recursive_cutting(item, cutts, [])
                 sort_breps = self.sort_brep(res_breps)
                 return sort_breps
@@ -1344,6 +1428,8 @@ try:
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
                 self.SetUpParam(p, "Distance", "D", "offset distance")
+                DEFAULT = 1
+                p.SetPersistentData(gk.Types.GH_Number(DEFAULT))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
@@ -1596,7 +1682,7 @@ try:
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
-                self.SetUpParam(p, "Index", "I", "The original subscript of Brep was deleted")
+                self.SetUpParam(p, "Index", "I", "Subscript of overlapping Brep in the original Brep")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Output.Add(p)
 
@@ -1629,6 +1715,9 @@ try:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
                     else:
+                        structure_tree = self.Params.Input[0].VolatileData
+                        origin_brep = [list(i) for i in structure_tree.Branches][self.RunCount - 1]
+
                         total, count, no_need_index = 0, 0, []
                         if filter(None, Breps):
                             while len(Breps) > total:
@@ -1642,7 +1731,7 @@ try:
                                     total += len(sub_index)
                                 count += 1
                             need_index = [_[0] for _ in no_need_index]
-                            Brep_Result = [Breps[_] for _ in need_index]
+                            Brep_Result = [origin_brep[_] for _ in need_index]
                             Index = ght.list_to_tree(no_need_index)
 
                     sc.doc.Views.Redraw()
@@ -2206,13 +2295,16 @@ try:
 
             # 得到合并曲线
             def Get_Curve(self, Geo):
-                if 'Point' in str(type(Geo)):
-                    Curves = [None]
-                elif 'Curve' in str(type(Geo)):
-                    Curves = [Geo]
+                if not Geo:
+                    pass
                 else:
-                    Curves = list(ghp.run(self.IsHole, zip(Geo.Edges)))
-                return list(rg.Curve.JoinCurves(list(Curves)))
+                    if 'Point' in str(type(Geo)):
+                        Curves = [None]
+                    elif 'Curve' in str(type(Geo)):
+                        Curves = [Geo]
+                    else:
+                        Curves = list(ghp.run(self.IsHole, zip(Geo.Edges)))
+                    return list(rg.Curve.JoinCurves(list(Curves)))
 
             # 去除多余的真假值
             def Remove_Excess(self, Bool):
@@ -2229,26 +2321,29 @@ try:
 
             # Geometry 炸开成曲线,判断曲线是否是圆弧
             # 分类是否带圆弧的 Geometry
-            def Geometry_Multiprocess(self, Geometry_list):
+            def Geometry_Multiprocess(self, tuple_data):
+                Geometry_list, origin_geo = tuple_data
                 Curve_list = list(ghp.run(self.Get_Curve, Geometry_list))  # 得到所有的合并曲线,查看是否是孔得到判断结果
                 Geometry_Bool_list = list(map(self.IsHole_Multiprocess, Curve_list))  # 判断是否带孔的数据 真假值
-                Geometry_Bool_list = list(
-                    ghp.run(self.Remove_Excess, Geometry_Bool_list))  # 简化[[False, False--]] 变为 [[False]]去重 有真则为真
-                return zip(*ghp.run(self.HoleInGeometry_Bool, zip(Geometry_list, Geometry_Bool_list)))
+                Geometry_Bool_list = list(ghp.run(self.Remove_Excess, Geometry_Bool_list))  # 简化[[False, False--]] 变为 [[False]]去重 有真则为真
+                return zip(*ghp.run(self.HoleInGeometry_Bool, zip(origin_geo, Geometry_Bool_list)))
 
             def RunScript(self, Geometry):
                 try:
                     sc.doc = Rhino.RhinoDoc.ActiveDoc
-
+                    Perforated, Solid = (gd[object]() for _ in range(2))
                     # 带孔Geometry，不带孔Geometry
                     re_mes = Message.RE_MES([Geometry], ['Geometry'])
                     if len(re_mes) > 0:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
-                        return gd[object](), gd[object]()
                     else:
+                        structure_tree = self.Params.Input[0].VolatileData
+                        origin_brep = [i for i in structure_tree.Branches]
+
                         Geometry_Tree = [i for i in Geometry.Branches]  # 拿到数据 二维列表
-                        res = map(self.Geometry_Multiprocess, Geometry_Tree)  # 得到物体是否有圆的真假值
+                        zip_list = zip(Geometry_Tree, origin_brep)
+                        res = map(self.Geometry_Multiprocess, zip_list)  # 得到物体是否有圆的真假值
                         Perforated, Solid = zip(*res)
                         Perforated = self.Restore_Tree(Perforated, Geometry)
                         Solid = self.Restore_Tree(Solid, Geometry)
@@ -2488,12 +2583,12 @@ try:
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
                 self.SetUpParam(p, "Base", "B", "Curve or surface")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Vector()
                 self.SetUpParam(p, "Direction", "D", "Stretch vector")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
@@ -2551,44 +2646,80 @@ try:
                             stock_tree.Insert(item, path, index)
                 return stock_tree
 
+            def bopp(self, sub_tuple_data):
+                base, vector = sub_tuple_data
+                if 'Curve' in str(base) or type(base) is rg.Circle or type(base) is rg.Arc:
+                    contour_line = base
+                elif 'Brep' in str(base):
+                    face_list = [f for f in base.Faces]
+                    if len(face_list) == 1:
+                        contour_line = base
+                    else:
+                        contour_line = None
+                        Message.message2(self, "This stretch only supports surface or line stretching!")
+                else:
+                    contour_line = None
+                    Message.message2(self, "This geometry type does not support stretching!")
+
+                if contour_line:
+                    pt_1 = rg.Point3d(vector[0], vector[1], vector[2])
+                    new_vetcor = vector * -1
+                    pt_2 = rg.Point3d(new_vetcor[0], new_vetcor[1], new_vetcor[2])
+                    line = rg.Line(pt_1, pt_2).Direction
+                    move_line = ghc.Move(contour_line, vector)['geometry']
+
+                    ext_1 = ghc.Extrude(move_line, line)
+                    ext_1.MergeCoplanarFaces(self.tol)
+                    res_brep = ext_1
+                    # ext_1 = ghc.Extrude(contour_line, vector)
+                    # ext_2 = ghc.Extrude(contour_line, vector * -1)
+                    #
+                    # union_brep = rg.Brep.JoinBreps([ext_1, ext_2], self.tol)[0]
+                    # cap_brep = union_brep.CapPlanarHoles(self.tol)
+                    # if cap_brep:
+                    #     cap_brep.MergeCoplanarFaces(self.tol)
+                    #     res_brep = cap_brep
+                    # else:
+                    #     union_brep.MergeCoplanarFaces(self.tol)
+                    #     res_brep = union_brep
+
+                    if res_brep.SolidOrientation != rg.BrepSolidOrientation.Outward:
+                        res_brep.Flip()
+                    return res_brep
+
+            def temp_fun(self, tuple_data):
+                base_list, vector_list, origin_path = tuple_data
+                base_len, vector_len = len(base_list), len(vector_list)
+                if base_len > vector_len:
+                    new_vector_list = vector_list + [vector_list[-1]] * (base_len - vector_len)
+                else:
+                    new_vector_list = vector_list
+                sub_zip_list = zip(base_list, new_vector_list)
+                ungroup_data = self.split_tree(map(self.bopp, sub_zip_list), origin_path)
+                Rhino.RhinoApp.Wait()
+                return ungroup_data
+
             def RunScript(self, Base, Direction):
                 try:
                     sc.doc = Rhino.RhinoDoc.ActiveDoc
                     Extrusion = gd[object]()
-                    tol = sc.doc.ModelAbsoluteTolerance
+                    self.tol = sc.doc.ModelAbsoluteTolerance
 
                     re_mes = Message.RE_MES([Base, Direction], ['B端', 'D端'])
                     if len(re_mes) > 0:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
                     else:
-                        contour_line = None
-                        if 'Curve' in str(Base):
-                            contour_line = Base
-                        elif 'Brep' in str(Base):
-                            face_list = [f for f in Base.Faces]
-                            if len(face_list) == 1:
-                                line_list = [_ for _ in Base.Edges]
-                                contour_line = rg.Curve.JoinCurves(line_list, tol)[0]
-                            else:
-                                Message.message2(self, "This stretch only supports surface or line stretching！")
+                        base_trunk, base_path = self.Branch_Route(Base)
+                        dir_trunk, dir_path = self.Branch_Route(Direction)
+                        b_len, d_len = len(base_trunk), len(dir_trunk)
+                        if b_len > d_len:
+                            new_dir_trunk = dir_trunk + [dir_trunk[-1]] * (b_len - d_len)
                         else:
-                            Message.message2(self, "This stretch only supports surface or line stretching！")
-
-                        if contour_line:
-                            ext_1 = ghc.Extrude(contour_line, Direction)
-                            ext_2 = ghc.Extrude(contour_line, Direction * -1)
-
-                            union_brep = rg.Brep.JoinBreps([ext_1, ext_2], tol)[0]
-                            cap_brep = union_brep.CapPlanarHoles(tol)
-                            if cap_brep:
-                                cap_brep.MergeCoplanarFaces(tol)
-                                Extrusion = cap_brep
-                            else:
-                                union_brep.MergeCoplanarFaces(tol)
-                                Extrusion = union_brep
-                        if Extrusion.SolidOrientation == rg.BrepSolidOrientation.Inward:
-                            Extrusion.Flip()
+                            new_dir_trunk = dir_trunk
+                        zip_list = zip(base_trunk, new_dir_trunk, base_path)
+                        iter_ungroup_data = ghp.run(self.temp_fun, zip_list)
+                        Extrusion = self.format_tree(iter_ungroup_data)
 
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
@@ -2614,16 +2745,16 @@ class AssemblyInfo(GhPython.Assemblies.PythonAssemblyInfo):
         Grasshopper.Instances.ComponentServer.AddCategoryShortName('Scavenger', 'Save')
 
     def get_AssemblyName(self):
-        return "Tradition v4.4"
+        return "Tradition"
 
     def get_AssemblyDescription(self):
         return """HAE plug-in"""
 
     def get_AssemblyVersion(self):
-        return "4.4"
+        return "v4.5"
 
     def get_AuthorName(self):
-        return "HAE Development Team"
+        return "by HAE Development Team"
 
     def get_Id(self):
         return System.Guid("86c4ead2-84fa-4dff-a70f-099478c2ccca")
