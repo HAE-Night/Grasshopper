@@ -2909,7 +2909,7 @@ try:
                     for obj in range(len(Object)):
                         obj_attr = sc.doc.Objects.FindId(Object[obj]).Attributes
                         value = obj_attr.GetUserString(key)  # 根据输入的key值得到Value
-                        if fnmatch.fnmatch(value, str(v)):
+                        if value is not None and fnmatch.fnmatch(value, str(v)):
                             Obj.append(obj)
                 return Obj
 
