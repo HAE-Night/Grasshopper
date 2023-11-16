@@ -2648,7 +2648,7 @@ try:
 
             def bopp(self, sub_tuple_data):
                 base, vector = sub_tuple_data
-                if 'Curve' in str(base) or type(base) is rg.Circle or type(base) is rg.Arc:
+                if 'Curve' in str(base) or type(base) is rg.Circle or type(base) is rg.Arc or type(base) is rg.Line:
                     contour_line = base
                 elif 'Brep' in str(base):
                     face_list = [f for f in base.Faces]
@@ -2669,7 +2669,7 @@ try:
                     move_line = ghc.Move(contour_line, vector)['geometry']
 
                     ext_1 = ghc.Extrude(move_line, line)
-                    ext_1.MergeCoplanarFaces(self.tol)
+                    # ext_1.MergeCoplanarFaces(self.tol)
                     res_brep = ext_1
                     # ext_1 = ghc.Extrude(contour_line, vector)
                     # ext_2 = ghc.Extrude(contour_line, vector * -1)
