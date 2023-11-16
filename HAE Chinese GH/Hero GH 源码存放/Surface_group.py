@@ -372,7 +372,7 @@ try:
                     else:
                         if Vector:
                             normal_vector = self._get_normal_vector(Brep)
-                            if rg.Vector3d.VectorAngle(normal_vector, Vector) > sc.doc.ModelAngleToleranceRadians:
+                            if rg.Vector3d.VectorAngle(normal_vector, Vector) > math.radians(90):
                                 Brep.Flip()
                                 New_Brep = Brep
                             else:
