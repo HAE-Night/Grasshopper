@@ -345,6 +345,17 @@ try:
             def __init__(self):
                 self.tol, self.format_put = None, None
 
+            def _trun_object(self, ref_obj):
+                """引用物体转换为GH内置物体"""
+                if 'ReferenceID' in dir(ref_obj):
+                    if ref_obj.IsReferencedGeometry:
+                        test_pt = ref_obj.Value
+                    else:
+                        test_pt = ref_obj.Value
+                else:
+                    test_pt = ref_obj
+                return test_pt
+
             def remove_duplicate_points(self, tuple_data):  # 删除重复的点
                 points, origin_pt_list, origin_path = tuple_data
                 new_points = []
@@ -361,14 +372,19 @@ try:
                         new_points.append(p)  # 添加唯一点
                         index_groups.append([i])
 
+                # 判断依据，0只输出每组唯一一个点；1输出删除点和保留点
                 if self.format_put == 1:
                     index_groups = index_groups
                 elif self.format_put == 0:
                     index_groups = [_[0] for _ in index_groups]
                 else:
                     index_groups = index_groups
-                    Message.message2(self, "Please input the correct data type！！")
-                new_ref_points = [origin_pt_list[_] for _ in index_groups]
+                    self.message2("Please input the correct data type！！")
+                # 判断需要的点列表
+                if type(index_groups[0]) is list:
+                    new_ref_points = map(lambda x: [origin_pt_list[_] for _ in x], index_groups)
+                else:
+                    new_ref_points = [origin_pt_list[_] for _ in index_groups]
                 ungroup_data = map(lambda x: self.split_tree(x, origin_path), [new_ref_points, index_groups])
                 Rhino.RhinoApp.Wait()
                 return ungroup_data
@@ -385,13 +401,12 @@ try:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
                     else:
-                        pt_trunk_path = self.Branch_Route(Points)[1]
+                        pt_trunk, pt_trunk_path = self.Branch_Route(Points)
 
                         structure_tree = self.Params.Input[0].VolatileData
                         origin_pts = self.Branch_Route(structure_tree)[0]
-                        gh_origin_pts = map(lambda x: map(TreeFun._trun_object, x), origin_pts)
+                        gh_origin_pts = map(lambda x: map(self._trun_object, x), origin_pts)
                         zip_list = zip(gh_origin_pts, origin_pts, pt_trunk_path)
-
                         iter_ungroup_data = zip(*ghp.run(self.remove_duplicate_points, zip_list))
                         Reuslt_Pt, Index_Pt = ghp.run(lambda single_tree: self.format_tree(single_tree), iter_ungroup_data)
 
