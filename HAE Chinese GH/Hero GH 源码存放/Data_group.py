@@ -60,6 +60,8 @@ try:
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
+                INDEX = 1
+                p.SetPersistentData(Grasshopper.Kernel.Types.GH_Integer(INDEX))
                 self.SetUpParam(p, "Index", "I", "Value subscript")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
@@ -90,16 +92,23 @@ try:
             def RunScript(self, Lists, Index):
                 try:
                     List = gd[object]()
-                    re_mes = Message.RE_MES([Lists, Index], ['Lists', 'Index'])
+                    # 判断输入的列表是否都为空
+                    structure_tree = self.Params.Input[0].VolatileData
+                    temp_geo_list = [list(i) for i in structure_tree.Branches]  # 获取所有数据
+                    j_list = filter(None, list(chain(*temp_geo_list)))
+                    re_mes = Message.RE_MES([j_list, Index], ['Lists', 'Index'])
                     if len(re_mes) > 0:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
                     else:
-                        Lists = self.Branch_Route(self.Params.Input[0].VolatileData)[0][self.RunCount - 1]
-                        index_list = Index.split(" ")
-                        List = []
-                        for i in index_list:
-                            List.append(Lists[int(i)])
+                        try:
+                            Lists = self.Branch_Route(self.Params.Input[0].VolatileData)[0][self.RunCount - 1]
+                            index_list = Index.split(" ")
+                            List = []
+                            for i in index_list:
+                                List.append(Lists[int(i)])
+                        except Exception as e:
+                            Message.message2(self, str(e))
                     return List
                 finally:
                     self.Message = 'Multiple subscript values'
@@ -264,21 +273,23 @@ try:
                     if len(index) == 1:
                         data = list[0:index[0]]
                         data2 = list[index[0]:]
-                        DataTree.AddRange(data, GH_Path(i, 0))
-                        DataTree.AddRange(data2, GH_Path(i, 1))
+                        path = List.Path(i)
+                        DataTree.AddRange(data, path.AppendElement(0))
+                        DataTree.AddRange(data2, path.AppendElement(1))
                     else:
                         for j in range(len(index)):
+                            path = List.Path(i)
                             if j == 0:
                                 data = list[0:index[j]]
-                                DataTree.AddRange(data, GH_Path(i, j))
+                                DataTree.AddRange(data, path.AppendElement(j))
                             elif j == len(index) - 1:
                                 data = list[index[j - 1]:index[j]]
                                 data2 = list[index[j]:]
-                                DataTree.AddRange(data, GH_Path(i, j))
-                                DataTree.AddRange(data2, GH_Path(i, j + 1))
+                                DataTree.AddRange(data, path.AppendElement(j))
+                                DataTree.AddRange(data2, path.AppendElement(j + 1))
                             else:
                                 data = list[index[j - 1]:index[j]]
-                                DataTree.AddRange(data, GH_Path(i, j))
+                                DataTree.AddRange(data, path.AppendElement(j))
                 return DataTree
 
             def RunScript(self, List, Index):
@@ -286,14 +297,14 @@ try:
                     DataTree = gd[object]()
                     re_mes = Message.RE_MES([List, Index], ['List', 'Index'])
                     if len(re_mes) > 0:
-                       for mes_i in re_mes:
-                           Message.message2(self, mes_i)
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
                     else:
-                        List_one = gd[object]()
+                        Ogrin_List = gd[object]()
                         YList, YList_Path = self.Branch_Route(self.Params.Input[0].VolatileData)
                         for _ in range(len(YList)):
-                            List_one.AddRange(YList[_], GH_Path(tuple(YList_Path[_])))
-                        DataTree = self.ListToTree(List_one, Index)
+                            Ogrin_List.AddRange(YList[_], GH_Path(tuple(YList_Path[_])))
+                        DataTree = self.ListToTree(Ogrin_List, Index)
                     return DataTree
                 finally:
                     self.Message = 'List cutting'
@@ -361,29 +372,42 @@ try:
 
             @staticmethod
             def Average(list_data):
-                return sum(list_data) / len(list_data)
+                new_list_data = [_ for _ in list_data if _ is not None]
+                if new_list_data:
+                    return sum(list_data) / len(list_data)
 
             @staticmethod
             def Sum(list_data):
-                return sum(list_data)
+                new_list_data = [_ for _ in list_data if _ is not None]
+                if new_list_data:
+                    return sum(list_data)
 
             @staticmethod
             def Multiplication(list_data):
-                multiplier = 1
-                for _ in list_data:
-                    multiplier = multiplier * _
-                return multiplier
+                new_list_data = [_ for _ in list_data if _ is not None]
+                if new_list_data:
+                    multiplier = 1
+                    for _ in new_list_data:
+                        multiplier = multiplier * _
+                    return multiplier
 
             def RunScript(self, List, Extremum):
                 try:
-                    re_mes = Message.RE_MES([List], ['List'])
+                    # 判断输入的列表是否都为空
+                    structure_tree = self.Params.Input[0].VolatileData
+                    temp_geo_list = [list(i) for i in structure_tree.Branches]  # 获取所有数据
+                    j_list = filter(None, list(chain(*temp_geo_list)))
+                    re_mes = Message.RE_MES([j_list], ['List'])
                     if len(re_mes) > 0:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
                         return gd[object]()
                     else:
-                        instruct = self.factor[Extremum]
-                        command = eval('self.{}(List)'.format(instruct))
+                        if len(List) != 0:
+                            instruct = self.factor[Extremum]
+                            command = eval('self.{}(List)'.format(instruct))
+                        else:
+                            command = None
                         return command
                 finally:
                     self.Message = 'list extremum'
@@ -473,14 +497,22 @@ try:
 
             def RunScript(self, List):
                 try:
-                    re_mes = Message.RE_MES([List], ['List'])
+                    # 判断输入的列表是否都为空
+                    structure_tree = self.Params.Input[0].VolatileData
+                    temp_geo_list = [list(i) for i in structure_tree.Branches]  # 获取所有数据
+                    j_list = filter(None, list(chain(*temp_geo_list)))
+                    re_mes = Message.RE_MES([j_list], ['List'])
+
                     if len(re_mes) > 0:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
                         return gd[list](), gd[list](), gd[list](), gd[list](), gd[list]()
                     else:
                         List = self.Branch_Route(self.Params.Input[0].VolatileData)[0][self.RunCount - 1]
-                        return List[1:], List[:-1], List[1:-1], List[0], List[-1]
+                        if len(List) != 0:
+                            return List[1:], List[:-1], List[1:-1], List[0], List[-1]
+                        else:
+                            return [], [], [], [], []
                 finally:
                     self.Message = 'The beginning and end of the list are deleted'
 
@@ -820,6 +852,8 @@ try:
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
                 self.SetUpParam(p, "Depth", "DP", "trim depth")
+                DEPTH = 1
+                p.SetPersistentData(gk.Types.GH_Integer(DEPTH))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
@@ -846,116 +880,90 @@ try:
             def mes_box(self, info, button, title):
                 return rs.MessageBox(info, button, title)
 
-            def flatten(self, origin_list, result_res):
-                for each in origin_list:
-                    if 'List[object]' in str(type(each)):
-                        self.flatten(each, result_res)
-                    else:
-                        result_res.append(each)
-                return result_res
+            def Branch_Route(self, Tree):
+                """分解Tree操作，树形以及多进程框架代码"""
+                Tree_list = [list(_) for _ in Tree.Branches]
+                Tree_Path = [list(_) for _ in Tree.Paths]
+                return Tree_list, Tree_Path
 
-            def _handle_path(self, data):
-                temp_res_list = []
-                count, total = 0, 0
-                while len(data) > total:
-                    flatten_list = list(chain(*temp_res_list))
-                    if count not in flatten_list:
-                        sub_index = []
-                        for _ in range(len(data)):
-                            if str(data[count]) == str(data[_]):
-                                sub_index.append(_)
-                        temp_res_list.append(sub_index)
-                        total += len(sub_index)
-                    count += 1
-                temp_new_ghpath = [data[_[0]] for _ in temp_res_list]
-
-                res_list = temp_res_list if len(temp_res_list) != 0 else [[_] for _ in range(len(data))]
-                new_ghpath = temp_new_ghpath if len(temp_new_ghpath) != 0 else data
-                return zip(res_list, new_ghpath)
-
-            def _trim_tree(self, origin_tree, depths):
-                try:
-                    origin_tree = [eval("_{}".format(depths[0])) for _ in origin_tree]
-                    depths.pop(0)
-                    if len(depths) != 0:
-                        return self._trim_tree(origin_tree, depths)
-                    else:
-                        return origin_tree
-                except:
-                    return origin_tree
-
-            def _deepest_length(self, path, factor):
-                if factor < 0:
-                    return -1
+            def split_tree(self, tree_data, tree_path):
+                """操作树单枝的代码"""
+                new_tree = ght.list_to_tree(tree_data, True, tree_path)  # 此处可替换复写的Tree_To_List（源码参照Vector组-点集根据与曲线距离分组）
+                result_data, result_path = self.Branch_Route(new_tree)
+                if list(chain(*result_data)):
+                    return result_data, result_path
                 else:
-                    for _ in path.Paths:
-                        if factor >= _.Length:
-                            return False
-                    return True
+                    return [[]], result_path
+
+            def format_tree(self, result_tree):
+                """匹配树路径的代码，利用空树创造与源树路径匹配的树形结构分支"""
+                stock_tree = gd[object]()
+                for sub_tree in result_tree:
+                    fruit, branch = sub_tree
+                    for index, item in enumerate(fruit):
+                        path = gk.Data.GH_Path(System.Array[int](branch[index]))
+                        if hasattr(item, '__iter__'):
+                            if item:
+                                for sub_index in range(len(item)):
+                                    stock_tree.Insert(item[sub_index], path, sub_index)
+                            else:
+                                stock_tree.AddRange(item, path)
+                        else:
+                            stock_tree.Insert(item, path, index)
+                return stock_tree
+
+            def parameter_judgment(self, tree_par_data):
+                # 获取输入端参数所有数据
+                geo_list, geo_path = self.Branch_Route(tree_par_data)
+                if geo_list:
+                    j_list = any(ghp.run(lambda x: len(list(filter(None, x))), geo_list))  # 去空操作, 判断是否为空
+                else:
+                    j_list = False
+                return j_list, geo_list, geo_path
+
+            def _depth_tree(self, path_list):
+                res_path = []
+                if self.Depth >= len(path_list):
+                    res_path = [path_list[0]]
+                else:
+                    res_path = path_list[0: -self.Depth]
+                res_str = ",".join([str(_) for _ in res_path])
+                return res_str
 
             def RunScript(self, Data_Tree, Depth):
                 try:
-                    sc.doc = Rhino.RhinoDoc.ActiveDoc
-
-                    Depth = 1 if Depth is None else Depth
                     Result = gd[object]()
-                    Data_Tree.SimplifyPaths()
-                    re_mes = Message.RE_MES([Data_Tree], ['Data_Tree'])
+                    # 深度
+                    self.Depth = Depth
+                    # 确认输入端是否为空
+                    j_bool_1, geo_list, origin_path = self.parameter_judgment(self.Params.Input[0].VolatileData)
+
+                    # 信息提示方法
+                    re_mes = Message.RE_MES([j_bool_1], ['Data_Tree'])
                     if len(re_mes) > 0:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
                     else:
-                        temp_data = [list(_) for _ in Data_Tree.Branches]
-                        if Depth == 0:
-                            Result = [list(chain(*_)) for _ in temp_data]
-                            Result = ght.list_to_tree(Result)
-                            path_list = [_ for _ in Data_Tree.Paths]
-                            [Result.Paths[_].FromString(str(path_list[_])) for _ in range(len(Result.Paths))]
-                        else:
-                            self.origin_data = []
-                            for _ in temp_data:
-                                if len(_) == 1 and 'List[object]' in str(type(_[0])):
-                                    gh_Geos = [gk.GH_Convert.ToGeometricGoo(g) for g in list(chain(*_[0]))]
-                                    ghGroup = gk.Types.GH_GeometryGroup()
-                                    ghGroup.Objects.AddRange(gh_Geos)
-                                    self.origin_data.append([ghGroup])
-                                else:
-                                    self.origin_data.append(self.flatten(_, []))
+                        # 默认简化树形数据
+                        Data_Tree.SimplifyPaths()
 
-                            if self.origin_data and len(self.origin_data) > 1:
-                                result_boolean = self._deepest_length(Data_Tree, Depth)
-                                if result_boolean is False:
-                                    Message.message3(self, "trimming has been completely！")
+                        new_path = list(ghp.run(self._depth_tree, origin_path))
 
-                                new_depth = Data_Tree.Paths[0].Length - 1 if result_boolean is False or result_boolean == -1 else Depth
-                                depth_cull = ['.CullElement()' for _ in range(new_depth)]
-                                origin_path = self._trim_tree([_ for _ in Data_Tree.Paths], depth_cull)
-                                index_list, new_paths = zip(*self._handle_path(origin_path))
+                        dict_data = dict()
+                        for index, path in enumerate(new_path):
+                            if path not in dict_data:
+                                dict_data[path] = geo_list[index]
+                            else:
+                                dict_data[path] += (geo_list[index])
 
-                                trunk_list = map(lambda x: list(chain(*[self.origin_data[_] for _ in x])), index_list)
-                                result_list = []
-                                for _ in trunk_list:
-                                    if len(_) == 1 and 'List[object]' in str(type(_[0])):
-                                        gh_Geos = [gk.GH_Convert.ToGeometricGoo(g) for g in list(chain(*_[0]))]
-                                        ghGroup = gk.Types.GH_GeometryGroup()
-                                        ghGroup.Objects.AddRange(gh_Geos)
-                                        result_list.append([ghGroup])
-                                    else:
-                                        result_list.append(self.flatten(_, []))
-                                Result = ght.list_to_tree(result_list)
-                                [Result.Paths[_].FromString(str(new_paths[_])) for _ in range(len(Result.Paths))]
-
-                            elif len(self.origin_data) == 1:
-                                Result = Data_Tree
+                        # 修改为列表
+                        keys_list = [[int(_) for _ in d.split(",")] for d in dict_data.keys()]
+                        sub_zip_list = zip(dict_data.values(), keys_list)
+                        iterative_data = ghp.run(lambda a: self.split_tree(a[0], a[1]), sub_zip_list)
+                        Result = self.format_tree(iterative_data)
                     return Result
                 finally:
-                    sc.doc.Views.Redraw()
-                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
-                    sc.doc = ghdoc
-                    if -1 >= Depth:
-                        self.Message = 'Simplest'
-                    else:
-                        self.Message = 'trim degree：{}'.format(Depth)
+                    self.Message = 'trim degree：{}'.format(self.Depth)
 
 
         # RPP_数据结构对比
@@ -1247,83 +1255,155 @@ try:
                 o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAVCSURBVEhLlVUJTBRnFH67szvM7s7MLizgAoqsqEWsrhKsAosXl6gRARUiHm2QKIpWMa1HFMVbLBVI8aqaSioVUaEm1qvWprbWWlsbxaP2CJWoscZ4AYoor+/fGVNg1zT9kpf53/u/9/5j3jcDHuAgE5Xh/wJvNuoj1LFn8Im2dFP1kGfCij7HyPVToq+FRn0yiIcq8k/+/G3Rs0mpUZlqTIEuTBpiWNW3kn83dImhzPGld1MqisdjURtsmqJP7ToD/PQDVGpncMvfS11Xc2DpjkULUha13P0UEU/jni251XnZ8WnJiQMmE8cLOKd/vFyXiObfRqF0biTKVxJR+n7kc/GYs5X5XD/zBKWeG7Rf1S47j3gGn96uwNZ7e9vaHu7DhrryxudPD2Hlx3MvEUcHXqndEsQjMbfNN0YhW0j+JcH1NDeMQdNR5wPOYR6h1HODUFORX9X8YN9LfFyNbfcr8eW9vYhNBxBbP8eKrbM/IY7eRTSsDK8y/zXatXv5WtK/C9RE12sCDeuIM4QROyMrI2Z4w9Wtzdhai/hgH7KF8FEVYvNBLNswvYQoRoBA/g1jqeOCdJau53IimvYMQum7EShfiEPDtog6LtrKTpBNNpIVbQdtwftpK+qvbW1pvFOBj2/uxp++Xo/4vBavXSx9UrJ2WjFxTAoVQOJ6i+P57JCd+oyuh/mckAJdki2f4rQDF7RkeWRxLq8d7AGW2Nk5yQvXF2SeyZ+ZXLSxcPIaCg9SZj2DFdEpww5gbTmHLJ45twICXi3+CjYBdLHq2DP4MYHjTDVRj4WVfY+S66tE3TCPzh3fZu+brvoMBqGo3xFD1eBG/TBfDzpYHf6ZML/XUkOJ4xTTgXSCdBBinKpPD8oBX/1AldoeEz4y+pSHTbaX8aUDdvBpQYvl83FoeZSCwuKwan6sLV07yJJFPFUH1D3m30kHP7TTwXHnC+ZzEeZUpaYL3mTsc5CxEaST3UsGXpKaxqNExeWL8W2s+8Sjzkb5ehIKheGXiUc6SAuOF484b7np4Ca16cmhf3M9xYlETCGbySyI4yYesAZu/kMIiIUP++2SLye8cLX2JcqjXFbH/Gcyei3r8xodXG2ng9roem1P6R3iMB2w3QPu38+19ejTi425odYR9FlpNtdTLtscW4jl/5qEXnNDS4mi6qDE8aN0lnqfdtFBB1sirugSugxmxTxAy2cFF9BVPmNXKX0zHI27Iumqk9F0OPqJV17PDjoQuVAxhZ9h3wbTuh2EXPsSXaL/fIp3bkV3CDqnbqxtgXam/RRMsK3Vz7IXUjRSmXSH/JbGWNz7P4TiAdpgat0ojVik+h0gk7Ge14wGeVEZdMU88LtHfiibJDAVewKLs3+GRBYwD/zullJuHEgb2KQKDnqAzkkF788Bv/P54F+3BYKxEAJaxoK8fSp4nwgCfrRK7gxNGlgOLQXbnelgPb4OgrCcckk4p6eDT+UwkHYSR6DLMiZvopXZZDE91xORWQl0wzIyBwhTlHpu0FOxC7uhu4u7Uc3bQMZi2eB7nTheMBSkXrnge4wVZ5OMyIwlLQD/+t7Ahyn13KBLB+9Zy8HW9EG73CLVxoF5FeOwPuryNljPbacTbCYiI7EEdlWLwfYiEoQMpZ47YkGcsQYCXaffpBZmG2P+RLB8QRRvsNGLmgTea3PB7wbd58Ms8GEv+elC8G9IAUvRm2DqopRzgyaGrjcHrGfopDfJcBJYnlCNlmlgPREFxiTicApVgSUE9FMjtcYCevEx5L+2lzvBQN/2wf3BsLo/CJk+oGOqVwUG8A+AlgcmZniPAwAAAABJRU5ErkJggg=="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
-            def indextree(self, gbdata, data):
-                if data == 0:
-                    if type(th.tree_to_list(gbdata)[0]) != list:
-                        atype = type((th.tree_to_list(gbdata))[0])
-                    else:
-                        atype = type((th.tree_to_list(gbdata))[0][0])
-                    gbdatatree = DataTree[atype]()
-                    datatree = DataTree[int]()
-                    for i in range(len(gbdata.Branches)):
-                        gpdalist = list(gbdata.Branch(i))
-                        list1 = list(set(gpdalist))
-                        list1.sort(key=gpdalist.index)
-                        for j in range(len(list1)):
-                            num = gpdalist.count(list1[j])
-                            gbdatatree.Add(list1[j], GH_Path(i, j))
+            # def indextree(self, gbdata, data):
+            #     if data == 0:
+            #         if type(th.tree_to_list(gbdata)[0]) != list:
+            #             atype = type((th.tree_to_list(gbdata))[0])
+            #         else:
+            #             atype = type((th.tree_to_list(gbdata))[0][0])
+            #         gbdatatree = DataTree[atype]()
+            #         datatree = DataTree[int]()
+            #         for i in range(len(gbdata.Branches)):
+            #             gpdalist = list(gbdata.Branch(i))
+            #             list1 = list(set(gpdalist))
+            #             list1.sort(key=gpdalist.index)
+            #             for j in range(len(list1)):
+            #                 num = gpdalist.count(list1[j])
+            #                 gbdatatree.Add(list1[j], GH_Path(i, j))
+            #
+            #                 for un in range(num):
+            #                     index = gpdalist.index(list1[j])
+            #                     gpdalist[index] = 'aaaa'
+            #                     datatree.Add(index, GH_Path(i, j))
+            #         return gbdatatree, datatree
+            #
+            #     elif data != 0:
+            #         if type(th.tree_to_list(gbdata)[0]) != list:
+            #             atype = type((th.tree_to_list(gbdata))[0])
+            #         else:
+            #             atype = type((th.tree_to_list(gbdata))[0][0])
+            #         if type(th.tree_to_list(data)[0]) != list:
+            #             btype = type((th.tree_to_list(data))[0])
+            #         else:
+            #             btype = type((th.tree_to_list(data))[0][0])
+            #         gbdatatree = DataTree[atype]()
+            #         datatree = DataTree[btype]()
+            #
+            #         for i in range(len(gbdata.Branches)):
+            #             gpdalist = list(gbdata.Branch(i))
+            #             dalist = list(data.Branch(i))
+            #             list1 = list(set(gpdalist))
+            #             list1.sort(key=gpdalist.index)
+            #             for j in range(len(list1)):
+            #                 num = gpdalist.count(list1[j])
+            #                 gbdatatree.Add(list1[j], GH_Path(i, j))
+            #                 for un in range(num):
+            #                     index = gpdalist.index(list1[j])
+            #                     datab = dalist[index]
+            #                     gpdalist[index] = 'aaa'
+            #                     datatree.Add(datab, GH_Path(i, j))
+            #         return gbdatatree, datatree
 
-                            for un in range(num):
-                                index = gpdalist.index(list1[j])
-                                gpdalist[index] = 'aaaa'
-                                datatree.Add(index, GH_Path(i, j))
-                    return gbdatatree, datatree
+            def Branch_Route(self, Tree):
+                """分解Tree操作，树形以及多进程框架代码"""
+                Tree_list = [list(_) for _ in Tree.Branches]
+                Tree_Path = [list(_) for _ in Tree.Paths]
+                return Tree_list, Tree_Path
 
-                elif data != 0:
-                    if type(th.tree_to_list(gbdata)[0]) != list:
-                        atype = type((th.tree_to_list(gbdata))[0])
-                    else:
-                        atype = type((th.tree_to_list(gbdata))[0][0])
-                    if type(th.tree_to_list(data)[0]) != list:
-                        btype = type((th.tree_to_list(data))[0])
-                    else:
-                        btype = type((th.tree_to_list(data))[0][0])
-                    gbdatatree = DataTree[atype]()
-                    datatree = DataTree[btype]()
+            def split_tree(self, tree_data, tree_path):
+                """操作树单枝的代码"""
+                new_tree = ght.list_to_tree(tree_data, True, tree_path)  # 此处可替换复写的Tree_To_List（源码参照Vector组-点集根据与曲线距离分组）
+                result_data, result_path = self.Branch_Route(new_tree)
+                if list(chain(*result_data)):
+                    return result_data, result_path
+                else:
+                    return [[]], result_path
 
-                    for i in range(len(gbdata.Branches)):
-                        gpdalist = list(gbdata.Branch(i))
-                        dalist = list(data.Branch(i))
-                        list1 = list(set(gpdalist))
-                        list1.sort(key=gpdalist.index)
-                        for j in range(len(list1)):
-                            num = gpdalist.count(list1[j])
-                            gbdatatree.Add(list1[j], GH_Path(i, j))
-                            for un in range(num):
-                                index = gpdalist.index(list1[j])
-                                datab = dalist[index]
-                                gpdalist[index] = 'aaa'
-                                datatree.Add(datab, GH_Path(i, j))
-                    return gbdatatree, datatree
+            def format_tree(self, result_tree):
+                """匹配树路径的代码，利用空树创造与源树路径匹配的树形结构分支"""
+                stock_tree = gd[object]()
+                for sub_tree in result_tree:
+                    fruit, branch = sub_tree
+                    for index, item in enumerate(fruit):
+                        path = gk.Data.GH_Path(System.Array[int](branch[index]))
+                        if hasattr(item, '__iter__'):
+                            if item:
+                                for sub_index in range(len(item)):
+                                    stock_tree.Insert(item[sub_index], path, sub_index)
+                            else:
+                                stock_tree.AddRange(item, path)
+                        else:
+                            stock_tree.Insert(item, path, index)
+                return stock_tree
+
+            def parameter_judgment(self, tree_par_data):
+                # 获取输入端参数所有数据
+                geo_list, geo_path = self.Branch_Route(tree_par_data)
+                if geo_list:
+                    j_list = any(ghp.run(lambda x: len(filter(None, x)), geo_list))  # 去空操作, 判断是否为空
+                else:
+                    j_list = False
+                return j_list, geo_list, geo_path
+
+            def _create_dict(self, list_data):
+                # 初始化字典
+                dict_data = dict()
+                # 循环获取数据字典
+                for index, item in enumerate(list_data):
+                    # 将不存在的键值添加到字典中
+                    if item not in dict_data:
+                        dict_data[item] = [index]
+                    # 将存在的键新增值
+                    else:
+                        dict_data[item].append(index)
+                return dict_data
+
+            def grouping(self, tuple_data_2):
+                data, geo_data, origin_path = tuple_data_2
+                group_dict_data = self._create_dict(data)
+                # 获取初始化下标值（字典无序）
+                origin_index = group_dict_data.values()
+                # 将字典列表排序
+                sorted_index = map(lambda x: x[0], origin_index)
+                res_index = map(lambda y: y[1], sorted(zip(sorted_index, origin_index)))
+                res_str = map(lambda y: [y[1]], sorted(zip(sorted_index, group_dict_data)))
+                res_geo = map(lambda u: [geo_data[_] for _ in u], res_index)
+                ungroup_data = map(lambda u: self.split_tree(u, origin_path), [res_str, res_geo])
+                return ungroup_data
+
+            def just_output_str(self, tuple_data_1):
+                str_data, origin_path = tuple_data_1
+                str_dict_data = self._create_dict(str_data)
+                # 获取初始化下标值（字典无序）
+                origin_index = str_dict_data.values()
+                # 将字典列表排序
+                sorted_index = map(lambda x: x[0], origin_index)
+                res_str = map(lambda y: [y[1]], sorted(zip(sorted_index, str_dict_data)))
+                ungroup_data = self.split_tree(res_str, origin_path)
+                return ungroup_data
+
 
             def RunScript(self, GroupByData, GroupData):
                 try:
-                    re_mes = Message.RE_MES([GroupByData, GroupData], ['GroupByData', 'GroupData'])
+                    ByTree, DaTree = (gd[object]() for _ in range(2))
+
+                    j_list_1, str_list, str_path = self.parameter_judgment(self.Params.Input[0].VolatileData)
+                    re_mes = Message.RE_MES([j_list_1], ['G end'])
                     if len(re_mes) > 0:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
-                        return gd[object](), gd[object]()
                     else:
-                        if GroupData.BranchCount < 1:
-                            GroupData2 = 0
-                        elif GroupData.BranchCount == GroupByData.BranchCount:
-                            GroupData2 = GroupData
-                        elif GroupData.BranchCount == 1 and GroupByData.BranchCount > 1:
-                            btype = type((th.tree_to_list(GroupData))[0])
-                            ggdata, GroupData2 = th.tree_to_list(GroupData), DataTree[btype]()
-                            for i in range(GroupByData.BranchCount):
-                                for j in range(len(ggdata)):
-                                    GroupData2.Add(ggdata[j], GH_Path(i))
-                        elif GroupData.BranchCount % GroupByData.BranchCount == 0:
-                            btype = type((th.tree_to_list(GroupData))[0])
-                            GroupData2 = DataTree[btype]()
-                            for i in range(GroupByData.BranchCount / GroupData.BranchCount):
-                                for j in range(GroupData.BranchCount):
-                                    ggdata = GroupData.Branch(j)
-                                    for j in range(len(ggdata)):
-                                        GroupData2.Add(ggdata[j], GH_Path(i))
-                        gbdata, data = self.indextree(GroupByData, GroupData2)
-                        return gbdata, data
+                        data_list = self.parameter_judgment(self.Params.Input[1].VolatileData)[1]
+                        real_str_list = ghp.run(lambda x: [_.Value for _ in x], str_list)
+                        if not data_list:
+                            str_zip_list = zip(real_str_list, str_path)
+                            iter_ungroup_data = ghp.run(self.just_output_str, str_zip_list)
+                            ByTree = self.format_tree(iter_ungroup_data)
+                        else:
+                            zip_list = zip(real_str_list, data_list, str_path)
+                            iter_ungroup_data = zip(*ghp.run(self.grouping, zip_list))
+                            ByTree, DaTree = ghp.run(lambda single_tree: self.format_tree(single_tree), iter_ungroup_data)
+                    return ByTree, DaTree
                 finally:
                     self.Message = 'Data comparison'
 
@@ -1412,7 +1492,11 @@ try:
 
             def RunScript(self, Geometry, Specifylen, Close, Compare):
                 try:
-                    re_mes = Message.RE_MES([Geometry], ['Geometry'])
+                    # 判断输入的列表是否都为空
+                    structure_tree = self.Params.Input[0].VolatileData
+                    temp_geo_list = [list(i) for i in structure_tree.Branches]  # 获取所有数据
+                    j_list = filter(None, list(chain(*temp_geo_list)))
+                    re_mes = Message.RE_MES([j_list], ['Geometry'])
                     if len(re_mes) > 0:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
@@ -1792,38 +1876,98 @@ try:
             def __init__(self):
                 pass
 
+            def Branch_Route(self, Tree):
+                """分解Tree操作，树形以及多进程框架代码"""
+                Tree_list = [list(_) for _ in Tree.Branches]
+                Tree_Path = [list(_) for _ in Tree.Paths]
+                return Tree_list, Tree_Path
+
+            def split_tree(self, tree_data, tree_path):
+                """操作树单枝的代码"""
+                new_tree = ght.list_to_tree(tree_data, True, tree_path)  # 此处可替换复写的Tree_To_List（源码参照Vector组-点集根据与曲线距离分组）
+                result_data, result_path = self.Branch_Route(new_tree)
+                if list(chain(*result_data)):
+                    return result_data, result_path
+                else:
+                    return [[]], result_path
+
+            def format_tree(self, result_tree):
+                """匹配树路径的代码，利用空树创造与源树路径匹配的树形结构分支"""
+                stock_tree = gd[object]()
+                for sub_tree in result_tree:
+                    fruit, branch = sub_tree
+                    for index, item in enumerate(fruit):
+                        path = gk.Data.GH_Path(System.Array[int](branch[index]))
+                        if hasattr(item, '__iter__'):
+                            if item:
+                                for sub_index in range(len(item)):
+                                    stock_tree.Insert(item[sub_index], path, sub_index)
+                            else:
+                                stock_tree.AddRange(item, path)
+                        else:
+                            stock_tree.Insert(item, path, index)
+                return stock_tree
+
             def mes_box(self, info, button, title):
                 return rs.MessageBox(info, button, title)
 
-            def RunScript(self, Data_a, Data_b, in_path):
+            def Str_to_GHPath(self, Str):
                 try:
+                    number_list = []
+                    for _s in Str:
+                        if _s.isdigit():
+                            number_list.append(eval(_s))
+                    path = GH_Path(tuple(number_list))
+                    return path
+                except Exception as e:
+                    Message.message2(self, str(e))
+
+            def RunScript(self, Data_a, Data_b, str_path):
+                try:
+                    in_path = map(self.Str_to_GHPath, str_path)
                     DataTree = gd[object]()
-                    if not in_path: return gd[object]()
 
-                    if len(in_path) == Data_b.BranchCount:
-                        if len(in_path) == 1:
-                            Data_a.AddRange(list(Data_b.Branch(0)), in_path[0])
-                        else:
-                            for path_ in range(len(in_path)):
-                                Data_a.AddRange(Data_b.Branch(path_), in_path[path_])
-
-                        paths = Data_a.Paths
-                        Branch = [list(_br) for _br in Data_a.Branches]
-
-                        for _i in range(len(paths)):
-                            for _j in Branch[_i]:
-                                if 'List[object]' in str(type(_j)):
-                                    gh_Geos = [GH_Convert.ToGeometricGoo(_n) for _n in _j]
-                                    ghGroup = GH_GeometryGroup()
-                                    ghGroup.Objects.AddRange(gh_Geos)
-                                    DataTree.Add(ghGroup, paths[_i])
-                                else:
-                                    DataTree.Add(_j, paths[_i])
+                    re_mes = Message.RE_MES([Data_a, Data_b], ['A end', 'B end'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
                     else:
-                        Message.message2(self, "The added data does not match with data path,please check")
+                        # 获取引用输入端口
+                        temp_list_b = [_ for _ in self.Params.Input[1].VolatileData.Branches]
+                        temp_list_a, a_path = self.Branch_Route(self.Params.Input[0].VolatileData)
+
+                        Data_a = self.format_tree(ghp.run(lambda x: self.split_tree(x[0], x[1]), zip(temp_list_a, a_path)))
+                        "------------------------------"
+                        if not in_path: return gd[object]()
+
+                        if len(in_path) == Data_b.BranchCount:
+                            if len(in_path) == 1:
+                                Data_a.AddRange(list(temp_list_b[0]), in_path[0])
+                            else:
+                                for path_ in range(len(in_path)):
+                                    Data_a.AddRange(temp_list_b[path_], in_path[path_])
+
+                            paths = Data_a.Paths
+                            Branch = [list(_br) for _br in Data_a.Branches]
+
+                            for _i in range(len(paths)):
+                                # 输出空树枝
+                                if Branch[_i]:
+                                    for _j in Branch[_i]:
+                                        if 'List[object]' in str(type(_j)):
+                                            gh_Geos = [GH_Convert.ToGeometricGoo(_n) for _n in _j]
+                                            ghGroup = GH_GeometryGroup()
+                                            ghGroup.Objects.AddRange(gh_Geos)
+                                            DataTree.Add(ghGroup, paths[_i])
+                                        else:
+                                            DataTree.Add(_j, paths[_i])
+                                else:
+                                    DataTree.AddRange(Branch[_i], paths[_i])
+                        else:
+                            Message.message2(self, "The added data does not match with data path,please check")
                     return DataTree
                 finally:
-                    self.Message = 'data tree insertion'
+                    self.Message = 'Data tree insertion'
 
 
         # 数据偏移
@@ -1937,13 +2081,17 @@ try:
 
             def OneByOne(self, tuple_data):
                 data, path = tuple_data
-                ensemble_data = list(zip(data, data[1:] + data[:1]))
-                right_scissor, left_scissor = ensemble_data[0: -1], ensemble_data[1:]
-                ensemble_data = self.cull_data(ensemble_data) if self.cull_list else ensemble_data
-                right_scissor = self.cull_data(right_scissor) if self.cull_list else right_scissor
-                left_scissor = self.cull_data(left_scissor) if self.cull_list else left_scissor
+                if len(data) == 0:
+                    ensemble_data, right_scissor, left_scissor = [None], [None], [None]
+                    ungroup_data_list = map(lambda single_data: self.split_tree(single_data, path), [ensemble_data, right_scissor, left_scissor])
+                else:
+                    ensemble_data = list(zip(data, data[1:] + data[:1]))
+                    right_scissor, left_scissor = ensemble_data[0: -1], ensemble_data[1:]
+                    ensemble_data = self.cull_data(ensemble_data) if self.cull_list else ensemble_data
+                    right_scissor = self.cull_data(right_scissor) if self.cull_list else right_scissor
+                    left_scissor = self.cull_data(left_scissor) if self.cull_list else left_scissor
 
-                ungroup_data_list = map(lambda single_data: self.split_tree(single_data, path), [ensemble_data, right_scissor, left_scissor])
+                    ungroup_data_list = map(lambda single_data: self.split_tree(single_data, path), [ensemble_data, right_scissor, left_scissor])
                 Rhino.RhinoApp.Wait()
                 return ungroup_data_list
 
@@ -1959,7 +2107,6 @@ try:
 
                         Data_List = gd[object]()
                         YList, YList_Path = self.Branch_Route(self.Params.Input[0].VolatileData)
-
                         for _ in range(len(YList)):
                             Data_List.AddRange(YList[_], GH_Path(tuple(YList_Path[_])))
 
@@ -2088,7 +2235,11 @@ try:
 
                             zip_list = zip([out_data], [out_path])
                             # 分割树
-                            ungroup_data = map(lambda x: self.split_tree(x[0], x[1]), zip_list)
+                            new_tree = self.split_tree(zip_list[0][0], zip_list[0][1])
+                            if len(origin_path) == 1:
+                                ungroup_data = map(lambda x: self.split_tree(x[0], x[1]), zip_list)
+                            else:
+                                ungroup_data = map(lambda x: self.split_tree(x[0][0], x[1]), zip_list)
                             iter_ungroup_data = ungroup_data
                             # 匹配树
                             Result = self.format_tree(iter_ungroup_data)
