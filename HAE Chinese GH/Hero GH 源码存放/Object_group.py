@@ -417,7 +417,7 @@ try:
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
-                self.which = {0: rg.GeometryBase, 1: rg.Point3d, 2: rg.Surface, 3: [rg.Curve, rg.Line, rg.PolyCurve, rg.Polyline, rg.PolylineCurve], 4: rg.Brep}
+                self.which = {0: gk.Types.GH_GeometricGoo, 1: gk.Types.GH_Point, 2: gk.Types.GH_Surface, 3: gk.Types.GH_Curve, 4: gk.Types.GH_Brep}
 
             def filter_layers(self, name):
                 layers = rs.LayerNames()
@@ -430,11 +430,38 @@ try:
             def choice(self, layer_list):
                 array_data = [rs.ObjectsByLayer(_) for _ in layer_list if len(_) != 0]
                 list_data = list(chain.from_iterable(array_data))
+                list_data = [str(_) for _ in list_data]
                 return list_data
 
             def ids_to_objects(self, id_list):
                 objects = [rs.coercegeometry(_) for _ in id_list]
                 return objects
+
+            def decorate_obj(self, data_array):
+                ref_brep_list = []
+                for data in data_array:
+                    rh_guid = System.Guid(data)
+                    gh_obj = objref(rh_guid).Geometry()
+                    str_type = str(type(gh_obj))
+
+                    if 'Point' in str_type:
+                        rh_obj = gk.Types.GH_Point(rh_guid)
+                    elif 'Curve' in str_type:
+                        rh_obj = gk.Types.GH_Curve(rh_guid)
+                    elif ('Brep' in str_type) or ('Extrusion' in str_type):
+                        rh_obj = gk.Types.GH_Brep(rh_guid)
+                    elif ('Text' in str_type):
+                        text_object = rs.coercerhinoobject(rh_guid, True, True)
+                        rh_obj = text_object.Geometry
+                        self.text_dim.append(rh_obj)
+                    elif ('Dim' in str_type):
+                        dim_object = rs.coercerhinoobject(rh_guid, True, True)
+                        rh_obj = dim_object.Geometry
+                        self.text_dim.append(rh_obj)
+                    else:
+                        rh_obj = None
+                    ref_brep_list.append(rh_obj)
+                return ref_brep_list
 
             def RunScript(self, LayerName, Layer_Type, Geo_Type):
                 try:
@@ -444,13 +471,13 @@ try:
                             Message.message2(self, mes_i)
                         return gd[object]()
                     else:
-                        Layer_Type = 0 if Layer_Type is None else Layer_Type
-                        Geo_Type = self.which[0] if Geo_Type is None else self.which[Geo_Type]
+                        Layer_Type = Layer_Type
+                        Geo_Type = self.which[Geo_Type] if Geo_Type is None else self.which[Geo_Type]
                         sc.doc = Rhino.RhinoDoc.ActiveDoc
                         res_layer = self.filter_layers(LayerName)[Layer_Type]
                         rhino_ids = self.choice(res_layer)
-                        Bulk_Geo = map(lambda x: rs.coercegeometry(x), rhino_ids)
-                        Geo = Bulk_Geo if Geo_Type is rg.GeometryBase else [_ for _ in Bulk_Geo if type(_) is Geo_Type or type(_) in Geo_Type]
+                        Bulk_Geo = self.decorate_obj(rhino_ids)
+                        Geo = Bulk_Geo if Geo_Type is gk.Types.GH_GeometricGoo else [_ for _ in Bulk_Geo if (type(_) is Geo_Type)]
                         return Geo
                 finally:
                     self.Message = 'Extract layer object'
@@ -708,7 +735,8 @@ try:
                     value_list = gd[object]()
                     Attributes, Attr_Path = self.Branch_Route(self.Params.Input[0].VolatileData)
                     Key_Length = len(list(chain(*self.Branch_Route(self.Params.Input[1].VolatileData)[0])))
-                    __attr = [map(lambda x: x.ReferenceID, _) for _ in Attributes]
+
+                    __attr = [map(lambda x: x.ReferenceID, filter(None, _)) for _ in Attributes]
 
                     attr_str = [map(lambda x: str(x), _) for _ in __attr]
 
@@ -1017,14 +1045,14 @@ try:
                 p.Optional = True
 
             def RegisterInputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_Guid()
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
                 self.SetUpParam(p, "Guid", "ID", "Id of the object to be replaced")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
                 self.SetUpParam(p, "Geometry", "G", "Replacement object")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Boolean()
@@ -1083,12 +1111,21 @@ try:
                             stock_tree.Insert(item, path, index)
                 return stock_tree
 
+            def temp(self, tuple_data):
+                rhino_id, geo = tuple_data
+                if len(rhino_id) == len(geo):
+                    zip_list = zip(rhino_id, geo)
+                    map(self.replace_obj, zip_list)
+                else:
+                    Message.message2(self, 'The number of the objects is different from the number of replaced objects！')
+
             def replace_obj(self, tuple_data):
                 rhino_id, geo = tuple_data
                 layer_name = rs.ObjectLayer(rhino_id)
                 lock_factor = rs.IsLayerLocked(layer_name)
                 if not lock_factor:
                     if self.factor:
+
                         sc.doc.Objects.Replace(rhino_id, geo)
                     else:
                         Message.message2(self, "Enter True to replace the object！")
@@ -1098,19 +1135,25 @@ try:
             def RunScript(self, Guid, Geometry, Replace):
                 try:
                     sc.doc = Rhino.RhinoDoc.ActiveDoc
-                    id_len, geo_len = len(Guid), len(Geometry)
-                    self.factor = Replace
+                    Geo = self.Branch_Route(self.Params.Input[0].VolatileData)[0]
+                    try:
+                        Guid = [map(lambda x: System.Guid(str(x)) if 'GH_Guid' in str(type(x)) else x.ReferenceID, _) for _ in Geo]
+                        Geometry = self.Branch_Route(Geometry)[0]
+                        id_len, geo_len = len(Guid), len(Geometry)
+                        self.factor = Replace
 
-                    re_mes = Message.RE_MES([Guid], ['G'])
-                    if len(re_mes) > 0:
-                        for mes_i in re_mes:
-                            Message.message2(self, mes_i)
-                    else:
-                        if id_len != geo_len:
-                            Message.message1(self, 'The number of the objects is different from the number of replaced objects！')
+                        re_mes = Message.RE_MES([Guid], ['G'])
+                        if len(re_mes) > 0:
+                            for mes_i in re_mes:
+                                Message.message2(self, mes_i)
                         else:
-                            zip_list = zip(Guid, Geometry)
-                            map(self.replace_obj, zip_list)
+                            if id_len != geo_len:
+                                Message.message1(self, 'The number of the objects is different from the number of replaced objects！')
+                            else:
+                                zip_list = zip(Guid, Geometry)
+                                map(self.temp, zip_list)
+                    except:
+                        Message.message2(self, "Guid does not exist!")
 
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
@@ -1179,6 +1222,7 @@ try:
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
+                self.text_dim, self.curve = [], []
                 self.output_type = None
 
             def mes_box(self, info, button, title):
@@ -1226,21 +1270,53 @@ try:
                     if 'Point' in str_type:
                         rh_obj = gk.Types.GH_Point(rh_guid)
                     elif 'Curve' in str_type:
+                        self.curve.append(rs.coercerhinoobject(rh_guid, True, True).Geometry)
                         rh_obj = gk.Types.GH_Curve(rh_guid)
                     elif ('Brep' in str_type) or ('Extrusion' in str_type):
                         rh_obj = gk.Types.GH_Brep(rh_guid)
+                    elif ('Text' in str_type):
+                        text_object = rs.coercerhinoobject(rh_guid, True, True)
+                        rh_obj = text_object.Geometry
+                        self.text_dim.append(rh_obj)
+                    elif ('Dim' in str_type):
+                        dim_object = rs.coercerhinoobject(rh_guid, True, True)
+                        rh_obj = dim_object.Geometry
+                        self.text_dim.append(rh_obj)
                     else:
                         rh_obj = None
                     ref_brep_list.append(rh_obj)
                 return ref_brep_list
 
-            def _find_guid(self, tuple_data):
+            def Get_ALL_Objects(self):
+                """获取到Rhino空间中所有的物件"""
+                settings = Rhino.DocObjects.ObjectEnumeratorSettings()
+                settings.IncludeLights = False
+                settings.IncludeGrips = False
+                settings.NormalObjects = True
+                settings.LockedObjects = True
+                settings.HiddenObjects = True
+                settings.ReferenceObjects = False
+                all_objects = [obj for obj in sc.doc.Objects.GetObjectList(settings)]
+
+                return all_objects
+
+            def _find_By_Layer(self, tuple_data):
                 layer_name, origin_path = tuple_data
-                temp_array = map(lambda layer: [str(_) for _ in rs.ObjectsByLayer(layer)], layer_name)
+                all_objects = self.Get_ALL_Objects()
+                ByLayerGuid = []
+                for layer in layer_name:
+                    temp = []
+                    for obj in all_objects:
+                        layer_index = obj.Attributes.LayerIndex
+                        obj_name = sc.doc.Layers.FindIndex(layer_index)
+                        if fnmatch.fnmatch(str(obj_name), str(layer)) and obj_name is not None:
+                            temp.append(str(obj.Id))
+                    ByLayerGuid.append(temp)
+
                 if self.output_type:
-                    guid_array = map(self.decorate_obj, temp_array)
+                    guid_array = map(self.decorate_obj, ByLayerGuid)
                 else:
-                    guid_array = temp_array
+                    guid_array = ByLayerGuid
 
                 ungroup_data = self.split_tree(guid_array, origin_path)
                 Rhino.RhinoApp.Wait()
@@ -1259,18 +1335,26 @@ try:
                     else:
                         layer_trunk, layer_trunk_path = self.Branch_Route(Layer)
                         zip_list = zip(layer_trunk, layer_trunk_path)
-                        iter_ungroup_data = ghp.run(self._find_guid, zip_list)
+                        iter_ungroup_data = ghp.run(self._find_By_Layer, zip_list)
                         Object = self.format_tree(iter_ungroup_data)
 
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
                     sc.doc = ghdoc
+
                     return Object
                 finally:
                     if self.output_type:
                         self.Message = 'Output type：Geometry'
                     else:
                         self.Message = 'Output type：Guid'
+
+            def DrawViewportWires(self, arg):
+                for _ in self.text_dim:
+                    arg.Display.DrawAnnotation(_, System.Drawing.Color.FromArgb(0, 150, 0))
+
+                for curve_list in self.curve:
+                    arg.Display.DrawCurve(curve_list, System.Drawing.Color.FromArgb(0, 150, 0), 5)
 
 
         # 通过物体名称筛选物件
@@ -1367,13 +1451,61 @@ try:
                             stock_tree.Insert(item, path, index)
                 return stock_tree
 
-            def _find_guid(self, tuple_data):
-                name_list, origin_path = tuple_data
-                temp_array = map(lambda name: [str(_) for _ in rs.ObjectsByName(name)], name_list)
+            def decorate_obj(self, data_array):
+                ref_brep_list = []
+                for data in data_array:
+                    rh_guid = System.Guid(data)
+                    gh_obj = objref(rh_guid).Geometry()
+                    str_type = str(type(gh_obj))
+
+                    if 'Point' in str_type:
+                        rh_obj = gk.Types.GH_Point(rh_guid)
+                    elif 'Curve' in str_type:
+                        rh_obj = gk.Types.GH_Curve(rh_guid)
+                    elif ('Brep' in str_type) or ('Extrusion' in str_type):
+                        rh_obj = gk.Types.GH_Brep(rh_guid)
+                    elif ('Text' in str_type):
+                        text_object = rs.coercerhinoobject(rh_guid, True, True)
+                        rh_obj = text_object.Geometry
+                        self.text_dim.append(rh_obj)
+                    elif ('Dim' in str_type):
+                        dim_object = rs.coercerhinoobject(rh_guid, True, True)
+                        rh_obj = dim_object.Geometry
+                        self.text_dim.append(rh_obj)
+                    else:
+                        rh_obj = None
+                    ref_brep_list.append(rh_obj)
+                return ref_brep_list
+
+            def Get_ALL_Objects(self):
+                """获取到Rhino空间中所有的物件"""
+                settings = Rhino.DocObjects.ObjectEnumeratorSettings()
+                settings.IncludeLights = False
+                settings.IncludeGrips = False
+                settings.NormalObjects = True
+                settings.LockedObjects = True
+                settings.HiddenObjects = True
+                settings.ReferenceObjects = False
+                all_objects = [obj for obj in sc.doc.Objects.GetObjectList(settings)]
+
+                return all_objects
+
+            def _find_By_Name(self, tuple_data):
+                Name, origin_path = tuple_data
+                all_objects = self.Get_ALL_Objects()
+                ByLayerGuid = []
+                for layer in Name:
+                    temp = []
+                    for obj in all_objects:
+                        obj_name = obj.Name
+                        if fnmatch.fnmatch(str(obj_name), str(layer)) and obj_name is not None:
+                            temp.append(str(obj.Id))
+                    ByLayerGuid.append(temp)
+
                 if self.output_type:
-                    guid_array = map(FilterByLayer().decorate_obj, temp_array)
+                    guid_array = map(self.decorate_obj, ByLayerGuid)
                 else:
-                    guid_array = temp_array
+                    guid_array = ByLayerGuid
 
                 ungroup_data = self.split_tree(guid_array, origin_path)
                 Rhino.RhinoApp.Wait()
@@ -1392,7 +1524,7 @@ try:
                     else:
                         name_trunk, name_trunk_path = self.Branch_Route(Name)
                         zip_list = zip(name_trunk, name_trunk_path)
-                        iter_ungroup_data = ghp.run(self._find_guid, zip_list)
+                        iter_ungroup_data = ghp.run(self._find_By_Name, zip_list)
                         Object = self.format_tree(iter_ungroup_data)
 
                     sc.doc.Views.Redraw()
@@ -2570,33 +2702,38 @@ try:
                             attr, Layer_name = None, None
 
                         if attr:
+
                             structure_tree = self.Params.Input[0].VolatileData
                             structure_list = list(chain(*self.Branch_Route(structure_tree)[0]))
-                            ref_rh_obj = structure_list[self.RunCount - 1]
-                            ref_rh_id = System.Guid(ref_rh_obj.ToString()) if type(ref_rh_obj) is gk.Types.GH_Guid else ref_rh_obj.ReferenceID
-                            rh_obj = sc.doc.Objects.Find(ref_rh_id)
 
-                            rh_attr_dict = rh_obj.Attributes.GetUserStrings()
-                            replace_attr_dict = attr.GetUserStrings()
+                            if self.RunCount > len(structure_list):
+                                self.message2("Data mismatch between G-end and A-end!")
+                            else:
+                                ref_rh_obj = structure_list[self.RunCount - 1]
+                                ref_rh_id = System.Guid(ref_rh_obj.ToString()) if type(ref_rh_obj) is gk.Types.GH_Guid else ref_rh_obj.ReferenceID
+                                rh_obj = sc.doc.Objects.Find(ref_rh_id)
 
-                            rh_key_list = [_ for _ in rh_attr_dict.AllKeys]
-                            rh_value_list = [rh_attr_dict[_] for _ in rh_attr_dict.AllKeys]
-                            replace_key_list = [_ for _ in replace_attr_dict.AllKeys]
-                            replace_value_list = [replace_attr_dict[_] for _ in replace_attr_dict.AllKeys]
+                                rh_attr_dict = rh_obj.Attributes.GetUserStrings()
+                                replace_attr_dict = attr.GetUserStrings()
 
-                            new_key_list = rh_key_list + replace_key_list
-                            new_value_list = rh_value_list + replace_value_list
+                                rh_key_list = [_ for _ in rh_attr_dict.AllKeys]
+                                rh_value_list = [rh_attr_dict[_] for _ in rh_attr_dict.AllKeys]
+                                replace_key_list = [_ for _ in replace_attr_dict.AllKeys]
+                                replace_value_list = [replace_attr_dict[_] for _ in replace_attr_dict.AllKeys]
 
-                            if Replace:
-                                BakeGeometry().create_layer(Layer_name)
-                                layer_index = sc.doc.Layers.FindByFullPath(Layer_name, True)
-                                attr.LayerIndex = layer_index
-                                rh_obj.Attributes = attr
+                                new_key_list = rh_key_list + replace_key_list
+                                new_value_list = rh_value_list + replace_value_list
 
-                                for k_index, k_item in enumerate(new_key_list):
-                                    rh_obj.Attributes.SetUserString(k_item, new_value_list[k_index])
+                                if Replace:
+                                    BakeGeometry().create_layer(Layer_name)
+                                    layer_index = sc.doc.Layers.FindByFullPath(Layer_name, True)
+                                    attr.LayerIndex = layer_index
+                                    rh_obj.Attributes = attr
 
-                                rh_obj.CommitChanges()
+                                    for k_index, k_item in enumerate(new_key_list):
+                                        rh_obj.Attributes.SetUserString(k_item, new_value_list[k_index])
+
+                                    rh_obj.CommitChanges()
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
                     sc.doc = ghdoc
@@ -2675,17 +2812,21 @@ try:
             def Find_Objectsby_Color(self, Colors):  # 根据物件颜色筛选物件
                 # 根据物件颜色筛选物件
                 all_objects = self.Get_ALL_Objects()
-
                 BycolorsGuid = []
                 for c in Colors:
                     """遍历Rhino空间中所有物体"""
                     for obj in all_objects:
                         """遍历颜色组"""
                         objAttr = obj.Attributes.ObjectColor  # 获取物件的ARGB值
-                        objArgb = (objAttr.A, objAttr.R, objAttr.G, objAttr.B)
-                        InputARGB = (c.A, c.R, c.G, c.B)
 
-                        if objArgb == InputARGB:
+                        # "----------------------------"
+                        layer_index = obj.Attributes.LayerIndex  # 获取图层索引
+                        layerColor = sc.doc.Layers[layer_index].Color  # 获取图层的颜色
+                        objArgb = [(objAttr.A, objAttr.R, objAttr.G, objAttr.B), (layerColor.A, layerColor.R, layerColor.G, layerColor.B)]
+                        InputARGB = (c.A, c.R, c.G, c.B)
+                        #                if objArgb == InputARGB:
+                        # "----------------------------"
+                        if InputARGB in objArgb:
                             BycolorsGuid.append(str(obj.Id))  # 返回物件的ID
                     return BycolorsGuid
 
@@ -2713,7 +2854,11 @@ try:
                     elif ('Brep' in str_type) or ('Extrusion' in str_type):
                         rh_obj = gk.Types.GH_Brep(rh_guid)
                     elif ('Text' in str_type):
-                        rh_obj = gk.Types.GH_Guid(rs.coercerhinoobject(rh_guid).Id)
+                        rh_obj = rs.coercerhinoobject(rh_guid).Geometry
+                    #                rh_obj = gk.Types.GH_Guid(rs.coercerhinoobject(rh_guid).Id)
+                    elif ('Dim' in str_type):
+                        dim_object = rs.coercerhinoobject(rh_guid)
+                        rh_obj = dim_object.Geometry
                     else:
                         rh_obj = None
                     ref_brep_list.append(rh_obj)
@@ -2886,6 +3031,37 @@ try:
             def __init__(self):
                 pass
 
+            def Branch_Route(self, Tree):
+                """分解Tree操作，树形以及多进程框架代码"""
+                Tree_list = [list(_) for _ in Tree.Branches]
+                Tree_Path = [_ for _ in Tree.Paths]
+                return Tree_list, Tree_Path
+
+            def split_tree(self, tree_data, tree_path):
+                """操作树单枝的代码"""
+                new_tree = ght.list_to_tree(tree_data, True, tree_path)  # 此处可替换复写的Tree_To_List（源码参照Vector组-点集根据与曲线距离分组）
+                result_data, result_path = self.Branch_Route(new_tree)
+                if list(chain(*result_data)):
+                    return result_data, result_path
+                else:
+                    return [[]], result_path
+
+            def format_tree(self, result_tree):
+                """匹配树路径的代码，利用空树创造与源树路径匹配的树形结构分支"""
+                stock_tree = gd[object]()
+                for sub_tree in result_tree:
+                    fruit, branch = sub_tree
+                    for index, item in enumerate(fruit):
+                        path = gk.Data.GH_Path(System.Array[int](branch[index]))
+                        if hasattr(item, '__iter__'):
+                            if item:
+                                for sub_index in range(len(item)):
+                                    stock_tree.Insert(item[sub_index], path, sub_index)
+                            else:
+                                stock_tree.AddRange(item, path)
+                        else:
+                            stock_tree.Insert(item, path, index)
+                return stock_tree
             def Get_ALL_Objects(self):
                 """获取到Rhino空间中所有的物件"""
                 settings = Rhino.DocObjects.ObjectEnumeratorSettings()
@@ -2936,23 +3112,26 @@ try:
                     sc.doc = Rhino.RhinoDoc.ActiveDoc
                     Obj = gd[object]()
 
-                    re_mes = Message.RE_MES([key, val], ['K end', 'V end'])
-                    if len(re_mes) > 0:
-                        for mes_i in re_mes:
-                            Message.message2(self, mes_i)
+                    if key:
+                        re_mes = Message.RE_MES([key, val], ['K end', 'V end'])
+                        if len(re_mes) > 0:
+                            for mes_i in re_mes:
+                                Message.message2(self, mes_i)
+                        else:
+                            attr = self.Get_ALL_Objects()
+                            attr_str = [str(_) for _ in attr]
+                            All_Objects = self.decorate_obj(attr_str)
+
+                            value, value_path = self.Branch_Route(val)  # 得到输入的value和path
+                            value_list = [[item] for sublist in value for item in sublist]  # 将嵌套的列表每个数据展开
+                            v, v_Path = self.Branch_Route(ght.list_to_tree(value_list))  # 将value_list转为树形结构得到它的Path
+
+                            for i in range(len(value_list)):
+                                O = self.HaveKey(attr, key, value_list[i])
+                                for _ in O:
+                                    Obj.Add(All_Objects[_], v_Path[i])
                     else:
-                        attr = self.Get_ALL_Objects()
-                        attr_str = [str(_) for _ in attr]
-                        All_Objects = self.decorate_obj(attr_str)
-
-                        value, value_path = TreeFun.Branch_Route(val)  # 得到输入的value和path
-                        value_list = [[item] for sublist in value for item in sublist]  # 将嵌套的列表每个数据展开
-                        v, v_Path = TreeFun.Branch_Route(ght.list_to_tree(value_list))  # 将value_list转为树形结构得到它的Path
-
-                        for i in range(len(value_list)):
-                            O = self.HaveKey(attr, key, value_list[i])
-                            for _ in O:
-                                Obj.Add(All_Objects[_], v_Path[i])
+                        Obj = None
 
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
@@ -3015,12 +3194,21 @@ try:
             def __init__(self):
                 pass
 
+            def Branch_Route(self, Tree):
+                """分解Tree操作，树形以及多进程框架代码"""
+                Tree_list = [list(_) for _ in Tree.Branches]
+                Tree_Path = [_ for _ in Tree.Paths]
+                return Tree_list, Tree_Path
+
             def KeyisNone(self, Object):  # 当Key值为空时，提取所有的Key值和Value
                 Key = []
 
                 for obj in Object:  # 根据物体的Guid属性获取Key值
-                    obj_attr = sc.doc.Objects.Find(obj).Attributes
-                    Key.append(obj_attr.GetUserStrings())
+                    if obj is not None:
+                        obj_attr = sc.doc.Objects.Find(obj).Attributes
+                        Key.append(obj_attr.GetUserStrings())
+                    else:
+                        return [], []
 
                 Keys, Value = gd[object](), gd[object]()
                 Keys, Value = [], []
@@ -3033,12 +3221,16 @@ try:
 
             def Graft_List(self, List, Path):
                 Tree = gd[object]()
-                if len(List) == 1:
-                    Tree.Add(List[0], Path)
+                Path = GH_Path(tuple(Path))
+                if len(List) == 0:
+                    Tree.AddRange(List, Path)
                 else:
-                    for index, n in enumerate(List):
-                        New_Path = Path.AppendElement(index)
-                        Tree.Add(n, New_Path)
+                    if len(List) == 1:
+                        Tree.Add(List[0], Path)
+                    else:
+                        for index, n in enumerate(List):
+                            New_Path = Path.AppendElement(index)
+                            Tree.Add(n, New_Path)
                 return Tree
 
             def RunScript(self, Geometry):
@@ -3050,21 +3242,21 @@ try:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
                     else:
-                        Tree, Tree_Path = TreeFun.Branch_Route(self.Params.Input[0].VolatileData)
+                        Tree, Tree_Path = self.Branch_Route(self.Params.Input[0].VolatileData)
 
-                        Geometry = []
-                        for _ in Tree:
-                            Geometry.append(map(lambda x: x.ReferenceID, _))
+                        # 取出所有物件的ID，并去除空值
+                        Geometry = [map(lambda x: x.ReferenceID if x is not None else x, _) for _ in Tree]
 
                         for index, G in enumerate(Geometry):
                             Data_Tree.MergeTree(self.Graft_List(G, Tree_Path[index]))
 
-                        Geometry_List, Geometry_Path = TreeFun.Branch_Route(Data_Tree)
+                        Geometry_List, Geometry_Path = self.Branch_Route(Data_Tree)
 
                         for index, Geo in enumerate(Geometry_List):
                             K, V = self.KeyisNone(Geo)
-                            Key_Tree.AddRange(K, Geometry_Path[index])
-                            val_Tree.AddRange(V, Geometry_Path[index])
+                            Path = GH_Path(tuple(Geometry_Path[index]))
+                            Key_Tree.AddRange(K, Path)
+                            val_Tree.AddRange(V, Path)
 
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
@@ -3126,23 +3318,36 @@ try:
             def __init__(self):
                 pass
 
+            def Branch_Route(self, Tree):
+                """分解Tree操作，树形以及多进程框架代码"""
+                Tree_list = [list(_) for _ in Tree.Branches]
+                Tree_Path = [_ for _ in Tree.Paths]
+                return Tree_list, Tree_Path
+
             def HaveKey(self, Object, Key):  # 根据Key值提取Value
                 Value = []
                 for _key in Key:
                     for obj in Object:
-                        obj_attr = sc.doc.Objects.Find(obj).Attributes
-                        Value.append(obj_attr.GetUserString(_key))
+                        if obj:
+                            obj_attr = sc.doc.Objects.Find(obj).Attributes
+                            Value.append(obj_attr.GetUserString(_key))
+                        else:
+                            Value.append(None)
 
                 return Value
 
             def Graft_List(self, List, Path):
                 Tree = gd[object]()
-                if len(List) == 1:
-                    Tree.Add(List[0], Path)
+                Path = GH_Path(tuple(Path))
+                if len(List) == 0:
+                    Tree.AddRange(List, Path)
                 else:
-                    for index, n in enumerate(List):
-                        New_Path = Path.AppendElement(index)
-                        Tree.Add(n, New_Path)
+                    if len(List) == 1:
+                        Tree.Add(List[0], Path)
+                    else:
+                        for index, n in enumerate(List):
+                            New_Path = Path.AppendElement(index)
+                            Tree.Add(n, New_Path)
                 return Tree
 
             def RunScript(self, Geometry, Key):
@@ -3155,34 +3360,32 @@ try:
                             Message.message2(self, mes_i)
 
                     else:
-                        Tree, Tree_Path = TreeFun.Branch_Route(self.Params.Input[0].VolatileData)
-                        Key, Key_Path = TreeFun.Branch_Route(Key)
+                        Tree, Tree_Path = self.Branch_Route(self.Params.Input[0].VolatileData)
+                        Key, Key_Path = self.Branch_Route(Key)
 
-                        Geometry = []
-                        for _ in Tree:
-                            Geometry.append(map(lambda x: x.ReferenceID, _))
+                        # 获取所有物体的ID值
+                        Geometry = [map(lambda x: x.ReferenceID if x is not None else x, _) for _ in Tree]
                         if len(Geometry) == 1 or len(Key) == 1:  # 判断输入端的数据结构，输出不同的数据结构
                             if len(Key[0]) == 1:
                                 for index, Geo in enumerate(Geometry):
                                     v = map(lambda _key: self.HaveKey(Geo, _key), Key)[0]
-                                    val_Tree.AddRange(v, Tree_Path[index])
+                                    val_Tree.AddRange(v, GH_Path(tuple(Tree_Path[index])))
                             else:
                                 for index, G in enumerate(Geometry):
                                     Data_Tree.MergeTree(self.Graft_List(G, Tree_Path[index]))
-                                Geometry_List, Geometrylist_Path = TreeFun.Branch_Route(Data_Tree)
+                                Geometry_List, Geometrylist_Path = self.Branch_Route(Data_Tree)
                                 for index, Geo in enumerate(Geometry_List):
                                     v = map(lambda _key: self.HaveKey(Geo, _key), Key)[0]
                                     if (len(Key[0]) == 1) and 0:
                                         val_Tree.AddRange(v, GH_Path(0))
                                     else:
-                                        val_Tree.AddRange(v, Geometrylist_Path[index])
+                                        val_Tree.AddRange(v, GH_Path(tuple(Geometrylist_Path[index])))
 
                         elif len(Key) >= len(Geometry):  # G端输入为树形，K端也为树形，结果与G端树形结构一致
                             remain = len(Key) - len(Geometry)  # Key超出Geometry的部分
-
                             for index, _Geo in enumerate(Geometry):
                                 _value = self.HaveKey(_Geo, Key[index])
-                                val_Tree.AddRange(_value, Tree_Path[index])
+                                val_Tree.AddRange(_value, GH_Path(tuple(Tree_Path[index])))
 
                             if remain > 0:  # 当Key的长度比Geometry多时
                                 index = [_ for _ in range(len(Geometry), len(Key))]
@@ -3197,7 +3400,7 @@ try:
                             remain = len(Geometry) - len(Key)  # Geometry超出Key的部分
                             for index, _Key in enumerate(Key):
                                 _value = self.HaveKey(Geometry[index], _Key)
-                                val_Tree.AddRange(_value, Tree_Path[index])
+                                val_Tree.AddRange(_value, GH_Path(tuple(Tree_Path[index])))
 
                             if remain > 0:  # 当Key的长度比Geometry多时
                                 index = [_ for _ in range(len(Key), len(Geometry))]
