@@ -153,20 +153,23 @@ try:
                 # 获得曲面关键点（角点、中点、线中心点）
                 brep_list, origin_path = tuple_data
                 corner_list, center_list, line_center_pt = ([] for _ in range(3))
-                for brep in brep_list:
-                    if brep:
-                        sub_corner = [_.Location for _ in brep.Vertices] if self.corner else []
-                        sub_center = [brep.GetBoundingBox(True).Center] if self.center else []
-                        sub_line_center = map(self.line_pt, [_ for _ in brep.Edges]) if self.line_center else []
-                        corner_list.append(sub_corner)
-                        center_list.append(sub_center)
-                        line_center_pt.append(sub_line_center)
-                    else:
-                        corner_list.append([])
-                        center_list.append([])
-                        line_center_pt.append([])
+                if brep_list:
+                    for brep in brep_list:
+                        if brep:
+                            sub_corner = [_.Location for _ in brep.Vertices] if self.corner else []
+                            sub_center = [brep.GetBoundingBox(True).Center] if self.center else []
+                            sub_line_center = map(self.line_pt, [_ for _ in brep.Edges]) if self.line_center else []
+                            corner_list.append(sub_corner)
+                            center_list.append(sub_center)
+                            line_center_pt.append(sub_line_center)
+                        else:
+                            corner_list.append([])
+                            center_list.append([])
+                            line_center_pt.append([])
 
-                ungroup_data = map(lambda x: self.split_tree(x, origin_path), [corner_list, center_list, line_center_pt])
+                    ungroup_data = map(lambda x: self.split_tree(x, origin_path), [corner_list, center_list, line_center_pt])
+                else:
+                    ungroup_data = map(lambda x: self.split_tree(x, origin_path), [[corner_list], [center_list], [line_center_pt]])
                 Rhino.RhinoApp.Wait()
                 return ungroup_data
 
@@ -327,7 +330,9 @@ try:
                 total_object, total_index, total_dis = [], [], []
                 for obj_index, obj_item in enumerate(main_object):
                     if obj_item:
+                        #                main_pt = Geometry_group.GeoCenter().center_box(obj_item)
                         main_pt = Geometry_group.GeoCenter().center_box(obj_item)
+                        #                other_pts = map(Geometry_group.GeoCenter().center_box, new_object[obj_index])
                         other_pts = map(Geometry_group.GeoCenter().center_box, new_object[obj_index])
                         sub_tuple_list, sub_distance = [], []
                         for pt_index, pt in enumerate(other_pts):
@@ -363,9 +368,21 @@ try:
                         self.count = Count
                         structure_tree = self.Params.Input[1].VolatileData
 
-                        main_trunk_list, main_path_list = self.Branch_Route(Main_Item)
-                        order_trunk_list = self.Branch_Route(structure_tree)[0]
-                        zip_list = zip(main_trunk_list, order_trunk_list, main_path_list)
+                        main_trunk_list, temp_path_1 = self.Branch_Route(Main_Item)
+                        order_trunk_list, temp_path_2 = self.Branch_Route(structure_tree)
+                        # 匹配数据
+                        m_len, o_len = len(main_trunk_list), len(order_trunk_list)
+                        if m_len < o_len:
+                            main_trunk_list = main_trunk_list + [main_trunk_list[-1]] * (o_len - m_len)
+                            target_path = temp_path_2
+                        elif m_len > o_len:
+                            order_trunk_list = order_trunk_list + [order_trunk_list[-1]] * (m_len - o_len)
+                            target_path = temp_path_1
+                        else:
+                            main_trunk_list = main_trunk_list
+                            order_trunk_list = order_trunk_list
+                            target_path = temp_path_1
+                        zip_list = zip(main_trunk_list, order_trunk_list, target_path)
                         iter_ungroup_data = zip(*ghp.run(self.closest_object, zip_list))
                         Res_Order_Item, Order_Index, Distance = ghp.run(lambda single_tree: self.format_tree(single_tree), iter_ungroup_data)
 
