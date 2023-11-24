@@ -18,6 +18,7 @@ import ghpythonlib.parallel as ghp
 import Grasshopper.DataTree as gd
 import Grasshopper.Kernel as gk
 from itertools import chain
+import math
 import initialization
 import Geometry_group
 
@@ -66,6 +67,13 @@ try:
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
+                p = Grasshopper.Kernel.Parameters.Param_Number()
+                self.SetUpParam(p, "Size", "S", "Font display size")
+                SIZE_FONT = 40
+                p.SetPersistentData(gk.Types.GH_Number(SIZE_FONT))
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
                 self.SetUpParam(p, "_place", "*", "placeholder（Each center point）")
@@ -75,7 +83,8 @@ try:
                 p0 = self.marshal.GetInput(DA, 0)
                 p1 = self.marshal.GetInput(DA, 1)
                 p2 = self.marshal.GetInput(DA, 2)
-                result = self.RunScript(p0, p1, p2)
+                p3 = self.marshal.GetInput(DA, 3)
+                result = self.RunScript(p0, p1, p2, p3)
 
                 if result is not None:
                     self.marshal.SetOutput(result, DA, 0, True)
@@ -85,7 +94,7 @@ try:
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
-                self.pts, self.lines, self.bbox, self.factor, self.show_cen = (None for _ in range(5))
+                self.pts, self.lines, self.bbox, self.factor, self.show_cen, self.size = (None for _ in range(6))
 
             def message1(self, msg1):
                 return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
@@ -105,16 +114,20 @@ try:
                     new_pts = pts
                     return new_pts, line_list
                 else:
-                    ply_line = rg.PolylineCurve(pts)
-                    center_pt = ght.tree_to_list(Geometry_group.GeoCenter().RunScript(ght.list_to_tree([ply_line])))[0]
-                    sc_trf = rg.Transform.Scale(center_pt, 0.8)
-                    copy_ply_line = ply_line.Duplicate()
-                    copy_ply_line.Transform(sc_trf)
-                    res_ply_line = copy_ply_line if self.factor else ply_line
+                    if pts:
+                        ply_line = rg.PolylineCurve(pts)
+                        # center_pt = ght.tree_to_list(Geometry_group.GeoCenter().RunScript(ght.list_to_tree([ply_line])))[0]
+                        center_pt = Geometry_group.GeoCenter().center_box(ply_line)
+                        sc_trf = rg.Transform.Scale(center_pt, 0.8)
+                        copy_ply_line = ply_line.Duplicate()
+                        copy_ply_line.Transform(sc_trf)
+                        res_ply_line = copy_ply_line if self.factor else ply_line
 
-                    new_pts = [_.Location for _ in res_ply_line.ToNurbsCurve().Points]
-                    loop_items = zip(new_pts, new_pts[1:] + new_pts[:1])[:len(new_pts) - 1]
-                    line_list = ghp.run(lambda pt_list: rg.Line(pt_list[0], pt_list[1]), loop_items)
+                        new_pts = [_.Location for _ in res_ply_line.ToNurbsCurve().Points]
+                        loop_items = zip(new_pts, new_pts[1:] + new_pts[:1])[:len(new_pts) - 1]
+                        line_list = ghp.run(lambda pt_list: rg.Line(pt_list[0], pt_list[1]), loop_items)
+                    else:
+                        new_pts, line_list = [], []
 
                 return new_pts, line_list
 
@@ -130,7 +143,9 @@ try:
                     _obj_pt = obj.Location
 
                 if self.show_cen:
-                    _obj_pt = ght.tree_to_list(Geometry_group.GeoCenter().RunScript(ght.list_to_tree([obj])))[0]
+                    if _obj_pt:
+                        _obj_pt = Geometry_group.GeoCenter().center_box(obj)
+                    # _obj_pt = ght.tree_to_list(Geometry_group.GeoCenter().RunScript(ght.list_to_tree([obj])))[0]
 
                 return _obj_pt
 
@@ -154,7 +169,7 @@ try:
                     center_pt = rg.Point3d(0, 0, 0)
                 return set_of_pts, set_of_line, center_pt
 
-            def RunScript(self, Geo, Format, F_Center):
+            def RunScript(self, Geo, Format, F_Center, Size):
                 try:
                     sc.doc = Rhino.RhinoDoc.ActiveDoc
 
@@ -162,6 +177,7 @@ try:
                     _place = gd[object]()
                     self.factor = Format
                     self.show_cen = F_Center
+                    self.size = Size
 
                     if origin_data:
                         list_pts, list_line, cen_pts = zip(*ghp.run(self._do_main, origin_data))
@@ -195,7 +211,7 @@ try:
                     for f_items in self.pts:
                         if f_items:
                             for sub_index in range(len(f_items)):
-                                args.Display.Draw2dText(str(sub_index), System.Drawing.Color.Green, f_items[sub_index], True, 40)
+                                args.Display.Draw2dText(str(sub_index), System.Drawing.Color.Green, f_items[sub_index], True, self.size)
                 except:
                     pass
 
@@ -253,6 +269,7 @@ try:
                 Plist = []
                 Tlist = []
 
+                self.c = list(filter(None, self.c))
                 for i in range(len(self.c)):
                     if not self.c[i]: return
                     # 检测曲线是否闭合 不闭合则终点也进行标注
