@@ -12,6 +12,7 @@ import Rhino
 import rhinoscriptsyntax as rs
 import ghpythonlib.parallel as ghp
 from Grasshopper import DataTree as gd
+import Grasshopper.Kernel as gk
 import urllib
 import random
 import json
@@ -567,6 +568,101 @@ try:
                     self.factor = False
                     return RP, GP, Time
 
+
+        # 抽取字符串中所有数字符号，并通过新的格式符号连接
+        class ReplaceNumText(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP_ReplaceNumText", "V12", """Extract all numeric symbols from the string and connect them with the new symbols""", "Scavenger", "L-Others")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("e89f1ee6-68fa-4f7d-94cc-fe5bbfb7b81e")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.primary
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_String()
+                self.SetUpParam(p, "Text", "T", "The string to be extracted")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Integer()
+                self.SetUpParam(p, "Split", "S", "Spacing step of separation")
+                STEP_NUM = 3
+                p.SetPersistentData(gk.Types.GH_Integer(STEP_NUM))
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_String()
+                self.SetUpParam(p, "Separator", "Sep", "Separator connect two-character")
+                SEP_STR = ','
+                p.SetPersistentData(gk.Types.GH_String(SEP_STR))
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_String()
+                self.SetUpParam(p, "Text_List", "R", "Result of the final character")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                p1 = self.marshal.GetInput(DA, 1)
+                p2 = self.marshal.GetInput(DA, 2)
+                result = self.RunScript(p0, p1, p2)
+
+                if result is not None:
+                    self.marshal.SetOutput(result, DA, 0, True)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAPpSURBVEhLrVVbaBxVGB6vbSMVrPqg1tjAlrI7c24ze8tumpSgIlgIgttaY1S6uzOz1+xu4l5mL7Obpm71RcyDWBUK2qcgBGzfjZe+FC22PliLfVCEEtoqeOuLOP5netKklC1NyAc/Z87/n/985/znO2ek24HZeax1p8fobGGM2ZnHhXvjgOrmz6SVPodq+gnSylwizdTzIrQxUCxjidSMffwb182LuGa84wY2CthKnSd25jyuG6fpTN4hVnL9O9BsvQ/K8ANppN4TLl6iX0klUfHpsX7S0DuoYV7x5HKbRHhtQPX0Ae2tKQdKcW2om3rous/8g9jZOdSdGob2U1TVf9GO6ve5CWsFsoxvcDl+FMpxljVTJe4jleQM6+QWaCX5Je1k3tbyE/3u4LWC2WkPtgzH85xnExxkHFvmTyIkaV5vm8nKGSZtWb9MccO01TeLvDwLUOdTbLbgBD+oDwzLzEsJuUopdRhjH46MjNwrUu4cvKZQ60tAclxppQ3QfAa30hdI0/yIxylGC4xRR9O0qJvQA5pt7FEPF77DzfRF2s5+z2Ynu755+36J1lNPw8odT278wRf6+h/jg2XLeBVb+p+2Y99N0Q2CPe5MPUCtZB4U+B8qTIwp0wdLcEH/QY30SclXjG9jxVc887HYPZrKloJaMMsT2GTcKznOXUDwGSfw+/0Bd6YeINV4Fs7vquhKcmH8WV5q0ZUkv6p2+URQ799Hw6NPCLdECTpBKXECgUAuGgoNhVZZJBxOBPz+95/B+AFqmwkQym8xWCjP00oHHsHN1AoBI8SgBDuE4G9htU8KNxDgLzRNdVSVOZqq3mQqHD5v8c5di6ycKKF6ammZgNVffop2sisEsKIdDFYKuzguXC4wxvsJQR1ZlrnNrLIOQsrHGKGz8vaBAGsZBtylKyJNUg/l3gXxXBNdSYISyC4BpfPCdUcA6W7mLakmdO1IyaHtzFew8h9JO/u3t/D6mDuII7pOgmXs1ff24Zr5kq+cSMrV5MRO48Ub5+himQAOec0EwcNZQ53Nfw62wNrZ/cJ9M9ZLoNqmxeApV6p6CTVSk8gyv6a13KMivIJVBJ8IV08Ui8UtvB059tpmeAH+lcvJaTewDLg/4msFnADUwlV0bnc0Wo1GB6vRwVttMBSaAxlfiATC40O1OOZaR+UkEtP0RlhVEaUYdkDg1mqOH7QPl+8WUxlz4AF0GIbLNzpcR3bmL3k6ftt3ykUkEtmKkC+mKMq+XoYQimFFmQLtL3q93mGeh2rGKZDk6eCR3Pbdc1MD2qFsNVDNPOxOuhEgFWMH/GrPkHbmMuj/MvywFne9cXDr9agk/Q+463nj3L771AAAAABJRU5ErkJggg=="
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def __init__(self):
+                self.default_num, self.join_str = (None for _ in range(2))
+
+            def message1(self, msg1):  # 报错红
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
+
+            def message2(self, msg2):  # 警告黄
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
+
+            def message3(self, msg3):  # 提示白
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
+
+            def mes_box(self, info, button, title):
+                return rs.MessageBox(info, button, title)
+
+            def extract_numbers_with_sign(self, string):
+                numbers = re.findall(r'[-+]?\d*\.?\d+', string)
+                return numbers
+
+            def RunScript(self, Text, Split, Separator):
+                try:
+                    Text_List = gd[object]()
+                    self.default_num = Split
+                    self.join_str = Separator
+                    re_mes = Message.RE_MES([Text], ['T'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                    else:
+                        num_list = self.extract_numbers_with_sign(Text)
+                        temp_str_list = [num_list[_: _ + self.default_num] for _ in range(0, len(num_list), self.default_num)]
+                        Text_List = map(lambda x: self.join_str.join(x), temp_str_list)
+
+                    return Text_List
+                finally:
+                    self.Message = 'Replace Text'
 
     else:
         pass

@@ -141,16 +141,26 @@ try:
 
             def RunScript(self, Rotated_Plane, Angle, Direction, Follow_rotation1, Follow_rotation2):
                 try:
-                    re_mes = Message.RE_MES([Rotated_Plane], ['Rotated_Plane'])
+
+                    # 判断输入的列表是否都为空
+                    structure_tree = self.Params.Input[0].VolatileData
+                    temp_geo_list = [list(i) for i in structure_tree.Branches]  # 获取所有数据
+                    j_list = filter(None, list(chain(*temp_geo_list)))
+                    re_mes = Message.RE_MES([j_list], ['Rotated_Plane'])
                     if len(re_mes) > 0:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
                         return gd[object](), gd[object](), gd[object]()
                     else:
-                        center_point = Rotated_Plane.Origin
-                        New_Plane, Rotated_object1, Rotated_object2 = self.get_new_plane(Rotated_Plane, Follow_rotation1,
-                                                                                         Follow_rotation2, Angle, Direction,
-                                                                                         center_point)
+                        if Rotated_Plane is not None:
+                            center_point = Rotated_Plane.Origin
+                            New_Plane, Rotated_object1, Rotated_object2 = self.get_new_plane(Rotated_Plane,
+                                                                                             Follow_rotation1,
+                                                                                             Follow_rotation2, Angle,
+                                                                                             Direction,
+                                                                                             center_point)
+                        else:
+                            New_Plane, Rotated_object1, Rotated_object2 = ([] for _ in range(3))
                         return New_Plane, Rotated_object1, Rotated_object2
                 finally:
                     self.Message = 'Plane rotation'
@@ -624,14 +634,21 @@ try:
                     sc.doc = Rhino.RhinoDoc.ActiveDoc
 
                     plane = gd[object]()
-                    self.origin = origin if origin else self.origin
-                    if x == None and y == None and z == None:
+
+                    re_mes = Message.RE_MES([origin], ['O'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
                         plane = rg.Plane.WorldXY
-                        self.message2("If you don't input axis,I will output XY plane!")
-                        plane.Origin = self.origin
-                        return plane
                     else:
-                        plane = self.Judge_Vector_Plane(x, y, z)
+                        self.origin = origin if origin else self.origin
+                        if x == None and y == None and z == None:
+                            plane = rg.Plane.WorldXY
+                            self.message2("If you don't input axis,I will output XY plane!")
+                            plane.Origin = self.origin
+                            return plane
+                        else:
+                            plane = self.Judge_Vector_Plane(x, y, z)
 
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()

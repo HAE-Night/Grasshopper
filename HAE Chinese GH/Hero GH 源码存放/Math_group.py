@@ -82,16 +82,24 @@ try:
                 o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAMtSURBVEhL7ZRJTBNRGMdr9GCMCeGmVzyYkM4+0wVbW2mpbFVWQVSWFKXAzFCm7FuDLKVDWxYRNO6akOjFRA1wQA0XJRg5qBdjkJviEbkgGD/fjIOyeDIkXvglX+bN/L/v/d+bed/odvj/BGyBPTzZE/DTfZMiEZranpCnapmBiSpCLtb56BDdxF0BH9m7KJKheZGUtyFC8xIVXUUGqzqJDCe0cFcBCQXaprYFAZf7/VQUdNV0xNSMdiBS8llFABja//VV+5HPk3WeldcB749PURYAdqlVm3h+q2jvj7dB9/JM26WFZ7XDi9OtNR/Gm2hFE4jQgERF/hj4qN5ziiDzmd1vHkgwO1oBL2974fGABzxuG69omzluYp19UjY8DBfCo2ghTN/hIVh+clrR0HfYaFBF9p1WhBQWu59xhIU0EwUpHAFOEgM7rg8o2mbSTFymDYuHJJTjoDBw0QQk0fp5RfPpBzr8awaN7AiIdOeF8nS2Lc/GQY6FhewEBgqO/hpnWQ0LDdmpRnVWDX9WkvuUzfglx2qA4kQTnLKycNpuhDNoXOwiXghc41MfEV1WDRqYEahk6uvTTIeHvClH56RMF0o0g8dpBiH9GGSY6Y9FTtP7fAfVVW5sxAusrsg5JzOekUBOVKbZ1bx8mxF4twOqTyQuJXFxYjndMFZNRFf+vCK8L09ZWdlx6xhayayDxkaSWSxclmwdr3RbBCzGEltBtcy0GK4COuNQGX9ZEPMpvCzZMuJi9SV2Mr4o1UgOFSeax5V5fPhg518/clxsbIxyXU86c3CfRPY/aeVuKMdZriLD9ztMd0EgesJayhZQww1uMJCYSK6mbYEn5PZO8z0Q8B5Je6SrpsK3L6om3We0RxtABhHUbKATmbClGTUa6rpm1As4TwaJtVDvia6MJg4dAlJ+otWq5OY+2I1W+K6G7v/G48HE9bXKGB3TUbXRBFo+hH4T3xWTRnZ4SwSMNwFNtFQRHzigzf0bL96lRwbQari+pa7VcA3QLubURJHs5uqYQY+PDJVujnr6UqmAByk18S/wWJe1jh48v7EuXFpH9Zf4sGCclrbDDv+MTvcTwSjMT0kDsa0AAAAASUVORK5CYII="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
+            def Branch_Route(self, Tree):
+                """分解Tree操作，树形以及多进程框架代码"""
+                Tree_list = [list(_) for _ in Tree.Branches]
+                Tree_Path = [_ for _ in Tree.Paths]
+                return Tree_list, Tree_Path
+
             def RunScript(self, List_Data, Start, End):
                 try:
+                    Result = gd[object]()
                     re_mes = Message.RE_MES([List_Data], ['List_Data'])
                     if len(re_mes) > 0:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
-                        return gd[object]()
                     else:
-                        Result = List_Data[Start: End + 1] if End is not None else List_Data[Start:]
-                        return Result
+                        structure_tree = self.Params.Input[0].VolatileData
+                        origindata_list = self.Branch_Route(structure_tree)[0][self.RunCount - 1]
+                        Result = origindata_list[Start: End + 1] if End is not None else origindata_list[Start:]
+                    return Result
                 finally:
                     self.Message = 'Get Date of Range'
 
@@ -148,25 +156,58 @@ try:
             def __init__(self):
                 self.len = None
 
+            def Branch_Route(self, Tree):
+                """分解Tree操作，树形以及多进程框架代码"""
+                Tree_list = [list(_) for _ in Tree.Branches]
+                Tree_Path = [list(_) for _ in Tree.Paths]
+                return Tree_list, Tree_Path
+
+            def split_tree(self, tree_data, tree_path):
+                """操作树单枝的代码"""
+                new_tree = ght.list_to_tree(tree_data, True, tree_path)  # 此处可替换复写的Tree_To_List（源码参照Vector组-点集根据与曲线距离分组）
+                result_data, result_path = self.Branch_Route(new_tree)
+                if list(chain(*result_data)):
+                    return result_data, result_path
+                else:
+                    return [[]], result_path
+
+            def format_tree(self, result_tree):
+                """匹配树路径的代码，利用空树创造与源树路径匹配的树形结构分支"""
+                stock_tree = gd[object]()
+                for sub_tree in result_tree:
+                    fruit, branch = sub_tree
+                    for index, item in enumerate(fruit):
+                        path = gk.Data.GH_Path(System.Array[int](branch[index]))
+                        if hasattr(item, '__iter__'):
+                            if item:
+                                for sub_index in range(len(item)):
+                                    stock_tree.Insert(item[sub_index], path, sub_index)
+                            else:
+                                stock_tree.AddRange(item, path)
+                        else:
+                            stock_tree.Insert(item, path, index)
+                return stock_tree
+
             def get_tree(self, len_list_data):
                 index_list = [_ for _ in range(len(len_list_data)) if len_list_data[_] == self.len]
                 return index_list
 
             def RunScript(self, Tree, Length):
                 try:
-                    re_mes = Message.RE_MES([Tree], ['Tree'])
-                    if len(re_mes) > 0:
-                        for mes_i in re_mes:
-                            Message.message2(self, mes_i)
-                        return gd[object]()
-                    else:
-                        self.len = Length
-                        leaf_list = [list(_) for _ in Tree.Branches]
+                    self.len = Length
+                    Result = gd[object]()
 
-                        length_list = map(lambda x: len(x), leaf_list)
-                        res_index = self.get_tree(length_list)
-                        Result = Message.message2(self, 'No Specific Length of Data Tree！') if len(res_index) == 0 else ght.list_to_tree([leaf_list[_] for _ in res_index])
-                        return Result
+                    structure_tree = self.Params.Input[0].VolatileData
+                    leaf_list, origin_path = self.Branch_Route(structure_tree)
+                    length_list = list(map(lambda x: len(x), leaf_list))
+                    res_index = self.get_tree(length_list)
+                    if len(res_index):
+                        for _index in res_index:
+                            tree_zip = self.split_tree(leaf_list[_index], origin_path[_index])
+                            Result.MergeTree(self.format_tree([tree_zip]))
+                    else:
+                        Message.message2(self, 'No Specific Length of Data Tree！')
+                    return Result
                 finally:
                     self.Message = 'Get Tree Data as per Specific Length'
 
@@ -254,14 +295,21 @@ try:
             def RunScript(self, List_Num):
                 try:
                     Final_data = gd[object]()
-                    re_mes = Message.RE_MES([List_Num], ['List_Num'])
+                    temp_geo_list = self.Branch_Route(self.Params.Input[0].VolatileData)[0]
+                    length_list = [len(filter(None, _)) for _ in temp_geo_list]
+                    Abool_factor = any(length_list)
+                    re_mes = Message.RE_MES([Abool_factor], ['List_Num'])
                     if len(re_mes) > 0:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
                     else:
-                        Final_data = []
-                        for index in range(1, len(List_Num) + 1):
-                            Final_data.append(sum(List_Num[:index]))
+                        if len(List_Num):
+                            List_Num = filter(None, List_Num)
+                            Final_data = []
+                            for index in range(1, len(List_Num) + 1):
+                                Final_data.append(sum(List_Num[:index]))
+                        else:
+                            return []
                     return Final_data
                 finally:
                     self.Message = 'sum n in the list'
@@ -318,29 +366,38 @@ try:
             def __init__(self):
                 pass
 
+            def Branch_Route(self, Tree):
+                """分解Tree操作，树形以及多进程框架代码"""
+                Tree_list = [list(_) for _ in Tree.Branches]
+                Tree_Path = [_ for _ in Tree.Paths]
+                return Tree_list, Tree_Path
+
             def RunScript(self, Data, Random):
                 try:
-                    re_mes = Message.RE_MES([Data], ['Data'])
+                    Result = gd[object]()
+
+                    temp_geo_list = self.Branch_Route(self.Params.Input[0].VolatileData)[0]
+                    length_list = [len(filter(None, _)) for _ in temp_geo_list]
+                    Abool_factor = any(length_list)
+                    re_mes = Message.RE_MES([Abool_factor], ['Data'])
                     if len(re_mes) > 0:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
-                        return gd[object]()
                     else:
+                        structure_tree = self.Params.Input[0].VolatileData
+                        data_list = self.Branch_Route(structure_tree)[0][self.RunCount - 1]
                         if len(Random) == 0:
-                            index_list = random.sample([index for index in range(len(Data))], len(Data))
-                            Result = [Data[_] for _ in index_list]
-                            return Result
+                            index_list = random.sample([index for index in range(len(data_list))], len(data_list))
+                            Result = [data_list[_] for _ in index_list]
                         else:
                             if len(Random) == 1 and Random[0] == -1:
-                                Result = Data[::-1]
-                                return Result
-                            elif len(Random) == len(Data):
-                                Result = [Data[_] for _ in Random]
-                                return Result
+                                Result = data_list[::-1]
+                            elif len(Random) == len(data_list):
+                                Result = [data_list[_] for _ in Random]
                             else:
                                 Message.message3(self, "number in Random list should be same with original list!please check")
-                                Result = Data
-                                return Result
+                                Result = data_list
+                    return Result
                 finally:
                     self.Message = "random data"
 
@@ -410,6 +467,12 @@ try:
             def __init__(self):
                 self.switch = False
 
+            def Branch_Route(self, Tree):
+                """分解Tree操作，树形以及多进程框架代码"""
+                Tree_list = [list(_) for _ in Tree.Branches]
+                Tree_Path = [list(_) for _ in Tree.Paths]
+                return Tree_list, Tree_Path
+
             def compare_five(self, carry, keep):
                 if keep >= 0:
                     return keep + 1 if carry >= 5 else keep
@@ -468,14 +531,29 @@ try:
                     decimal.getcontext().prec = 10000
                     Precision = 0 if Precision is None else Precision
                     Result, Percentage, Per_thousand = (gd[object]() for _ in range(3))
-                    if Decimal is not None:
-                        per = Decimal * 100
-                        per_th = Decimal * 1000
-                        Result = str(dd(Decimal).quantize(dd("1e-{}".format(Precision)), rounding="ROUND_HALF_UP")) if "e" in str(Decimal) else self.handle_str(Decimal, Precision)
-                        Percentage = str(dd(per).quantize(dd("1e-{}".format(Precision)), rounding="ROUND_HALF_UP")) + '%' if "e" in str(per) else self.handle_str(per, Precision) + "%"
-                        Per_thousand = str(dd(per_th).quantize(dd("1e-{}".format(Precision)), rounding="ROUND_HALF_UP")) + '‰' if "e" in str(per) else self.handle_str(per_th, Precision) + '‰'
+
+                    temp_geo_list = self.Branch_Route(self.Params.Input[0].VolatileData)[0]
+                    length_list = [len(filter(None, _)) for _ in temp_geo_list]
+                    Abool_factor = any(length_list)
+                    re_mes = Message.RE_MES([Abool_factor], ['D'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
                     else:
-                        Message.message2(self, 'D terminal input data！')
+                        if Decimal is not None:
+                            per = Decimal * 100
+                            per_th = Decimal * 1000
+                            Result = str(dd(Decimal).quantize(dd("1e-{}".format(Precision)),
+                                                              rounding="ROUND_HALF_UP")) if "e" in str(
+                                Decimal) else self.handle_str(Decimal, Precision)
+                            Percentage = str(dd(per).quantize(dd("1e-{}".format(Precision)),
+                                                              rounding="ROUND_HALF_UP")) + '%' if "e" in str(
+                                per) else self.handle_str(per, Precision) + "%"
+                            Per_thousand = str(dd(per_th).quantize(dd("1e-{}".format(Precision)),
+                                                                   rounding="ROUND_HALF_UP")) + '‰' if "e" in str(
+                                per) else self.handle_str(per_th, Precision) + '‰'
+                        else:
+                            Result, Percentage, Per_thousand = (None for _ in range(3))
                     return Result, Percentage, Per_thousand
                 finally:
                     self.Message = "Scientific Notation（extract precision）"
@@ -597,15 +675,25 @@ try:
                     Precision = 0 if Precision is None else Precision
                     Result, Floor, Ceil = (gd[object]() for _ in range(3))
 
-                    if Decimal is not None:
-                        Result = str(dd(Decimal).quantize(dd("1e-{}".format(Precision)), rounding="ROUND_HALF_UP")) if "e" in str(Decimal) else NewRound().handle_str(Decimal, Precision)
-                        Floor = math.floor(Decimal)
-                        Ceil = math.ceil(Decimal)
+                    temp_geo_list = self.Branch_Route(self.Params.Input[0].VolatileData)[0]
+                    length_list = [len(filter(None, _)) for _ in temp_geo_list]
+                    Abool_factor = any(length_list)
+                    re_mes = Message.RE_MES([Abool_factor], ['D'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
                     else:
-                        self.message2('D端未输入数据！')
+                        if Decimal is not None:
+                            Result = str(dd(Decimal).quantize(dd("1e-{}".format(Precision)),
+                                                              rounding="ROUND_HALF_UP")) if "e" in str(
+                                Decimal) else NewRound().handle_str(Decimal, Precision)
+                            Floor = math.floor(Decimal)
+                            Ceil = math.ceil(Decimal)
+                        else:
+                            Result, Floor, Ceil = (None for _ in range(3))
                     return Result, Floor, Ceil
                 finally:
-                    self.Message = '四舍五入'
+                    self.Message = 'Half Adjust'
 
 
         # 数字格式化
@@ -720,37 +808,40 @@ try:
             def RunScript(self, Number, Format, Prefix, Suffix):
                 try:
                     FormattedNumber = gd[object]()
-                    split_dec_list = Format.split('.')
-                    if len(split_dec_list) > 1:
-                        A_Part, B_Part = split_dec_list
-                        B_Part = '.' + B_Part
-                    else:
-                        A_Part, B_Part = split_dec_list[0], ''
-                    reverse_str_list = [_ for _ in A_Part][::-1]
-                    pre_str = Prefix if Prefix else ''
-                    suf_str = Suffix if Suffix else ''
-
-                    if Number is not None:
-                        last_byte = int(round(Number, 0))
-                        replace_list = [_ for _ in str(last_byte)][::-1]
-
-                        new_indexes = []
-                        for index, item in enumerate(reverse_str_list):
-                            if item == '0':
-                                new_indexes.append(index)
-
-                        if len(new_indexes) > 1:
-                            for sub_str_index, sub_str in enumerate(replace_list):
-                                reverse_str_list[new_indexes[sub_str_index]] = sub_str
-                            new_character_string = ''.join(reverse_str_list[::-1])
+                    if str(Number).find('.') <= len(Format):
+                        split_dec_list = Format.split('.')
+                        if len(split_dec_list) > 1:
+                            A_Part, B_Part = split_dec_list
+                            B_Part = '.' + B_Part
                         else:
-                            char_list = reverse_str_list[::-1]
-                            char_list[(char_list.index("0"))] = str(last_byte)
-                            new_character_string = ''.join(char_list)
+                            A_Part, B_Part = split_dec_list[0], ''
+                        reverse_str_list = [_ for _ in A_Part][::-1]
+                        pre_str = Prefix if Prefix else ''
+                        suf_str = Suffix if Suffix else ''
 
-                        FormattedNumber = pre_str + new_character_string + B_Part + suf_str
+                        if Number is not None:
+                            last_byte = int(round(Number, 0))
+
+                            replace_list = [_ for _ in str(last_byte)][::-1]
+
+                            new_indexes = []
+                            for index, item in enumerate(reverse_str_list):
+                                if item == '0':
+                                    new_indexes.append(index)
+                            if len(new_indexes) > 1:
+                                for sub_str_index, sub_str in enumerate(replace_list):
+                                    reverse_str_list[new_indexes[sub_str_index]] = sub_str
+                                new_character_string = ''.join(reverse_str_list[::-1])
+                            else:
+                                char_list = reverse_str_list[::-1]
+                                char_list[(char_list.index("0"))] = str(last_byte)
+                                new_character_string = ''.join(char_list)
+
+                            FormattedNumber = pre_str + new_character_string + B_Part + suf_str
+                        else:
+                            self.message2('N terminal is null！')
                     else:
-                        self.message2('N terminal is null！')
+                        self.message2('Format error!')
                     return FormattedNumber
                 finally:
                     self.Message = 'format number'
@@ -985,37 +1076,15 @@ try:
             def mes_box(self, info, button, title):
                 return rs.MessageBox(info, button, title)
 
-            def Branch_Route(self, Tree):
-                """分解Tree操作，树形以及多进程框架代码"""
-                Tree_list = [[_[0]] for _ in Tree.Branches]
+            def Get_Tree_Data(self, Tree):
+                Tree_list = []
+                for _ in Tree.Branches:
+                    if len(_):
+                        Tree_list.append([_[0]])
+                    else:
+                        Tree_list.append(list(_))
                 Tree_Path = [[_] for _ in Tree.Paths]
                 return Tree_list, Tree_Path
-
-            def split_tree(self, tree_data, tree_path):
-                """操作树单枝的代码"""
-                new_tree = ght.list_to_tree(tree_data, True, tree_path)  # 此处可替换复写的Tree_To_List（源码参照Vector组-点集根据与曲线距离分组）
-                result_data, result_path = self.Branch_Route(new_tree)
-                if list(chain(*result_data)):
-                    return result_data, result_path
-                else:
-                    return [[]], result_path
-
-            def format_tree(self, result_tree):
-                """匹配树路径的代码，利用空树创造与源树路径匹配的树形结构分支"""
-                stock_tree = gd[object]()
-                for sub_tree in result_tree:
-                    fruit, branch = sub_tree
-                    for index, item in enumerate(fruit):
-                        path = gk.Data.GH_Path(System.Array[int](branch[index]))
-                        if hasattr(item, '__iter__'):
-                            if item:
-                                for sub_index in range(len(item)):
-                                    stock_tree.Insert(item[sub_index], path, sub_index)
-                            else:
-                                stock_tree.AddRange(item, path)
-                        else:
-                            stock_tree.Insert(item, path, index)
-                return stock_tree
 
             def Complete_data(self, basis_List, Need_List):  # 补全数据
                 Last_Data = Need_List[-1]  # 以最后一个值补全数据
@@ -1035,10 +1104,9 @@ try:
                     try:
                         Format = format_str[start: end + 1]  # 取出{}
                     except:
-                        print(666)
                         return
                     if len(Format) == 2:
-                        self.message1("format of the character string is wrong！")
+                        self.message2("format of the character string is wrong！")
                     else:
                         Font_str = format_str[:start] if start != 0 else ''  # 取出{}之前的字符串
                         last_str = format_str[end + 1:] if start != 0 else ''  # 取出{}之前的字符串
@@ -1051,14 +1119,14 @@ try:
                                 Format_Str = Font_str + '{}' + last_str
                                 Format_List.append(Format_Str.format(number))
                             else:
-                                self.message1("format of the character string is wrong！")
+                                self.message2("format of the character string is wrong！")
                         elif eval(Format[1: -1]) == 0:
                             number = str(number)
                             number = number.rstrip('0').rstrip('.') if '.' in number else number  # 去掉浮点数后多余的0
                             Format_Str = Font_str + '{}' + last_str
                             Format_List.append(Format_Str.format(number))
                         else:
-                            self.message1("format of the character string is wrong！")
+                            self.message2("format of the character string is wrong！")
                 return Format_List
 
             def get_number(self, Data_Length, Start_number, Step):  # 获取数值列表
@@ -1079,22 +1147,24 @@ try:
             def RunScript(self, Object, Start, Step, Format):
                 try:
                     FormatNumber = gd[object]()
-
                     sc.doc = Rhino.RhinoDoc.ActiveDoc
                     if Object.BranchCount != 0:
                         Data_Length = [[len(_l)] for _l in [_ for _ in Object.Branches]]  # 得到Object每个分支的长度和下标
-                        path = self.Branch_Route(Object)[1]
+                        path = self.Get_Tree_Data(Object)[1]
                         # 根据Object将缺少的数据补齐
-                        Start_number = self.Complete_data(path, self.Branch_Route(Start)[0])
-                        Step = self.Complete_data(path, self.Branch_Route(Step)[0])
-                        Format = self.Complete_data(path, self.Branch_Route(Format)[0])
-
+                        Start_number = self.Complete_data(path, self.Get_Tree_Data(Start)[0])
+                        Step = self.Complete_data(path, self.Get_Tree_Data(Step)[0])
+                        Format = self.Complete_data(path, self.Get_Tree_Data(Format)[0])
                         Format_List = ghp.run(self.temp, zip(*[Data_Length, Start_number, Step, Format]))
-
-                        if len(list(chain(Format_List))) != 0:
-                            for i, _path in enumerate(path):  # 将得到的数据还原到原树分支中
-                                FormatNumber.AddRange(Format_List[i], _path[0])
-
+                        try:
+                            if Format_List[0] is None:
+                                self.message2("format of the character string is wrong！")
+                            else:
+                                if len(list(chain(Format_List))) != 0:
+                                    for i, _path in enumerate(path):  # 将得到的数据还原到原树分支中
+                                        FormatNumber.AddRange(Format_List[i], _path[0])
+                        except Exception as e:
+                            self.message2(str(e))
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
                     sc.doc = ghdoc
