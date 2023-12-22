@@ -1400,19 +1400,19 @@ try:
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Point()
                 self.SetUpParam(p, "Points", "Pi", "Point List ")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
                 self.SetUpParam(p, "FirstIndex", "F", "Specifies the starting element subscript")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Plane()
                 self.SetUpParam(p, "Plane", "P", "Sorting plane")
                 NORMAL_PLANE = rg.Plane.WorldXY
                 p.SetPersistentData(gk.Types.GH_Plane(NORMAL_PLANE))
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
@@ -1488,6 +1488,15 @@ try:
                             stock_tree.Insert(item, path, index)
                 return stock_tree
 
+            def parameter_judgment(self, tree_par_data):
+                # 获取输入端参数所有数据
+                geo_list, geo_path = self.Branch_Route(tree_par_data)
+                if geo_list:
+                    j_list = any(ghp.run(lambda x: len(list(filter(None, x))), geo_list))  # 去空操作, 判断是否为空
+                else:
+                    j_list = False
+                return j_list, geo_list, geo_path
+
             def is_nan(self, angle):
                 # 判断是否为失效值
                 nan_bool = (not float('-inf')) < angle < float('inf')
@@ -1525,50 +1534,81 @@ try:
                 sort_zip_list = sorted(zip(distance_list, zip_coll))
                 return sort_zip_list
 
+            def temp(self, tuple_data):
+                # 解包数据
+                pt_list, origin_pt_list, _index, ref_pln, origin_path = tuple_data
+                if pt_list:
+                    _index = _index[0]
+                    ref_pln = ref_pln[0]
+                    # 得到平面基础数据
+                    base_pt, ref_vector = ref_pln.Origin, ref_pln.XAxis
+                    # 平面投影
+                    xform = rg.Transform.PlaneToPlane(ref_pln, rg.Plane.WorldXY)
+                    projected_point_set = [rg.Point3d(_) for _ in pt_list]
+                    # 投影点重排序并输出下标
+                    temp_index = self.right_hand_rule(projected_point_set, base_pt, ref_vector, ref_pln)
+                    # 判断F端是否为失效值
+                    if _index is not None:
+                        # 判断F端是否为负数
+                        if _index < 0:
+                            _index += len(temp_index)
+                        # 若F端在正常范围内
+                        elif 0 <= _index < len(temp_index):
+                            pass
+                        else:
+                            _index = len(temp_index)
+                            Message.message2(self, 'The index subscript is not in the range！')
+                        split_index = temp_index.index(_index)
+                        a_temp_list, b_temp_list = temp_index[split_index:], temp_index[:split_index]
+                        res_indexes = a_temp_list + b_temp_list
+                        res_pts = [origin_pt_list[single_index] for single_index in res_indexes]
+                    # 若F端未输入数据
+                    else:
+                        res_pts = [origin_pt_list[single_index] for single_index in temp_index]
+                        res_indexes = temp_index
+                else:
+                    res_pts, res_indexes = [], []
+                # 解包数据
+                ungroup_data = map(lambda x: self.split_tree(x, origin_path), [res_pts, res_indexes])
+                Rhino.RhinoApp.Wait()
+                return ungroup_data
+
             def RunScript(self, Points, FirstIndex, Plane):
                 try:
                     sc.doc = Rhino.RhinoDoc.ActiveDoc
                     Points_Result, index = (gd[object]() for _ in range(2))
-
-                    "----------------------------"
-                    if Plane:
-                        base_pt, ref_vector = Plane.Origin, Plane.XAxis
+                    # 获取输入端数据
+                    j_bool_f1, origin_pts, _path = self.parameter_judgment(self.Params.Input[0].VolatileData)
+                    re_mes = Message.RE_MES([j_bool_f1], ['P end'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
                     else:
-                        Plane = rg.Plane.WorldXY
-                        base_pt, ref_vector = Plane.Origin, Plane.XAxis
-                    "----------------------------"
-
-                    structure_tree = self.Params.Input[0].VolatileData
-                    temp_geo_list = [list(i) for i in structure_tree.Branches]
-                    if len(temp_geo_list) < 1:
-                        Message.message2(self, 'The p-terminal cannot be empty！')
-                        return gd[object](), gd[object]()
-                    if Points:
-                        # 平面投影
-                        projected_point_set = [Plane.ClosestPoint(_) if _ else None for _ in Points]
-                        # 投影点重排序并输出下标
-                        temp_index = self.right_hand_rule(projected_point_set, base_pt, ref_vector, Plane)
-                        structure_tree = self.Params.Input[0].VolatileData
-                        origin_pts = self.Branch_Route(structure_tree)[0][self.RunCount - 1]
-                        "----------------------------"
-                        # 判断F端是否为负数
-                        if FirstIndex is not None:
-                            if FirstIndex < 0:
-                                FirstIndex += len(temp_index)
-                            if 0 <= FirstIndex < len(temp_index):
-                                split_index = temp_index.index(FirstIndex)
-                                a_temp_list, b_temp_list = temp_index[split_index:], temp_index[:split_index]
-                                index = a_temp_list + b_temp_list
-                                Points_Result = [origin_pts[single_index] for single_index in index]
-                            else:
-                                Message.message1(self, 'The index subscript is not in the range！')
+                        # 数据匹配
+                        pt_trunk, pt_path = self.Branch_Route(Points)
+                        index_trunk, index_path = self.Branch_Route(FirstIndex)
+                        pl_trunk, pl_path = self.Branch_Route(Plane)
+                        pt_len, index_len, pl_len = len(pt_trunk), len(index_trunk), len(pl_trunk)
+                        if pt_len > pl_len:
+                            new_pt_trunk = pt_trunk
+                            new_pl_trunk = pl_trunk + [pl_trunk[-1]] * (pt_len - pl_len)
                         else:
-                            Points_Result = [origin_pts[single_index] for single_index in temp_index]
-                            index = temp_index
-                        "----------------------------"
-                    else:
-                        Points_Result, index = [], []
+                            new_pt_trunk = pt_trunk
+                            new_pl_trunk = pl_trunk
 
+                        # 输入失效值时的F端数据结构
+                        if not index_trunk:
+                            index_trunk = [[None]]
+
+                        if len(new_pt_trunk) > index_len:
+                            new_index_trunk = index_trunk + [index_trunk[-1]] * (len(new_pt_trunk) - index_len)
+                        else:
+                            new_index_trunk = index_trunk
+                        zip_list = zip(new_pt_trunk, origin_pts, new_index_trunk, new_pl_trunk, pt_path)
+                        # 多进程处理数据
+                        iter_ungroup_data = zip(*ghp.run(self.temp, zip_list))
+                        # 匹配树形并分配输出端
+                        Points_Result, index = ghp.run(lambda single_tree: self.format_tree(single_tree), iter_ungroup_data)
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
                     sc.doc = ghdoc
@@ -1762,8 +1802,11 @@ try:
                     set_origin_list = [origin_pts_list] * len(plane_list)
                     sub_zip_list = zip(set_pts_list, plane_list, set_origin_list)
                     need_indexes, no_indexes, need_list, no_list = zip(*map(self.coplanar_pts, sub_zip_list))
-                ungroup_data = map(lambda x: self.split_tree(x, origin_path),
-                                   [need_indexes, no_indexes, need_list, no_list])
+                # "--------------------------------"
+                need_list = [[]] if len(need_list) == 0 else need_list
+                need_indexes = [[]] if len(need_indexes) == 0 else need_indexes
+                # "--------------------------------"
+                ungroup_data = map(lambda x: self.split_tree(x, origin_path), [need_indexes, no_indexes, need_list, no_list])
                 Rhino.RhinoApp.Wait()
                 return ungroup_data
 
