@@ -7,12 +7,14 @@
 # @Time : 2022/8/13 17:17
 
 from ghpythonlib.componentbase import dotnetcompiledcomponent as component
-import Grasshopper, GhPython
+import Grasshopper, GhPython, System
 import Rhino
 import rhinoscriptsyntax as rs
 import ghpythonlib.parallel as ghp
+import ghpythonlib.treehelpers as ght
 from Grasshopper import DataTree as gd
 import Grasshopper.Kernel as gk
+import scriptcontext as sc
 import urllib
 import random
 import json
@@ -24,6 +26,8 @@ import csv
 from itertools import chain
 import getpass
 import time
+import os
+import shutil
 
 reload(sys)
 sys.setdefaultencoding('utf-8')
@@ -664,10 +668,798 @@ try:
                 finally:
                     self.Message = 'Replace Text'
 
+
+        # 将Gh数据写入到Excel表格中
+        from System.IO import FileStream, FileMode, FileAccess
+        from System.IO import File
+        import sys
+        import clr
+
+        sys.path.append(r"C:\Users\Administrator\AppData\Roaming\Grasshopper\Libraries")
+        # 加载Microsoft Excel的互操作组件
+        clr.AddReference("NPOI")
+        clr.AddReference("NPOI.OOXML")
+        # 导入Excel相关的命名空间
+        from NPOI.HSSF import UserModel as HsModel
+        from NPOI.XSSF import UserModel as XsModel
+
+
+        class WriteExcel(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP_WriteExcel", "V14", """Write Gh data to Excel table""", "Scavenger", "L-Others")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("6017aa8b-06bc-4cea-a929-f5901bc2a396")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.tertiary
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Boolean()
+                self.SetUpParam(p, "Write", "W", "Write if set to True")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_String()
+                self.SetUpParam(p, "Path", "P", "Output path with extended file name")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_String()
+                self.SetUpParam(p, "Sheet", "S", "Form Settings, not written to default Sheet1")
+                p.SetPersistentData(gk.Types.GH_String('Sheet1'))
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_String()
+                self.SetUpParam(p, "Cell", "C", "Cell Settings, default A1")
+                p.SetPersistentData(gk.Types.GH_String('A1'))
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_String()
+                self.SetUpParam(p, "Data", "D", "Comma separated data")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Messge", "M", "Excel operation status")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                p1 = self.marshal.GetInput(DA, 1)
+                p2 = self.marshal.GetInput(DA, 2)
+                p3 = self.marshal.GetInput(DA, 3)
+                p4 = self.marshal.GetInput(DA, 4)
+                result = self.RunScript(p0, p1, p2, p3, p4)
+
+                if result is not None:
+                    self.marshal.SetOutput(result, DA, 0, True)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAQRSURBVEhL7ZN7SFtnGIdTtlbKoKtJTHJMjbWaGLX0ojYxJubupWVTsO06jbXVeInRbhpzT3qZzo2C0A3m0MYLdM6OdWjrrMLYWmqhY3PdrdCxMkZhF+g2KGPr37+95ySYpJox2F+DvfDwnXByfs/3fhfe//Wvak/E0VU47ZxVjjsuRengUEQ6LhVMdr5nWQjNVi2FZ61Xk6n5aOBy3dJAWywmdSnG2u4pZ1+E4u3uKDNObpRPO6G82APr9ZdQvTyIqhsDSexfOQvrQuibWEzqUkTab8unu5A33o68CEFjLsv5Nigm2mF8PwDLYgjmq8EkKq+dgWUh+FksJnUVjdhXiiY6oBxp4SgYaYXyTTvkJMif6oRpIQjrUpiTJFJFnVUuhldiMTxezesn0hivdULsN98UuAzL/L6K5Yx+4zLjr/yDCVZB7LeCCVQi01+Jwt4DUJ5tQO7ocejmPNDP+1BxxRvlchTjB2EY53xxQb6nNlPkM0FwygLmdDXSg0ZsCejB9+ix+QUVRB4ThB4Dtnr1yLGpIevUQhgwI2+0Nbp01NEqETsUbzlA+xcXyHqrGQr4M61XhfoxF759cB+64WPgteVj9Ma7mP/qOra4yklgQM7RslVBLifooOBkifxCF+TrCdgZPu3S4f5vP2Hxzk3sGjwEto5EvNh4ohR8n5ETZDt0EAYtyB1riXcQiQsUF+i0jbWvFQj9RgoqgemcHQ8f/Y7vf/kBU7eugNe1GwJaIlawo1mDbGcFhGErnSoKm3JAPtkZZYIdO5A/0wPlhGOtQECCdFp3NvDOj/e42euHW7Chu5j2wAg+vZcd2QeZrQzibj0yB5+F9JVaSIdY6mLUYtvwQWwbqksW0AypAxMX7rw4hJ8fPsCHdz/Gre++wKaeUqS7K8APmJBZvxfSZ/ZA1KQCv08Hfj9By5qIwE/dunRrBU/1l2PXy4e5mftmXwPjs3DPp+ZH8ERPMSeQ1hdDWrsXGc1qCNwGCGjj2eVLRBgyQ+g2PrZEbsOjtD4Vet55FXNfXoPYZ8YG526cnH8DM58ucR9upZklCdhAH8FKEhCGSeBNEGS7D0jYe5AxUIX0kAmbPGrww3T2aSYbXWpsdmu453S6J9KDJZxARAKhi8KoC2F/Mhl0hOmixgWG04YnpT6rXxSwTGa4TeMCtylCY0TcXParhC6WuFEFsU0FScM+ZJmLaB+KuT0QN9G7dZC0aOj/6rggVW3XFHyyQ78T27UFyNEWEjSad4J5rjQqYMXrIDlGgsZ/IMiqL/5c9rwKWYdKVpEeLuW6+Tskx1mB6nYsJnUxtrK7TJcekjZtHLsWTCtLeUoyHXowNvXXsZjUld2kqxEf1ZwRNahPShJI/P34Mwv7jaxRZ43F/KeLx/sLFL3BLApzcXgAAAAASUVORK5CYII="
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def RunScript(self, Write, Path, Sheet, Cell, Data):
+                Messge = "False"
+                try:
+                    # 判断输入地址和数据是否为空
+                    if not Path:
+                        Message.message2(self, "The input Path is empty")
+                        Messge = None
+                    elif not Data:
+                        Message.message2(self, "Data on the input side is null")
+                        Messge = None
+                    else:
+                        if Write:
+                            # 将单元格字符转换为数字的行和列(A1转换为1,1)
+                            Cell_E = re.findall(r"[a-zA-Z]+", Cell)[0]
+                            Cell_N = re.findall(r"\d+", Cell)[0]
+                            row = int(Cell_E, base=26) - int(len(str(Cell_E)) * "9", base=26)
+                            # 判断文件路径是否存在(存在创建)
+                            if not File.Exists(Path):
+                                file_stream = FileStream(Path, FileMode.CreateNew, FileAccess.ReadWrite)
+                                new_excel = XsModel.XSSFWorkbook()
+                                new_sheet = new_excel.CreateSheet(Sheet)
+                                # 遍历数据写入
+                                for index_Data in range(0, len(Data)):
+                                    List_Data = Data[index_Data].split(",")
+                                    new_row = new_sheet.CreateRow(int(Cell_N) + index_Data - 1)
+                                    for _ in range(0, len(List_Data)):
+                                        new_cell = new_row.CreateCell(row + _ - 1)
+                                        new_cell.SetCellValue(List_Data[_])
+                                new_excel.Write(file_stream)
+                                new_excel.Close()
+                            else:
+                                # 有这个文件则追加
+                                file_stream = FileStream(Path, FileMode.OpenOrCreate, FileAccess.ReadWrite)
+                                xs_excel = XsModel.XSSFWorkbook(file_stream)
+                                xs_sheet = xs_excel.GetSheet(Sheet) or xs_excel.CreateSheet(Sheet)
+                                for index_Data in range(0, len(Data)):
+                                    List_Data = Data[index_Data].split(",")
+                                    new_row = xs_sheet.GetRow(int(Cell_N) + index_Data - 1) or xs_sheet.CreateRow(int(Cell_N) + index_Data - 1)
+                                    for _ in range(0, len(List_Data)):
+                                        new_cell = new_row.GetCell(row + _ - 1) or new_row.CreateCell(row + _ - 1)
+                                        new_cell.SetCellValue(List_Data[_])
+                                ne_file = File.Create(Path)
+                                xs_excel.Write(ne_file)
+                                xs_excel.Close()
+                                ne_file.Close()
+                            file_stream.Close()
+                            Messge = "True"
+                except Exception as e:
+                    Messge = e
+                    Message.message1(self, str(e))
+                finally:
+                    pass
+                return Messge
+
+
+        # 重命名文件夹
+        class RenameFolder(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP_RenameFolder", "V25", """Rename folder""", "Scavenger", "L-Others")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("3b98f050-267f-4345-89ef-81e020c02b60")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.tertiary
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_String()
+                self.SetUpParam(p, "Path", "P", "The folder path that needs to be renamed")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_String()
+                self.SetUpParam(p, "NewName", "N", "New folder name (without path)")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Boolean()
+                self.SetUpParam(p, "Operate", "O", "Enter True to perform the action")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "NewPath", "N", "Preview the new folder path")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                p1 = self.marshal.GetInput(DA, 1)
+                p2 = self.marshal.GetInput(DA, 2)
+                result = self.RunScript(p0, p1, p2)
+
+                if result is not None:
+                    self.marshal.SetOutput(result, DA, 0, True)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAPUSURBVEhL7ZVPbBR1FMdnZuf/7vxmd6HlTytVoNSircAuVdLSzbbSVtJGikCrQHdndzu1LZW2KbO73S7TWjCgcjBE9FDDQbgZNXowGBMvJsSLqRdjvGjUqyWKJtJEnu/361qz2ZK4Em++5JOZN+/Pd96bXzLc//aPzDdpr/flh5p9aatllZzVQqbtcCHl3xs5kwiTdOKmMZ26bjjWtVXS1jWSS72Dzz/C67OF9PLNSCfe9DlWsuCWGJlONlEhkk19QKZTnV4n3uCfSjYWkUXc4cbg2HFSKPvbDCd+xUgnewruPc3MDkZJbvCqkUkUT/oXuAGSSXxqZmKhQsmKYfB13HlvwV014k4EiZsMkolk0MwMBzjblrhIROTcmLomsZiKqx4znMR1WmNkRtdxdrdeIrDJtnXiWJ8ZucEljJWStn66J05iCWuXV/zkLTIz9EOJgOlYR8xzp4BMD5ZPNgUkkyz4KfCfH4MSAXyLd83ZYcBx7w8UoRMXCfhcez2eqttUfc2iMjDnRgB7LRQJ4IM4DaxVUC5mfgh82fj+YgHHumG6978e2hw/9tec6wpMgEzFugJp28Rz/Dv7UGsUlYP54igVyNOX5oyp+Bvk4ng4cDnb7395kp0Cc8YGc3YE6DTsHqHChTdb8XN4Uuj92efZiWGN6T3Nnxv5tQa+9TMBkh96VX2qxREbdyxq3a0s0TvQA0rrHlDam0B/7iB4rUNgjPaDfrSDNaFxX+owitigPR1lMXpqtN42MEb6QGlr+h5bn0XaOfPixKz0WO0nns0VQFEPPAHyvkYQNgRA7dgHyv49INZuAf1YB7v6XzrNrnLTo2DOnwIhSFieMX4SeK8K+jNPAufx/IjNLyPdnHnhhXk5vHNRaQ2x5lKongko0b0QuDQF2qEo8JoCKk4j7X6YrUmoDDIROo2nqhKknVtB64kAr8qg93UBr8ifY/MVMy+Mz+tHDzB1PmCAN9ELSiSMvgby4w1MQKjwg7itmgn7ho+BWPcgNt0GxunjIGJzT/UGELc/wHLUrmba/AvkS6Sdq3zL3apEQl9h0bL4UNVdY3LgZzlcvyzvfWSJzI1+p3Y2/ybtqrvjqaq4K4fq7+DOb4s7algzva/zFxqTGrb/IdbVgNRQe0sw9Dg2/hjZiAgIszO8oS1wsnhVIL4ZTlVew7Usils253GSV3hdpf45XhLf5zV1AfNvIDd5XbvESdKHwjr/CbF6Y4QThPfwOf05fYPMIK0IsyjShexGjiA0cAVxkYNIG7IJ6UcshP5YapETyEnERKgNILsQWvc2chj5L43j/gQ5ckr4LPrThAAAAABJRU5ErkJggg=="
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def __init__(self):
+                pass
+
+            def RunScript(self, Path, NewName, Operate):
+                try:
+                    NewPath = gd[object]()
+                    # 判断输入端
+                    re_mes = Message.RE_MES([Path, NewName], ['P end', 'N end'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                    else:
+                        NewPath = Path.replace(os.path.split(Path)[1], NewName)  # 替换路径
+
+                        if not (os.path.isdir(Path)) and not (os.path.isdir(NewPath)):
+                            if Operate:
+                                os.makedirs(NewPath)  # 文件夹不存在创建新文件夹
+                        elif os.path.isdir(NewPath):
+                            Message.message2(self, "The changed file name already exists！")
+                        else:
+                            if Operate:
+                                os.rename(Path, NewPath)  # 文件夹重命名
+                    return NewPath
+
+                finally:
+                    self.Message = 'Rename folder'
+
+
+        # 移动或复制文件到指定位置
+        class MoveFiles(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP_Move \ copy files", "V21", """Move or copy a file to a specified location""", "Scavenger", "L-Others")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("0f572482-3528-4116-9f87-0505d15e86a3")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.tertiary
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = GhPython.Assemblies.MarshalParam()
+                self.SetUpParam(p, "FilePath", "FP", "File path to be moved or copied (with file extension)")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = GhPython.Assemblies.MarshalParam()
+                self.SetUpParam(p, "TargetPath", "TP", "The destination folder to copy or move to")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_String()
+                self.SetUpParam(p, "Type", "T", "Enter 1 to copy the file，Enter 2 Move files (default copy)")
+                NORMALNUM = "1"
+                p.SetPersistentData(gk.Types.GH_String(NORMALNUM))
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = GhPython.Assemblies.MarshalParam()
+                self.SetUpParam(p, "Operate", "O", "Enter True to perform the action")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "TargetFile", "TF", "Preview the path of the file after moving or copying it")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                p1 = self.marshal.GetInput(DA, 1)
+                p2 = self.marshal.GetInput(DA, 2)
+                p3 = self.marshal.GetInput(DA, 3)
+                result = self.RunScript(p0, p1, p2, p3)
+
+                if result is not None:
+                    self.marshal.SetOutput(result, DA, 0, True)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAALdSURBVEhLrVU9aBRBFN6oiPFuZjYRDIqKiGBjpyhWJ1YKIrFIITnJzezmkpjkzOXYv9NkjTEakkgMASvFVghY2BnQUgUrwRQ2NooIWiiIihbre3MPks2tuhfzwcftzr73vXlv3rwz1gu8bLXuKpeb6XX9wXx5lDmF2/S6vmir5DPctY6I0d6IufIULa8dmUp+u6gWi7xqLXDfesU99Z676pMY6Ym4r962hp2cTBtGE692B7xqfxRj/ZG40heJy8WIX+qOYC2CQJEYuwBZqPtGGG4gn3RoHezkrGovivGBmiCI8cCqPSMDCOBCAAgKv8+NMLeJXFOgo2Mj8+QTLe6DCNRahCDkqV/clR+AWKLvlMkP5qgD5JkO3JOjWhzKgXVmgf2IBVYe6r9/m6PYjrC4NevIHNpkXemSWzo0O2onCH0TV/uxDO+Y332GPsUgfPsQZPTMiKImWkoHaL/AnBrG1JdaSuf30HIdhN/Xgt1Fr+kBu1riI72ftwwXdtNSDFmnq52HfVPQOTfgDoxDGaeZW+iiz39HJrDadHeU8ydpKQbhy33QtpG4NqDbUxPOAZsgU1EHySwRTZmJUlvWUe2wswdi9qKJwVYTd433QbfsCmKHMV8lnpUGGN0xJ4ciaM0XkPZL3BHuNE5bC+ld44VD4k3GADgyfHma5OohvIINDvPQnjehx28xR84nEcRmtQ3S0bZPMUhiAO6ow3y05y4Y3QPHOXCYrgVQM/CLz3+mr2Ygm0lsVSjNY3NisD6A8Kzj5kQpnnIDxJLC5h7Cxs7p8taVCIYTfHyth9eqQ0tFnEue+grlPQHPP7FBSHkZmC5mUOeckujLPKXgfBaZZ+VJdhlQv2M6AxhoSQL/ogjhcD21AJ03BJQkuwIwYuHDm7WXycYAX4Qnz5qBzJFqHGA4999lcmXJCDs2k2QceuzixUpwTsNameQiySUAIuMfiHmdWrZR0iwSXtdewzCM358jLeGKQxPyAAAAAElFTkSuQmCC"
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def __init__(self):
+                pass
+
+            def Branch_Route(self, Tree):
+                """分解Tree操作，树形以及多进程框架代码"""
+                Tree_list = [list(_) for _ in Tree.Branches]
+                Tree_Path = [list(_) for _ in Tree.Paths]
+                return Tree_list, Tree_Path
+
+            def split_tree(self, tree_data, tree_path):
+                """操作树单枝的代码"""
+                new_tree = ght.list_to_tree(tree_data, True, tree_path)  # 此处可替换复写的Tree_To_List（源码参照Vector组-点集根据与曲线距离分组）
+                result_data, result_path = self.Branch_Route(new_tree)
+                if list(chain(*result_data)):
+                    return result_data, result_path
+                else:
+                    return [[]], result_path
+
+            def format_tree(self, result_tree):
+                """匹配树路径的代码，利用空树创造与源树路径匹配的树形结构分支"""
+                stock_tree = gd[object]()
+                for sub_tree in result_tree:
+                    fruit, branch = sub_tree
+                    for index, item in enumerate(fruit):
+                        path = gk.Data.GH_Path(System.Array[int](branch[index]))
+                        if hasattr(item, '__iter__'):
+                            if item:
+                                for sub_index in range(len(item)):
+                                    stock_tree.Insert(item[sub_index], path, sub_index)
+                            else:
+                                stock_tree.AddRange(item, path)
+                        else:
+                            stock_tree.Insert(item, path, index)
+                return stock_tree
+
+            def RunScript(self, filepath, targetpath, Type, operate):
+                try:
+                    new_targetpath = gd[object]()
+                    # 输入端判断操作
+                    re_mes = Message.RE_MES([filepath, targetpath], ['F end', 'P end'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                    else:
+                        filename = os.path.split(filepath)[1]  # 得到文件名
+                        new_targetpath = os.path.join(targetpath, filename)  # 得到带文件名的目标路径
+                        if not (os.path.exists(filepath)):  # 判断文件是否存在
+                            Message.message2(self, "File does not exist!")
+                        else:
+                            if '.' in filename:  # 判断操作
+                                if operate:
+                                    if not (os.path.isdir(targetpath)):  # 判断目标文件夹是否存在
+                                        os.makedirs(targetpath)  # 创建文件夹
+                                        if Type == '1':  # 1为复制，2为移动
+                                            shutil.copy(filepath, new_targetpath)
+                                        elif Type == '2':
+                                            shutil.move(filepath, new_targetpath)
+                                    else:
+                                        if Type == '1':
+                                            shutil.copy(filepath, new_targetpath)
+                                        elif Type == '2':
+                                            shutil.move(filepath, new_targetpath)
+                            else:
+                                Message.message2(self, "File input error！")
+                    return new_targetpath
+                finally:
+                    if Type == '1':
+                        self.Message = 'Copy'
+                    elif Type == '2':
+                        self.Message = 'Move'
+
+
+        # 获取文件夹内的文件名称
+        class GetFiles(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP_GetFiles", "V22", """Gets the file name inside the folder""", "Scavenger", "L-Others")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("8c46bb9b-1c55-4f5d-9ef2-d878551a19b8")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.tertiary
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_String()
+                self.SetUpParam(p, "Path", "P", "The name of the folder where you want to get the file")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_String()
+                self.SetUpParam(p, "Filter", "F", "Wildcard (default *)")
+                NORMAL_STR_1 = "*"
+                p.SetPersistentData(gk.Types.GH_String(NORMAL_STR_1))
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_String()
+                self.SetUpParam(p, "Type", "T", "1: TopFiles, 2: SubFiles（Default is 1）")
+                NORMAL_STR_2 = "1"
+                p.SetPersistentData(gk.Types.GH_String(NORMAL_STR_2))
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "FullPath", "FP", "Full path name of the file")
+                self.Params.Output.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "SubPath", "SP", "filename")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                p1 = self.marshal.GetInput(DA, 1)
+                p2 = self.marshal.GetInput(DA, 2)
+                result = self.RunScript(p0, p1, p2)
+
+                if result is not None:
+                    if not hasattr(result, '__getitem__'):
+                        self.marshal.SetOutput(result, DA, 0, True)
+                    else:
+                        self.marshal.SetOutput(result[0], DA, 0, True)
+                        self.marshal.SetOutput(result[1], DA, 1, True)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAO0SURBVEhLrZVdaBRXFMfPJq6bzWbuTBIszKqE4oP0TU3qgxaNHw+C4oMfqElaMjO7Y/2IzdfOzCbBFaT4EX0QhXbFQkFtqSLaKJQUAtr6EKVKFR8KEaW0JtQkNkQSBSXT/xln4wZiomv/8GPnnL13/nPOvXOHsiUcY4toMQ8J22gXtjY1LTEQT1Jq80x/+tTiScqBL1zlUIOrHKyfHh775R5XShqdVLcm5N9mcslOVbGw9ZciaQyIRO0WKaGvfwsSojXumUn2NCbhlu2zUa4rWdpNPzWtZFtfiJY+EpberbQ3Tm0STuhRkYxhkH7LT00ruVlbjQfqKbZNGUZXlSPNb25XTgZOnA3+9oKmmgja+6tyFCaTVZKTgW1USrY25IeesLMu8OJLyVjnnIaGsJ/OzaAkVS0kS38o2uLX8JuG2XFUdEZO7fB2F3blBUql8rzBuRiwlCa9TG4zv8aTX8QNL8LgnGTXnsKajMBwWDXNQm+gZ8C7yDHeyeBNEo7+l+ToQxMNuIJk7DcvQRTwmUyT5TO5AJnlQWFpj9CNf8cNSq+fihasWermRT/43UsQHQN7X11SKfgZzPMiIg1cA5lF3A9Ogo9AN7gXkCNjBRtW9amu6xvc+i4aWlb+ApfPgAA/AJ7EWgZcsNmLiBoBx0u8iKgHXAEfgxEKBA7iXgMRY0O/2tGRZbBy8SjNyOeJ28BX4AT/B2VueNiLiHYBjm3AVfH1WVAB/qEl86XiY84fotUcUtetyzJYsfg5DMYQfg/OAG4Ti6u5C7hNLDYYAZcAt2cQnAbloB8VpEOfLBiW6mseq+l0lkFlxRiFZtxDyBP/BDyZF+8O2ArYpAjUgV8AG94H34BzYBEYALfzy9QXRXXb+ia2qLLCpfDMLsrL24kUl50A3ILHYB/oA9z3HeA8OABuAB5/Gbxq0eySOXibe3Auvd6mnsHycpdCwW4qLFSRGgUWqAJPwW3Ax0IT+Bz8BLgl/L8BOgEbDFIwWB2pWdtbtLtqUE2nsteAKwhxO1g/Am4Rl/8tJyB+Yn5SXvQuTvjaA3gXLQRc7QAF892C9ZW949s0nNoVlRpq3EJzU8ZABrPAXKBwAuL+lwF+L6Kc8MVjOeYT9EMqleZHYhv7i+o/faKm/Aq8NxlfJ6k1njF4L8mt8b6JRwV/0djA0v6fs8jSenGvp+MGJXXVAt/kURx4w/ijXnY0U1i1298Vb16z5og28yVO0wfjxzVLtgxL3r/bVdqbXOVwY+5gPn8TYPAZEdF/8nerSfSj9/gAAAAASUVORK5CYII="
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def __init__(self):
+                pass
+
+            def Match_filter(self, String, Filter):  # 通配符匹配方法
+                if Filter == '*' or Filter == '.':
+                    return True
+                elif '.' in Filter:
+                    ft = Filter.split('.')
+                    st = String.split('.')
+                    if ft[0] == '*':
+                        return st[-1] in ft[-1]
+                    elif ft[-1] == '*':
+                        return st[0] in ft[0]
+                else:
+                    Message.message2(self, "Filter input error！")
+
+            def RunScript(self, Path, Filter, Type):
+                try:
+                    FullPath, SubPath = [], []
+                    NFullPath, NSubPath = [], []
+
+                    # 判断输入端
+                    re_mes = Message.RE_MES([Path], ['P end'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                    else:
+                        if not (os.path.exists(Path)):  # 判断路径是否存在
+                            Message.message2(self, "Folder path error！")
+                        else:
+                            for root, subdirs, files in os.walk(Path, topdown=False):  # 遍历文件夹内的文件
+                                if Type == '1' and root == Path:
+                                    if len(files) == 0:
+                                        FullPath, SubPath = [], []
+                                    else:
+                                        for f in files:
+                                            FullPath.append(os.path.join(Path, f))
+                                            SubPath.append(f)
+                                elif Type == '2':
+                                    for f in files:
+                                        FullPath.append(os.path.join(root, f))
+                                        SubPath.append(f)
+
+                            if len(FullPath) != 0:
+                                for i in range(len(FullPath)):
+                                    if self.Match_filter(SubPath[i], Filter):
+                                        NFullPath.append(FullPath[i])
+                                        NSubPath.append(SubPath[i])
+
+                    return NFullPath, NSubPath
+                finally:
+                    if Type == '1':
+                        self.Message = 'TopFiles'
+                    elif Type == '2':
+                        self.Message = 'SubFiles'
+
+
+        # 重命名文件
+        class RenameFile(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP_RenameFile", "V24", """Rename file""", "Scavenger", "L-Others")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("e14af72f-d92d-45b7-8734-7c7c3e3ad76d")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.tertiary
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_String()
+                self.SetUpParam(p, "Path", "P", "The file path that needs to be renamed (with file name and extension)")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_String()
+                self.SetUpParam(p, "NewName", "N", "The file path that needs to be renamed (with file name and extension)")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Boolean()
+                self.SetUpParam(p, "Operate", "O", "Enter True to perform the action")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "NewPath", "N", "Preview the new file path and name")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                p1 = self.marshal.GetInput(DA, 1)
+                p2 = self.marshal.GetInput(DA, 2)
+                result = self.RunScript(p0, p1, p2)
+
+                if result is not None:
+                    self.marshal.SetOutput(result, DA, 0, True)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAQnSURBVEhLpZR/bFNVFMdv33t9r7/efa/t1q2s6GAuDgebExhjsBaFyZYganR0WQ1rX9dCh+sE1r62G1QT3UQkgEYSo5FECUH/8Ef8x7lEXfwRJRH5Q+OPKKLADA7mzymGueu5b+8PTLquzpN88u497577vefck4uuNZxW2nEmug+r4f1YDeUn0wVE0ijbxuvh+Q2CDshDvUTet5PIjz4wN3TtI3EipruGUU+LoG+T26RUhx0nlas4HR7HydAWMaFsLoAE7o9oYmJKeRP19MwuYs5sK4N0iZgMndRdc5qkKnU4Fb4AB/tQ3r9rRqSz06T//reZE8oCnO4ioqp8rLvmNKkvtAE2/8quRiXIfFR+vA/iwyM5ReYlkIpsgIzP03HJ7vusIPK+JpLOITIvATW8TlRDP+tTzUDkVXr58B1xZ6MW3T0/AUc2gKEkZ3F/9B3I5AnahdAgR6VsjMiDcQLjV1A2y2iL5yNAzZoOl+CByEEoy3G4j5dB6CVRDT4Llz8J2f3qjupZ5BKgdRUHtlXOEMyJI9nloS0upWJ2PUwzyOYcLV9eAThRu7R3+zhWFSA0O0nlEh6IXrSpilcLzPo48F+AvX7KK0CfAEsm4i6Ivs5SuvFMXKEC87VCBWzZaJG8J+azpUM+WyIP6YhP7o96HT0BrAUWKoATQT/Oxs7TxXMyED1nSwSbtMD/VCL6FNNHjL6WswL/r32ycwl4pqfN0kM7iNgfOaU5/o+BAHTfGH6we0L3IBeyWZKm1rXE2t3+HnI4aC3DQIK7qWKHcckixRq712+srw4L3jqFqbguYmppDMhD8Q6mcmFQaFoetg/2+lmP+y6IgW7KMua7b/tOWF//J+K4nVTAa+CNV7jyBX8bJOtJcK4E34/IyA3z61edYReVEdMdvl/4VUsnhTU3T7IVHsKvqJ6SHr7/C6bESQTv8t+kwfjnbKlzCuJCdEODbPuWLS26Cnsdo/O1jMv5qS3mv4J44xmYNwNv0R+6jQDPA3uBuD5+G1gM/AUEAGpjwNN0wBTLY5b2lst0TG014thLrKdkmvEUf4CMxhrwnQXoJj7gGeAj4DVgO/Ak8AnwHEAP1AbUAu8CJ+jFMqXOryGDKcSyh8CHGg3Y9j1b5iKm1jVvwNwDnAbuBOh9HAH2AOPAFmAIOAiMAocBWvso8BjwIuL5KsZl/4xfWf0H6y7eCD50K+OUT9FackvKL1ruaT5kMHJfWjta/WK3P2iQxNN8U90Rg9l0mata/AJTbB/la288wTcsG2aud7/OVZUfY4rkEYNZmIBKTPANtce5Gxb+LjSv/sFaU+OiAvSROmra5OszLqskYm+A0IuFRQS6gQhNtxBx91Zi2thILG23E8G3gti6/cTxVIaYN3mJefM6wtcvJeKurdqYdiPfUEOQwfANQmj0H0Dl6KumU8bpAAAAAElFTkSuQmCC"
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def __init__(self):
+                pass
+
+            def RunScript(self, Path, NewName, Operate):
+                try:
+                    NewPath = gd[object]()
+                    # 判断输入端
+                    re_mes = Message.RE_MES([Path, NewName], ['P end', 'N end'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                    else:
+                        NewPath = Path.replace(os.path.split(Path)[1], NewName)  # 获取新文件的全路径
+                        if not (os.path.exists(Path)):  # 判断路径是否存在
+                            Message.message2(self, "File does not exist！")
+                        elif os.path.isdir(NewPath):  # 判断文件是否存在
+                            Message.message2(self, "The modified file already exists！")
+                        else:
+                            if Operate:
+                                os.rename(Path, NewPath)  # 文件重命名
+                    return NewPath
+
+                finally:
+                    self.Message = 'Rename file'
+
+
+        # 获取文件夹内的子目录
+        class GetFolders(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP_GetFolders", "V23", """Gets the folder subdirectory""", "Scavenger", "L-Others")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("a68117c1-e7a4-47db-b6f2-5e905cc72147")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.tertiary
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_String()
+                self.SetUpParam(p, "Path", "P", "Gets the folder path of the subdirectory")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_String()
+                self.SetUpParam(p, "Type", "T", "1: TopFolder, 2: SubFolder（Default is 1）")
+                NORMAL_STR = "1"
+                p.SetPersistentData(gk.Types.GH_String(NORMAL_STR))
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "FullPath", "FP", "Full path of the subdirectory path")
+                self.Params.Output.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "SubPath", "SP", "Part of the subdirectory path")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                p1 = self.marshal.GetInput(DA, 1)
+                result = self.RunScript(p0, p1)
+
+                if result is not None:
+                    if not hasattr(result, '__getitem__'):
+                        self.marshal.SetOutput(result, DA, 0, True)
+                    else:
+                        self.marshal.SetOutput(result[0], DA, 0, True)
+                        self.marshal.SetOutput(result[1], DA, 1, True)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAUFSURBVEhLnVVrbBRVFJ7Z987OzJ1CtTYURMACIRAeImqF8mgiVCNi26Sl6u7M7G6f0JayMztdYKG8CqFRMRgq/NFg/GFioijRRBOjiZpooonRSojRkBCiSHzEaDSxx+/eGUCMiZSTfLv3nnvP6zv33pG4TCm365prHdeL9lOaax7XHGvsCqA7ibV9UrklJjbfjEwtWJrmmOd01zqjDZorVM+sFyiY9UbJWqUXrSMI/FailJkemExe1G1tlQjwqerY8wPVdcLczFpU8qZUTicC1eRFdTMbdcd6JZhKqmM6eil7AtUdBfaCsm+QxGndyz6tu+boTdGmO+YHhpNZyMdw+C6yzrCimdeK9lYgjfUuUNaNgKf0olkSRpMRcP22VrQe5mNke1IrZBp1J7NZ9+zDvNlYP4Aqyyknu0AvWGdqBpqTwvCGpKUlDOM3Up5dxadqwXJFtgVrLiuk16meXacWMivV7XYdX8fe08xNz+TjGxJQMQvcfg70CCpKuZeZY+WUoVy17tq7QNFRVAX+rSdRTR/2XeL9QSXdqLJXwLO26MVsm1TOK4Hb64UV7RaeNXesD2W/YI7ZXIHjCWdf8j5gbjPPtHkSDP3B3s6rzjlcy0Xwy4ZrrQpcotQBewoMRuHgOa1ojrCdHSPGoYGDbLj74xk/vV9hlLsWaU5GnC59uKek7+3doe/D/878Dr3c6Y+hMw727aqZOJ+E3THVy9UL51yQlYlFYnu6yRjpJ20wTUr7gxSrW3xeSkRbU92tJ7Ri9lnJMBbG1t7dH6u/a3ts9fJBpf2hQqKpQYyFvmFFX3gqW600NbymWE1LAve8WXYH291NbFcnJRruIUmWSYqGKVRpkGxopGxupIrD/byx54BfgUvA5fCCWe+Fqqd+hvEPgf432P4pJ+KE8WzAF843ryDZ1MAXKLqoltBgYsM9pG174jtt4PHd/k7pd+AF4DZgGhAFVKAaeBU4r7Ru8BR70yjGMuAL8xDgwFYK11SRnFKEY2O4551bTu2vq6ULlWJTlZTC7x9SNPqMmP9bZOlF/H5f/cmYUiYK+cpAWKkjx3Z0gJYIRRfPI3ZkkG/mb87W+MolHyZb13+FC3dOVhITUiT8o6SnxiVVOZvYuPYsaD3L9nSNR+bM+AXrf+F4j6P6cdD+urI9zSu9EiBPciJGkdk1F9dPTMSVloZjkdrbRT+iC+YQ292F9bioMvHAfRRfs5xSHS3Q42Ds34I9s0nWksT9sHKnODA4kSv8AF42x/ZtofD0Kt6Dj7C4jhuxPT0UYhpF5t0heiKFQxS/dzFVjBbI2NsLZx2EjEXw6PxZJKtJwj0gHHP+f7HCzTM/gGhyPyUa7/ebvHT+BW7EEdJVisydGQQIg8K5hI8QaX3thOb7DnkAJCGnEv4cPcQzMiaccxEBUIE+lPtWikU4/yTDcXjarX7AhXeKAOCYpBCOsIJjCDrDc6aTzikBHVEkIUOPm+1TVLDWCOdcRIBD/aR7ucOVz5dr1eyjE3Hch/iqpZTctI603jaRdSqzUVxApW2DQMp8ROjxfSA13yzWeQ/411HK5/kR9oW/9/yYsmJ6GX+SxTigiJW7eGVXub0OcMb1oIMYvzdc5zd3JHDtC5wWgJ+rBh9L4Th+fdVwsuDVDGWRaHZZ4NoXfBqb8eYP8wWehdj4Xw7+B9wWCfKn49ot/qdorv0SXtFr9EwS3BbJeYE7iCT9DWTObD5nKeXgAAAAAElFTkSuQmCC"
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def __init__(self):
+                pass
+
+            def message1(self, msg1):  # 报错红
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
+
+            def message2(self, msg2):  # 警告黄
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
+
+            def message3(self, msg3):  # 提示白
+                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
+
+            def mes_box(self, info, button, title):
+                return rs.MessageBox(info, button, title)
+
+            def RunScript(self, Path, Type):
+                try:
+                    FullPath, SubPath = [], []
+                    # 判断输入端
+                    re_mes = Message.RE_MES([Path], ['P end'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                    else:
+                        for root, dirs, files in os.walk(Path, topdown=True):
+                            if Path != root:
+                                if Type == '1':
+                                    if '\\' not in root.split(Path)[1][1:]:
+                                        FullPath.append(root)
+                                        SubPath.append(root.split(Path)[1])
+                                elif Type == '2':
+                                    FullPath.append(root)
+                                    SubPath.append(root.split(Path)[1])
+                    return FullPath, SubPath
+                finally:
+                    if Type == '1':
+                        self.Message = 'TopFolder'
+                    elif Type == '2':
+                        self.Message = 'SubFolder'
+
+
+        # 新建文件夹
+        class CreateNewFile(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP_CreateNewFile", "V15", """New folder""", "Scavenger", "L-Others")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("1aaaf024-74fd-4b75-8264-c3cce16ecd7c")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.tertiary
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_String()
+                self.SetUpParam(p, "Path", "P", "Full path name of the folder to be created")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Boolean()
+                self.SetUpParam(p, "Operate", "O", "Enter True to perform the action")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                pass
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                p1 = self.marshal.GetInput(DA, 1)
+                result = self.RunScript(p0, p1)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAJBSURBVEhL7VS/axRBFF78Gc3OzCVRREUEf6SxtbKIhZ2FqHBaRMnO7N7m7vSI5tjZ3Vvv5sxhYfwL9B8QGwsbS7GwFCwUFBQsgqawkFiJxfje3GhycHDrprDJBx/D7s5839v33jxnC/8fe2/NHqRZpUMSv0disWTYqvRI5vMTjcZuu604aCzul5YXNbtbH2DpXkNTKZ6SyDs5ksn1aQjyuKPUNiu7Diq9lHXrGowGmfiadaqatoIcrGjWntdEijfuYrjPSvfBInEOP9LECkthNrOsoknMP8OhTyMZi4+40nZ1BfWsdB+lpjgKoj9pCpGAQd/Mf0ekd2YqEoSphRJTc6O5gCvsTWoT+1XdRTrl8nbHUWd3YATsTqiNSRqsQU6n3FRcpO3wLZitQAC5SCSHlX8BrtIkWGVZ+N78Bbx4xlRVM1XTJBJPHDU3ZmoAz5hfKGAhYrMYA2zNvx0U8dCNxYwR31j0fyUGFvFvxoDF/BIKYv7HZXAKittFs6EHcxI7EFL2whiQJJjGdoPCrh1oXhuHlL1kHSj2kIN5iQG6ki8bA0eVd0HU3+HDq0k1S8H5x5+uKkpTU+ld7hsAoA6vacwf0Eic3mz0NPXxPv1iCT9m5dGAP0JHWJubzj+2vOQfBkYHScQFM1ckf25GxJCDecm60O4xf2ylLR6GO/dE4pCpBbbYkIN5yXo34T7x21Z5HSb/4G5oLl4BLt3AUfN1sjV/2MpuAI6NxD9PM/8q5PBKEbJOrTyReUes4hZGwXF+AytOXFuxd/PPAAAAAElFTkSuQmCC"
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def __init__(self):
+                pass
+
+            def Branch_Route(self, Tree):
+                """分解Tree操作，树形以及多进程框架代码"""
+                Tree_list = [list(_) for _ in Tree.Branches]
+                Tree_Path = [list(_) for _ in Tree.Paths]
+                return Tree_list, Tree_Path
+
+            def RunScript(self, Path, Operate):
+                try:
+                    # 判断输入端
+                    temp_geo_list = self.Branch_Route(self.Params.Input[0].VolatileData)[0]
+                    length_list = [len(filter(None, _)) for _ in temp_geo_list]
+                    Abool_factor = any(length_list)
+                    re_mes = Message.RE_MES([Abool_factor], ['P end'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                    else:
+                        if Path:
+                            if not (os.path.isdir(Path)):  # 判断路径是否存在
+                                if Operate:
+                                    os.makedirs(Path)  # 创建文件夹
+                            else:
+                                Message.message2(self, "Folder already exists！")
+                finally:
+                    self.Message = 'New folder'
+
+
+        # 删除占位电池
+        class Delete_PlaceholderComponent(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP_Delete_PlaceholderComponent", "V13", """Remove the placeholder battery，the deletion is irrevocable""", "Scavenger", "L-Others")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("05059936-db83-47b2-b7f5-8189edc0c9c4")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.secondary
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Boolean()
+                self.SetUpParam(p, "Delete", "Del", "Bool value,Removes the placeholder battery when True")
+                p.SetPersistentData(gk.Types.GH_Boolean(False))
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                pass
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                result = self.RunScript(p0)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAI2SURBVEhLY6Ab4ODgkIcyaQMYGRk3AfF2KJcmQAJowT0g3gjl0wQIAi24T2tLQOAUIwPDciibOkC9s5SXIS88jSHDL5shxqWJgZPlP1B4HW9NaiFDVmAhQ5wrcTjRo5AhPzxTpr5QCGIyFHDmRzWZL+j6n755yf/0bcv+py6c+l9NU/M/g5bi/+zdq/9nbV32P33TYsJ48+L/dov7/3MURE2FGg0Fab6zmg9v/Y8M3r59+19HTf1/XFgEVIQ4MPX0wf8Mqb7roSZDQZTrsup9G6BKEABkiZyc3H9fX1+oCGHQc2z3f4Z0vxVQkxl4WBgYMhisdZ5W79sIVYIKYJb4+PhARfCDnuNAC1xNXgDNdgNZ0ARMMe8Y/K2XY/MBDJDiE7AF3laglHgIZIE+kHGcwct8Ez4LQIBYS8AWBDuASoWXIAsYmBkYghmsdJ7hCiJkQExwgS1wMnzNxMBQBrYADBK85hHyAQwQ8gk4kiNd9gFNZYcYDgKpvtObDqEmU3zg77cf//XUNf6HBQVDRRBgCiiZpvujlgQs2SHzozcv/L/j7jWi8L4nd/4vO3fsP4Mw//+w0ND/229c/L/j/nWwXPrOlf9Zs0M2QY2GAJHqNDu2yqT9DLlhxxhywo4Sg1krk47y5UcfBWp/xKAo+Z+hLPYgsJg4zFqZeFCkJt0LYjI1gCSPCJC8CMTwzEULIADEd4FF/QYIlzaALvUJyJIHQLwTyEZKptQFwkAL5gJpQQiXZoCBAQDe1PdZRMVw5gAAAABJRU5ErkJggg=="
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def __init__(self):
+                pass
+
+            def RunScript(self, Delete):
+                try:
+                    sc.doc = Rhino.RhinoDoc.ActiveDoc
+
+                    if Delete:
+                        doc = self.OnPingDocument()
+                        if (doc != None):
+                            objs = doc.Objects
+                            deleteComs = [obj for obj in objs if (str(type(obj)) == "<type 'GH_PlaceholderComponent'>")]
+                            if (deleteComs != None):
+                                func = lambda d: doc.RemoveObjects(deleteComs, False)
+                                doc.ScheduleSolution(20, func)
+                    sc.doc.Views.Redraw()
+                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                    sc.doc = ghdoc
+                finally:
+                    self.Message = 'Remove the placeholder battery'
+
+
     else:
         pass
 except:
     pass
 
-import GhPython
 import System
