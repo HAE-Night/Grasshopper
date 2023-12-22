@@ -345,10 +345,20 @@ try:
             def mes_box(self, info, button, title):
                 return rs.MessageBox(info, button, title)
 
+            def convert_brep(self, trim_brep):
+                # 转为未修饰的面
+                planar_brep = rg.Brep.CreatePlanarBreps(trim_brep.Loops[0].To3dCurve())
+                if planar_brep:
+                    new_brep = planar_brep[0]
+                else:
+                    new_brep = trim_brep.UnderlyingSurface().ToBrep()
+                return new_brep
+
             def _get_data(self, obj):
                 zip_list = []
 
-                origin_data = ghc.DeconstructBrep(obj)['faces']
+                trim_sur = [_ for _ in obj.Faces]
+                origin_data = list(map(self.convert_brep, trim_sur))
                 for face in origin_data if isinstance(origin_data, (tuple, list)) else [origin_data]:
                     pl_list = ghc.SurfaceFrames(face, 10, 10)['frames']
                     if pl_list:
@@ -408,6 +418,148 @@ try:
 
             def get_ClippingBox(self):
                 return self.bb_pts
+
+
+        # 显示点向量
+        class PointVector(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP_PointVector", "Z4", """显示点向量""", "Scavenger", "I-Display")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("b0e4682f-691c-4715-861f-b57a16858298")
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Point()
+                self.SetUpParam(p, "PointA", "P", "向量显示起点")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Vector()
+                self.SetUpParam(p, "Vector", "V", "要显示的向量")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Integer()
+                self.SetUpParam(p, "Size", "S", "向量幅值大小 ")
+                p.SetPersistentData(gk.Types.GH_Integer(1))
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "ActualVector", "A", "实际向量(原始大小与Size相乘) ")
+                self.Params.Output.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "UnitVector", "UV", "单位向量(原始大小与Size相乘) ")
+                self.Params.Output.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "UnitRVector", "R", "单位向量(原始大小与Size相乘)的反向向量")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                p1 = self.marshal.GetInput(DA, 1)
+                p2 = self.marshal.GetInput(DA, 2)
+                result = self.RunScript(p0, p1, p2)
+
+                if result is not None:
+                    if not hasattr(result, '__getitem__'):
+                        self.marshal.SetOutput(result, DA, 0, True)
+                    else:
+                        self.marshal.SetOutput(result[0], DA, 0, True)
+                        self.marshal.SetOutput(result[1], DA, 1, True)
+                        self.marshal.SetOutput(result[2], DA, 2, True)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAI6SURBVEhLvZXPa9RAFMffJLus292qYJcKzWTdsgcPIuoieFLQk3c9CXoVxIN4FXvw0N0km3bdVl1B6EFsErW7XbU/wEpvXjwUVPTgwYOC6EWSqG3aZnyTzn+Q0Q88HjPfx3uZN5MZ+C8MzsX7yNP1+0o/WuOej4UkAY+pxPFX4BVj0ENDT5zwJXieKiLSkXN/VuHJBgPvNwMn2PE4TuZlMOCF+8msvwVzmwxmsQB6Pi7Mx8MiJD2KE96ARWzPMhr6ZCwb9XFwBpa2riYeaQ0crFm7KhcS8V8wsae8t6HQH21FX7Vzo6fFtFyMjH7lAZTZBKHMVvT5Zr56QkhyMIcPF+pE+2aDxm4DZU0s1FT1R2a+cnwMTmVEWDpwFWNTmHwcRlgD7S7ozFTox8lCRc4paxWrJYNogYnJ62gtLNZQtRkhy6Gh0nYHvzxJjkUmuc/oN4WcHrMweshS6EqdUIMn56tp8yKKdl2ESACvKO4MQm/xPeFF+MbjUb6c6DLBPbGnsWWW2JNxhV4UkjwMlXamMbmFR9jG41tX6CUhyQPb9ZC36x7+jG3YvXDuWjOfe80OMICknVLAIkt3YHC5PPP+LDzf/kC66xHpRmtZLzwiQtLRgVq2ZvWHoBt9gRd4G/P3BG9l4vpv4Q3LirCULMbHoI/JnVA8Wn8YuCHLu79GREQ6iq5fIm4YwjNRBN8U4gafYCHOiZD0qE5wnvQ2v0N/m5Fe9Dnj+CeFJI9i5+tQdjU+Wpp6V9yZAfgLJ3j+4e4qOocAAAAASUVORK5CYII="
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def __init__(self):
+                self.line = []
+
+            def Branch_Route(self, Tree):
+                """分解Tree操作，树形以及多进程框架代码"""
+                Tree_list = [list(_) for _ in Tree.Branches]
+                Tree_Path = [list(_) for _ in Tree.Paths]
+                return Tree_list, Tree_Path
+
+            def split_tree(self, tree_data, tree_path):
+                """操作树单枝的代码"""
+                new_tree = ght.list_to_tree(tree_data, True, tree_path)  # 此处可替换复写的Tree_To_List（源码参照Vector组-点集根据与曲线距离分组）
+                result_data, result_path = self.Branch_Route(new_tree)
+                if list(chain(*result_data)):
+                    return result_data, result_path
+                else:
+                    return [[]], result_path
+
+            def format_tree(self, result_tree):
+                """匹配树路径的代码，利用空树创造与源树路径匹配的树形结构分支"""
+                stock_tree = gd[object]()
+                for sub_tree in result_tree:
+                    fruit, branch = sub_tree
+                    for index, item in enumerate(fruit):
+                        path = gk.Data.GH_Path(System.Array[int](branch[index]))
+                        if hasattr(item, '__iter__'):
+                            if item:
+                                for sub_index in range(len(item)):
+                                    stock_tree.Insert(item[sub_index], path, sub_index)
+                            else:
+                                stock_tree.AddRange(item, path)
+                        else:
+                            stock_tree.Insert(item, path, index)
+                return stock_tree
+
+            def parameter_judgment(self, tree_par_data):
+                # 获取输入端参数所有数据
+                geo_list, geo_path = self.Branch_Route(tree_par_data)
+                if geo_list:
+                    j_list = any(ghp.run(lambda x: len(list(filter(None, x))), geo_list))  # 去空操作, 判断是否为空
+                else:
+                    j_list = False
+                return j_list, geo_list, geo_path
+
+            def RunScript(self, PointA, Vector, Size):
+                try:
+                    if self.RunCount == 1:
+                        self.j_bool_f1 = self.parameter_judgment(self.Params.Input[0].VolatileData)[0]
+                        self.j_bool_f2 = self.parameter_judgment(self.Params.Input[1].VolatileData)[0]
+                    re_mes = Message.RE_MES([self.j_bool_f1, self.j_bool_f2], ['P end', 'V end'])
+                    # 判空
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                        return gd[object](), gd[object](), gd[object]()
+                    else:
+                        if PointA and Vector:
+                            ActualVector = rg.Vector3d.Multiply(Size, Vector)
+                            # 添加绘画线
+                            self.line.append(rg.Line(PointA, ActualVector))
+                            Vector.Unitize()
+                            UnitVector = rg.Vector3d.Multiply(Size, Vector)
+                            Vector.Reverse()
+                            UnitRVector = rg.Vector3d.Multiply(Size, Vector)
+                            sc.doc.Views.Redraw()
+                            return ActualVector, UnitVector, UnitRVector
+                finally:
+                    self.Message = '显示向量'
+
+            def DrawViewportWires(self, arg):
+                try:
+                    # 遍历绘画线
+                    for _ in self.line:
+                        arg.Display.DrawArrow(_, System.Drawing.Color.Green)
+                except Exception as e:
+                    Message.message1(self, e)
 
 
     else:
