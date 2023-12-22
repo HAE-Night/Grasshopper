@@ -8,6 +8,7 @@ import Grasshopper, GhPython
 import Rhino.Geometry as rg
 import rhinoscriptsyntax as rs
 import ghpythonlib.treehelpers as ght
+import ghpythonlib.parallel as ghp
 from Grasshopper import DataTree as gd
 import Grasshopper.Kernel as gk
 import scriptcontext as sc
@@ -657,6 +658,171 @@ try:
                     return plane
                 finally:
                     self.Message = 'Construct a work plane'
+
+
+        # 平面信息转换
+        class PlaneToText(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP_Plane<->Character", "S5", """Converts text to Plane and converts plane to text，space mark：“&”；
+                                                                   \nThis program uses Plane to store and read information in Rhino""", "Scavenger", "F-Plane")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("f5a3e0ff-a46d-4fbb-9839-11e643f5d515")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.primary
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Plane()
+                p.Simplify = True
+                self.SetUpParam(p, "Plane", "P", "Grasshopper Plan information")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_String()
+                p.Simplify = True
+                self.SetUpParam(p, "Text", "T", "Rhino stores text Plane information")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_String()
+                self.SetUpParam(p, "Text", "RT", "Plane converts text information")
+                self.Params.Output.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Plane()
+                self.SetUpParam(p, "Plane", "RP", "Text convert Plane")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                p1 = self.marshal.GetInput(DA, 1)
+                result = self.RunScript(p0, p1)
+
+                if result is not None:
+                    if not hasattr(result, '__getitem__'):
+                        self.marshal.SetOutput(result, DA, 0, False)
+                    else:
+                        self.marshal.SetOutput(result[0], DA, 0, False)
+                        self.marshal.SetOutput(result[1], DA, 1, False)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAQwSURBVEhLvZRtTFtVGMfPB5UJQ7bR1gwGMxsbG2ZaWm6h0EELzBFly7ohZAwl6xKVb+oHYxRW3jqK5UUUpgxpgZaWrV1hSQsstGFhI0NlQ52KFGHDgMAGbgUxKlkfz7nQQiksW6b+k3/ueZ6T8/zuOc89F/2vSqrtCaM0v8aKKzq3ZKo61yVXd+869GnHzpTK9pCDp6+EHj59edsb0mrv9ErT1pdrru4m+dYk5LW4fG1lKC76UOoRXUTT1AxPO/Y7v364K/5Mr5hqHJ3hasbsHM34dIR23B5dN9h/rLxZGKke6eNpJybxc5TS3/lOUD2QuFhqdQkaBg9xLwHwVQO5aQW6oJj6IUFShXU7V31TSKlHy9gX5iGyYSQrun6Qf6yiJSxcO/FndP1Qxb7KL9k7tfO3Uzu++ssxi76GGdQL9gXj+KrjPrIsAFQ3YsJN88A23O2JUQ8K6eSiREpbOsc4B/G134eR+DV5fTCncXwOAxQp+Nh2aOaHj3e09Tvm0DWHHV13eRYNAyCgixDtVf6Qxj175xanDYDSjOoPfnHFl86rbCcIIFb5E0ViicKwlaOdnOQ0Tdu5+nsQpR3rTEqq8OiD4w/EdwE6pXFP0AMsfsPPn0R0Abyom3yJxCsBmeW65/AOZmNUA2VRDUP54ca52b3VN6LJ3HLhHYhcAEHtj8k87XirUNn/AaWd6GKfv/e3QH2LPhJBnS2LageIU9miSHy8rHFbxLkpiKkbyCYxt2nKxm2avn2gxvIsiZ3CgHgXQGQc2b6n7b46xOKwcPR3L+z/vOcVegIroaZPyNf8YoiruRZC4hOlNZtws5Wi2m+PklhY+01klG7CnHimdz+JnXIDnENovRohqhEhHs48SScfU26Aj1BAYhUKgiq0BeRo8z46+ZhyOPDLOgHFKFD0MS5OXIwCEujkKmJKm9n+snaRf47BZb88kyjHJ1SU5xVKj53591sk716++cISoBwXJ34QgJFt6GYpLgGzwLTgQjM8U2yBN8MOwFu7k8EPjxk4R+Y25ZnBO8fyyAAr81Q7ME6ed9lXZgYqvRB4Rwvo8dKcERj55kcGWJiyNmDkGFz2LTRBZFouRKVK6bFrDkPITuiF/xWA8a8AZCbgHZHCnlQZIIUF1uGitHEvnpZ3eAIUKDCeTq6i1QA+uJmirFx4T/w6iCVySM0sgFexxZJTYIxN8QTIUYDHf8WpjSebL64EbPjQCDuKGiD97TxIy8iHtMx8DMmHwxjQEnvEHYDfHopQYB+GWN292VqKGNbnJaW/+cla3QDMHD1syDbCU7nmpePB9sJH5O08IudNJpAqFAyfeTgIlIgFvIwiWE8+xWWANb28yUUoeGMJbi5p8FouQf4JQe+orvuv2MGaXv6ZPqxID1grLtqalhrpm7649OGE36ybVbLsV/Eg4+KsYiv8A1TvCl8I7pcpAAAAAElFTkSuQmCC"
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def RE_MES(self, parameter, para_name):
+                remes = []
+                for i_parameter in range(len(parameter)):
+                    if not parameter[i_parameter] or 'empty tree' == str(parameter[i_parameter]):
+                        remes.append(para_name[i_parameter])
+                return remes
+
+            # 树形数据删除空值
+            def Delete_None_Tree(self, Data_Tree):
+                Data_List = [data_ for data_ in Data_Tree.Branches]
+                Data_List_Paths = [data_ for data_ in Data_Tree.Paths]
+                NewData_Tree, Null_Paths = gd[object](), []
+                for i_path in range(len(Data_Tree.Paths)):
+                    if len(Data_List[i_path]) == 0:
+                        Null_Paths.append(Data_List_Paths[i_path])
+                    else:
+                        NewData_Tree.AddRange(Data_List[i_path], Data_List_Paths[i_path])
+                return NewData_Tree, Null_Paths
+
+            # Plane信息转为String
+            def PlToTe(self, Plane):
+                Text_Plane_List = []
+                for pi_ in Plane:
+                    if pi_:
+                        Text_Plane_List.append("O{}&X{}&Y{}".format("{%s}" % pi_[0], "{%s}" % pi_[1], "{%s}" % pi_[2]))
+                    else:
+                        Text_Plane_List.append(None)
+                return Text_Plane_List
+
+            # String信息转为Plane
+            def TeToPl(self, Plane):
+                Plane_Text_List = []
+                for si_ in Plane:
+                    if si_:
+                        Plane_Text = si_.split('&')
+                        if len(Plane_Text) == 3:
+                            C_T = Plane_Text[0][2:-1].split(",")  # 原点
+                            X_T = Plane_Text[1][2:-1].split(",")  # X Axis
+                            Y_T = Plane_Text[2][2:-1].split(",")  # Y Axis
+                            Plane = rg.Plane(rg.Point3d(float(C_T[0]), float(C_T[1]), float(C_T[2])), rg.Vector3d(rg.Point3d(float(X_T[0]), float(X_T[1]), float(X_T[2]))), rg.Vector3d(rg.Point3d(float(Y_T[0]), float(Y_T[1]), float(Y_T[2]))))
+                            Plane_Text_List.append(Plane)
+                        else:
+                            Message.message2(self, "Check the spacing symbol of the plane storage，spacer splitting failed，the plane output is None")
+                            Plane_Text_List.append(None)
+                    else:
+                        Plane_Text_List.append(None)
+                return Plane_Text_List
+
+            # 孔列表提示 并添加空数
+            def PT_RUN(self, Data, Name, nupa):
+                Tree_Have = gd[object]()
+                if not Data or 'empty tree' != str(Data):
+                    if len(nupa) > 0:  # 树形包含空数列提醒
+                        for mes_i in nupa:
+                            Tree_Have.AddRange(Data.Branch(mes_i), mes_i)
+                        Message.message3(self, "%s contains empty tree, please check (does not affect other output)" % Name)
+                    return True, Tree_Have
+                else:
+                    return False, Tree_Have
+
+            def RunScript(self, Plane_P, Text_P):
+                try:
+                    PText, TPlane = gd[object](), gd[object]()
+                    re_mes = self.RE_MES([Plane_P, Text_P], ['Plane_P', 'Text_P'])
+
+                    PlaneHave, Pnupa = self.Delete_None_Tree(Plane_P)
+                    TextHave, Tnupa = self.Delete_None_Tree(Text_P)
+                    if len(re_mes) == 2:  # 树形包含空数列提醒
+                        for mes_i in re_mes:
+                            Message.message2(self, "Connect the data you want to transform, %s or %s" % (self.Params.Input[0].NickName, self.Params.Input[1].NickName))
+                        return PText, TPlane
+                    else:
+                        with Rhino.RhinoDoc.ActiveDoc:
+                            # 禁用视图重绘
+                            rs.EnableRedraw(False)
+                            PBotton = self.PT_RUN(Plane_P, 'Plane_P', Pnupa)
+                            TBotton = self.PT_RUN(Text_P, 'Text_P', Tnupa)
+
+                            # Plane信息转换
+                            if PBotton[0]:
+                                Plane_List_pt = [list(data_) for data_ in PlaneHave.Branches]
+                                Plane_List_Paths_pt = [data_ for data_ in PlaneHave.Paths]
+                                PText = PBotton[1]
+                                TextList = ghp.run(self.PlToTe, Plane_List_pt)
+                                for pt_i in range(len(TextList)):
+                                    PText.AddRange(TextList[pt_i], Plane_List_Paths_pt[pt_i])
+                            # Text信息转换
+                            if TBotton[0]:
+                                Text_List_pt = [list(data_) for data_ in TextHave.Branches]
+                                Text_List_Paths_pt = [data_ for data_ in TextHave.Paths]
+                                TPlane = TBotton[1]
+                                PlaneList = ghp.run(self.TeToPl, Text_List_pt)
+                                for pt_i in range(len(PlaneList)):
+                                    TPlane.AddRange(PlaneList[pt_i], Text_List_Paths_pt[pt_i])
+
+                            # 启用视图重绘
+                            rs.EnableRedraw(True)
+                            sc.doc.Views.Redraw()
+                            ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                            sc.doc = ghdoc
+                        return PText, TPlane
+                finally:
+                    self.Message = 'Plane To Text'
+
 
     else:
         pass
