@@ -5166,11 +5166,10 @@ try:
         #         finally:
         #             self.Message = 'Curve Divide'
 
-        # 曲线按曲面偏移
         class OffsetBySurface(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_OffsetBySurface", "W55", """曲线按曲面偏移""", "Scavenger", "B-Curve")
+                                                                   "RPP_OffsetBySurface", "W55", """The curve is offset by the surface""", "Scavenger", "B-Curve")
                 return instance
 
             def get_ComponentGuid(self):
@@ -5188,24 +5187,24 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Curve()
-                self.SetUpParam(p, "Curve", "C", "待偏移的曲线")
+                self.SetUpParam(p, "Curve", "C", "Curve to be offset")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Distance", "D", "偏移距离")
+                self.SetUpParam(p, "Distance", "D", "Offset distance")
                 p.SetPersistentData(gk.Types.GH_Number(10))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Surface()
-                self.SetUpParam(p, "Surface", "S", "偏移基准面")
+                self.SetUpParam(p, "Surface", "S", "Offset surface")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Res_Curve", "R", "偏移后的结果")
+                self.SetUpParam(p, "Res_Curve", "R", "The result after offset")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):

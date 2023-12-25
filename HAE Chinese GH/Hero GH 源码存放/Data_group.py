@@ -2513,7 +2513,7 @@ try:
         class PackageDataFlow(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_PackageDataFlow", "D43", """打包Gh中的数据流""", "Scavenger", "G-Data")
+                                                                   "RPP_PackageDataFlow", "D43", """Package the data stream in Gh""", "Scavenger", "G-Data")
                 return instance
 
             def get_ComponentGuid(self):
@@ -2531,13 +2531,13 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Data", "D", "Gh任意数据流")
+                self.SetUpParam(p, "Data", "D", "Gh arbitrary data stream")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Result_Data", "H", "打包后的数据包")
+                self.SetUpParam(p, "Result_Data", "H", "The packaged data packet")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -2615,14 +2615,14 @@ try:
                     sc.doc = ghdoc
                     return Result_Data
                 finally:
-                    self.Message = '打包数据'
+                    self.Message = 'Packaged data'
 
 
         # 解包Gh中的数据包
         class UnpackingData(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_UnpackingData", "D44", """解包Gh中的数据包""", "Scavenger", "G-Data")
+                                                                   "RPP_UnpackingData", "D44", """Unpack the packets in Gh""", "Scavenger", "G-Data")
                 return instance
 
             def get_ComponentGuid(self):
@@ -2640,13 +2640,13 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "HAE_Data", "H", "Gh空间中的数据包")
+                self.SetUpParam(p, "HAE_Data", "H", "Packets in the Gh space")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Result_Data", "D", "解包后的数据流")
+                self.SetUpParam(p, "Result_Data", "D", "Unpacked data flow")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -2725,7 +2725,7 @@ try:
                     sc.doc = ghdoc
                     return Result_Data
                 finally:
-                    self.Message = '解包数据'
+                    self.Message = 'Unpack data'
     else:
         pass
 except:

@@ -424,7 +424,7 @@ try:
         class PointVector(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_PointVector", "Z4", """显示点向量""", "Scavenger", "I-Display")
+                                                                   "RPP_PointVector", "Z4", """Display point vector""", "Scavenger", "I-Display")
                 return instance
 
             def get_ComponentGuid(self):
@@ -438,32 +438,32 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Point()
-                self.SetUpParam(p, "PointA", "P", "向量显示起点")
+                self.SetUpParam(p, "PointA", "P", "Vector display origin")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Vector()
-                self.SetUpParam(p, "Vector", "V", "要显示的向量")
+                self.SetUpParam(p, "Vector", "V", "The vector to display")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
-                self.SetUpParam(p, "Size", "S", "向量幅值大小 ")
+                self.SetUpParam(p, "Size", "S", "The magnitude of the vector ")
                 p.SetPersistentData(gk.Types.GH_Integer(1))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "ActualVector", "A", "实际向量(原始大小与Size相乘) ")
+                self.SetUpParam(p, "ActualVector", "A", "Actual vector (original Size multiplied by size) ")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "UnitVector", "UV", "单位向量(原始大小与Size相乘) ")
+                self.SetUpParam(p, "UnitVector", "UV", "Unit vector (original Size multiplied by size) ")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "UnitRVector", "R", "单位向量(原始大小与Size相乘)的反向向量")
+                self.SetUpParam(p, "UnitRVector", "R", "The inverse vector of the unit vector (original Size multiplied by size)")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -551,7 +551,7 @@ try:
                             sc.doc.Views.Redraw()
                             return ActualVector, UnitVector, UnitRVector
                 finally:
-                    self.Message = '显示向量'
+                    self.Message = 'Display vector'
 
             def DrawViewportWires(self, arg):
                 try:
