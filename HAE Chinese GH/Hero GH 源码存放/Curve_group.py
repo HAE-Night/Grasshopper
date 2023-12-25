@@ -5169,7 +5169,7 @@ try:
         class OffsetBySurface(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_OffsetBySurface", "W55", """The curve is offset by the surface""", "Scavenger", "B-Curve")
+                                                                   "RPP_OffsetBySurface", "W55", """The Curve is offset by the surface""", "Scavenger", "B-Curve")
                 return instance
 
             def get_ComponentGuid(self):
