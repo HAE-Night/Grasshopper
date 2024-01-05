@@ -909,12 +909,12 @@ try:
                 p.Optional = True
 
             def RegisterInputParams(self, pManager):
-                p = GhPython.Assemblies.MarshalParam()
+                p = Grasshopper.Kernel.Parameters.Param_String()
                 self.SetUpParam(p, "FilePath", "FP", "File path to be moved or copied (with file extension)")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
-                p = GhPython.Assemblies.MarshalParam()
+                p = Grasshopper.Kernel.Parameters.Param_String()
                 self.SetUpParam(p, "TargetPath", "TP", "The destination folder to copy or move to")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
@@ -926,7 +926,7 @@ try:
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
-                p = GhPython.Assemblies.MarshalParam()
+                p = Grasshopper.Kernel.Parameters.Param_Boolean()
                 self.SetUpParam(p, "Operate", "O", "Enter True to perform the action")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
