@@ -40,7 +40,9 @@ try:
         class SurfaceKeyPoints(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_SurfaceKeyPoints", "F1", """Obtain the key points, corner points, center points, line center points of the surface plate""", "Scavenger", "H-Facade")
+                                                                   "RPP_SurfaceKeyPoints", "F1",
+                                                                   """Obtain the key points, corner points, center points, line center points of the surface plate""",
+                                                                   "Scavenger", "H-Facade")
                 return instance
 
             def get_ComponentGuid(self):
@@ -171,9 +173,11 @@ try:
                             center_list.append([])
                             line_center_pt.append([])
 
-                    ungroup_data = map(lambda x: self.split_tree(x, origin_path), [corner_list, center_list, line_center_pt])
+                    ungroup_data = map(lambda x: self.split_tree(x, origin_path),
+                                       [corner_list, center_list, line_center_pt])
                 else:
-                    ungroup_data = map(lambda x: self.split_tree(x, origin_path), [[corner_list], [center_list], [line_center_pt]])
+                    ungroup_data = map(lambda x: self.split_tree(x, origin_path),
+                                       [[corner_list], [center_list], [line_center_pt]])
                 Rhino.RhinoApp.Wait()
                 return ungroup_data
 
@@ -197,7 +201,8 @@ try:
 
                         brep_trunk_list, brep_path_list = self.Branch_Route(Surface)
                         iter_ungroup_data = zip(*ghp.run(self.get_pt, zip(brep_trunk_list, brep_path_list)))
-                        Corner_Pt, Center_Pt, Line_Center_Pt = ghp.run(lambda single_tree: self.format_tree(single_tree), iter_ungroup_data)
+                        Corner_Pt, Center_Pt, Line_Center_Pt = ghp.run(
+                            lambda single_tree: self.format_tree(single_tree), iter_ungroup_data)
 
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
@@ -211,7 +216,9 @@ try:
         class SmallestRegion(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_SmallestRegion", "F3", """Centered on the central object，find a rough minimum range in a set of objects""", "Scavenger", "H-Facade")
+                                                                   "RPP_SmallestRegion", "F3",
+                                                                   """Centered on the central object，find a rough minimum range in a set of objects""",
+                                                                   "Scavenger", "H-Facade")
                 return instance
 
             def get_ComponentGuid(self):
@@ -388,7 +395,8 @@ try:
                             target_path = temp_path_1
                         zip_list = zip(main_trunk_list, order_trunk_list, target_path)
                         iter_ungroup_data = zip(*ghp.run(self.closest_object, zip_list))
-                        Res_Order_Item, Order_Index, Distance = ghp.run(lambda single_tree: self.format_tree(single_tree), iter_ungroup_data)
+                        Res_Order_Item, Order_Index, Distance = ghp.run(
+                            lambda single_tree: self.format_tree(single_tree), iter_ungroup_data)
 
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
@@ -402,7 +410,9 @@ try:
         class CounterBore(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_CounterBore", "F2", """Input specifications automatically generate countersunk screws (including M4, M5, M6, M8, M10, M12, M16, M20)""", "Scavenger", "H-Facade")
+                                                                   "RPP_CounterBore", "F2",
+                                                                   """Input specifications automatically generate countersunk screws (including M4, M5, M6, M8, M10, M12, M16, M20)""",
+                                                                   "Scavenger", "H-Facade")
                 return instance
 
             def get_ComponentGuid(self):
@@ -465,8 +475,12 @@ try:
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
-                self.al_specifications = {'M4': (4.5, 9.6), 'M5': (5.5, 11.6), 'M6': (6.5, 13.6), 'M8': (8.5, 17.8), 'M10': (11.0, 22.0), 'M12': (13.0, 26.0), 'M16': (17.0, 32.0), 'M20': (21.0, 38.0)}
-                self.fe_specifications = {'M4': (6.0, 9.6), 'M5': (7.0, 11.6), 'M6': (8.0, 13.6), 'M8': (10.0, 17.8), 'M10': (12.0, 22.0), 'M12': (14.0, 26.0), 'M16': (18.0, 32.0), 'M20': (22.0, 38.0)}
+                self.al_specifications = {'M4': (4.5, 9.6), 'M5': (5.5, 11.6), 'M6': (6.5, 13.6), 'M8': (8.5, 17.8),
+                                          'M10': (11.0, 22.0), 'M12': (13.0, 26.0), 'M16': (17.0, 32.0),
+                                          'M20': (21.0, 38.0)}
+                self.fe_specifications = {'M4': (6.0, 9.6), 'M5': (7.0, 11.6), 'M6': (8.0, 13.6), 'M8': (10.0, 17.8),
+                                          'M10': (12.0, 22.0), 'M12': (14.0, 26.0), 'M16': (18.0, 32.0),
+                                          'M20': (22.0, 38.0)}
                 self.deep1, self.deep2 = 0, 0
 
             def mes_box(self, info, button, title):
@@ -523,7 +537,9 @@ try:
                 # start_pt = big_circle.PointAtStart
                 # end_pt = small_circle_two.PointAtEnd
                 unset_pt = rg.Point3d.Unset
-                loft_brep = rg.Brep.CreateFromLoft([big_circle, small_circle_one, small_circle_two], origin_pln.Origin, unset_pt, rg.LoftType.Straight, False)[0]
+                loft_brep = \
+                    rg.Brep.CreateFromLoft([big_circle, small_circle_one, small_circle_two], origin_pln.Origin, unset_pt,
+                                           rg.LoftType.Straight, False)[0]
                 res_brep = loft_brep.CapPlanarHoles(sc.doc.ModelAbsoluteTolerance)
                 return res_brep
 
@@ -556,7 +572,9 @@ try:
         class Surface_flanging(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_Surface_flanging", "F12", """Panel folding, suitable for regular aluminum plate, special plate need semi-manual work""", "Scavenger", "H-Facade")
+                                                                   "RPP_Surface_flanging", "F12",
+                                                                   """Panel folding, suitable for regular aluminum plate, special plate need semi-manual work""",
+                                                                   "Scavenger", "H-Facade")
                 return instance
 
             def get_ComponentGuid(self):
@@ -585,12 +603,14 @@ try:
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Curve()
-                self.SetUpParam(p, "Edge_Tree", "EL", "Curve list, enter the edges that need to be defined,if no input,make folding uniformly")
+                self.SetUpParam(p, "Edge_Tree", "EL",
+                                "Curve list, enter the edges that need to be defined,if no input,make folding uniformly")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Size_Tree", "SL", "folding width list, control the list of curve value, quantity must be consistent with curve list")
+                self.SetUpParam(p, "Size_Tree", "SL",
+                                "folding width list, control the list of curve value, quantity must be consistent with curve list")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
@@ -709,9 +729,13 @@ try:
                             fold = list(zip(fold_surface, fold_size_count))
                         elif Edge_Tree.BranchCount >= 0 and Size_Tree.DataCount > 0:
                             if Size_Tree.BranchCount == 1:
-                                ver_zip = list(zip(fold_vector_count, self.data_polishing_list(ght.tree_to_list(Edge_Tree), [ght.tree_to_list(Size_Tree)])))
+                                ver_zip = list(zip(fold_vector_count,
+                                                   self.data_polishing_list(ght.tree_to_list(Edge_Tree),
+                                                                            [ght.tree_to_list(Size_Tree)])))
                             else:
-                                ver_zip = list(zip(fold_vector_count, self.data_polishing_list([data_ for data_ in Edge_Tree.Branches], [data_ for data_ in Size_Tree.Branches])))
+                                ver_zip = list(zip(fold_vector_count,
+                                                   self.data_polishing_list([data_ for data_ in Edge_Tree.Branches],
+                                                                            [data_ for data_ in Size_Tree.Branches])))
                             fold_size_count = ghp.run(self.ver_lenght, ver_zip)
                             fold = list(zip(fold_surface, fold_size_count))
 
@@ -731,7 +755,9 @@ try:
         class HorizontalAnnotation(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_HorizontalAnnotation", "F4", """X-axis dimension of the plane (horizontal dimension)""", "Scavenger", "H-Facade")
+                                                                   "RPP_HorizontalAnnotation", "F4",
+                                                                   """X-axis dimension of the plane (horizontal dimension)""",
+                                                                   "Scavenger", "H-Facade")
                 return instance
 
             @property
@@ -862,14 +888,14 @@ try:
 
             def _get_dim(self, pt_tuple_data):
                 sub_start_pt, sub_end_pt, sub_dis, sub_over_data, sub_align = pt_tuple_data
-                self.pln.Origin = sub_start_pt
-                if sub_align:
-                    above_pt = sub_align.ClosestPoint(sub_start_pt, True)
-                    offset_dis = above_pt.DistanceTo(sub_start_pt)
-                else:
-                    offset_dis = 0
 
-                offset_pt = rg.Point3d(self.pln.OriginX, self.pln.OriginY + sub_dis + offset_dis, self.pln.OriginZ)
+                # 若直线存在
+                if sub_align:
+                    self.pln = ghc.Line_Pt(sub_align, rg.Point3d(0, 0, 0))
+                else:
+                    self.pln.Origin = sub_start_pt
+
+                offset_pt = rg.Point3d(self.pln.OriginX, self.pln.OriginY + sub_dis, self.pln.OriginZ)
                 ann_type = rg.AnnotationType.Rotated
 
                 sub_dim = rg.LinearDimension.Create(ann_type, self.style, self.pln, self.pln.XAxis, sub_start_pt, sub_end_pt, offset_pt, 0)
@@ -887,7 +913,7 @@ try:
             def run_mian(self, tuple_data):
                 start_pt_list, end_pt_list, dis_list, over_data_list, align_line_list, origin_path = tuple_data
                 s_len, e_len = len(start_pt_list), len(end_pt_list)
-                if s_len > e_len:
+                if s_len >= e_len:
                     start_pt_list = start_pt_list
                     end_pt_list = end_pt_list * s_len
                     dis_list = dis_list * s_len
@@ -927,7 +953,8 @@ try:
                     sp_trunk_list, sp_path_trunk = self.Branch_Route(Start_Pt)
                     ep_trunk_list, ep_path_trunk = self.Branch_Route(End_Pt)
                     dis_trunk_list = self.Branch_Route(Distance)[0]
-                    over_trunk_list, align_trunk_list = self.Branch_Route(Overwrite)[0], self.Branch_Route(Align_Line)[0]
+                    over_trunk_list, align_trunk_list = self.Branch_Route(Overwrite)[0], self.Branch_Route(Align_Line)[
+                        0]
                     over_trunk_list = over_trunk_list if over_trunk_list else [[None]]
                     align_trunk_list = align_trunk_list if align_trunk_list else [[None]]
 
@@ -960,9 +987,11 @@ try:
                             over_trunk_list = over_trunk_list * sp_len
                             align_trunk_list = align_trunk_list * sp_len
 
-                        zip_list = zip(new_sp_trunk_list, new_ep_trunk_list, dis_trunk_list, over_trunk_list, align_trunk_list, trunk_path)
+                        zip_list = zip(new_sp_trunk_list, new_ep_trunk_list, dis_trunk_list, over_trunk_list,
+                                       align_trunk_list, trunk_path)
                         iter_ungroup_data = zip(*ghp.run(self.run_mian, zip_list))
-                        Dimension, Real_Value, Show_Value = ghp.run(lambda single_tree: self.format_tree(single_tree), iter_ungroup_data)
+                        Dimension, Real_Value, Show_Value = ghp.run(lambda single_tree: self.format_tree(single_tree),
+                                                                    iter_ungroup_data)
 
                     no_rendering_line = self.Branch_Route(Dimension)[0]
                     self.dim = list(chain(*no_rendering_line))
@@ -986,7 +1015,9 @@ try:
         class VerticalDimension(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_VerticalDimension", "F5", """Y-axis dimension of the plane（Vertical Dimension）""", "Scavenger", "H-Facade")
+                                                                   "RPP_VerticalDimension", "F5",
+                                                                   """Y-axis dimension of the plane（Vertical Dimension）""",
+                                                                   "Scavenger", "H-Facade")
                 return instance
 
             def get_ComponentGuid(self):
@@ -1117,14 +1148,12 @@ try:
 
             def _get_dim(self, pt_tuple_data):
                 sub_start_pt, sub_end_pt, sub_dis, sub_over_data, sub_align = pt_tuple_data
-                self.pln.Origin = sub_start_pt
                 if sub_align:
-                    above_pt = sub_align.ClosestPoint(sub_start_pt, True)
-                    offset_dis = above_pt.DistanceTo(sub_start_pt)
+                    self.pln = ghc.Line_Pt(sub_align, rg.Point3d(0, 0, 0))
                 else:
-                    offset_dis = 0
+                    self.pln.Origin = sub_start_pt
 
-                offset_pt = rg.Point3d(self.pln.OriginX + sub_dis + offset_dis, self.pln.OriginY, self.pln.OriginZ)
+                offset_pt = rg.Point3d(self.pln.OriginX + sub_dis, self.pln.OriginY, self.pln.OriginZ)
                 ann_type = rg.AnnotationType.Rotated
 
                 sub_dim = rg.LinearDimension.Create(ann_type, self.style, self.pln, self.pln.XAxis, sub_start_pt, sub_end_pt, offset_pt, 0)
@@ -1142,7 +1171,7 @@ try:
             def run_mian(self, tuple_data):
                 start_pt_list, end_pt_list, dis_list, over_data_list, align_line_list, origin_path = tuple_data
                 s_len, e_len = len(start_pt_list), len(end_pt_list)
-                if s_len > e_len:
+                if s_len >= e_len:
                     start_pt_list = start_pt_list
                     end_pt_list = end_pt_list * s_len
                     dis_list = dis_list * s_len
@@ -1183,7 +1212,8 @@ try:
                     sp_trunk_list, sp_path_trunk = self.Branch_Route(Start_Pt)
                     ep_trunk_list, ep_path_trunk = self.Branch_Route(End_Pt)
                     dis_trunk_list = self.Branch_Route(Distance)[0]
-                    over_trunk_list, align_trunk_list = self.Branch_Route(Overwrite)[0], self.Branch_Route(Align_Line)[0]
+                    over_trunk_list, align_trunk_list = self.Branch_Route(Overwrite)[0], self.Branch_Route(Align_Line)[
+                        0]
                     over_trunk_list = over_trunk_list if over_trunk_list else [[None]]
                     align_trunk_list = align_trunk_list if align_trunk_list else [[None]]
 
@@ -1216,9 +1246,11 @@ try:
                             over_trunk_list = over_trunk_list * sp_len
                             align_trunk_list = align_trunk_list * sp_len
 
-                        zip_list = zip(new_sp_trunk_list, new_ep_trunk_list, dis_trunk_list, over_trunk_list, align_trunk_list, trunk_path)
+                        zip_list = zip(new_sp_trunk_list, new_ep_trunk_list, dis_trunk_list, over_trunk_list,
+                                       align_trunk_list, trunk_path)
                         iter_ungroup_data = zip(*ghp.run(self.run_mian, zip_list))
-                        Dimension, Real_Value, Show_Value = ghp.run(lambda single_tree: self.format_tree(single_tree), iter_ungroup_data)
+                        Dimension, Real_Value, Show_Value = ghp.run(lambda single_tree: self.format_tree(single_tree),
+                                                                    iter_ungroup_data)
 
                     no_rendering_line = self.Branch_Route(Dimension)[0]
                     self.dim = list(chain(*no_rendering_line))
@@ -1242,7 +1274,9 @@ try:
         class Table(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_Table", "F11", """Create a table in the Rhino space""", "Scavenger", "H-Facade")
+                                                                   "RPP_Table", "F11",
+                                                                   """Create a table in the Rhino space""", "Scavenger",
+                                                                   "H-Facade")
                 return instance
 
             @property
@@ -1340,7 +1374,8 @@ try:
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
-                self.ref_h_scale, self.w_s, self.layer_index, self.factor, self.unrendered_rec3d, self.unrendered_text = (None for _ in range(6))
+                self.ref_h_scale, self.w_s, self.layer_index, self.factor, self.unrendered_rec3d, self.unrendered_text = (
+                    None for _ in range(6))
 
             def Branch_Route(self, Tree):
                 """分解Tree操作，树形以及多进程框架代码"""
@@ -1398,7 +1433,8 @@ try:
                     else:
                         text_list.append(None)
 
-                sub_rec = rg.Rectangle3d(pln, rg.Interval(0, max(x_dir_list)), rg.Interval(0, self.ref_h_scale * -height_text))
+                sub_rec = rg.Rectangle3d(pln, rg.Interval(0, max(x_dir_list)),
+                                         rg.Interval(0, self.ref_h_scale * -height_text))
 
                 return sub_rec, max(x_dir_list), len(word_list), text_list
 
@@ -1522,7 +1558,8 @@ try:
                         iter_ungroup_data = zip(*map(self._do_main, zip_list))
                         self.unrendered_rec3d = list(chain(*zip(*iter_ungroup_data[1])[0]))
                         self.unrendered_text = list(chain(*zip(*iter_ungroup_data[0])[0]))
-                        Text_TEN, Cells, Pln = ghp.run(lambda single_tree: self.format_tree(single_tree), iter_ungroup_data)
+                        Text_TEN, Cells, Pln = ghp.run(lambda single_tree: self.format_tree(single_tree),
+                                                       iter_ungroup_data)
 
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
                     sc.doc = ghdoc
@@ -1535,7 +1572,9 @@ try:
                     for text_index, text_item in enumerate(self.unrendered_text):
                         for sub_index, sub_text in enumerate(text_item):
                             if sub_text:
-                                args.Display.DrawText(sub_text, System.Drawing.Color.FromArgb(0, 150, 0), sub_text.GetTextTransform(sub_text.DimensionScale, sub_text.DimensionStyle))
+                                args.Display.DrawText(sub_text, System.Drawing.Color.FromArgb(0, 150, 0),
+                                                      sub_text.GetTextTransform(sub_text.DimensionScale,
+                                                                                sub_text.DimensionStyle))
                             rec_curve = self.unrendered_rec3d[text_index][sub_index].ToNurbsCurve()
                             args.Display.DrawCurve(rec_curve, System.Drawing.Color.FromArgb(0, 150, 0), 2)
                 except:
@@ -1546,7 +1585,8 @@ try:
         class DimStyle(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_DimStyle", "F14", """Create dimension style""", "Scavenger", "H-Facade")
+                                                                   "RPP_DimStyle", "F14", """Create dimension style""",
+                                                                   "Scavenger", "H-Facade")
                 return instance
 
             def get_ComponentGuid(self):
@@ -1674,7 +1714,8 @@ try:
         class LeaderDim(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_LeaderDim", "F13", """Lead labeling""", "Scavenger", "H-Facade")
+                                                                   "RPP_LeaderDim", "F13", """Lead labeling""",
+                                                                   "Scavenger", "H-Facade")
                 return instance
 
             def get_ComponentGuid(self):
@@ -1837,10 +1878,37 @@ try:
                 Points = map(self.Get_curve_pt, curves)
                 return Points
 
+            def match_list(self, data1, data2):
+                """匹配两个列表的数据"""
+                zip_list = [data1, data2]
+                len_list = map(lambda x: len(x), zip_list)  # 得到最长的树
+                max_index = len_list.index(max(len_list))  # 得到最长的树的下标
+                max_list = zip_list[max_index]  # 最长的列表
+                other_list = [zip_list[_] for _ in range(len(zip_list)) if _ != max_index]  # 剩下的列表
+                matchzip = zip([max_list] * len(other_list), other_list)
+
+                def sub_match(tuple_data):  # 数据匹配
+                    target_tree, other_tree = tuple_data
+                    t_len, o_len = len(target_tree), len(other_tree)
+                    if o_len == 0:
+                        return other_tree
+                    else:
+                        new_tree = other_tree + [other_tree[-1]] * (t_len - o_len)
+                        return new_tree
+
+                iter_group = map(sub_match, matchzip)  # 数据匹配
+                iter_group.insert(max_index, max_list)  # 将最长的数据插入进去
+
+                return iter_group
+
             def temp_Create_Leader(self, tuple):
                 # 创建标注样式
                 Points_List, Str_List, Path = tuple
-                zip_list = zip(Points_List, Str_List)
+
+                iter_group = self.match_list(Points_List, Str_List)  # 匹配后的数据
+                match_point, math_str = iter_group  # 匹配后的点列表和字符
+                zip_list = zip(match_point, math_str)
+
                 leader_list = map(self.Create_Leader, zip_list)
                 ungroup_data = self.split_tree(leader_list, Path)
 
@@ -1899,7 +1967,8 @@ try:
         class AngularDim(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_Angle dimension", "RPP_AngularDim", """Angle dimension""", "Scavenger", "H-Facade")
+                                                                   "RPP_AngularDim", "F15", """Angle dimension""",
+                                                                   "Scavenger", "H-Facade")
                 return instance
 
             def get_ComponentGuid(self):
@@ -1950,6 +2019,7 @@ try:
 
                 p = Grasshopper.Kernel.Parameters.Param_Boolean()
                 self.SetUpParam(p, "Dihedral", "D", "Inverse or not")
+                p.SetPersistentData(gk.Types.GH_Boolean(False))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
@@ -2135,7 +2205,8 @@ try:
                 Plane = rg.Plane.WorldXY  # 以世界XY坐标轴作为参考平面
                 rg.Plane.Origin
                 Plane.Origin = Center_Point
-                AngularDim = rg.AngularDimension.Create(Dimstyle, Plane, Vector, Center_Point, Start_Point, End_Point, Coeff_Point)
+                AngularDim = rg.AngularDimension.Create(Dimstyle, Plane, Vector, Center_Point, Start_Point, End_Point,
+                                                        Coeff_Point)
                 if OverWrite is not None:
                     AngularDim.RichText = str(OverWrite)  # 标注覆写
                 True_Value = math.degrees(AngularDim.NumericValue)  # 角度真实值
@@ -2143,26 +2214,63 @@ try:
 
                 return AngularDim, True_Value, DisPlay_Value
 
+            def match_list(self, *args):
+                """匹配两个列表的数据"""
+                zip_list = list(args)
+                len_list = map(lambda x: len(x), zip_list)  # 得到最长的树
+                max_index = len_list.index(max(len_list))  # 得到最长的树的下标
+                max_list = zip_list[max_index]  # 最长的列表
+                other_list = [zip_list[_] for _ in range(len(zip_list)) if _ != max_index]  # 剩下的列表
+                matchzip = zip([max_list] * len(other_list), other_list)
+
+                def sub_match(tuple_data):  # 数据匹配
+                    target_tree, other_tree = tuple_data
+                    t_len, o_len = len(target_tree), len(other_tree)
+                    if o_len == 0:
+                        return other_tree
+                    else:
+                        new_tree = other_tree + [other_tree[-1]] * (t_len - o_len)
+                        return new_tree
+
+                iter_group = map(sub_match, matchzip)  # 数据匹配
+                iter_group.insert(max_index, max_list)  # 将最长的数据插入进去
+
+                return iter_group
+
             def temp_get_newSPEp(self, tuple):
                 # 运行中间商
                 CP_list, SP_list, EP_list = tuple
-                zip_list = zip(CP_list, SP_list, EP_list)
+
+                iter_group = self.match_list(CP_list, SP_list, EP_list)
+                match_CP, match_SP, match_EP = iter_group
+                zip_list = zip(match_CP, match_SP, match_EP)
+
                 Point_List = map(self.get_new_SpEp, zip_list)
-                return Point_List[0]  # 只返回里面的元组
+
+                new_SP_List, new_EP_List = zip(*Point_List)
+                return list(new_SP_List), list(new_EP_List)
 
             def temp_get_Vector(self, tuple):
                 # 运行中间商
                 Center_Point, Start_Point, End_Point, Coefficient = tuple
-                zip_list = zip(Center_Point, Start_Point, End_Point, Coefficient)
+
+                iter_group = self.match_list(Center_Point, Start_Point, End_Point, Coefficient)
+                match_CP, match_SP, match_EP, match_Coeff = iter_group
+                zip_list = zip(match_CP, match_SP, match_EP, match_Coeff)
+
                 vector_Pt = map(self.get_Vector, zip_list)
-                return vector_Pt[0]  # 只返回里面的元组
+
+                Ref_Vector, Coeff_Point = zip(*vector_Pt)
+                return list(Ref_Vector), list(Coeff_Point)
 
             def run_main(self, tuple):
                 # 创建标注主方法，还原数据结构
-                target_Path, Ref_Vector, CP_trunk_list, new_Sp_Point, \
-                    new_Ep_Point, Coeff_Point, OverWrite = tuple
+                target_Path, Ref_Vector, CP_trunk_list, new_Sp_Point, new_Ep_Point, Coeff_Point, OverWrite = tuple
 
-                sub_zip_list = zip(Ref_Vector, CP_trunk_list, new_Sp_Point, new_Ep_Point, Coeff_Point, OverWrite)
+                iter_group = self.match_list(Ref_Vector, CP_trunk_list, OverWrite)
+                match_ReV, match_CP, match_Over = iter_group
+
+                sub_zip_list = zip(Ref_Vector, match_CP, new_Sp_Point, new_Ep_Point, Coeff_Point, match_Over)
                 # 创建角度标注
 
                 AngularDim, True_Value, DisPlay_Value = zip(*map(self.Create_AngularDim, sub_zip_list))
@@ -2177,13 +2285,15 @@ try:
                     CP_factor = self.parameter_judgment(self.Params.Input[0].VolatileData)[0]
                     SP_factor = self.parameter_judgment(self.Params.Input[1].VolatileData)[0]
                     EP_factor = self.parameter_judgment(self.Params.Input[2].VolatileData)[0]
-                    re_mes = Message.RE_MES([CP_factor, SP_factor, EP_factor], ['Center_Point terminal', 'Start_Point terminal', 'End_Point terminal'])
+                    re_mes = Message.RE_MES([CP_factor, SP_factor, EP_factor],
+                                            ['Center_Point terminal', 'Start_Point terminal', 'End_Point terminal'])
                     if len(re_mes) > 0:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
                     else:
                         # 匹配树形
-                        max_index, iter_group, max_group = self.match_tree(Center_Point, Start_Point, End_Point, Coefficient, OverWrite)
+                        max_index, iter_group, max_group = self.match_tree(Center_Point, Start_Point, End_Point,
+                                                                           Coefficient, OverWrite)
                         iter_group.insert(max_index, max_group)  # 将得到的最长的列表插入到匹配后的数据中
                         target_Path = self.Branch_Route(self.Params.Input[max_index].VolatileData)[1]  # 得到最长的目标路径
                         if len(target_Path) == 0: target_Path = [[0]]  # 如果目标路径为0, 给一个默认的路径
@@ -2194,23 +2304,28 @@ try:
                         EP_trunk_list = iter_group[2]
                         Coefficient_trunk_list = iter_group[3]
                         OverWrite_trunk_list = iter_group[4]
-                        OverWrite_trunk_list = OverWrite_trunk_list if OverWrite_trunk_list else [[None] for i in range(len(CP_trunk_list))]  # 覆写没有值默认为None
+                        OverWrite_trunk_list = OverWrite_trunk_list if OverWrite_trunk_list else [[None] for i in range(
+                            len(CP_trunk_list))]  # 覆写没有值默认为None
                         self.dimstyle = self.Find_DimStyle(Style)
 
-                        # '--------设置默认值---------'
-                        self.Dihedral = Dihedral if Dihedral else False  # 反角
-                        Coefficient_trunk_list = Coefficient_trunk_list if Coefficient_trunk_list else [[1]]
-                        # '--------设置默认值---------'
+                        self.Dihedral = Dihedral  # 反角
+                        Coefficient_trunk_list = Coefficient_trunk_list
 
                         new_list1 = map(self.temp_get_newSPEp, zip(CP_trunk_list, SP_trunk_list, EP_trunk_list))
-                        new_Sp_Point, new_Ep_Point = self.data_packet(new_list1)  # 解构得到的数据
-                        new_list2 = map(self.temp_get_Vector, zip(CP_trunk_list, SP_trunk_list, EP_trunk_list, Coefficient_trunk_list))
-                        Ref_Vector, Coeff_Point = self.data_packet(new_list2)  # 解构得到的数据
+                        new_Sp_Point, new_Ep_Point = [result[0] for result in new_list1], [result[1] for result in
+                                                                                           new_list1]
+
+                        new_list2 = map(self.temp_get_Vector,
+                                        zip(CP_trunk_list, SP_trunk_list, EP_trunk_list, Coefficient_trunk_list))
+                        Ref_Vector, Coeff_Point = [result[0] for result in new_list2], [result[1] for result in
+                                                                                        new_list2]
 
                         # 此处运行创建角度标注主方法
-                        sub_zip_list = zip(target_Path, Ref_Vector, CP_trunk_list, new_Sp_Point, new_Ep_Point, Coeff_Point, OverWrite_trunk_list)
+                        sub_zip_list = zip(target_Path, Ref_Vector, CP_trunk_list, new_Sp_Point, new_Ep_Point,
+                                           Coeff_Point, OverWrite_trunk_list)
                         iter_ungroup_data = zip(*ghp.run(self.run_main, sub_zip_list))
-                        AngularDim, True_Value, DisPlay_Value = ghp.run(lambda single_tree: self.format_tree(single_tree), iter_ungroup_data)
+                        AngularDim, True_Value, DisPlay_Value = ghp.run(
+                            lambda single_tree: self.format_tree(single_tree), iter_ungroup_data)
 
                     no_rendering_line = self.Branch_Route(AngularDim)[0]
                     self.dim = filter(None, list(chain(*no_rendering_line)))
@@ -2241,7 +2356,8 @@ try:
         class Add_Drawing_Frame(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_Add_Drawing_Frame", "F22", """Add frame""", "Scavenger", "H-Facade")
+                                                                   "RPP_Add_Drawing_Frame", "F22", """Add frame""",
+                                                                   "Scavenger", "H-Facade")
                 return instance
 
             def get_ComponentGuid(self):
@@ -2369,7 +2485,12 @@ try:
                 if len(Frame_List) == len(Frame_Scale):
                     for index, Scale in enumerate(Frame_Scale):
                         if len(Scale) != len(Frame_List[index]):
-                            Message.message2(self, "Frame scale does not match！")
+                            scale_data = Scale[-1]
+                            s = []  # 根据图框对象放入比例大小
+                            for _i in Frame_List[index]:
+                                Scale = scale_data if scale_data else 0
+                                s.append(Scale)
+                            new_Scale.append(s)
                 else:
                     if len(Frame_Scale) == 1:  # 如果输入的是一个列表
                         if len(Frame_Scale[0]) == len(Frame_List):
@@ -2445,7 +2566,8 @@ try:
                 Rhino.RhinoApp.Wait()
                 return ungroup_data
 
-            def RunScript(self, Frame_List, Frame_scale, Drawing_area_width, Drawing_area_height, Frame_width, Frame_height, Base_Point):
+            def RunScript(self, Frame_List, Frame_scale, Drawing_area_width, Drawing_area_height, Frame_width,
+                          Frame_height, Base_Point):
                 try:
                     Drawing_Frame, Picture_Frame, New_Frame_scale = (gd[object]() for i in range(3))
                     sc.doc = Rhino.RhinoDoc.ActiveDoc
@@ -2490,7 +2612,8 @@ try:
         class Get_block_By_Name(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_Get_block_By_Name", "RPP_Get_block_By_Name", """Get block""", "Scavenger", "H-Facade")
+                                                                   "RPP_Get_block_By_Name", "F24", """Get block""",
+                                                                   "Scavenger", "H-Facade")
                 return instance
 
             def get_ComponentGuid(self):
@@ -2698,7 +2821,8 @@ try:
         class Deconstruct_Block(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_Deconstruct_Block", "F25", """Destructor block""", "Scavenger", "H-Facade")
+                                                                   "RPP_Deconstruct_Block", "F25",
+                                                                   """Destructor block""", "Scavenger", "H-Facade")
                 return instance
 
             def get_ComponentGuid(self):
@@ -2835,7 +2959,8 @@ try:
                         zip_list = zip(Block_data, Block_Path)
                         iter_ungroup_data = ghp.run(self.Get_Block_Attr, zip_list)
 
-                        Name, Plane, Geometry = ghp.run(lambda single_tree: self.format_tree(single_tree), zip(*iter_ungroup_data))
+                        Name, Plane, Geometry = ghp.run(lambda single_tree: self.format_tree(single_tree),
+                                                        zip(*iter_ungroup_data))
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
                     sc.doc = ghdoc
@@ -2854,7 +2979,9 @@ try:
         class Get_CAD_Attribute(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_Get_CAD_Attribute", "F23", """Gets the CAD frame properties""", "Scavenger", "H-Facade")
+                                                                   "RPP_Get_CAD_Attribute", "F23",
+                                                                   """Gets the CAD frame properties""", "Scavenger",
+                                                                   "H-Facade")
                 return instance
 
             def get_ComponentGuid(self):
@@ -2907,7 +3034,8 @@ try:
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Base_Point", "P", "The frame area is a vector between base points at the bottom left of the drawing area")
+                self.SetUpParam(p, "Base_Point", "P",
+                                "The frame area is a vector between base points at the bottom left of the drawing area")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -2998,7 +3126,8 @@ try:
 
             def RunScript(self, Frame_Path, Get):
                 try:
-                    Attribute_labels, Attribute_value, Drawing_width, Drawing_height, Frame_width, Frame_height, Base_Point = (gd[object]() for i in range(7))
+                    Attribute_labels, Attribute_value, Drawing_width, Drawing_height, Frame_width, Frame_height, Base_Point = (
+                        gd[object]() for i in range(7))
                     re_mes = Message.RE_MES([Frame_Path], ['Frame_Path'])
                     if len(re_mes) > 0:
                         for mes_i in re_mes:
@@ -3009,7 +3138,8 @@ try:
                         if Get:
                             # 获取cad块中属性值
                             try:
-                                self.acad = System.Runtime.InteropServices.Marshal.GetActiveObject("AutoCAD.Application")
+                                self.acad = System.Runtime.InteropServices.Marshal.GetActiveObject(
+                                    "AutoCAD.Application")
                             except:
                                 self.acad = AcadApplicationClass()
                                 self.acad.Visible = False
@@ -3023,7 +3153,8 @@ try:
                             Attribute_labels = [_.TagString for _ in block_reference.GetAttributes()]  # 属性标签
                             Attribute_value = [_.TextString for _ in block_reference.GetAttributes()]  # 属性值
 
-                            Polyline = [entity for entity in doc.ModelSpace if entity.EntityName == 'AcDbPolyline']  # 获取线框
+                            Polyline = [entity for entity in doc.ModelSpace if
+                                        entity.EntityName == 'AcDbPolyline']  # 获取线框
 
                             if len(Polyline) == 2:
                                 # 排序判断获取绘画框和图框获取
@@ -3060,7 +3191,8 @@ try:
         class Export_to_CAD(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_Export_to_CAD", "F21", """Export CAD and frame""", "Scavenger", "H-Facade")
+                                                                   "RPP_Export_to_CAD", "F21",
+                                                                   """Export CAD and frame""", "Scavenger", "H-Facade")
                 return instance
 
             def get_ComponentGuid(self):
@@ -3207,13 +3339,15 @@ try:
                 """套图框操作"""
                 block_reference = None
                 AcDbBlock, PolyCurve = [], []
-                Array_Block = self.model_space.InsertBlock(Array_Point, self.Frame_Path, Frame_Scale, Frame_Scale, Frame_Scale, 0)
+                Array_Block = self.model_space.InsertBlock(Array_Point, self.Frame_Path, Frame_Scale, Frame_Scale,
+                                                           Frame_Scale, 0)
                 Explode_Array_Block = Array_Block.Explode()  # 将插入的图框炸开
                 for block in Explode_Array_Block:
                     if block.ObjectName != "AcDbBlockReference":
                         if block.EntityName == 'AcDbPolyline':
                             point_list = block.Coordinates
-                            points = [rg.Point3d(point_list[i], point_list[i + 1], 0) for i in range(0, len(point_list), 2)]
+                            points = [rg.Point3d(point_list[i], point_list[i + 1], 0) for i in
+                                      range(0, len(point_list), 2)]
                             points.append(points[0])
                             curve = rg.PolylineCurve(points)
                             PolyCurve.append(curve)
@@ -3246,7 +3380,8 @@ try:
 
                 self.add_attributes_to_cad(block_reference, Attribute)  # 改变图框属性
 
-            def RunScript(self, Frame_Path, Storage_Path, Attribute_labels, Attribute_value, Frame_List, Object_List, Frame_Scale, Export):
+            def RunScript(self, Frame_Path, Storage_Path, Attribute_labels, Attribute_value, Frame_List, Object_List,
+                          Frame_Scale, Export):
                 try:
                     sc.doc = Rhino.RhinoDoc.ActiveDoc
 
@@ -3265,13 +3400,16 @@ try:
                             trunk_Attribute_value = filter(None, self.Branch_Route(Attribute_value)[0])
                             Frame_Scale = filter(None, Frame_Scale)
 
-                            if len(Cut_None_FrameList) == len(trunk_Attribute_value) == len(Frame_Scale):  # 判断属性值和图框列表是否匹配
+                            if len(Cut_None_FrameList) == len(trunk_Attribute_value) == len(
+                                    Frame_Scale):  # 判断属性值和图框列表是否匹配
                                 try:
-                                    self.acad = System.Runtime.InteropServices.Marshal.GetActiveObject("AutoCAD.Application")
+                                    self.acad = System.Runtime.InteropServices.Marshal.GetActiveObject(
+                                        "AutoCAD.Application")
                                 except:
                                     self.acad = AcadApplicationClass()
                                     self.acad.Visible = False
-                                Attribute_dict = ghp.run(self.Get_Attribute_dict, trunk_Attribute_value)  # 将属性值和属性标签写入字典中
+                                Attribute_dict = ghp.run(self.Get_Attribute_dict,
+                                                         trunk_Attribute_value)  # 将属性值和属性标签写入字典中
                                 ArrayPoint = ghp.run(self.Get_Insert_Point, Frame_List)  # 获取到点列表
                                 self.export_objects_to_cad(Object_List, Storage_Path)  # 将物体列表导出到CAD
                                 Storage_doc = self.acad.Documents.Open(Storage_Path)  # 打开导出的CAD文件
