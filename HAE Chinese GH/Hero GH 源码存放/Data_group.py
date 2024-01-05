@@ -2403,6 +2403,7 @@ try:
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
                 self.SetUpParam(p, "Offset", "O", "Trim depth")
+                p.SetPersistentData(gk.Types.GH_Integer(-1))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
@@ -2476,7 +2477,7 @@ try:
                 try:
                     Tree = gd[object]()
                     sc.doc = Rhino.RhinoDoc.ActiveDoc
-                    self.Offset = -1 if Offset is None else Offset
+                    self.Offset = Offset
                     # 空值判断
                     re_mes = Message.RE_MES([Data_Tree], ['D end'])
                     if len(re_mes) > 0:
