@@ -431,18 +431,11 @@ try:
                 return j_list, geo_list, geo_path
 
             def _get_normal_vector(self, _srf):
-                # 获取面的朝向
-                pl_list = ghc.SurfaceFrames(_srf, 1, 1)['frames']
-                # 若平面列表存在
-                if pl_list:
-                    # 取平面法向
-                    normal = pl_list[0].ZAxis
-                # 若不存在
-                else:
-                    # 获取3d线框
-                    new_curve = _srf.Faces[0].Loops[0].To3dCurve()
-                    # 取线框平面法向
-                    normal = ghc.SurfaceFrames(new_curve, 1, 1)['frames'][0].ZAxis
+                # 获取实体所有面
+                _srf_list = ghc.DeconstructBrep(_srf)['faces']
+                if type(_srf_list) is not list:
+                    _srf_list = [_srf_list]
+                normal = ghc.SurfaceFrames(_srf_list[0], 1, 1)['frames'][0].ZAxis
                 return normal
 
             def RunScript(self, Brep, Vector):
@@ -1239,18 +1232,18 @@ try:
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Surface()
                 self.SetUpParam(p, "Surface", "S", "Surface to be extended")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Curve()
                 self.SetUpParam(p, "Edges", "E", "Edge of surface")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
                 self.SetUpParam(p, "Distance", "D", "The distance to be extended")
                 p.SetPersistentData(Grasshopper.Kernel.Types.GH_Number(10))
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Boolean()
@@ -1260,7 +1253,7 @@ try:
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                p = Grasshopper.Kernel.Parameters.Param_Surface()
                 self.SetUpParam(p, "Result_Surface", "S", "The extended surface")
                 self.Params.Output.Add(p)
 
@@ -1317,30 +1310,24 @@ try:
                             stock_tree.Insert(item, path, index)
                 return stock_tree
 
-            def _trun_object(self, ref_obj):
-                """引用物体转换为GH内置物体"""
-                if 'ReferenceID' in dir(ref_obj):
-                    if ref_obj.IsReferencedGeometry:
-                        test_pt = ref_obj.Value
-                    else:
-                        test_pt = ref_obj.Value
+            def parameter_judgment(self, tree_par_data):
+                # 获取输入端参数所有数据
+                geo_list, geo_path = self.Branch_Route(tree_par_data)
+                if geo_list:
+                    j_list = any(ghp.run(lambda x: len(filter(None, x)), geo_list))  # 去空操作, 判断是否为空
                 else:
-                    test_pt = ref_obj
-                return test_pt
-
-            def Restore_Tree(self, Before_Tree, Tree):
-                Tree_Path = [_ for _ in Tree.Paths]
-                After_Tree = gd[object]()
-                for i in range(Tree.BranchCount):
-                    After_Tree.AddRange(Before_Tree[i], Tree_Path[i])
-                return After_Tree
+                    j_list = False
+                return j_list, geo_list, geo_path
 
             def _extend_surface(self, surf, edge_list, dis_list):
                 # 曲面延伸的主函数
-
                 def key_fun(surf, iso_curve, dis):
                     if dis[0] != 0:
                         temp_surf = surf.Extend(iso_curve[0], dis[0], self.smooth)
+                        if temp_surf:
+                            sub_surf = temp_surf
+                        else:
+                            temp_surf = surf
                     else:
                         temp_surf = surf
                     iso_curve.pop(0)
@@ -1358,8 +1345,11 @@ try:
                 result_surface = key_fun(surf, iso_type_list, dis_list)
                 return result_surface
 
-            def _select_edges(self, temp_brep, edge_list, dis_list):
+            def _select_edges(self, data_set_coll):
                 # 循环查找曲线的最近曲线
+                temp_brep, edge_list, dis_list = data_set_coll
+                dis_list = dis_list * len(edge_list)
+                temp_brep = ghc.DeconstructBrep(temp_brep)['faces']
                 if edge_list:
                     curve_list = [_.ToNurbsCurve() for _ in temp_brep.Edges]
                     count = 0
@@ -1374,8 +1364,7 @@ try:
                             mid_center = single_cur.PointAt(0.5)
                             start_mid_center = curve_list[min_cur_index].PointAt(0.5)
                             if cur_index not in min_index_list:
-                                if mid_center.DistanceTo(origin_mid_center) < start_mid_center.DistanceTo(
-                                        origin_mid_center):
+                                if mid_center.DistanceTo(origin_mid_center) < start_mid_center.DistanceTo(origin_mid_center):
                                     min_cur_index = cur_index
                         new_edge_list.append(curve_list[min_cur_index])
                         count += 1
@@ -1383,48 +1372,66 @@ try:
                     result_surf = self._extend_surface(temp_brep.Faces[0], new_edge_list, dis_list)
                     return result_surf
 
-            def parameter_judgment(self, tree_par_data):
-                # 获取输入端参数所有数据
-                geo_list, geo_path = self.Branch_Route(tree_par_data)
-                if geo_list:
-                    j_list = any(ghp.run(lambda x: len(list(filter(None, x))), geo_list))  # 去空操作, 判断是否为空
-                else:
-                    j_list = False
-                return j_list, geo_list, geo_path
+            def _do_main(self, tuple_data):
+                # 重新匹配输入端数据
+                a_part_trunk, b_part_trunk, origin_path = tuple_data
+                new_list_data = list(b_part_trunk)
+                new_list_data.insert(self.max_index, a_part_trunk)
+                sur_list, edge_list, dis_list = new_list_data
+                # 数据匹配至唯一值
+                edge_list = [edge_list] * len(sur_list)
+                dis_list = [dis_list] * len(sur_list)
+                sub_zip_list = zip(sur_list, edge_list, dis_list)
+
+                res_nurf = map(self._select_edges, sub_zip_list)
+                ungroup_data = self.split_tree(res_nurf, origin_path)
+                return ungroup_data
+
+            def match_tree(self, *args):
+                # 参数化匹配数据
+                value_list, trunk_paths = zip(*map(self.Branch_Route, args))
+                len_list = map(lambda x: len(x), value_list)  # 得到最长的树
+                max_index = len_list.index(max(len_list))  # 得到最长的树的下标
+                self.max_index = max_index
+                max_trunk = value_list[max_index]
+                ref_trunk_path = trunk_paths[max_index]
+                other_list = [value_list[_] for _ in range(len(value_list)) if _ != max_index]  # 剩下的树
+                matchzip = zip([max_trunk] * len(other_list), other_list)
+
+                def sub_match(tuple_data):
+                    # 子树匹配
+                    target_tree, other_tree = tuple_data
+                    t_len, o_len = len(target_tree), len(other_tree)
+                    if o_len == 0:
+                        new_tree = [other_tree] * len(target_tree)
+                    else:
+                        new_tree = other_tree + [other_tree[-1]] * (t_len - o_len)
+                    return new_tree
+
+                # 打包数据结构
+                other_zip_trunk = zip(*map(sub_match, matchzip))
+                zip_list = zip(max_trunk, other_zip_trunk, ref_trunk_path)
+                # 多进程函数运行
+                iter_ungroup_data = map(self._do_main, zip_list)
+                temp_data = self.format_tree(iter_ungroup_data)
+                return temp_data
 
             def RunScript(self, Surface, Edges, Distance, Smooth):
                 try:
                     sc.doc = Rhino.RhinoDoc.ActiveDoc
                     Result_Surface = gd[object]()
-
                     # 判断输入的列表是否都为空
-                    j_list_1, temp_geo_list, geo_path = self.parameter_judgment(self.Params.Input[0].VolatileData)
-                    j_list_2, temp_curve_list, curve_path = self.parameter_judgment(self.Params.Input[1].VolatileData)
+                    j_bool_f1 = self.parameter_judgment(self.Params.Input[0].VolatileData)[0]
+                    j_bool_f2 = self.parameter_judgment(self.Params.Input[1].VolatileData)[0]
                     self.smooth = Smooth
 
-                    re_mes = Message.RE_MES([j_list_1, j_list_2], ['Surface', 'Edges'])
+                    re_mes = Message.RE_MES([j_bool_f1, j_bool_f2], ['S end', 'E end'])
                     if len(re_mes) > 0:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
                     else:
-                        # D端列表判空判负数操作
-                        if not all([False if _ < 0 else True for _ in Distance]):
-                            Message.message2(self, "D端只能是0或者正数！")
-                        else:
-                            # 获取有效数据
-                            if Surface and Edges:
-                                edge_length, dis_length = len(Edges), len(Distance)
-                                if edge_length > dis_length:
-                                    Distance = Distance + [Distance[-1]] * abs(edge_length - dis_length)
+                        Result_Surface = self.match_tree(Surface, Edges, Distance)
 
-                                if 'ToBrep' in dir(Surface):
-                                    real_surface = Surface.ToBrep()
-                                else:
-                                    real_surface = Surface
-
-                                Result_Surface = self._select_edges(real_surface, Edges, Distance)
-                            else:
-                                Result_Surface = Surface
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
                     sc.doc = ghdoc
@@ -1505,7 +1512,7 @@ try:
                 # 将曲线转换为NURBS曲线列表
                 nurbs_curves = [crv_ for crv_ in curves]
                 # 使用Brep对象的Split方法来分割曲面
-                split_breps = Brep.Split.Overloads[IEnumerable[Rhino.Geometry.Curve], System.Double](nurbs_curves, 0.01)
+                split_breps = Brep.Split.Overloads[IEnumerable[Rhino.Geometry.Curve], System.Double](nurbs_curves, sc.doc.ModelAbsoluteTolerance)
 
                 return split_breps
 
