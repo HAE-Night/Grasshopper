@@ -4042,7 +4042,7 @@ class AssemblyInfo(GhPython.Assemblies.PythonAssemblyInfo):
         return """HAE plug-in"""
 
     def get_AssemblyVersion(self):
-        return "v4.6"
+        return "v4.6.5(plus)"
 
     def get_AuthorName(self):
         return "by HAE Development Team"
