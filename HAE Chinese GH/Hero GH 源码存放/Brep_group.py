@@ -25,6 +25,7 @@ import math
 import initialization
 import time
 import copy
+import webbrowser as wb
 from System.Collections.Generic import List
 from Grasshopper.Kernel.Data import GH_Path
 
@@ -319,7 +320,7 @@ try:
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
                 self.SetUpParam(p, "Tolerance", "T", "tolerance，default is 0.01")
-                Tolerance = 0.01
+                Tolerance = sc.doc.ModelAbsoluteTolerance
                 p.SetPersistentData(Grasshopper.Kernel.Types.GH_Number(Tolerance))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
@@ -392,7 +393,10 @@ try:
             def parameter_judgment(self, tree_par_data):
                 # 获取输入端参数所有数据
                 geo_list, geo_path = self.Branch_Route(tree_par_data)
-                j_list = filter(None, list(chain(*geo_list)))  # 获取所有数据
+                if geo_list:
+                    j_list = any(ghp.run(lambda x: len(list(filter(None, x))), geo_list))  # 去空操作, 判断是否为空
+                else:
+                    j_list = False
                 return j_list, geo_list, geo_path
 
             def tr_object(self, origin_brep, transform):
@@ -404,21 +408,21 @@ try:
 
             def _first_handle(self, passive_brep, cut_brep):
                 """群组切割方法"""
-                res_temp_brep = []
                 # 获取映射平面
                 pl = rg.Plane.WorldXY
                 brep_center = passive_brep.GetBoundingBox(False).Center
-                pl.Origin = brep_center
-                brep_center_pl = pl
-                center_tr_one = rg.Transform.PlaneToPlane(brep_center_pl, rg.Plane.WorldXY)
-                center_tr_two = rg.Transform.PlaneToPlane(rg.Plane.WorldXY, brep_center_pl)
+                brep_pl = rg.Plane.WorldXY
+                brep_pl.Origin = brep_center
+                center_tr_one = rg.Transform.PlaneToPlane(brep_pl, pl)
+                center_tr_two = rg.Transform.PlaneToPlane(pl, brep_pl)
                 # 映射被切割体
-                passive_brep.Transform(center_tr_one)
+                # passive_brep.Transform(center_tr_one)
                 # 映射切割体
-                new_cut_brep = self.tr_object(cut_brep, center_tr_one)
+                # new_cut_brep = self.tr_object(cut_brep, center_tr_one)
+                new_cut_brep = cut_brep
                 # 群组切割
                 res_temp_brep = rg.Brep.CreateBooleanDifference([passive_brep], new_cut_brep, self.tol)
-
+                #
                 # 判断是否切割成功
                 res_temp_brep = [_ for _ in res_temp_brep] if res_temp_brep else None
                 if res_temp_brep:
@@ -426,10 +430,10 @@ try:
                     area = [_.GetArea() for _ in res_temp_brep]
                     max_index = area.index(max(area))
                     res_temp_brep = res_temp_brep[max_index]
-                    res_temp_brep.Transform(center_tr_two)
+                    # res_temp_brep.Transform(center_tr_two)
                 else:
-                    # 若切割失败，返回原Brep
-                    passive_brep.Transform(center_tr_two)
+                    # # 若切割失败，返回原Brep
+                    # passive_brep.Transform(center_tr_two)
                     res_temp_brep = passive_brep
                 return res_temp_brep
 
@@ -445,8 +449,7 @@ try:
                         # 循环检测
                         count = 0
                         while len(coll_brep) > count:
-                            interse_sets = rg.Intersect.Intersection.BrepBrep(bumped_brep, coll_brep[count],
-                                                                              sc.doc.ModelAbsoluteTolerance)
+                            interse_sets = rg.Intersect.Intersection.BrepBrep(bumped_brep, coll_brep[count], sc.doc.ModelAbsoluteTolerance)
                             if interse_sets[1]:
                                 inter_brep.append(coll_brep[count])
                             else:
@@ -463,8 +466,10 @@ try:
                 return res_brep, no_inter_brep, no_intersect_set_tip
 
             def tree_match(self, temp_data):
+                # 解包数据
                 a_set, b_set, origin_path = temp_data
-                new_b_set = [copy.deepcopy(b_set) for _ in range(len(a_set))]
+                # 复制b集合数据列表
+                new_b_set = [b_set[::] for _ in range(len(a_set))]
 
                 # 匹配数据
                 temp_brep = zip(a_set, new_b_set)
@@ -483,53 +488,44 @@ try:
                     self.tol = Tolerance
                     Res_Breps, Disjoint = (gd[object]() for _ in range(2))
 
-                    j_list_1, temp_brep_list_1, a_brep_path = self.parameter_judgment(A_Brep)
-                    j_list_2, temp_brep_list_2, b_brep_path = self.parameter_judgment(B_Brep)
+                    j_bool_f1, a_trunk_brep, a_brep_path = self.parameter_judgment(A_Brep)
+                    j_bool_f2, b_trunk_brep, b_brep_path = self.parameter_judgment(B_Brep)
 
-                    #            _a_trunk, _a_trunk_path = self.Branch_Route(A_Brep)
-                    #            _b_trunk, _b_trunk_path = self.Branch_Route(B_Brep)
-                    #            _a_tr_len, _b_tr_len = len(_a_trunk), len(_b_trunk)
-                    #            _copy_b_trunk = copy.deepcopy(_b_trunk)
-                    #
-                    re_mes = Message.RE_MES([j_list_1, j_list_2], ['A端', 'B端'])
+                    re_mes = Message.RE_MES([j_bool_f1, j_bool_f2], ['A end', 'B end'])
                     if len(re_mes) > 0:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
                     else:
                         # 树形长度匹配
-                        _a_tr_len, _b_tr_len = len(temp_brep_list_1), len(temp_brep_list_2)
-                        if _a_tr_len == _b_tr_len:
-                            new_a_trunk = temp_brep_list_1
-                            new_b_trunk = temp_brep_list_2
+                        _a_tr_len, _b_tr_len = len(a_trunk_brep), len(b_trunk_brep)
+                        if _a_tr_len > _b_tr_len:
+                            new_a_trunk = a_trunk_brep
+                            new_b_trunk = b_trunk_brep + [b_trunk_brep[-1]] * (_a_tr_len - _b_tr_len)
                             new_trunk_path = a_brep_path
+                        elif _b_tr_len < _a_tr_len:
+                            new_a_trunk = a_trunk_brep + [a_trunk_brep[-1]] * (_b_tr_len - _a_tr_len)
+                            new_b_trunk = b_trunk_brep
+                            new_trunk_path = b_brep_path
                         else:
-                            if _a_tr_len < _b_tr_len:
-                                new_a_trunk = temp_brep_list_1 + [temp_brep_list_1[-1]] * (_b_tr_len - _a_tr_len)
-                                new_b_trunk = temp_brep_list_2
-                                new_trunk_path = b_brep_path
-                            else:
-                                new_a_trunk = temp_brep_list_1
-                                new_b_trunk = temp_brep_list_2 + [temp_brep_list_2[-1]] * (_a_tr_len - _b_tr_len)
-                                new_trunk_path = a_brep_path
+                            new_a_trunk = a_trunk_brep
+                            new_b_trunk = b_trunk_brep
+                            new_trunk_path = a_brep_path
+                        # 构筑打包数据运行多进程
                         zip_list = zip(new_a_trunk, new_b_trunk, new_trunk_path)
-
-                        temp_iter_ungroup, dis_tips = zip(*map(self.tree_match, zip_list))
+                        temp_iter_ungroup, dis_tips = zip(*ghp.run(self.tree_match, zip_list))
                         iter_ungroup_data = zip(*temp_iter_ungroup)
                         _res_breps = zip(*iter_ungroup_data[0])[0]
 
+                        # 检索切割与被切割未相交个体
                         for f_disjoint_index in range(len(dis_tips)):
                             for s_disjoint_index in dis_tips[f_disjoint_index][0]:
-                                Message.message2(self,
-                                                 "the order of data is {}：the cutting object which subscript is{} is not intersecting！".format(
-                                                     (f_disjoint_index + 1), s_disjoint_index))
+                                Message.message2(self, "the order of data is {}：the cutting object which subscript is{} is not intersecting！".format((f_disjoint_index + 1), s_disjoint_index))
 
+                        # 检索切割失败个体
                         for _f_res_index in range(len(_res_breps)):
                             if not _res_breps[_f_res_index]:
-                                Message.message1(self,
-                                                 "the data which order is {} failed to be cut：please use RPP-Brep cut （high accuracy）plug-in to look for it！".format(
-                                                     _f_res_index + 1))
-                        Res_Breps, Disjoint = ghp.run(lambda single_tree: self.format_tree(single_tree),
-                                                      iter_ungroup_data)
+                                Message.message1(self, "the data which order is {} failed to be cut：please use RPP-Brep cut （high accuracy）plug-in to look for it！".format(_f_res_index + 1))
+                        Res_Breps, Disjoint = ghp.run(lambda single_tree: self.format_tree(single_tree), iter_ungroup_data)
 
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
@@ -934,25 +930,35 @@ try:
                         brep_list.append(new_cap_brep)
                 return brep_list
 
-            def sort_by_xyz(self, pt_list, follow_object):
+            def sort_by_xyz(self, follow_objects, pln):
+                pt_list = [_.GetBoundingBox(True).Center for _ in follow_objects]
+                # 获取转换过程
+                xform = rg.Transform.PlaneToPlane(pln, rg.Plane.WorldXY)
+                # 映射点
                 dict_pt_data = dict()
-                dict_pt_data['X'] = [round(_.X, 1) for _ in pt_list]
-                dict_pt_data['Y'] = [round(_.Y, 1) for _ in pt_list]
-                dict_pt_data['Z'] = [round(_.Z, 1) for _ in pt_list]
+                copy_pt = [rg.Point3d(_) for _ in pt_list]
+                [_.Transform(xform) for _ in copy_pt]
+                dict_pt_data['X'] = [round(_.X, 1) for _ in copy_pt]
+                dict_pt_data['Y'] = [round(_.Y, 1) for _ in copy_pt]
+                dict_pt_data['Z'] = [round(_.Z, 1) for _ in copy_pt]
 
+                # 点按Z方向排序
                 zip_list = zip(dict_pt_data['Z'], dict_pt_data['X'], dict_pt_data['Y'])
                 w_sort_pts = []
                 for index in range(len(zip_list)):
                     w_sort_pts.append(list(zip_list[index]) + [index])
+                # 获取下标
                 index_list = [_[-1] for _ in sorted(w_sort_pts)]
-                new_object_list = [follow_object[_] for _ in index_list]
+                # 下标映射
+                new_object_list = [follow_objects[_] for _ in index_list]
                 return new_object_list
 
             def _recursive_cutting(self, ent, cut_list, new_brep_list):
                 cut = cut_list[0]
                 ent = ent if type(ent) is list else [ent]
                 for en in ent:
-                    temp_brep = list(en.Split.Overloads[IEnumerable[Rhino.Geometry.Brep], System.Double]([cut], self.tol))
+                    temp_brep = list(
+                        en.Split.Overloads[IEnumerable[Rhino.Geometry.Brep], System.Double]([cut], self.tol))
                     if len(temp_brep):
                         cap_brep = self.cap_brep(temp_brep)
                         new_brep_list.append(cap_brep)
@@ -970,27 +976,30 @@ try:
             def _get_intersect(self, item, pln):
                 pln = filter(None, pln)
                 if pln:
-                    origin_pt = [_.Origin for _ in pln]
-                    new_pln = self.sort_by_xyz(origin_pt, pln)
+                    new_pln = pln
                     cutts = []
 
                     for pl in new_pln:
                         single_event = rg.Intersect.Intersection.BrepPlane(item, pl, self.tol)
                         # 是否切到实体，未切到则不加入切割列表
                         if single_event[1]:
-                            surface_cut = rg.Brep.CreatePlanarBreps(single_event[1])
+                            # 确定曲线是否闭合
+                            if len(single_event[1]) > 1:
+                                curves = rg.Curve.JoinCurves(single_event[1], 0.1)
+                            else:
+                                curves = single_event[1]
+                            # 闭合曲线生成Brep
+                            surface_cut = rg.Brep.CreatePlanarBreps(curves, 0.1)
                             if surface_cut:
                                 cutts.append(surface_cut[0])
 
                     # 若平面全部都没切割到实体，则输出实体
                     if cutts:
-                        #                "----------------------------"
                         temp_cutts = ghc.Untrim(cutts)
-                        #                # 输入端口调整为列表
+                        # 输入端口调整为列表
                         res_cutts = temp_cutts if type(temp_cutts) is list else [temp_cutts]
-                        #                "----------------------------"
                         res_breps = self._recursive_cutting(item, res_cutts, [])
-                        sort_breps = self.sort_brep(res_breps)
+                        sort_breps = self.sort_by_xyz(res_breps, new_pln[0])
                     else:
                         sort_breps = item
                 else:
@@ -1003,10 +1012,6 @@ try:
                         brep.Flip()
                 return breps
 
-            def sort_brep(self, temp_breps):
-                brep_list = self.sort_by_xyz([_.GetBoundingBox(True).Center for _ in temp_breps], temp_breps)
-                return brep_list
-
             def _get_surface(self, surf, pln_list):
                 cutts = []
                 for pl in pln_list:
@@ -1015,7 +1020,7 @@ try:
                         cutts.append(single_event[1][0])
                 cut_breps = surf.Split.Overloads[IEnumerable[Rhino.Geometry.Curve], System.Double](cutts, self.tol)
                 res_breps = self._handle_brep(cut_breps)
-                sort_breps = self.sort_brep(res_breps)
+                sort_breps = self.sort_by_xyz(res_breps, pln_list[0])
                 return sort_breps
 
             def temp(self, tuple_data):
@@ -1061,33 +1066,8 @@ try:
                             new_plane_list = temp_pl_list
 
                         zip_list = zip(new_brep_list, new_plane_list, brep_path)
-                        trunk_list_res_brep = map(self.temp, zip_list)
+                        trunk_list_res_brep = ghp.run(self.temp, zip_list)
                         Result_Brep = self.format_tree(trunk_list_res_brep)
-
-                    #            trunk_list_brep, trunk_list_path = self.Branch_Route(Brep)
-                    #            trunk_list_plane = self.Branch_Route(Plane)[0]
-                    #            self.tol = Tolerance
-                    #            self.cap_factor = Cap
-                    #            len_b, len_p = len(trunk_list_brep), len(trunk_list_plane)
-                    #
-                    #            if not (trunk_list_brep or trunk_list_plane):
-                    #                self.message2("B terminal solid、P terminal plane is no input！")
-                    #            elif not trunk_list_brep:
-                    #                self.message2("B terminal solid is no input！")
-                    #            elif not trunk_list_plane:
-                    #                self.message2("P terminal plane is no input！")
-                    #            else:
-                    #                if len_b != len_p:
-                    #                    new_brep_list = trunk_list_brep
-                    #                    new_plane_list = trunk_list_plane + [trunk_list_plane[-1]] * abs(len_b - len_p)
-                    #                    new_plane_list = ghp.run(lambda li: [copy.copy(_) for _ in li[:]], new_plane_list)
-                    #                else:
-                    #                    new_brep_list = trunk_list_brep
-                    #                    new_plane_list = trunk_list_plane
-                    #
-                    #                origin_list = zip(new_brep_list, new_plane_list, trunk_list_path)
-                    #                trunk_list_res_brep = list(ghp.run(self.temp, origin_list))
-                    #                Result_Brep = self.format_tree(trunk_list_res_brep)
 
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
@@ -1809,14 +1789,15 @@ try:
                 return res_brep_list
 
             def offset(self, brep, dis):
-                # 将trim线剔除
-                untrim_brep_list = self.untrim_curve(brep)
-                temp_brep = rg.Brep.JoinBreps(untrim_brep_list, self.tol)
-                if temp_brep:
-                    untrim_brep = temp_brep[0]
-                else:
-                    untrim_brep = untrim_brep_list[0]
+                # # 将trim线剔除
+                # untrim_brep_list = self.untrim_curve(brep)
+                # temp_brep = rg.Brep.JoinBreps(untrim_brep_list, self.tol)
+                # if temp_brep:
+                #     untrim_brep = temp_brep[0]
+                # else:
+                #     untrim_brep = untrim_brep_list[0]
 
+                untrim_brep = brep
                 # 判断两边是否都需要偏移
                 if self.b_side:
                     # 正向实体偏移
@@ -2652,7 +2633,8 @@ try:
                         if Brep:
                             face_list = [face for face in Brep.Faces]
                             map(lambda shrin: shrin.ShrinkFace(rg.BrepFace.ShrinkDisableSide.ShrinkAllSides), face_list)
-                            area_to_brep = map(lambda get_area: get_area[0] * get_area[1], [_.GetSurfaceSize()[1:] for _ in face_list])
+                            area_to_brep = map(lambda get_area: get_area[0] * get_area[1],
+                                               [_.GetSurfaceSize()[1:] for _ in face_list])
                             max_index = 0
                             for _ in range(len(area_to_brep)):
                                 if area_to_brep[_] > area_to_brep[max_index]:
@@ -2664,7 +2646,8 @@ try:
                             leader_line, Result_Surfs = zip(*set_data)
 
                             rotation_curve = map(self.temp_fun, set_data)
-                            Result_Axis = [rg.Line(_.PointAtStart, _.PointAtEnd) for _ in map(self.flip_curve, list(zip(leader_line, rotation_curve)))]
+                            Result_Axis = [rg.Line(_.PointAtStart, _.PointAtEnd) for _ in
+                                           map(self.flip_curve, list(zip(leader_line, rotation_curve)))]
                         else:
                             Result_Surfs, Result_Axis = [], []
 
@@ -3183,12 +3166,13 @@ try:
                 if "ToNurbsCurve" in dir(base):
                     contour_line = base
                 elif "ToBrep" in dir(base) or type(base) is rg.Brep:
-                    face_list = [f for f in base.Faces]
-                    if len(face_list) == 1:
-                        contour_line = base
-                    else:
-                        contour_line = None
-                        Message.message2(self, "This stretch only supports surface or line stretching!")
+                    contour_line = base
+                    # face_list = [f for f in base.Faces]
+                    # if len(face_list) == 1:
+                    #     contour_line = base
+                    # else:
+                    #     contour_line = None
+                    #     Message.message2(self, "This stretch only supports surface or line stretching!")
                 else:
                     contour_line = None
                     Message.message2(self, "This geometry type does not support stretching!")
@@ -3415,9 +3399,9 @@ try:
 
             def RunScript(self, A_Brep, B_Breps, Tolerance):
                 try:
-                    Tolerance = Tolerance or 0.001
+                    Tolerance = Tolerance
                     j_bool_f1 = self.parameter_judgment(self.Params.Input[0].VolatileData)[0]
-                    j_bool_f2 = self.parameter_judgment(self.Params.Input[1].VolatileData)[1]
+                    j_bool_f2 = self.parameter_judgment(self.Params.Input[1].VolatileData)[0]
                     Breps, FBreps, NBreps = (gd[object]() for _ in range(3))
                     re_mes = Message.RE_MES([j_bool_f1, j_bool_f2], ['A end', 'B end'])
                     if len(re_mes) > 0:
@@ -4048,27 +4032,8 @@ class AssemblyInfo(GhPython.Assemblies.PythonAssemblyInfo):
         icon = System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(icon_text)))
         Grasshopper.Instances.ComponentServer.AddCategoryIcon("Scavenger", icon)
         Grasshopper.Instances.ComponentServer.AddCategoryShortName('Scavenger', 'Save')
-        # Grasshopper.Instances.CanvasCreated += self._set_tool_botton
-
-    def _set_tool_botton(self):
-        Grasshopper.Instances.CanvasCreated -= self._set_tool_botton
-        _toolbar = Grasshopper.Instances.DocumentEditor.Controls[0].Controls[1]
-        list_botton = []
-        _toolbar.toolbar.Items.Add("弹窗测试 \n by HAE-smbl47")
-        for _ in _toolbar.Items:
-            if 'HAE' in str(_):
-                list_botton.append(_)
-        list_botton[-1].Image = self.get_Internal_Icon_24x24()
-        list_botton[-1].DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image
-        list_botton[-1].Click += System.EventHandler(self.print_message)
-        return
-
-    def print_message(self, sender, none_e):
-        rs.MessageBox('工具栏测试', 0 | 48)
-
-    def get_Internal_Icon_24x24(self):
-        o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAANFSURBVEhLrZZbSFRBHMbX1ArNMoow6KF7dNGnioKCCISk6OpW2upWWmbJJiIm0RXKjiZabRBEYRGVhlZ2h/KptKiQ6kV7KO2e0W3PzHr24u7Xf2bXctuzweYe+F7Ozvy+//znm9ljsO1emOYpTVFslumRVcEUxZM3SjHwwmQrLMOBvMQIiVg58UBWDHAuBwZWmKxgcyK4eVj/tZ44GQPBjDHQ7p2GeCJnIOCrB0DNSoTj6U0JR3NNhAwEfKUBLH88nJ3P4SW2/c4JoLY4MgZsuQHqzrlw/+yC1+0Ca1CgXq0Eyhb20yA7AWwZVV5pRI/Xi57vn8Bq94E3VoJtnwaYov7XgMab4qBS5fxMsWy3m1qjXtwNVn8QLDcJfE20TFT4Bv6kqMYB6L5llXDniyaoovLzO8HWxYNnDpLjBDc8gz5J0Z5cl3C37QvsLx+CHc0CN0bTysjAPz48g96kbBkHZ8czCbfftILdPQV+xAS+gtqVnRAwJywDkRRWOoeS8hneHjfY5UNgjVXgu+aBCbjOnGADUaVY4toY6uNgejf0T1IOp8Pj9cDzo0smhV09DF44Azyd4GJeH3Cvgg0EfNsE2A+kgVum0pGPAlslklIkD4/rzQuoF/aAN5RRUkbTflDPQ8CFgg0yBoEVpUBrvQ03+wHtfi3YKYuEO583weZPCjcN+Z2Uv6F9FWwgW0T5XkxVHzND+/oe/HEjZZv6TaeTn9zqT0pcEExP+gbUFr5xFOw3joI11YC31EO9dRzq/lRfv7MDk/IvBRoQnFEM1W2T4Hzti6GzqwPsQR1cLge42Bc6XHqgUAowkDHcNR/ubx8l3PWhHfxsCdS9qXC1t0C7RvdLiDiGkt9guoK1BK/OhMelSbibdtVWOguc9oItMsBOl1f39Wq5Qj1QKEkDW06SgrodMini0R5QcqoywQomUlLozkmPguNVK3j5cnlN6IFCyWdgHqngo6/n3ZfLoS6lKoUo/2wJVX+lAlpbM9ia2LA2WMjXok1jFOydDee7NqjHN4CXzAQvmAy+ZwGt5hIc9J7lj5VnRF7TOqBQkga8KMWKvFggl17QXxzePgXekTofAbcr6E4fAZjpd/G1oPsV8Q9ZhuMXjiPHLIKO5n4AAAAASUVORK5CYII="
-        return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+        if Result:
+            Listener().PriorityLoad()
 
     def get_AssemblyName(self):
         return "Tradition"
@@ -4087,3 +4052,83 @@ class AssemblyInfo(GhPython.Assemblies.PythonAssemblyInfo):
 
     def get_AuthorContact(self):
         return "smblscr47@163.com"
+
+
+class Listener(gk.GH_AssemblyPriority):
+    def __init__(self):
+        pass
+
+    def PriorityLoad(self):
+        Grasshopper.Instances.CanvasCreated += LockGh().Instances_CanvasCreated
+        Grasshopper.Instances.CanvasCreated += CreateMenu()._CreateMenu
+        return gk.GH_LoadingInstruction.Proceed
+
+
+class LockGh(object):
+    def __init__(self):
+        pass
+
+    def Instances_CanvasCreated(self, canvas):
+        Grasshopper.Instances.CanvasCreated -= self.Instances_CanvasCreated
+        _toolbar = Grasshopper.Instances.DocumentEditor.Controls[0].Controls[1]
+        button = System.Windows.Forms.ToolStripButton("Lock/Unlock GH\nPowered by HAE Development Team")
+        _toolbar.Items.Insert(7, button)
+        button.Image = self.Lock_Unlock_Icon_24x24()
+        button.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image
+        button.Click += System.EventHandler(self.Gh_solver_en_dis)
+
+    def Gh_solver_en_dis(self, sender, none_e):
+        lock_state = Grasshopper.Plugin.GH_RhinoScriptInterface().IsSolverEnabled()
+        if lock_state is True:
+            Grasshopper.Plugin.GH_RhinoScriptInterface().DisableSolver()
+        else:
+            Grasshopper.Plugin.GH_RhinoScriptInterface().EnableSolver()
+
+    def Lock_Unlock_Icon_24x24(self):
+        o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAATaSURBVEhLrZR7TFt1FMevixinQ8kmMUZBoYwRZDJJSHAbWNgYBLJO2kIfUPrgVdh4FlqeozwKd6OUjlEeDkgcjI0JWMZrY7wfAoPNbWbqPyYu/jFjDEk1kS1LPJ77QDYLionf5JPfOed3cr/tub/fJZ6RS0h4uPAtF5dANv//5Orufog01z9p7+4BU0sriOSKz7H8ArO7fTk4OOzH5R0m29COtBzN98WV1Q89PPZJuUdCc/RkDQSHR+Sy+9vRe5qCoq/OXWgD/dlaCP+EX87WCcLPz+/YqVwdYOjDVAjihEDYcipX+xuGu5jKP0udmXWrymT+40hYWLFYFt9abqyDgKCg4/SmQCKtlyoTv6MTVhwOh6stLQNnZ+cDbGlLuXI4fvml5bDb2VnAlgi+SDQolqtmmUQiaRIrVEt0wsrLy+ujTG0+Grzty5a2VERUVLZSnfY7hjuYCkEEBAQcF0pjf8HwRXQTW9Bghdli5O3tfThLV7Atg2hpnCU+MfkbNqXl7u7uIxBLf8XwTQIDi0SVcJvZYvRfDCRy+RWZKmmGTWl5ebl5ovEajtiD4AmEjQJJ3By7R4syYEbk/K8GsXKlVSJX3GBTWjhiT5FM/tTV1cOb+OCAX7OP74fUuf9LlEF6nm67Br1ShXKETWl5erq6UQYuLi4c4mBQUFVg8NE77B6t9z09/dOyNbBrzx4vtrSZqIvo9DGXOxoYxJ3E+NVn8OWGHH2KazBCvIy8RgWsHHbufImvTEqm7sYxhLqZz+KGvIHsVqWkPKyoMUFhWeVjPWl8RFF2xviopIr8uajcAHkl+sfY97xCQriF1Sbzk4u9VqixND8529C0RlFDYWlea/ys82mMTDGMrY6kyfR4YvkuDE3Pw/DsAozMLdJcn1uCmwsrcHX4JvUjn1fUicjanuHr0NbdBx1fDECndZChfxAu9Q/Btck5SDiZMY2tjtywSFtskhqi45V2iJUJwBPH2Rvs5bxLRsfJICo2HqKkuP4NkTIJ9vsfGsdWx7iERFspfnt0OA5dGUKtSD5SZCAhs/C0vQGPF0l29lmhtbsXWq/04D9ZpxfakavXx0Cekk4bmBsttvn73+I4luHm4gqMrbN0G2bufA3WsSl7g8jIMLL9cjc0XuyiaVqnowuaOy7jqIZAlpBKG/CiRbb0/CJIydIguZCSvUFarhbkqembjciNjJHheOKQ2E1GpNoYUSRfaFNrtKA6mWFHUkY2SBPV9gZ8Po+kXnKHdWjjBSPUC6YYmJqDpPQc2sDU0GCbvfsAbswvwY0vb8EoBTUuZGrlHvSNTtobhIYGk/WtbWBsvgDGpk8Rar0AtZhTtFzqhhiZijZQpqhthnMWOE0aGc4YoZSmFipqzaDVG+wN9u11IyUKJQjxqAllCjukeCx9A4Jog8DQMJtIlQh8PHHPI8NeOURES+wNogX8utH5BejH894/MYunZgK6R8bpeGBqHmbuPYDUrLwFbHU01NSsjS7eBuv4NPRTTMzQXEOoC9c1MGJvcPhgQHp+qf6+puj0/VOavB/NDXXQ0tYIWVrdTzkFxcuFFdUroRG8RmzdlZya+oPR0rJaWWterTSdWzVQ1NWvViFnz1tWSwxnVpmnbqFXdhAFOtUB0Kv9wdvVwcqW10V97F5HnLaGcPoT8S29cENG0iAAAAAASUVORK5CYII="
+        return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+
+class CreateMenu(object):
+    def __init__(self):
+        self.reload_ico = 'iVBORw0KGgoAAAANSUhEUgAAAPAAAADwCAYAAAA+VemSAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAgAElEQVR42u3deXwURd4/8Krq6p4zk5nJ5CQJGA4BERARL/BkeXy82J+iorsuyyoioIAiIkRERC4Jt4I3j7us4i7rKp6Lx3qishE1xsgRQwgkhBwzySQzmemj6veHKy9EAjm6p3pm6v2X5Pj2t0Y+zNF1AMBxHMdxHMdxHMdxHMdxHMdxHMdxHMdxHMdxHMdxHMdxHMdxHMdxHMdxHMdxHMdxHMdxHMdxHMdxbEHWDXDG2vPC7faMsi96wVBrL6ip+ZBoPQAlGQCALEqBDxHNRRHyQk2ViCC6BUow1FQAKP2pAISAChhoEKlIU5qogGVISANBQiuEoAEAUAsgqqNIqCYYVwGbo/LIwPMq+//xuTDrsScDHuAEceDJG+3OvSWDcVvrYKgpZwIKBkKi9YFEyweExLYZhABFwiGKhL0AgjIqiN9pdmdJqM+gkrwpW3mwdcQDHKfqCs/uZwnUjYSqcj4k2gigaQMh0TDrvk6GIoEAQSilSNhJRfHzqDt9R8biXbtZ9xXPeIDjRP384bmSv24MlKO/gZRcAhU5i3VPeqCiVEsR+pCK0vuyJ/Od9EeLD7HuKZ7wAJuYf9aAEbi1aSzQtKuRKg8++r40UUEIKBZLqYDfUJ2pr5Wde/3OkTcujvHr//jCA2wyjfcNOE9saboJquo4qMq5rPthiYpSDUXCViXF/XLayt07WPdjRjzAJlA/d2gvKVD3B6Qqt0JF7sO6HzOiolRBsPii4knf5Fv6bQXrfsyCB5iRyqfHY3fJF79F0bbJSIleBihFrHuKCxACIkofEIvtqXC/Ia/mTN8ms26J6cPBuoFkU/fg8AxLw+E7kBKdAlUlh3U/8YxiXEtFy9PRtOyN6Yu/qmXdDws8wDHSMPuMflKwcRaU5T9AollZ95NIKEIyFS2bVZd3pbeorIx1P7HEA2ywxvsGDBaDgUIkR8bxl8kGg5AQybpNc7oWeVbt3cW6nZgMmXUDicp/34CBOBhYiOTIdTy4MQYhIJJlm5rime9dubuEdTuGDpV1A4mmcc6ZuWJTwyIUbfsDDy5jPz0jb5Hdvvm+x0oT8pNrHmCdHHnkQqe1pnKuEA3PBITYWffDHQMhWbPYHpczchelP7KziXU7euIB1kHT3b1uEcItK6Cq8k+VTYwKuI7YHIX7Rt3w/PDxKxNihhcPcDf4Z/UfiIOBjUiOXMS6F67jqGjZqaR4JntX7/mGdS/dxQPcBQeW/4/kqSwtRJHwA4AQiXU/XBdApBKrbU04v9+CrHkfxu0SRx7gTgrM7DsctzZtgoo8iHUvXPdRLJarKe6JnjXln7LupSt4gDuoes212Lnnq/lCW3geoMTU6265ToKQaFb7mmDBoMK8+7dHWLfTqdZZNxAP/PcN6IObGv+KlOgI1r1wxqGiVKq4vDd7V+0pZd1LR/EAn0LTXb1uEULBjZBoLta9dAfFYitFqBxQUAEQqqIIVVMB1xLJ0oABbQhZUoL2NHfrwez+arPkCatUCANKkYiI1SUH7PmHf8DhxianPdLiUqHgQ3LEBzU1CxLSA1KSTykogID2gYrsZD3WbkEoojpc97gfP/Ak61Y6gge4HYeWj7a6KsrWokjoDta9dApEgGC8FyBUDBD+iohSSSjntN095n4Qk50uqpdcmuM4XDkQKvJgSNSzASHDkKb2j/m+XN1ErPYtbdmnTcp8eEcr615Ohgf4BBpnn5EvBer+ARV5OOteTgkhQgVxF0XoA2K1fRLKKdjR44H3/azbOlb1ssvdjpr9F6BoeBQg5DKkKsMBIaafpUaxWKa406/3rvzBtPt28QAfJzCj90jc0vQPqKkZrHtpDxVwE8X4LSJa3gxnn7Y958GPGlj31Bk1iy/x2g/vH43k6FVQU66Gqupl3VO7kBBUnKm/86zf/wbrVk6EB/gYTXf1/BMOBTea8d7uT6EVXyFW28sNQy/6oM+fXlBZ96SHsr/ciXOK370ItYVugqoyDmomDDOERHW45rifqCpi3cqvWmPdgBl8vmUOOuOjzUtRW+h+U20cBxEhorSdWG3PhXsN2JYz6+2E3n2i6qmbpJTSnVcKkfBEpMpXAmKu23XE5ni2ZcA5U3rMeM00/3gmfYD3F10tpe376gUUCY9n3cvPqIDrqCg9K6dlPuVb8k0V635YqCsclmNpPHI7UqKTzbRzCZGs74Rz+96QteBTU3y4ldQBPvzwSKezeu8/oRwdzboXAACgolSmWWwrQwWDXuwx6624mlBglIMbrscpZcU3CtG22VCODmXdDwAAUFEqjqbn/q9v6dfMP3tI2gD75w314rrqt5EiM5+cQSVLsWZ1LCq9cPwbI8cvja/7LTHkn9nnChxqKURyZCTrXggWd2ve9Ms9K36oYdlHUga4bu6wDFv9wXehIg9m2QcRpRJiT5nvXlexjfVjEk8CM/uMFkLBxUhmPDMO44qoJ+s3aUXfM9ssIOkCXDt3WJa97uD7SJUHsuqBYvEQsdoL94+6bvPQ8Wv4M24XBaYXXIdDwaVQVfqx6oEK4qGIN/PS9KLvy1lcP6kC3DB3mM9Sd/DfUGW0kgihsGa1Lw/nn16UPfeDuF3CZiY1K66QHPtL70KR8AKosZnuSgXxkOzNujitKPbb9iRNgP3zhrjFupp/Q0Vm8kEIsdjekN2+u32PlVayfiwSUePcoVliY+1KJEduYXIrEOMK1ZM+yl20O6bviZMiwPWPXGi3VO17HynR82J9bSrgOs3hmuZev38r68chGQRm9B6NW5ufgarSK9bXJljcLWfkjYrlp9Omn4/aXQfX/BZbDpb/g0V4icW2JZLdcwAPb+x41v74Xlte3zOJ1bEBwNg+PyFV6W+pP/R27cKRMVuRlfDPwME7czahttAfY3pRQWhSHamT3ev3/431+JNZYHrBGNzavAlqsd1skErWd4KDzrsmFjO2EvoZuHlq3kOxDi8VLTuivuwhPLzsedZVbI9m5g0hFltMFyJAOXJFyg//2RiLayVsgJvv6jVeCLcsjNkFIQSa3VnUPOj8i9Me+z4ppz+akW/pNw3fjrljrOZwzQYQxWwOM2oL3d40Lf8+o6+TkC+hAzP7DsfNDZ9AQmJyiBhFQqvmdN3mXl/Jn3VNrGlG70uElqa/Q031xeSCEBIlxTPWyKWICRfghgeGZFjqDn0FNTUmp9tTLFapKZ5rPGv2JfQZPInCP3tgvhiofz1ms/CQEJS9mecatSlAQr2Erl43FkuNh/8es/CK0s5Ieu45PLzxw7uirKo1t9+FxGKNzftiornEpvp/HHn4AkM+mU6oADt/KF6M5GhMTkkgFtu2aH6/S9OXfVPHetxc52Q//Flr6KwLx2o2Z0w2roOqMtB2eP8zhtSOxQBioWn6aVfiYOD1WJwIqNkc/xcacNaknBlvmmZhN9c1zVPzHhLCLQtjMXtLdbqnuJ/Qd7fLhAhww5zBWZb66u9i8eEEsTvXuDZW38N6zJx+AtN6ThdDzWsNDzFCEdmTcY6e+07H/UvoT7bMQ1LgyAuxCK/qcBXx8CYezxMH1mmO1MkAQmNXhhFiFYP+lw4+Nka3uyNxH+DBH/9lKopGxhh9HdXhKnJvODib9Xg5Y6Q+ceBpzZE6xejpl1CRB7kqShfrVs/wR8ZA/vsG9hEba7+FRDP0QG1idz7u2lh9N+vxcsYLTOs5Uww1rzb05TSERHH7LtbjQLW4fQb+8m9zEG5u3GR4eK32zbsvvmUG6/FyseF54sAazZ7yiKEXoRThlqZNtUsu6fbf3bgNcP+PXrzD6L2RiGTd3nT6iNtGjF/Bd81IIqkbDi4w+hYTVJU+9qq93Z7qG5cBbnxgcBZqCy018hpUlEpacwpuyL/3tYTei5k7sfCQc6cZPdkDRdpm+u/p160NJuIywKK/bjXUNLdR9amAa1VP+lU5Cz8Psh4rx0b2lFdIuEffm6koGTfLjhIstjQ9VfzSvV3OYdwFODCj92VIjhi3CTtCsuLyXO9ZURaT0/w488pa8Gmr4sm4hgrYsNl2UImO6Pvp1j919ffjKsD7n7sV41DQ0BvuqsN1t3dN+Q7WY+XMwbvi+yo1xX2TkUsRUVtocf38EV16RRlXAfbs+uh2qBi3o6Rmtf/Z/fiBp1mPkzMXz9ofP9TszrlG1YeammGpPzS/K78bNwE+svACl9AWMmyBPsViWTS39xTW4+TMqeSyiauIxfaWUfVRtO2uhvsHFXT699g+LB1nPVw5y7AzexGKKKlpN2fM/5Tv1cyd0KhxjxA5LWsCFbAx28YSIklNDYs6+2txEeC6B4dnIDlyr1H1NZtzrnfVHr6mlzsp39JvGlRn6kSjplsiOTLeP6t/pzYaiIsAW+urZ0NNM2RBNJEsH+4ddcM61mPk4oNnXcV2zWrfYEhxShFuCXTqWdj0Aa4vHJaB5OhUI2pTJIQVt++2c25exWdacR0mZ/ecQ7FoyDEqSI5eG7i337AO/zzrB+NUpIbaWcCg+c7EZp+ftqKM2clyXHxKX/B5q+o0aOUSpUBoDXb4E2lTB7j+oRFupETuNKI2FaVvmoeO4i+duS7xrP1xO5GsLxpRG8mRa/33DezQ6ZmmDrBUX3OnISfOQUhUp3ta/h0v8S1xuC5T0rJmUUHQf7otpQgH/R1ae27aAFevHyshOWLIGlxisW32rNnHZ1tx3ZK29JtaYrUbMjcBKtFb6gvPzjrVz5k2wI4934yDqqL/mTZICMuedMNm1XDJJdz7zMcpFvfqXRcSIlkaD59yYpFpA4yibYY8+2oW2yrfspKYnuHKJa7sWW/LqsNlyBMCVOQ7ataPlU72M6YMcON9A4ciWdb9OFAq4IZodv4K1uPjEotnXcUrRLJ8oXddqCpZ9j3fXHeynzFlgMUW/2QA9F9xRC3W5RkL+BpfTn+aw9WlxQingqJtk076fdYDP96hx/7HChVF9/W+VMB1oby+xsyg4ZKeZ035e0SydnuTuuMhRb6s4YEh7S5yMF2AUw78cB3UVN132yAW6+rseR/yxQqcYVRHSqcXI5wSpUBsqp/Y3rdNF2AoR2/V/TEQhKCcmceffTlDedeUb6eSZZfedZGq3NLu91gP+lj1D52TgVR5tN51iWh5Nv3hL/h7X85wmsW2Uu+aUJELGmf1v+BE3zNVgKWG2usAIVjf0SOiun3rWY+NSw4tA87+G8Wi7rcpxZamm070dVMFGCrRG/SuSSTpjbTl31WyHhuXHPKmvaISUXpK77pQ08Z9+rfCX+XVNAE+vGiUD6mK7mf7albHRtZj45JLNC3rWYD03QQPqnLOwC//MeL4r5smwPbaA1fq/fKZYrGq8tyrt7MeG5dcMhbvqiFY0n3/LNzaPPb4r5kmwFCOXqV3TSJKm8/63Tq+WJ+LOc1q36R3TaipVx//NVMEuOSvd2GoqfoeEQohUFLTXmA9Ni45tZ5xzltUwH49a0JVGVT/4PDcY79migDnFW8foffkDYKlXb7l3+m+SoTjOiLvzr/JFItbdS1KKZD8R6449kumCDBqa9X93i/A+GXW4+KSG7E7dP87CFX58mP/bIoAQ1W9VOeKQPZkvMp6XFxyqxk+5mOKcYOeNSEhlxz7Z+YB3vvcBAkSTdelg1QUd/uWfsNfPnNMDfz9RpUKoq6fRkNFzqorHNb/5z8zD3B66Y5hUFOtetakAjb0XFeO6ygiWd7Uu6YlUH90WiXzAKO28AXdr/JLms3xL9bj4jgAAAhnn/aeAZM6Lvz5v5kHGGrquXrWo4IQCZ1+lu7rMjmuK3IKP/QTLOq6QgkScnRGFvsAU9LhXeg7giK8I3fK3yOsx8VxRyH0ga71NG3gwQ3j7AAwDnB10RUuqKl9dC2K8Ucsx8RxxyMW+yd61oNEQ/YfSwcDwDjA9pqKwYDoO9NRs9j5fs+cqbRmn7YDIH2jhsOt7AMM28KDdC2IEAjnFOxkOSaOO17u3PebiIB361kTasqZADAOMFKVAXrWIwLe22POdr7zBmc+CBXrWo+CgQCw/xCrQwc4dRhEuu9HxHF6oAh/rWc9SLR+AAAAg3dkvY6ibVd3t2AyIhbbG66na69h3Qdnfk3TTxuNm/3v6lYQIXDo4uscSPZkTKKCoOuyp2RABcEvezImdb8SlwxCWb3KdC1ICMgs+6IX8i0vqdUcrmmsBxhvNIdrmm95SS3rPrj40GPev2uoKLXqWrQt1AsBAIB7feUWYrXru3YxgRGrfat7feUW1n1w8YUCWK5nPaSq+Uc/xJLTMqdQAdexHqTZUQHXyWlZpzz2keNOoELPYpBoPY4G2LfkmwbNkTKZ9QjNTnOkTPYt+VrXNZ5ckkCoStd6lGT84jaSe33lq8Rqf5H1OM2KWO0vutdX8o0CuC6hCFXrXDLrV/eBI5l5d1MB8wOwj0MFXBPJzDPk0HEuOVCEdf3Qk1Lg+1WAMx7Z6VedqZMAhKzHax4QAtWZOinjkZ38dhvXZcRi0fWtFyKa84QzsTzrKt4iFtvzrAdsFsRie96zrkL3jbq55CJAoGuAKUK+dqdStmXm30OxqO+b7jhEsVjVlpV/D+s+uPgXFh26ztOHmiq1G+DMR74Mqs7U25L6pfRPL51vy1z4JV8gwXWb3efRdSIHEUT3SRczeNb++J5msSftwdiaxb7Bs/bH91j3wSWGg9n9dd0bC1GCT7kaSc7On0OxqOsN6HhAsVghZ/ecw7oPLnEEJU9Yz3pIU0+9nDD94S9a1RT3RABh8hwSBiFRU9wT0x/+XN+5q1xSiyhA1wADSju2HtizpvxjzWpfx/oBiBXNal/nWVP+Mes+OO5UOrygP9yz/1yKRV23BTEjisW94Z6nz2XdB5d4rCKw61oQwo4HOHvuB5GfXkrru0m1qUCkqinuCdlz/823peV055IDugaYCLhzW+p41pR/Qaz2ItYPhFGI1V7kWVP+Bes+uMSUd3g31rMegUjt9J5Y/l5nLKBYKmX9YOiNYqnU3+uMBaz74BJXuCHg1LMe0pSmTge41wPbZdXlmZBQL6UhUlWXZ0KvB7bLrFvhEpddCbn0rEcFLHdpV0rP6r27NJtjCesHRC+azbHEs3ov39GSM5RGgU/PepCQhi5vK9vSd+giKkpx/5eeitKulr5DF7Hug0t8KBrVNcAECa1dDnDuvW+oiss7ASAUvy87EZIVl3dC7r1vJM7bAc60IFGzdK0HQdefgQEAwLtqT6lmc8TtBz+azbHAu2pPwn0gx5kTJKSHziVru30yQ/NZo4qIZIm784iIZNnZfNaohL0lxpkQIfm61oOortsBzp/0kqqmeCYAhOJn8gNCETXFMyF/0kv8pTMXSwV6FqNIqNblbCTvqj27NZszbqYfajbnXO+qPQk/LZQzFwiormdhE4yrdDvc7MDIseuIZPk09g9LJwctWT49MHJs0izM4MyhesmlOVCRdZ3IAWyOSt0CPPiWx4ma6ptAkWDaJXgUCWHV7Zsw+JbHk2dpJGcKjtpKfU/iRAgcGXiefgEGAABvUVkFsTtMuwie2B2zvSvKkm5zAo49KMuD9axHkXCo/x+fC+t+PnDJqFufpJLVdNvQUMn6XsmoW59k3QeXnCBRz9KzHkXCXgAMOOB71PglJOrJuI0iwTQbwVEkBKPejNtGjV/CXzpzbBAyXNd6EJQBYECAAQDA99h3VZojxTRbsWqOlHt8y79L+i1yOTYOLb3cjTS1v541qSB+B4BBAQYAAPfjB54nFivzzdCJxfqW+/EDfJN6jhnn4f0XAKLviz/V7iwBwMAAAwCA4s2cRAWB2XEkVBD8ijdzEqvrcxwAAKBIeJSe9SgSSLj3IOMDnLaspEZzuGYYeY2TUR2uGWnLSvhBbRxblFymaz1BKMubujUMgMEBBgAA9/rKzcRii/mRnMRie9WzvnJzrK/LcceqWXKpF6nKMD1rUoSOrj0wPMAAAKB4MydTAcfsUGwq4AbFm8kPK+eYs9dUjAaE6LoXFhWlz37+75gEOG3Zt3WawzUlFtcCAADN4ZqStuzbulhdj+Pag+TIVXrXjLrTdxytH6uBuNfv30osti1GX4dYbFvc6/dvjdW4OK49ZX+5E0NNvVLPmlSUajMW7zq6ECdmAQYAgKgvZxoV9D2l/BeDE3Bt1JczLZZj4rj25BS/exFUVV230aEIfXjsn2Ma4PQlu/yaM3WyIUeWQgg0Z+rk9CW7mN224rhjobbQTXrXpFh6/xfXiPWg3OsqthGL7c961yUW25/d6yq2xXo8HHciVRtvlKCqjNO1KIRA9ma+c+yXYh5gAAAIZ+TNoAI+pFc9KuBD4Yw8ZvebOe54KWX/uRJqqlfPmhSLpemPFv8iN0wCnLVoZ5PqTL1Nl5fSEALVmXpb1qKdTSzGwnEnIkTCE/WuSQX8xvFfYxJgAADwrKvYTiy2p7tbh1jtT3vWVWxnNQ6OO17dvGE5SJV1/fQZAABUZ+prx3+NWYABAKAtM38WxWJlV3+fYrGyLTNvFssxcNzxLP7a23WfvIGlmrJzr//V7q9MA5z5yJetqjN1IoCw80s1ICSqM3Vi5sIvTbuFD5d8Dm64HiNF1n0WIBWErSNvXPyrnDANMAAAeNb++KFmtW/o7O9pVvsGz9ofP2TdP8cdK6Ws+EaoKjl611VS3C+f6OvMAwwAAJG8PnMoFss7+vMUi+WRvL6m3XuLS15CtE33t3RUlCrSVu7ecaLvmSLAmYUfh9UU94QOvZSGkKhO94TMwo/CrPvmuGP5Z/YZA+WoriuPAACAYPHF9r5nigADAIBnTfkOYrWvOuVgrPZVnrXlOzpSk+NiCYda5uteFEKguNM3tfdt0wQYAACCBYPmUyyVtfd9iqWyYMEg/R8kjuumwMw+o5EcGal3XSJKH/iWfdvuVsimCnDu/dsjSop7AoDo12cWQaQqKe4Jufdvj58zmLikIYSChpwxTSy2Z072fVMFGAAAvGv2FROrfdmvBmK1L/Ou2VfMuj+OO15gesF1SI6ep3ddisXattOHvnKynzFdgAEAINh36CIqSiVHByJKJcG+Qw35F47juuPwqislHAouNaI2FaWns+9+TT7Zz5gywLmz3pQVl3cCgEgGEMmKyzshd9abcvcrc5y+7OUlU6Gq9NO7LkVIjqZlbzzVzxmwMFc/zVNyHwQAgNSNhx5l3QvHHa9x7pAs6cjBPVDTXHrXJhbb/7merj3lgghd52vqrXXA2f99L6zbykOO043YeGSFEeEFEBLF5V0BwKk3rzH1M7CRKp7/PUot+2pkWtEPH7PuhYs/gRm9R4vNje8CSnWvTSy2V11P1/6/jvysKd8Dx0Ja8Uf3Sf4j/2ycMziDdS9cfKlfeL4dtzY/ZUR4f9oaytXhD2yTMsD+e08fJLS1LoSa5hUDdU+x7oeLL5bDB1ZAVSkwojaRLNs8q/bu6ujPJ12Aq9dei8Wg/wVAiBUAAFC07bdNd/X6A+u+uPgQmF4wBkXCUw0pDiFRUzydmmmYdAF27t41DyryLyacC6Hgev99Awz5F5VLHA3zhvpwa/MmQ146AwCIZN3iXbm7pDO/k1QB9t97+lAhEio8/uuQaC7c1PhS1aprJNY9cub0ydaHkNRQuwlqqu5rfQEAACAky6lpnZ7nnzQBPrB8jPTfl84nDClSoiPce79awbpPzpwGf7DpXhRtu9qo+sRie9y34vuKzv5e0gTYvb90AVTkwSd9MCLh6U139xrPulfOXJpm9L5ECLcaMl0SAACogOui6T26NFU4Ke4DB+7pO0IMNHwG6Kk3GqNICKvutPM9q/d16r0Il5j8s8/IFxtr/wM11bDbjZozdVLqE1XPduV3E/4Z+PCyy604GHihI+EFAABINDsO+l+ve2Aovz+c5GoXjnSKgbrXjQwvFS07940c93xXfz/hA2yv/GExVJX+nfkdqKr5tobq1xoeHWll3T/HxuGN1yF79b6XTvW2q1t+WuM+efjNqzq/K+t/JXSAAzP6jBQi4Zld+V2oyOdJVeUvHXp2fEI/RtyJ2b/98gkUjRj2oRUAABCrbY139d5vulMjYf9y1j1yoR23Nm0ClHZ5jCja9tuU4k9OuaSLSyzNU/MWCm2tdxp5DYrF8nBe3wXdrZOwAbbW7F8BVaVPd+sIba13NE3NW856PFxsBKb1nCmEWh4y9CIQEjXFPTFLh51VEzLAgRm9L0ORsG7/guJQ8P7mqfkLWY+LM1bztJ53iKHm1QAYM9PqZ5rVvsazpvxTPWolXICPPHy+67/T3XQdmxBqfoiHOHE139XzDiHUvNGoaZI/o6JU2lIwqLD7lX6ScAG2Ha5cCVUl34jaQqj5If5yOvEEpvWcLvy0PNDYPCAUUVzem/XcWTWhAhyYXnAFirbdbuQ1cCh4f/DOHhv3vvCnhHrsklXz1LyHxFDzWqOfeQEAQHW47vGu2lOqZ82E+kuIFHlYLP5HoLbWO7M+e+vlI0sv4feJ49ThJ69HwTt7bBRCwYWx+DtDrPYt7scPPKl33YQKcP25o5cRyRqTw75RtG2cvaLs/Ya5Z/lYj5vrnCMLRzoduz59DRl8q+hnFItlbdmnTTKidsLNhW4sHOaVaqu+gqrSKxbXo1isUFPTrvGs2lPW/Wqc0fyzB+aLgfrXDZ1hdSwkBGVv5rnelT/sNqJ8wgUYAAAC9/QdjJsaP4NEc8bkgkgIqs7UCe71+19lPXaufU0zCi4RWppfNnJu8y9ASJQUz1jP+v1vGHWJhHoJ/TPP6n0lmtN1a4eOK9UD0Vy4JfDP5ik9llevudrUW/Umo0+2PoSap+bdh5sD78YsvAAA1eGaY2R4AUjQZ+CfNU/Lv09obY7pIn0qWT6NejJv9j32Hd/M2gQa5g31SQ21m4xcjH8ixOZ41vVkjSHve4+VkM/AP0t9oqpIszs3xPKaUI6OtDRUf9t092njWI8/2QWmF4yx1B78NubhtVjfaRlwzpRYXCuhAwwAAKc18c4AAAfpSURBVIFzLr2bWGyvdL9Sx0FN8+Kg/+/Bydl/rZt/jpf1Y5Bs6hee7wzemfOEGPT/y7A9rNpBRak4nNP3hh4zXlO7X+3UEvol9M+ql19udZV/9yaUo5fF+tpUwLWawzXNvX5/TP8RSVaBGb1H49bmZ2J1F+JYBIu75Yy8Ub6lXzfE6ppJEWAAADi8cJTTcXDPu0jR/xzXjiAW2zbZnT7D99h3lawfi0TUOHdIlth4ZAWSI7+PxcSM41GMKzRvxij3ih9qYnndpAkwAAA0Fp7llo4cehcq8nAmDSAU1qz25a09+xf1eOD9bi8l4wA4vOoqbC8vmY4ioQWGHDTWAVQQD8nezIvTijq/q2R3JVWAAQDAP2+IW6yrYRdiAADFYhWxOQrLL7zuxbNvXh2bW10JKDC94DocCi414nzejqKCeCjizbw0vej7chbXT7oAAwBA49zBbrG+9l9IiY5g2QcVpRLNnjLfva5iG+vHJJ4EZvYZLYSCi5DM5u3QURhXRD3Zv0krKo35M+/PkjLAAABQ/fCFLlf1vtegHL2EdS9UshRrVsei70fd/MaFNy7hz8jt8M/sMwaHWuYjOTKSdS8Ei7s1T/rlnqLYvuc9XtIGGAAA6h690Gqt+vFlFG27lnUvAABARalMs9hWtvQ648W82W/rtmY0nh3ccD1OKSu+UYi2zYJydFj3K3YfFaXiaHru/8by0+b2JHWAAQDg8NqrkP2Hr58S2kKGriPuDCrgOipKz0bTsp5KX/J1Fet+WKgrHJZjaay9HSnyZKgqMb2XezLEYn0n3KPvDVkLPm1l3QsAPMBHNU3Nn4fDwUWG78rQGRARIkrbidW2KZR/+rYes/+V0M/KVRtukFJ+KL5SiIQnIlW+EpCObcYfK8TmeLZlwDlTYjVJoyN4gI/RdFfPG4VQ8AX437ODzYQKuIli8VVitb3kH3zhhwW3b5ZZ96SHss1TcE7x9otQOHQTVJVxUFPNN3MNQqI6XHPcT1QVsW7lV62xbsBsAjP7DsdB/z+hpuay7qU9P4UZv0VEy+vh7F7v5Tz4MfP3Yp1Rs/gSr/3w/tFIjlwFNfVKqKqm3RSBIiGoprh/51lXYeiqoq7iAT6B+geGZFkbD78M5ehFrHs5JYQIEcRdAKEPidX2USjrtB095n3gZ93WsQ4tG+121lRcgCLhUYCSy5CqDAeEmOetSjsoFssUd/r1Ri3G1wMPcDsOrb4Gp+zZtVyIhO5lMTWvyxACVMB7KULFAOGviSiVhLJ7lfWY9++YLG+sXnJpjqO2ciCU5cGQqGcDQoYhTe0PSHzdHSNW+5a27NMmZT68wxQfVrWHB/gUmu4+7Voh1LwJapr53pt1AsViK4WoHAJQQRGqoghVUwHXEsnSgCFoCEuOoMOb2nogZ6AaFN1hFYoRCgARgWp3yQF73uHduK0h4LQpIZdGgQ9Foz5I1CxISA9ASD4AoAAC2gcqcmx2QTEKQhHV7rrH/YT+G9AZgQe4AxruPzPXEjjyFzNM+uCMQ7FUqqR6b9Z761cjmf59iBn4Hvvu0IFLbrhcc7hmA4QS+lZOUoKQaDbHqqbTzzonnsILAH8G7jT/vacPEoP+TSwXQ3D6oVgsV53uiZ61+pxVFGv8GbiTvKv2lAbOuex8zZEyByDElwTGK4hUYnMUhXoPGhKv4QWAPwN3S+PsMwrE5oYnUDRyBeteuI6jomWnkuKe3N3Dtc2AB1gHgekFv8Wh4GoW27hwHUcFXEdsjsJ9I8c9P/zmVfF1X6sdPMA6Obh8jDW18vt7YaRtbsw2lOc6BiFZs9gelzNyF6U/srOJdTt64gHWWcO8s7Kkxtr5SI7cYbbJ+EkHQkIk6xbZ7Zvve4zdontDh8i6gUTVMHtQgdTcsBDJ0fGA8iDHFISASJZtaopnvnfl7hLW7Rg6VNYNJLrG2Wf0E5sbC5ESvYU/Ixvsp2fcbZrTtcizau8u1u3EZMisG0gW/jln9hKaGmYhOfpH/h5ZXxQJMhWlzWqqd6V3RVlSnRLJAxxj9Q+N8Er11bcjOToNqko+637iGcW4loqWp6Np2RvTF39Vy7ofFniAGSndPBXl7nz7atQWnowU+QpAzb+8zhQgBESUPiAW2zNt/Ya8kj19W0JsbNDlh4N1AxwA9YXDcqXG2t8jVZ0AlWh/1v2YERWlCoLFF1VP+qa0pd8m5CfKXcEDbDKNswcOE4OBm6GmjoOK3It1PyxRLNVQQdiqpLhfTlu5ewfrfsyIB9jEGmefMQy3BMZCVb0aqcowQBNi8lD7IAQUi6VUwG+oztTXys69fufIGxcn+KC7hwc4TtQ/NCJLbKwdg+TobyAll0FFNs1Wq91BRamWQvQhFaX3ZW/mO+mPFvOD0TuBBzhO1Ree3Udsqh+JFPl8SLQRQNMGQaKZ+j4zRQIBglBGEdpJsfRZ1JO+I2PxLtPuNxUPeIATxP5nfmdN3f3VYCHcOhhqypmAgoGQaP0gIfmAaLFtBiFAkXCIImEvgKCMCuJ3qt1ZEu49qCRv6la+BFNHPMAJbvcLk+yZZZ/3gqHWfKCp+YhoeYCSDABAFqXAh4jmogh5oapKBItuRAlGmgqObuQHIaACBhpEKtLUJioIMiTET5AQhBA0AADqAES1FAnVBOMqYHNUHhl4XmX/Pz7Hg8pxHMdxHMdxHMdxHMdxHMdxHMdxHMdxHMdxHMfFgf8PQ0anLdRxVSMAAAAASUVORK5CYII='
+        self.website_ico = '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'
+
+    def _CreateMenu(self, canvas):
+        # 创建菜单
+        Grasshopper.Instances.CanvasCreated -= self._CreateMenu
+        _toolbar = Grasshopper.Instances.DocumentEditor.MainMenuStrip
+        HAE_ = System.Windows.Forms.ToolStripMenuItem("HAE-Facadehub2.0")
+        _toolbar.Items.Insert(6, HAE_)  # 创建菜单
+
+        _toolbar.ShowItemToolTips = True
+
+        # 下面是创建二级菜单
+        Reload = System.Windows.Forms.ToolStripMenuItem("Reload")  # 添加重启按钮
+        HAE_.DropDownItems.Add(Reload)  # 创建子菜单
+        Reload.Image = System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(self.reload_ico)))  # 添加图标
+        Reload.Click += System.EventHandler(self.reload_gh)  # 添加点击事件
+        Reload.ToolTipText = "Reload Grasshopper\nPowered by HAE Development Team"  # 添加提示
+        Reload.AutoToolTip = False
+
+        Open_Web = System.Windows.Forms.ToolStripMenuItem("View the HAE official website")  # 添加公司官网
+        HAE_.DropDownItems.Add(Open_Web)  # 创建子菜单
+        Open_Web.Image = System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(self.website_ico)))  # 添加图标
+        Open_Web.Click += System.EventHandler(self.open_webpage)  # 添加点击事件
+        Open_Web.ToolTipText = "Open the HAE official website\nPowered by HAE Development Team"  # 添加提示
+        Reload.AutoToolTip = False
+
+    def reload_gh(self, sender, e):
+        # 重启事件
+        btn = Rhino.UI.ShowMessageButton.YesNo  # 添加YN的按钮
+        icon = Rhino.UI.ShowMessageIcon.Warning  # 添加图标
+        dlg_result = Rhino.UI.Dialogs.ShowMessage("Are you sure you want to restart?", "Reload", btn, icon)  # 添加弹窗
+
+        if dlg_result == Rhino.UI.ShowMessageResult.Yes:
+            Grasshopper.Plugin.Commands.Run_GrasshopperUnloadPlugin()
+            Grasshopper.Plugin.Commands.Run_Grasshopper()
+
+    def open_webpage(self, sender, e):
+        # 跳转网页事件
+        url = "https://heroesae.com/"
+        wb.open(url)
