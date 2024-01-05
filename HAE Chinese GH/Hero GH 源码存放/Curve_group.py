@@ -3735,12 +3735,12 @@ try:
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Curve()
                 self.SetUpParam(p, "Curve", "C", "orientation of Curve to be determined")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
-                p = Grasshopper.Kernel.Parameters.Param_Geometry()
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
                 self.SetUpParam(p, "Geometry", "G", "A set of objects A that affect the direction of a curve")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Boolean()
@@ -3849,13 +3849,62 @@ try:
                     rcurve.Reverse()
                 return rcurve
 
+            def temp_vector(self, tuple):
+                Points, Curve = tuple
+                new_Point = Points[::-1] if self.Reverse else Points  # 判断点列表是否反转
+
+                rcurve = self.get_vector(new_Point, Curve)  # 根据点列表判断是否反转
+
+                return rcurve
+
+            def temp(self, tuple):
+                Curve, Geometry, Path = tuple
+
+                Cut_None_Geometry = filter(None, Geometry)
+                Cut_None_Curve = filter(None, Curve)
+
+                if len(Cut_None_Curve) == 0:
+                    r_curve = []
+                else:
+                    Curve_Point = map(lambda one_curve: self.compare_distance(one_curve, Cut_None_Geometry), Cut_None_Curve)  # 将单根线和一组物体传入主方法中
+                    zip_list = zip(Curve_Point, Curve)
+                    r_curve = map(self.temp_vector, zip_list)
+
+                iter_group_data = self.split_tree(r_curve, Path)
+
+                return iter_group_data
+
+            def temp_by_match_tree(self, *args):
+                # 参数化匹配数据
+                value_list, trunk_paths = zip(*map(self.Branch_Route, args))
+                len_list = map(lambda x: len(x), value_list)  # 得到最长的树
+                max_index = len_list.index(max(len_list))  # 得到最长的树的下标
+                max_trunk = value_list[max_index]
+                ref_trunk_path = trunk_paths[max_index]
+                other_list = [value_list[_] for _ in range(len(value_list)) if _ != max_index]  # 剩下的树
+                matchzip = zip([max_trunk] * len(other_list), other_list)
+
+                def sub_match(tuple_data):
+                    # 子树匹配
+                    target_tree, other_tree = tuple_data
+                    t_len, o_len = len(target_tree), len(other_tree)
+                    if o_len == 0:
+                        new_tree = [other_tree] * len(target_tree)
+                    else:
+                        new_tree = other_tree + [other_tree[-1]] * (t_len - o_len)
+                    return new_tree
+
+                iter_group = map(sub_match, matchzip)
+                iter_group.insert(max_index, max_trunk)
+
+                return iter_group, ref_trunk_path
+
             def RunScript(self, Curve, Geomertry, Reverse):
                 try:
                     rcurve = gd[object]()
                     sc.doc = Rhino.RhinoDoc.ActiveDoc
 
-                    structure_tree, structure_tree1 = self.Params.Input[0].VolatileData, self.Params.Input[
-                        1].VolatileData
+                    structure_tree, structure_tree1 = self.Params.Input[0].VolatileData, self.Params.Input[1].VolatileData
                     temp_geo_list = [list(i) for i in structure_tree.Branches]
                     temp_geo_list1 = [list(i) for i in structure_tree1.Branches]
                     if len(temp_geo_list) < 1 or len(temp_geo_list1) < 1:
@@ -3866,11 +3915,13 @@ try:
                     if len(re_mes) > 0:
                         return None
                     else:
-                        curve_point = self.compare_distance(Curve, Geomertry)
-                        if Reverse:
-                            rcurve = self.get_vector(curve_point[::-1], Curve)
-                        else:
-                            rcurve = self.get_vector(curve_point, Curve)
+                        self.Reverse = Reverse
+                        iter_group, target_Path = self.temp_by_match_tree(Curve, Geomertry)
+                        trunk_Curve, trunk_Geometry = iter_group
+
+                        zip_list = zip(trunk_Curve, trunk_Geometry, target_Path)
+                        ungroup_data = map(self.temp, zip_list)
+                        rcurve = self.format_tree(ungroup_data)
 
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
@@ -4906,6 +4957,7 @@ try:
                                 temp_e.append("They're not on the same plane")
                                 temp_v.append(100)
                                 temp_c4.append(origin_b_curve[index_curve])
+                                break
                             else:
                                 # 判断曲线中的点是否在封闭线内部
                                 if a_curve.Contains(par_pt, self.ref_pln, self.tol) == rg.PointContainment.Inside:
