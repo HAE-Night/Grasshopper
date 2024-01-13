@@ -435,7 +435,7 @@ try:
                             if sub_dis_list[count - 1]:
                                 new_item = c_item.Offset(curve_planar, sub_dis_list[count - 1],
                                                          sc.doc.ModelAbsoluteTolerance, rg.CurveOffsetCornerStyle.
-                                None)[0]
+                                                         None)[0]
                             else:
                                 new_item = c_item
                             offset_line_list.append(new_item)
@@ -1686,6 +1686,10 @@ try:
                                                                    "Scavenger", "B-Curve")
                 return instance
 
+            def __init__(self):
+                self.bool_factor = False
+                pass
+
             def get_ComponentGuid(self):
                 return System.Guid("ff552258-2c50-4fe8-b032-9ec25ef804b5")
 
@@ -1724,31 +1728,118 @@ try:
                 self.SetUpParam(p, "Sort_Curve", "C", "Sorted list of curves")
                 self.Params.Output.Add(p)
 
-            def SolveInstance(self, DA):
-                p0 = self.marshal.GetInput(DA, 0)
-                p1 = self.marshal.GetInput(DA, 1)
-                p2 = self.marshal.GetInput(DA, 2)
-                result = self.RunScript(p0, p1, p2)
+            def sort_cur(self, set_data):
+                # 获取片段集合中所有点和平面
+                origin_curs, pl = set_data
+                curs = map(self._trun_object, origin_curs)
+                pl = self._trun_object(pl)
+                if len(curs):
+                    # 新建字典
+                    dict_pt_data = dict()
+                    from_plane = rg.Plane.WorldXY
+                    # 获取转换过程
+                    xform = rg.Transform.PlaneToPlane(pl, from_plane)
+                    # 取线的中心点
+                    pts = [rs.CurveMidPoint(cur) for cur in curs]
+                    # 复制点列表
+                    copy_pt = [rg.Point3d(_) for _ in pts]
+                    # 将转换过程映射至点集合副本中
+                    [_.Transform(xform) for _ in copy_pt]
+                    dict_pt_data['X'] = [_.X for _ in copy_pt]
+                    dict_pt_data['Y'] = [_.Y for _ in copy_pt]
+                    dict_pt_data['Z'] = [_.Z for _ in copy_pt]
+                    # 按轴排序，最后结果映射只源点列表中
+                    zip_list_sort = zip(dict_pt_data[self.axis], origin_curs)
+                    res_origin_curs = zip(*sorted(zip_list_sort))[1]
+                else:
+                    res_origin_curs = []
+                return res_origin_curs
 
-                if result is not None:
-                    self.marshal.SetOutput(result, DA, 0, True)
+            def SolveInstance(self, DA):
+                # 插件名称
+                self.Message = 'Sort Curve'
+                # 初始化输出端数据内容
+                Sort_Cur = gd[object]()
+                if self.RunCount == 1:
+                    # 获取输入端
+                    p0 = self.Params.Input[0].VolatileData
+                    p1 = self.Params.Input[1].VolatileData
+                    p2 = self.Params.Input[2].VolatileData
+                    # 确定不变全局参数
+                    self.axis = str(p1[0][0]).upper()
+                    self.j_bool_f1 = self.parameter_judgment(p0)[0]
+                    re_mes = Message.RE_MES([self.j_bool_f1], ['C end'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                    else:
+                        # 多进程方法
+                        def temp(tuple_data):
+                            # 解包元组元素
+                            origin_cur_list, origin_pl_list, origin_path = tuple_data
+                            # 若平面有多个，重新赋值
+                            o_pl_len = len(origin_pl_list)
+                            if o_pl_len == 1:
+                                origin_cur_list = [origin_cur_list]
+                            else:
+                                origin_cur_list = [origin_cur_list[:] for _ in range(o_pl_len)]
+                            # 每个单元切片进行主方法排序
+                            sub_zip_list = zip(origin_cur_list, origin_pl_list)
+                            res_cur_list = map(self.sort_cur, sub_zip_list)
+                            # 每个单元切片是否有数据输出
+                            if res_cur_list:
+                                ungroup_data = self.split_tree(res_cur_list, origin_path)
+                            else:
+                                ungroup_data = self.split_tree([[]], origin_path)
+                            return ungroup_data
+
+                        # 数据匹配
+                        cur_trunk, cur_path_trunk = self.Branch_Route(p0)
+                        pl_trunk, pl_path_trunk = self.Branch_Route(p2)
+                        cur_len, pl_len = len(cur_trunk), len(pl_trunk)
+                        if cur_len > pl_len:
+                            new_cur_trunk = cur_trunk
+                            new_pl_trunk = pl_trunk + [pl_trunk[-1]] * (cur_len - pl_len)
+                            path_trunk = cur_path_trunk
+                        elif cur_len < pl_len:
+                            new_cur_trunk = cur_trunk + [cur_trunk[-1]] * (pl_len - cur_len)
+                            new_pl_trunk = pl_trunk
+                            path_trunk = pl_path_trunk
+                        else:
+                            new_cur_trunk = cur_trunk
+                            new_pl_trunk = pl_trunk
+                            path_trunk = cur_path_trunk
+                        zip_list = zip(new_cur_trunk, new_pl_trunk, path_trunk)
+                        # 获得结果树列表
+                        iter_ungroup_data = ghp.run(temp, zip_list)
+                        Sort_Cur = self.format_tree(iter_ungroup_data)
+
+                # 将结果添加进输出端
+                DA.SetDataTree(0, Sort_Cur)
 
             def get_Internal_Icon_24x24(self):
                 o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAANlSURBVEhLvZVbSBRRGMfXygiLHqKQCFKIkAy6sHjJdefM7O7MmZm92IV9KKhAy4cIesmnHjZ6LCjooadehAhLMNDoQkJBXnZ3ZnZX3TRvmYkvFhhCEBaevjN9LW7tFGb0Axnnf/Z8l/N93xnXf4eEzK2CmmyMxdgalP4tomzUqEfnmFc1FJRswGmVqKZi0Wh2PUp/h9ttFotaek6gZjtKNoJq3tWjH5kUtNwo/UxRDX1c7orF/py5QJM3CbU+LY9W1Kz7yuEZ5lWSdSjlAQF55YYpJlKTouQMOIj4Q6+ZEOjfjZKLqGabcvgdg2ctSnkI1Lgm6UPjsPcWSs6ImuHxh0cZkRMHUAIHxj0eIdTiIEo5eEOAgwGBpq7Dc5SQ5+twqTBeOd7iC75i9WpqG0q/dUCoIRI1tSjqA11Qv0VCkwFc+hVZzmwE4/OQ6lOUbMBBm6MDxTgPNbvM/4dmiMHeC/ZCIcB7q9wwzQTd2oOSDUTZIUfeOGSQFuXwZBMYPyeHx5ocMyA0FdCOvWeC0n8JpRxwtl3cAdHTubr8oBK6LRSaLeHZ86fDrLAiiHJY1AZGUMiDULNTjkzCHKT2o7QyIM1y3jmCkjiBUh6CanQFwuNQ+HglSitDoskKf3jMcVBW7YCfIwzRgkDjd1DKg2hm56occCDKq/yYvNTYjlIOQbWe8Aw9NLEXpRy1St8WXzBbXR+29tXRngpeT1zKx+frL7WvCGrd4O+SauyyFwC4a7r9kIGkW2UwqRv8oZEWX3iw1F7TDBkC6xX1oWlo4/FolK21NxUCinwbWnJe0FKafV2oVivXeRf5gsNLnpC5E9YfRI5/hZmwmu1NCMxBFgbuJL4WxqsY1VJwiEHLngHjH/hcwOB0QAY9YOALGO+mR2aZqKWmfMG+HbgNjCevwBE/xFdnCO0vh/SZV7cE3llwQ86gQcjGYAEYNkkbXPDQl7laSIrl5kFJWuYUOKpyrAEHotADkQkmKd8H6pDUWwbDl7EN64MwaNklmHTZ/jEiqsZpf2TiBQTzDNq8nRDmfJt6aeIRnPfc8iu3Wo1vJlqmW254C5/SeBPKOUQ1SXz8DtLSZ6EujbB3Ey7lw6PmXy2Yh4so5eCf0kIXHYd3jbuZFbubTfvP8Yj4tMJZfnaHzBKUVonL9Q2mpZtIkFobPgAAAABJRU5ErkJggg=="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
-            def __init__(self):
-                self.bool_factor = False
-                pass
+            def _trun_object(self, ref_obj):
+                """引用物体转换为GH内置物体"""
+                if 'ReferenceID' in dir(ref_obj):
+                    if ref_obj.IsReferencedGeometry:
+                        test_pt = ref_obj.Value
+                    else:
+                        test_pt = ref_obj.Value
+                else:
+                    test_pt = ref_obj
+                return test_pt
 
-            # def _sort_by_length(self, list_data):
-            #     for f in range(len(list_data)):
-            #         for s in range(len(list_data) - 1 - f):
-            #             first_line = list_data[s].GetLength()
-            #             second_line = list_data[s + 1].GetLength()
-            #             if first_line > second_line:
-            #                 list_data[s], list_data[s + 1] = list_data[s + 1], list_data[s]
-            #     return list_data
+            def parameter_judgment(self, tree_par_data):
+                # 获取输入端参数所有数据
+                geo_list, geo_path = self.Branch_Route(tree_par_data)
+                if geo_list:
+                    j_list = any(ghp.run(lambda x: len(list(filter(None, x))), geo_list))  # 去空操作, 判断是否为空
+                else:
+                    j_list = False
+                return j_list, geo_list, geo_path
 
             def Branch_Route(self, Tree):
                 """分解Tree操作，树形以及多进程框架代码"""
@@ -1782,45 +1873,34 @@ try:
                             stock_tree.Insert(item, path, index)
                 return stock_tree
 
-            def _sort_by_xyz(self, data, axis, coord_pl):
-                xform = rg.Transform.PlaneToPlane(coord_pl, rg.Plane.WorldXY)
-                pt_list = map(lambda x: rs.CurveMidPoint(x), data)
-                copy_pt = [rg.Point3d(_) for _ in pt_list]
-                [_.Transform(xform) for _ in copy_pt]
-                X, Y, Z = zip(*copy_pt)
-                target_axis = eval(axis)
-                tuple_data = zip(target_axis, range(len(target_axis)))
-                index_list = [_[1] for _ in sorted(tuple_data)]
-                return index_list
-
-            def RunScript(self, Curve, Axis, CP):
-                try:
-                    Sort_Curve = gd[object]()
-                    # 判断输入的列表是否都为空
-                    structure_tree = self.Params.Input[0].VolatileData
-                    temp_geo_list, geo_path = self.Branch_Route(structure_tree)
-                    length_list = [len(filter(None, _)) for _ in temp_geo_list]
-
-                    bool_factor = any(length_list)
-                    re_mes = Message.RE_MES([bool_factor], ['Curve'])
-                    Sort_Curve = gd[object]()
-                    if len(re_mes) > 0:
-                        for mes_i in re_mes:
-                            Message.message2(self, mes_i)
-                    else:
-                        # "---------------------------"
-                        origin_curve = filter(None, self.Branch_Route(structure_tree)[0][self.RunCount - 1])
-                        # "---------------------------"
-                        origin_path = self.Branch_Route(structure_tree)[1][self.RunCount - 1]
-                        if len(origin_curve) == 0:
-                            Sort_Curve.AddRange([], GH_Path(tuple(origin_path)))
-                        else:
-                            Axis = Axis.upper()
-                            index_list = self._sort_by_xyz(filter(None, Curve), Axis, CP)
-                            Sort_Curve.AddRange([origin_curve[_] for _ in index_list], GH_Path(tuple(origin_path)))
-                    return Sort_Curve
-                finally:
-                    self.Message = "Sort Curve"
+            # def RunScript(self, Curve, Axis, CP):
+            #     try:
+            #         Sort_Curve = gd[object]()
+            #         # 判断输入的列表是否都为空
+            #         structure_tree = self.Params.Input[0].VolatileData
+            #         temp_geo_list, geo_path = self.Branch_Route(structure_tree)
+            #         length_list = [len(filter(None, _)) for _ in temp_geo_list]
+            #
+            #         bool_factor = any(length_list)
+            #         re_mes = Message.RE_MES([bool_factor], ['Curve'])
+            #         Sort_Curve = gd[object]()
+            #         if len(re_mes) > 0:
+            #             for mes_i in re_mes:
+            #                 Message.message2(self, mes_i)
+            #         else:
+            #             # "---------------------------"
+            #             origin_curve = filter(None, self.Branch_Route(structure_tree)[0][self.RunCount - 1])
+            #             # "---------------------------"
+            #             origin_path = self.Branch_Route(structure_tree)[1][self.RunCount - 1]
+            #             if len(origin_curve) == 0:
+            #                 Sort_Curve.AddRange([], GH_Path(tuple(origin_path)))
+            #             else:
+            #                 Axis = Axis.upper()
+            #                 index_list = self._sort_by_xyz(filter(None, Curve), Axis, CP)
+            #                 Sort_Curve.AddRange([origin_curve[_] for _ in index_list], GH_Path(tuple(origin_path)))
+            #         return Sort_Curve
+            #     finally:
+            #         self.Message = "Sort Curve"
 
 
         # 均分曲线
