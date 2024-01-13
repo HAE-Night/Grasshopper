@@ -1024,6 +1024,9 @@ try:
                                                                    "RPP_SurfaceSortByXYZ", "E15", """Surface sort，Enter xyz axis to sort，can be sorted by reference plane""", "Scavenger", "C-Surface")
                 return instance
 
+            def __init__(self):
+                self.dict_axis = {'X': 0, 'Y': 1, 'Z': 2}
+
             def get_ComponentGuid(self):
                 return System.Guid("c5d243ad-a60f-46ff-8314-851545506bc1")
 
@@ -1062,21 +1065,118 @@ try:
                 self.SetUpParam(p, "Sort_Geo", "G", "The ordered surface")
                 self.Params.Output.Add(p)
 
-            def SolveInstance(self, DA):
-                p0 = self.marshal.GetInput(DA, 0)
-                p1 = self.marshal.GetInput(DA, 1)
-                p2 = self.marshal.GetInput(DA, 2)
-                result = self.RunScript(p0, p1, p2)
+            def sort_geo(self, set_data):
+                # 获取片段集合中所有点和平面
+                origin_geo, pl = set_data
+                geometry_list = map(self._trun_object, origin_geo)
+                pl = self._trun_object(pl)
+                if len(geometry_list):
+                    # 新建字典
+                    dict_pt_data = dict()
+                    from_plane = rg.Plane.WorldXY
+                    # 获取转换过程
+                    xform = rg.Transform.PlaneToPlane(pl, from_plane)
+                    # 取线的中心点
+                    pts = [HaeGeo.GeoCenter().center_box(geo) for geo in geometry_list]
+                    # 复制点列表
+                    copy_pt = [rg.Point3d(_) for _ in pts]
+                    # 将转换过程映射至点集合副本中
+                    [_.Transform(xform) for _ in copy_pt]
+                    dict_pt_data['X'] = [_.X for _ in copy_pt]
+                    dict_pt_data['Y'] = [_.Y for _ in copy_pt]
+                    dict_pt_data['Z'] = [_.Z for _ in copy_pt]
+                    # 按轴排序，最后结果映射只源点列表中
+                    zip_list_sort = zip(dict_pt_data[self.axis], origin_geo)
+                    res_origin_geo = zip(*sorted(zip_list_sort))[1]
+                else:
+                    res_origin_geo = []
+                return res_origin_geo
 
-                if result is not None:
-                    self.marshal.SetOutput(result, DA, 0, True)
+            def SolveInstance(self, DA):
+                # 插件名称
+                self.Message = 'Sort Point'
+                # 初始化输出端数据内容
+                Sort_Geo = gd[object]()
+                if self.RunCount == 1:
+                    # 获取输入端
+                    p0 = self.Params.Input[0].VolatileData
+                    p1 = self.Params.Input[1].VolatileData
+                    p2 = self.Params.Input[2].VolatileData
+                    # 确定不变全局参数
+                    self.axis = str(p1[0][0]).upper()
+                    self.j_bool_f1 = self.parameter_judgment(p0)[0]
+                    re_mes = Message.RE_MES([self.j_bool_f1], ['G end'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                    else:
+                        # 多进程方法
+                        def temp(tuple_data):
+                            # 解包元组元素
+                            origin_geo_list, origin_pl_list, origin_path = tuple_data
+                            # 若平面有多个，重新赋值
+                            o_pl_len = len(origin_pl_list)
+                            if o_pl_len == 1:
+                                origin_geo_list = [origin_geo_list]
+                            else:
+                                origin_geo_list = [origin_geo_list[:] for _ in range(o_pl_len)]
+                            # 每个单元切片进行主方法排序
+                            sub_zip_list = zip(origin_geo_list, origin_pl_list)
+                            res_cur_list = map(self.sort_geo, sub_zip_list)
+                            # 每个单元切片是否有数据输出
+                            if res_cur_list:
+                                ungroup_data = self.split_tree(res_cur_list, origin_path)
+                            else:
+                                ungroup_data = self.split_tree([[]], origin_path)
+                            return ungroup_data
+
+                        # 数据匹配
+                        geo_trunk, geo_path_trunk = self.Branch_Route(p0)
+                        pl_trunk, pl_path_trunk = self.Branch_Route(p2)
+                        geo_len, pl_len = len(geo_trunk), len(pl_trunk)
+                        if geo_len > pl_len:
+                            new_geo_trunk = geo_trunk
+                            new_pl_trunk = pl_trunk + [pl_trunk[-1]] * (geo_len - pl_len)
+                            path_trunk = geo_path_trunk
+                        elif geo_len < pl_len:
+                            new_geo_trunk = geo_trunk + [geo_trunk[-1]] * (pl_len - geo_len)
+                            new_pl_trunk = pl_trunk
+                            path_trunk = pl_path_trunk
+                        else:
+                            new_geo_trunk = geo_trunk
+                            new_pl_trunk = pl_trunk
+                            path_trunk = geo_path_trunk
+                        zip_list = zip(new_geo_trunk, new_pl_trunk, path_trunk)
+                        # 获得结果树列表
+                        iter_ungroup_data = ghp.run(temp, zip_list)
+                        Sort_Geo = self.format_tree(iter_ungroup_data)
+
+                # 将结果添加进输出端
+                DA.SetDataTree(0, Sort_Geo)
 
             def get_Internal_Icon_24x24(self):
                 o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAARtSURBVEhLnZV9TBtlHMcPsogSZxgaNufWAnuRTXQVRtgYUF5K2yvXQjfAKCjbWBzGBbbMsEViiEZINEYYQ3AvDF3IdKMFWt567fWutFAoK4O9CWR/jDj+nNE/jC8Z8vOeu4e+QNXIJ/mlzz2/b++Tu+fuOeL/snB4Yet86fxuqINwPBUEABGGh37Wha+rkkZKu2IjY1EZ4iPjDZJIiTGcCK/GER8sZXc6qVG4qDZuwVM+bBrbF3aS++F60fVn8JSILEo2R2fYoD99UCgmk4W2pK8hjAirxxEfFvWgmyE5aMnulOIpAe+75kiapH+6pZ8GC8kU4mmB57Qvah9P5HrBlmkXajxnAuoTG4DvBQURNGlx2UgWLihuSPCUAKOlywbVQzMDVN+1IRXN4mmB+DLJ24tjOR6wZFiFQuPqHSeRYJ8Y8fNPAlpjcfUrBz/oqW6MGlAPLjJaZiNuEXuOx1cKJw0UVMQdQ4JXxIifUALvm9wLjIYBq5rhrKStY7xgAvirOI7bRMqJ7VWrBOWxh5Fgpxjxsyz4NkDAaK0nGZJ9bFKbPu8lzY12rZ2j1VYvbhNJ7217f5XgSOxRJNglRvysFPChsCFy6FGvsv8zIcBjLLma6NKNQF8enYiOd7wjLV9aKUBXxfdSUCCQUAJDvkHRIe+IEgKYLqor15hnjEHjDbrNhT8HCkazx6Bu98dIoEWBQELdov8kNXrfveEsF6B3AQnQuDWpDQlOiQk/axJsitj0XW+aWXjBkAD99qSZICYi5iqO+FiTgOdEs6wFnFkjggBdCRrvj94/x/eC9py1CjJO7TwN7pxx3zqgt7lUUrbI9+LFiMhaBS8Vbyn5I3ChkezDhFq0DkoxIhJKwBbTyZNFk/Wcjqt3FjprHTpHlaXIHY3bAk8pYvJ+RE/PsgDdoibZOSSoECMioQRmyix3Uq7ePuWAkdbQs9P6O2BQmhNwW4S/33cCnyRHlhMuJbfD+oj1n+CIwLKgM9sQtJsuM6xj7/KiVQ8HkRS118PKHT4BJx+GFlkr6ON0Dx+UPhyfq3ikQTmLaohBAqlU/vRS7S/bFsrne+1arhP1XHr7p/x+9GeL/Maz6DiI5A0pEysFF5IugSz6tR47af/t7qFZ8L4x/Q2bb789oLI8mXrrVrP34M1f7x+agYsZlytnjk5u9hR4oEvRXYJPGUza82lBLxu6RZf3tqM1qOwhe17tU/b9PlVwG1iNAywqK9zUTcIINQZfZbbVov87dKzHrBzoQuNQRCg3KhdWLnLjniYkOIYC5zPOq/gd8i9GzQmCUf7kV7KufIl6Tr31yFzxA+AKuHPuInfNVMlUDa2l41BvGQm/ez6ZUc0JGx2q+6pZ+GhXHRIoxAhBdGS1nx6l3OCmPHAt53sOTxP9mv6Dw5TLxH/RWL5GHdTwiIk0HcBtAXVuTC7UvHwGqrZXC3Um4SykRqcu8b2tYkSkW9F9z5HvhIb0hlXfin8Dfd5SQ9TrfAXRKm9KbE5vXvWtDg1B/A2DtsHmaBDYdQAAAABJRU5ErkJggg=="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
-            def __init__(self):
-                self.dict_axis = {'X': 0, 'Y': 1, 'Z': 2}
+            def _trun_object(self, ref_obj):
+                """引用物体转换为GH内置物体"""
+                if 'ReferenceID' in dir(ref_obj):
+                    if ref_obj.IsReferencedGeometry:
+                        test_pt = ref_obj.Value
+                    else:
+                        test_pt = ref_obj.Value
+                else:
+                    test_pt = ref_obj
+                return test_pt
+
+            def parameter_judgment(self, tree_par_data):
+                # 获取输入端参数所有数据
+                geo_list, geo_path = self.Branch_Route(tree_par_data)
+                if geo_list:
+                    j_list = any(ghp.run(lambda x: len(list(filter(None, x))), geo_list))  # 去空操作, 判断是否为空
+                else:
+                    j_list = False
+                return j_list, geo_list, geo_path
 
             def Branch_Route(self, Tree):
                 """分解Tree操作，树形以及多进程框架代码"""
@@ -1110,107 +1210,90 @@ try:
                             stock_tree.Insert(item, path, index)
                 return stock_tree
 
-            def parameter_judgment(self, tree_par_data):
-                # 获取输入端参数所有数据
-                geo_list = self.Branch_Route(tree_par_data)[0]
-                j_list = filter(None, list(chain(*geo_list)))  # 获取所有数据
-                return j_list, geo_list
+            # def Get_different_Center(self, brep, type_str):  # 不同的物体求中心点
+            #     if "Plane" in type_str:
+            #         center = brep.Origin
+            #     elif "Circle" in type_str or "Box" in type_str or 'Rectangle' in type_str:
+            #         center = brep.Center
+            #     elif "Point" in type_str:
+            #         center = brep
+            #     elif "Arc" in type_str or "Curve" in type_str:
+            #         brep = brep.ToNurbsCurve()
+            #         center = brep.GetBoundingBox(True).Center
+            #     elif "Line" in type_str:
+            #         center = brep.BoundingBox.Center
+            #     else:
+            #         center = brep.GetBoundingBox(True).Center
+            #     return center
+            #
+            # # 求边界框的中心点
+            # def center_box(self, Box):
+            #     if not Box: return
+            #     type_str = str(type(Box))
+            #
+            #     # 群组物体判断
+            #     if 'List[object]' in type_str:
+            #         bbox = rg.BoundingBox.Empty  # 获取边界框
+            #         Pt = []
+            #         for brep in Box:
+            #             type_str = str(type(brep))
+            #             if "Circle" in type_str or 'Rectangle' in type_str or "Box" in type_str:
+            #                 bbox.Union(brep.BoundingBox)  # 获取几何边界
+            #             elif "Plane" in type_str or 'Point' in type_str or 'Arc' in type_str:
+            #                 Pt.append(self.Get_different_Center(brep, type_str))
+            #                 bbox = rg.BoundingBox(Pt)
+            #             elif "Curve" in type_str:
+            #                 brep = brep.ToNurbsCurve()
+            #                 bbox.Union(brep.GetBoundingBox(True))
+            #             elif "Line" in type_str:
+            #                 bbox.Union(brep.BoundingBox.Center)
+            #             else:
+            #                 bbox.Union(brep.GetBoundingBox(rg.Plane.WorldXY))
+            #
+            #         center = bbox.Center
+            #     else:  # 不是群组
+            #         center = self.Get_different_Center(Box, type_str)
+            #     return center
 
-            def _trun_object(self, ref_obj):
-                """引用物体转换为GH内置物体"""
-                if 'ReferenceID' in dir(ref_obj):
-                    if ref_obj.IsReferencedGeometry:
-                        test_pt = ref_obj.Value
-                    else:
-                        test_pt = ref_obj.Value
-                else:
-                    test_pt = ref_obj
-                return test_pt
-
-            def Get_different_Center(self, brep, type_str):  # 不同的物体求中心点
-                if "Plane" in type_str:
-                    center = brep.Origin
-                elif "Circle" in type_str or "Box" in type_str or 'Rectangle' in type_str:
-                    center = brep.Center
-                elif "Point" in type_str:
-                    center = brep
-                elif "Arc" in type_str or "Curve" in type_str:
-                    brep = brep.ToNurbsCurve()
-                    center = brep.GetBoundingBox(True).Center
-                elif "Line" in type_str:
-                    center = brep.BoundingBox.Center
-                else:
-                    center = brep.GetBoundingBox(True).Center
-                return center
-
-            # 求边界框的中心点
-            def center_box(self, Box):
-                if not Box: return
-                type_str = str(type(Box))
-
-                # 群组物体判断
-                if 'List[object]' in type_str:
-                    bbox = rg.BoundingBox.Empty  # 获取边界框
-                    Pt = []
-                    for brep in Box:
-                        type_str = str(type(brep))
-                        if "Circle" in type_str or 'Rectangle' in type_str or "Box" in type_str:
-                            bbox.Union(brep.BoundingBox)  # 获取几何边界
-                        elif "Plane" in type_str or 'Point' in type_str or 'Arc' in type_str:
-                            Pt.append(self.Get_different_Center(brep, type_str))
-                            bbox = rg.BoundingBox(Pt)
-                        elif "Curve" in type_str:
-                            brep = brep.ToNurbsCurve()
-                            bbox.Union(brep.GetBoundingBox(True))
-                        elif "Line" in type_str:
-                            bbox.Union(brep.BoundingBox.Center)
-                        else:
-                            bbox.Union(brep.GetBoundingBox(rg.Plane.WorldXY))
-
-                    center = bbox.Center
-                else:  # 不是群组
-                    center = self.Get_different_Center(Box, type_str)
-                return center
-
-            def _other_fun(self, data_list, axis, coord_pl):
-                xform = rg.Transform.PlaneToPlane(coord_pl, rg.Plane.WorldXY)
-
-                for f_index in range(len(data_list)):
-                    for s_index in range(len(data_list) - 1 - f_index):
-                        if not data_list[s_index]:
-                            continue
-                        first_center_pt = self.center_box(self._trun_object(data_list[s_index]))
-                        if data_list[s_index + 1]:
-                            second_center_pt = self.center_box(self._trun_object(data_list[s_index + 1]))
-                        first_center_pt.Transform(xform)
-                        second_center_pt.Transform(xform)
-
-                        first_center_axis = first_center_pt[self.dict_axis[axis]]
-                        second_center_axis = second_center_pt[self.dict_axis[axis]]
-                        if first_center_axis > second_center_axis:
-                            data_list[s_index], data_list[s_index + 1] = data_list[s_index + 1], data_list[s_index]
-                return data_list
-
-            def RunScript(self, Geo, Axis, CP):
-                try:
-                    Sort_Geo = gd[object]()
-                    j_list_1, temp_geo_list = self.parameter_judgment(self.Params.Input[0].VolatileData)
-
-                    re_mes = Message.RE_MES([j_list_1], ['Geo'])
-                    if len(re_mes) > 0:
-                        for mes_i in re_mes:
-                            Message.message2(self, mes_i)
-                    else:
-                        Axis = Axis.upper()
-                        if Axis not in ['X', 'Y', 'Z']:
-                            Message.message2(self, "输入了错误的轴！")
-                        else:
-                            structure_tree = self.Params.Input[0].VolatileData
-                            origin_surface = self.Branch_Route(structure_tree)[0][self.RunCount - 1]
-                            Sort_Geo = self._other_fun(origin_surface, Axis, CP)
-                    return Sort_Geo
-                finally:
-                    self.Message = 'Surface sort'
+            # def _other_fun(self, data_list, axis, coord_pl):
+            #     xform = rg.Transform.PlaneToPlane(coord_pl, rg.Plane.WorldXY)
+            #
+            #     for f_index in range(len(data_list)):
+            #         for s_index in range(len(data_list) - 1 - f_index):
+            #             if not data_list[s_index]:
+            #                 continue
+            #             first_center_pt = self.center_box(self._trun_object(data_list[s_index]))
+            #             if data_list[s_index + 1]:
+            #                 second_center_pt = self.center_box(self._trun_object(data_list[s_index + 1]))
+            #             first_center_pt.Transform(xform)
+            #             second_center_pt.Transform(xform)
+            #
+            #             first_center_axis = first_center_pt[self.dict_axis[axis]]
+            #             second_center_axis = second_center_pt[self.dict_axis[axis]]
+            #             if first_center_axis > second_center_axis:
+            #                 data_list[s_index], data_list[s_index + 1] = data_list[s_index + 1], data_list[s_index]
+            #     return data_list
+            #
+            # def RunScript(self, Geo, Axis, CP):
+            #     try:
+            #         Sort_Geo = gd[object]()
+            #         j_list_1, temp_geo_list = self.parameter_judgment(self.Params.Input[0].VolatileData)
+            #
+            #         re_mes = Message.RE_MES([j_list_1], ['Geo'])
+            #         if len(re_mes) > 0:
+            #             for mes_i in re_mes:
+            #                 Message.message2(self, mes_i)
+            #         else:
+            #             Axis = Axis.upper()
+            #             if Axis not in ['X', 'Y', 'Z']:
+            #                 Message.message2(self, "输入了错误的轴！")
+            #             else:
+            #                 structure_tree = self.Params.Input[0].VolatileData
+            #                 origin_surface = self.Branch_Route(structure_tree)[0][self.RunCount - 1]
+            #                 Sort_Geo = self._other_fun(origin_surface, Axis, CP)
+            #         return Sort_Geo
+            #     finally:
+            #         self.Message = 'Surface sort'
 
 
         # 延伸曲面（不含非规整曲面）
@@ -1253,7 +1336,7 @@ try:
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_Surface()
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
                 self.SetUpParam(p, "Result_Surface", "S", "The extended surface")
                 self.Params.Output.Add(p)
 
