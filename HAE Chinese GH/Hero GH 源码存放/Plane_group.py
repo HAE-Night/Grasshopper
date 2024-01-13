@@ -514,33 +514,82 @@ try:
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
-                p0 = self.marshal.GetInput(DA, 0)
-                p1 = self.marshal.GetInput(DA, 1)
-                p2 = self.marshal.GetInput(DA, 2)
-                p3 = self.marshal.GetInput(DA, 3)
-                result = self.RunScript(p0, p1, p2, p3)
+                self.Message = 'Construct a work plane'
+                plane = gd[object]()
+                if self.RunCount == 1:
+                    def _do_main(tuple_data):
+                        a_part_trunk, b_part_trunk, origin_path = tuple_data
+                        new_list_data = list(b_part_trunk)
+                        new_list_data.insert(self.max_index, a_part_trunk)  # 将最长的数据插入到原列表中
+                        match_orgin, match_x, match_y, match_z = new_list_data
 
-                if result is not None:
-                    self.marshal.SetOutput(result, DA, 0, True)
+                        GH_orgin_list, GH_x_list, GH_y_list, GH_z_list = self.match_list(match_orgin, match_x, match_y,
+                                                                                         match_z)  # 将数据二次匹配列表里面的数据
+
+                        orgin_list = [_.Value if _ is not None else _ for _ in GH_orgin_list]  # 将引用物体转换为GH内置物体
+                        x_list = [_.Value if _ is not None else _ for _ in GH_x_list]
+                        y_list = [_.Value if _ is not None else _ for _ in GH_y_list]
+                        z_list = [_.Value if _ is not None else _ for _ in GH_z_list]
+
+                        zip_list = zip(orgin_list, x_list, y_list, z_list)
+                        Plane = ghp.run(self.Judge_Vector_Plane, zip_list)  # 传入获取主方法中
+
+                        ungroup_data = self.split_tree(Plane, origin_path)
+                        Rhino.RhinoApp.Wait()
+                        return ungroup_data
+
+                    def temp_by_match_tree(*args):
+                        # 参数化匹配数据
+                        value_list, trunk_paths = zip(*map(self.Branch_Route, args))
+                        len_list = map(lambda x: len(x), value_list)  # 得到最长的树
+                        max_index = len_list.index(max(len_list))  # 得到最长的树的下标
+                        self.max_index = max_index
+                        max_trunk = [_ if len(_) != 0 else [None] for _ in value_list[max_index]]
+                        ref_trunk_path = trunk_paths[max_index]
+                        other_list = [
+                            map(lambda x: x if len(x) != 0 else [None], value_list[_]) if len(value_list[_]) != 0 else [[None]]
+                            for _ in range(len(value_list)) if _ != max_index]  # 剩下的树, 没有的值加了个None进去方便匹配数据
+                        matchzip = zip([max_trunk] * len(other_list), other_list)
+
+                        def sub_match(tuple_data):
+                            # 子树匹配
+                            target_tree, other_tree = tuple_data
+                            t_len, o_len = len(target_tree), len(other_tree)
+                            if o_len == 0:
+                                new_tree = [other_tree] * len(target_tree)
+                            else:
+                                new_tree = other_tree + [other_tree[-1]] * (t_len - o_len)
+                            return new_tree
+
+                        # 打包数据结构
+                        other_zip_trunk = zip(*map(sub_match, matchzip))
+
+                        zip_list = zip(max_trunk, other_zip_trunk, ref_trunk_path)
+                        # 多进程函数运行
+                        iter_ungroup_data = ghp.run(_do_main, zip_list)
+                        temp_data = self.format_tree(iter_ungroup_data)
+                        return temp_data
+
+                    plane = gd[object]()
+                    p0 = self.Params.Input[0].VolatileData
+                    p1 = self.Params.Input[1].VolatileData
+                    p2 = self.Params.Input[2].VolatileData
+                    p3 = self.Params.Input[3].VolatileData
+
+                    j_list = any([len(_i) for _i in self.Branch_Route(p0)[0]])
+
+                    re_mes = Message.RE_MES([j_list], ['O'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                    else:
+                        plane = temp_by_match_tree(p0, p1, p2, p3)  # 单次匹配树形数据结构
+
+                DA.SetDataTree(0, plane)  # 返回值
 
             def get_Internal_Icon_24x24(self):
                 o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAPQSURBVEhLrVJrTFtlGO4PoybGLKIpm3aF0VKh13N6OC29nZqxbJTVQsbGZRcGZlN3yUBnjDplENu5RDOjZgnRPxNj5ozdhgOjY24z2cbmgEK5yJQEKmEHCv5wkymiPr5tT9hiHCFrn+TJd877fnme9/LJ7oRiH1OZvtn4kPSbWixxyrN033nwRD23QQqlFhkHuca8m5ugOiK0SqGU4oHsY09FmOtlyDlbOLvEmL5CiqcG6RvVXkOvD/q+YjAj66GoZwNSKjVQNdmPM2MboA/5YBophfqoe5TC9yWySSLNkqbI/XbNrHF4XdzAMFBMLIF8q6ZEupIclr9sqDN0+6C7UgRDXwm0l9dA2yFgae3jsWXHnuzD0nk3Pki8Ox7xZinTSzOtSr9zlBn3QfvVc1AHPkbWmx/+k13bLGo3fzqh2dEsanY3i+q9n4hZDc1EOhvp/+0T4qOeqqAktTCU/oJB01ghTB1+cOeAvPOzcL4VhXtXBMIbItwvjUPYJ8J25FfwlOM75mAbBJbXHbooSSwMZaBgyDTmgfHifrDf/Ab+o5/hquyBq4K4sReCrxvuwk7Y6wZhbhHBno6SyV9Q7D54TpJYGPMGHfthbr0B22vX4qKudSG4ShN0F3XC8Ww/uM/GkzQ4dQNW/zCcW8OwV4Xh2BKGs6YPrjLqZlMv8ut/pDsT4K8k0YHl3RE4dvTDvr0fjuo+OKvDcXGBOnHWhGEOXgf//d/3YHBJMnh/FI7n++GMVU87iFdfFoLwdFf8mzs2Dv7qvRjc0UF8LOtDcFSQAVUuFHfHDey1tOikRtR2E9bAMAQSj43ERiOyV9J4vFQ9vSq+KQL2zPySz0oSC+O/HeTTkoXYCyrvge2FH+K7iHXg2DkA7nN6Re1RWMhg6c4Di+zgQMGQMeqB4XIDTF/PgPliApaGYVhe/wl5h0ZgpdO69xq4wxGY2qIwtU8h59IcCqtfmbmgULT7lSu2kUxaQu1/kBFYNcR3eWA+3wDm9C0wZ6bBnoqC/ZLYGoX5+CTYlknKTc9TTQYVNa8CObmY4Wzo0rGTLRrde3uWKTlJ9jbMK61DvGBH+eqVCK+tQKioDN1rid7y22eMsbjETm8lBhwFmDZx+IW14I88G8A7EGF4dOnZCydztC9K8jIZk60RVToDtusZgOEAk3lRnCPhKHGKOE38nTqBxYlbZHYiWzslyctkmoyMD+SZyuBq9ZPBXWptcNsi+IxaH3xHlXP1z3jldhpTPnr0bPSkJrdpi1y+imTvT6gngcOZqirRbEGbRtvZqMzcQ6HHEpkYZLJ/ATSQkFQMCKhjAAAAAElFTkSuQmCC"
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
-
-            def __init__(self):
-                self.origin = rg.Point3d(0, 0, 0)
-
-            def message1(self, msg1):  # 报错红
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):  # 警告黄
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):  # 提示白
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
-
-            def mes_box(self, info, button, title):
-                return rs.MessageBox(info, button, title)
 
             def Branch_Route(self, Tree):
                 """分解Tree操作，树形以及多进程框架代码"""
@@ -578,86 +627,79 @@ try:
                 # 确保向量是单位向量
                 vector.Unitize()
                 z_vector.Unitize()
-
                 # 获取 另外 向量（通过 两个向量 的叉积获得）
                 other_vector = rg.Vector3d.CrossProduct(z_vector, vector)
                 other_vector.Unitize()
 
                 return other_vector
 
-            def get_one_AXis(self, one_Axis):
+            def get_one_AXis(self, origin, one_Axis):
                 # 根据一个向量构建平面
-                return rg.Plane(self.origin, one_Axis)
+                return rg.Plane(origin, one_Axis)
 
-            def get_two_Axis(self, one_Axis, other_Axis):
+            def get_two_Axis(self, origin, one_Axis, other_Axis):
                 # 根据两个向量构建平面
-                return rg.Plane(self.origin, one_Axis, other_Axis)
+                return rg.Plane(origin, one_Axis, other_Axis)
 
-            def Construct_plane(self, x, y, z):
-                # 根据三个向量构建工作平面
-                plane = rg.Plane(self.origin, x, y)
-                plane.ZAxis = z
-                return plane
-
-            def Judge_Vector_Plane(self, x, y, z):
+            def Judge_Vector_Plane(self, tuple):
+                origin, x, y, z = tuple
+                if origin is None:  # 直接返回None值
+                    return None
                 Axis_List = [x, y, z]
                 res = list(filter(None, Axis_List))
-                if len(res) == 1:
+                if len(res) == 0:
+                    plane = rg.Plane.WorldXY  # xyz向量都没给时，输出世界XY坐标轴
+                    Message.message2(self, "If you don't input axis,I will output XY plane!")
+                    plane.Origin = origin
+                elif len(res) == 1:
                     if Axis_List[0] != None:
-                        # x轴
+                        # 只有x轴
                         y_vector = rg.Vector3d(0, 1, 0)
-                        plane = self.get_two_Axis(x, y_vector)
+                        plane = self.get_two_Axis(origin, x, y_vector)
                     elif Axis_List[1] != None:
-                        # y轴
+                        # 只有y轴
                         x_vector = rg.Vector3d(1, 0, 0)
-                        plane = self.get_two_Axis(x_vector, y)
+                        plane = self.get_two_Axis(origin, x_vector, y)
                     else:
-                        # z轴
-                        plane = self.get_one_AXis(Axis_List[2])
+                        # 只有z轴
+                        plane = self.get_one_AXis(origin, Axis_List[2])
                 elif len(res) == 2:
                     if x != None and y != None:
-                        plane = self.get_two_Axis(x, y)
+                        plane = self.get_two_Axis(origin, x, y)  # 直接根据两个向量构造出一个平面
 
                     if x != None and z != None:
-                        y_vector = self.get_x_y_vector(x, z)
-                        plane = self.get_two_Axis(x, y_vector)
+                        y_vector = self.get_x_y_vector(x, z)  # 根据xz向量求出y向量
+                        plane = self.get_two_Axis(origin, x, y_vector)
 
                     if y != None and z != None:
-                        x_vector = self.get_x_y_vector(z, y)
-                        plane = self.get_two_Axis(x_vector, y)
-
+                        x_vector = self.get_x_y_vector(z, y)  # 根据yz向量求出x向量
+                        plane = self.get_two_Axis(origin, x_vector, y)
                 else:
-                    plane = self.get_two_Axis(x, y)
+                    plane = self.get_two_Axis(origin, x, y)
                 return plane
 
-            def RunScript(self, origin, x, y, z):
-                try:
-                    sc.doc = Rhino.RhinoDoc.ActiveDoc
+            def match_list(self, *args):
+                """匹配列表里面的数据"""
+                zip_list = list(args)
+                len_list = map(lambda x: len(x), zip_list)  # 得到最长的树
+                max_index = len_list.index(max(len_list))  # 得到最长的树的下标
+                max_list = zip_list[max_index]  # 最长的列表
+                other_list = [zip_list[_] for _ in range(len(zip_list)) if _ != max_index]  # 剩下的列表
+                matchzip = zip([max_list] * len(other_list), other_list)
 
-                    plane = gd[object]()
-
-                    re_mes = Message.RE_MES([origin], ['O'])
-                    if len(re_mes) > 0:
-                        for mes_i in re_mes:
-                            Message.message2(self, mes_i)
-                        plane = rg.Plane.WorldXY
+                def sub_match(tuple_data):  # 数据匹配
+                    target_tree, other_tree = tuple_data
+                    t_len, o_len = len(target_tree), len(other_tree)
+                    if o_len == 0:
+                        return other_tree
                     else:
-                        self.origin = origin if origin else self.origin
-                        if x == None and y == None and z == None:
-                            plane = rg.Plane.WorldXY
-                            self.message2("If you don't input axis,I will output XY plane!")
-                            plane.Origin = self.origin
-                            return plane
-                        else:
-                            plane = self.Judge_Vector_Plane(x, y, z)
+                        new_tree = other_tree + [other_tree[-1]] * (t_len - o_len)
+                        return new_tree
 
-                    sc.doc.Views.Redraw()
-                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
-                    sc.doc = ghdoc
+                iter_group = map(sub_match, matchzip)  # 数据匹配
+                iter_group.insert(max_index, max_list)  # 将最长的数据插入进去
 
-                    return plane
-                finally:
-                    self.Message = 'Construct a work plane'
+                return iter_group
 
 
         # 平面信息转换
