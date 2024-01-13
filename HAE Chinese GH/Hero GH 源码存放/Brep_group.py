@@ -1001,7 +1001,7 @@ try:
                         res_breps = self._recursive_cutting(item, res_cutts, [])
                         sort_breps = self.sort_by_xyz(res_breps, new_pln[0])
                     else:
-                        sort_breps = item
+                        sort_breps = [item]
                 else:
                     sort_breps = item
                 return sort_breps
