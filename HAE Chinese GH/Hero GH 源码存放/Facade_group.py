@@ -3005,6 +3005,8 @@ try:
 
                 p = Grasshopper.Kernel.Parameters.Param_Boolean()
                 self.SetUpParam(p, "Get", "G", "Gets the frame properties if True")
+                Default_Bool = False
+                p.SetPersistentData(gk.Types.GH_Boolean(Default_Bool))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
