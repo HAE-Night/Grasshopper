@@ -2335,7 +2335,7 @@ try:
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
                     sc.doc = ghdoc
-                    return Keys, Values, Name, Layer_Name, Color, Material
+                    return Keys, Values, Name, [Layer_Name], Color, Material
                 finally:
                     self.Message = 'Deconstruct Attributes'
 
@@ -2528,6 +2528,7 @@ try:
                 return copy_obj_attr
 
             def _get_attr(self, _hea_attr):
+                _hea_attr = _hea_attr.Value
                 # 获取HAE内置属性
                 if '_HAEAttributes__hae_param' in dir(_hea_attr):
                     attr = _hea_attr._HAEAttributes__hae_param
