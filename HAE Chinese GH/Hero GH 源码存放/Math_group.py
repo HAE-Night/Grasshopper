@@ -409,6 +409,9 @@ try:
                                                                    "RPP_NewRound", "X5", """Redefine the data accuracy, data optimization (rounding off)""", "Scavenger", "J-Math")
                 return instance
 
+            def __init__(self):
+                self.switch = False
+
             def get_ComponentGuid(self):
                 return System.Guid("e2412c4a-0c46-443a-9c25-ca033de8bd30")
 
@@ -448,30 +451,172 @@ try:
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
-                p0 = self.marshal.GetInput(DA, 0)
-                p1 = self.marshal.GetInput(DA, 1)
-                result = self.RunScript(p0, p1)
+                self.Message = 'Scientific Notation（extract precision）'
+                Result, Percentage, Per_thousand = (gd[object]() for _i in range(3))
+                if self.RunCount == 1:
+                    def _do_main(tuple_data):
+                        a_part_trunk, b_part_trunk, origin_path = tuple_data
+                        new_list_data = list(b_part_trunk)
+                        new_list_data.insert(self.max_index, a_part_trunk)  # 将最长的数据插入到原列表中
 
-                if result is not None:
-                    if not hasattr(result, '__getitem__'):
-                        self.marshal.SetOutput(result, DA, 0, True)
+                        match_Decimal, match_Precision = new_list_data
+                        Decimal, Precision = self.match_list(match_Decimal, match_Precision)  # 将数据二次匹配列表里面的数据
+
+                        turn__Decimal = ghp.run(self._trun_object, Decimal)  # 将引用数据转为Rhino内置数据
+                        turn__Precision = ghp.run(self._trun_object, Precision)
+
+                        zip_list = zip(turn__Decimal, turn__Precision)
+                        zip_ungroup_data = ghp.run(self.run_main, zip_list)  # 传入获取主方法中
+
+                        Result, Percentage, Per_thousand = zip(*zip_ungroup_data)
+
+                        ungroup_data = map(lambda x: self.split_tree(x, origin_path), [Result, Percentage, Per_thousand])
+                        Rhino.RhinoApp.Wait()
+                        return ungroup_data
+
+                    def temp_by_match_tree(*args):
+                        # 参数化匹配数据
+                        value_list, trunk_paths = zip(*map(self.Branch_Route, args))
+                        len_list = map(lambda x: len(x), value_list)  # 得到最长的树
+                        max_index = len_list.index(max(len_list))  # 得到最长的树的下标
+                        self.max_index = max_index
+                        max_trunk = [_ if len(_) != 0 else [None] for _ in value_list[max_index]]
+                        ref_trunk_path = trunk_paths[max_index]
+                        other_list = [
+                            map(lambda x: x if len(x) != 0 else [None], value_list[_]) if len(value_list[_]) != 0 else [
+                                [None]]
+                            for _ in range(len(value_list)) if _ != max_index]  # 剩下的树, 没有的值加了个None进去方便匹配数据
+                        matchzip = zip([max_trunk] * len(other_list), other_list)
+
+                        def sub_match(tuple_data):
+                            # 子树匹配
+                            target_tree, other_tree = tuple_data
+                            t_len, o_len = len(target_tree), len(other_tree)
+                            if o_len == 0:
+                                new_tree = [other_tree] * len(target_tree)
+                            else:
+                                new_tree = other_tree + [other_tree[-1]] * (t_len - o_len)
+                            return new_tree
+
+                        # 打包数据结构
+                        other_zip_trunk = zip(*map(sub_match, matchzip))
+
+                        zip_list = zip(max_trunk, other_zip_trunk, ref_trunk_path)
+                        # 多进程函数运行
+                        iter_ungroup_data = zip(*ghp.run(_do_main, zip_list))
+                        Result, Percentage, Per_thousand = ghp.run(lambda single_tree: self.format_tree(single_tree),
+                                                                   iter_ungroup_data)
+                        return Result, Percentage, Per_thousand
+
+                    p0 = self.Params.Input[0].VolatileData
+                    p1 = self.Params.Input[1].VolatileData
+                    j_list = any([len(_i) for _i in self.Branch_Route(p0)[0]])
+
+                    re_mes = Message.RE_MES([j_list], ['D'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
                     else:
-                        self.marshal.SetOutput(result[0], DA, 0, True)
-                        self.marshal.SetOutput(result[1], DA, 1, True)
-                        self.marshal.SetOutput(result[2], DA, 2, True)
+                        Result, Percentage, Per_thousand = temp_by_match_tree(p0, p1)
+
+                # 将值传回输出端
+                DA.SetDataTree(0, Result)
+                DA.SetDataTree(1, Percentage)
+                DA.SetDataTree(2, Per_thousand)
 
             def get_Internal_Icon_24x24(self):
                 o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAASTSURBVEhL3VVfTFtlFL/3tpCtFGeFWeusEdFtqdL7rxQwLKhxe5Bse2IJS+aCcU4G9N4WGMNGOhmjvb0ttJPBYBsOMrdMyBiYYXgw0WRDp2+LiS+i0U3wxf1BcDpcrr+vvR0g3d588SS/fuec7/z57vnO+Ur9PyhABZgmMbTGWxx9bCkOlHZbCBbloEViOx9dapMOxC5QFliVjA6qdh2yezhlxsurtz1ceJZA4sK394tHrtcLnb8u0RHcIHspXTo0ubpuSpzSooenqDohnC+xyt8SF62QnGoRQQ3fXmLPzp/aYGEHUzo4VcLuO0nQ5QdA5juuSLxyQg9/P8H8XrZtna5K0T3gbJJFKcs+XAW7y6Skuiot1bGhUQ8XOqmLiwkahHi+rjKZzea1NE0vgB92OByZWI1kw8MqX/pd/XawGTk5OdlWqzUrBZvNZiI2MhdNk4BT5s5su/QkxI+Av3RowAISzdI0dQv8jhZ3/7nyvF2vUTR1Dfp75BDAXR3EZ/IdZ+vn9UJHN/gkpRJENo2Qk+2D4ZCRYcYQVAM/DYyD/wR7Lx0Qu8cqHV435A7ozwEfMww9BAwDI7AJ1XLBCZ8QOUZiJyhVohpn+3pdlSA4kwQDupgg1PfrhsKuJ3QxLUlcZCztHdTwCinRUroL9CRZ1F8MPY02vIIeT9zHgwj3tDyB7Ao+izmYk3l1FwLs9HJqPeS2l+3bf9uat/uil49WSXy4RObU3XAe0t3SEuk0Lxf9zMMrfboKn8QGn8Ed/ImNL5rFnt56PtYps+H2990D8kH3qeaW4v54gxAbl/nIddj8hEEbRLI2D6vWgq+W2LAfZenx8pFx6Cf3ixg0PhzRwy9ecmOyRM8ltfcpF2gDHm/gY6d9fMSPwFUyFwkhWJ/MhU9i7YTcILNqefULh+x1bPgiEhxPeBMiCRqFI9OstagKooZuuJqba7Kh/80Mw/yQ0GUwb/gL+0ZqXzy8MeH0EEom+Nck4/Nu7ti4R0B/T0ClGQzMVEaG4RvC0ww1KtpEE8pwSdl2IpsyUNvRXR+gVXXQMYPBoGINwt5eL8SHVyTwsKE/4mXjT0GkMzONvVjJkGlGA/M9sdECGoMW/UrTNAaHGNBbOAEGICZkbrCW+wuPD6R9i9A5zxPZZMpsxqI70XeMmYyP6FHjyz5XhAwjRZ4Fp9OatXmzM6uszGG2WCxrUk9F2hKRBKNbr1ophtpJToJT/b56dUYICciDp+HUh5td3ed9YqwUvAIdKeWnuK8x4ALsRgyGxFA+4uM7zq9MwKmzsVfPWCF+C2io8+uJTSNVjN8p4Ki/sDeMmdgLfhD4EfgZ+AWYBmYAUk4zHs2zKyYZA7Tgdx/dUpBbIhWsFQ/GXxnP9wrRgr5NE3mVDk/pPjbASayqSrx6ob10YL2XC7J1zlZ+T0FAeKvgPZGA2De74w607OSyL3hbDJAn4Ab6eb5RiM80iV3XyGSngFOTPfyLhWZxkDvka4mMQLeWg9goc/hHm6/j1VY9PEVVVFQYPEUxq5eNrnsYyFslC222dHtL8a5wzPbmBiVbD/9fEkX9AxIWEwLJZv7EAAAAAElFTkSuQmCC"
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
-
-            def __init__(self):
-                self.switch = False
 
             def Branch_Route(self, Tree):
                 """分解Tree操作，树形以及多进程框架代码"""
                 Tree_list = [list(_) for _ in Tree.Branches]
                 Tree_Path = [list(_) for _ in Tree.Paths]
                 return Tree_list, Tree_Path
+
+            def split_tree(self, tree_data, tree_path):
+                """操作树单枝的代码"""
+                new_tree = ght.list_to_tree(tree_data, True, tree_path)  # 此处可替换复写的Tree_To_List（源码参照Vector组-点集根据与曲线距离分组）
+                result_data, result_path = self.Branch_Route(new_tree)
+                if list(chain(*result_data)):
+                    return result_data, result_path
+                else:
+                    return [[]], result_path
+
+            def format_tree(self, result_tree):
+                """匹配树路径的代码，利用空树创造与源树路径匹配的树形结构分支"""
+                stock_tree = gd[object]()
+                for sub_tree in result_tree:
+                    fruit, branch = sub_tree
+                    for index, item in enumerate(fruit):
+                        path = gk.Data.GH_Path(System.Array[int](branch[index]))
+                        if hasattr(item, '__iter__'):
+                            if item:
+                                for sub_index in range(len(item)):
+                                    stock_tree.Insert(item[sub_index], path, sub_index)
+                            else:
+                                stock_tree.AddRange(item, path)
+                        else:
+                            stock_tree.Insert(item, path, index)
+                return stock_tree
+
+            def _trun_object(self, ref_obj):
+                """引用物体转换为GH内置物体"""
+                if ref_obj is None:
+                    return None
+                elif 'ReferenceID' in dir(ref_obj):
+                    if ref_obj.IsReferencedGeometry:
+                        test_pt = ref_obj.Value
+                    else:
+                        test_pt = ref_obj.Value
+                else:
+                    test_pt = ref_obj.Value
+                return test_pt
+
+            def run_main(self, tuple_data):
+                """运行主方法"""
+                Decimal, Precision = tuple_data
+                decimal.getcontext().prec = 10000
+                Precision = 0 if Precision is None else Precision
+                if Decimal is not None:
+                    per = Decimal * 100
+                    per_th = Decimal * 1000
+                    Result = str(dd(Decimal).quantize(dd("1e-{}".format(Precision)),
+                                                      rounding="ROUND_HALF_UP")) if "e" in str(
+                        Decimal) else self.handle_str(Decimal, Precision)
+                    Percentage = str(dd(per).quantize(dd("1e-{}".format(Precision)),
+                                                      rounding="ROUND_HALF_UP")) + '%' if "e" in str(
+                        per) else self.handle_str(per, Precision) + "%"
+                    Per_thousand = str(dd(per_th).quantize(dd("1e-{}".format(Precision)),
+                                                           rounding="ROUND_HALF_UP")) + '‰' if "e" in str(
+                        per) else self.handle_str(per_th, Precision) + '‰'
+                else:
+                    Result, Percentage, Per_thousand = (None for _ in range(3))
+
+                return Result, Percentage, Per_thousand
+
+            def match_list(self, *args):
+                """匹配列表里面的数据"""
+                zip_list = list(args)
+                len_list = map(lambda x: len(x), zip_list)  # 得到最长的树
+                max_index = len_list.index(max(len_list))  # 得到最长的树的下标
+                max_list = zip_list[max_index]  # 最长的列表
+                other_list = [zip_list[_] for _ in range(len(zip_list)) if _ != max_index]  # 剩下的列表
+                matchzip = zip([max_list] * len(other_list), other_list)
+
+                def sub_match(tuple_data):  # 数据匹配
+                    target_tree, other_tree = tuple_data
+                    t_len, o_len = len(target_tree), len(other_tree)
+                    if o_len == 0:
+                        return other_tree
+                    else:
+                        new_tree = other_tree + [other_tree[-1]] * (t_len - o_len)
+                        return new_tree
+
+                iter_group = map(sub_match, matchzip)  # 数据匹配
+                iter_group.insert(max_index, max_list)  # 将最长的数据插入进去
+
+                return iter_group
 
             def compare_five(self, carry, keep):
                 if keep >= 0:
@@ -526,38 +671,6 @@ try:
                     float_part = ''.join(float_part)
                     return '.'.join([int_part, float_part])
 
-            def RunScript(self, Decimal, Precision):
-                try:
-                    decimal.getcontext().prec = 10000
-                    Precision = 0 if Precision is None else Precision
-                    Result, Percentage, Per_thousand = (gd[object]() for _ in range(3))
-
-                    temp_geo_list = self.Branch_Route(self.Params.Input[0].VolatileData)[0]
-                    length_list = [len(filter(None, _)) for _ in temp_geo_list]
-                    Abool_factor = any(length_list)
-                    re_mes = Message.RE_MES([Abool_factor], ['D'])
-                    if len(re_mes) > 0:
-                        for mes_i in re_mes:
-                            Message.message2(self, mes_i)
-                    else:
-                        if Decimal is not None:
-                            per = Decimal * 100
-                            per_th = Decimal * 1000
-                            Result = str(dd(Decimal).quantize(dd("1e-{}".format(Precision)),
-                                                              rounding="ROUND_HALF_UP")) if "e" in str(
-                                Decimal) else self.handle_str(Decimal, Precision)
-                            Percentage = str(dd(per).quantize(dd("1e-{}".format(Precision)),
-                                                              rounding="ROUND_HALF_UP")) + '%' if "e" in str(
-                                per) else self.handle_str(per, Precision) + "%"
-                            Per_thousand = str(dd(per_th).quantize(dd("1e-{}".format(Precision)),
-                                                                   rounding="ROUND_HALF_UP")) + '‰' if "e" in str(
-                                per) else self.handle_str(per_th, Precision) + '‰'
-                        else:
-                            Result, Percentage, Per_thousand = (None for _ in range(3))
-                    return Result, Percentage, Per_thousand
-                finally:
-                    self.Message = "Scientific Notation（extract precision）"
-
 
         # 四舍五入
         class GHRound(component):
@@ -565,6 +678,9 @@ try:
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
                                                                    "RPP_GHRound", "X4", """the decimal point (float point number),rounded off up or down""", "Scavenger", "J-Math")
                 return instance
+
+            def __init__(self):
+                pass
 
             def get_ComponentGuid(self):
                 return System.Guid("0b6b166d-332d-4c95-95bd-b7f85482351c")
@@ -606,36 +722,81 @@ try:
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
-                p0 = self.marshal.GetInput(DA, 0)
-                p1 = self.marshal.GetInput(DA, 1)
-                result = self.RunScript(p0, p1)
+                self.Message = 'Half Adjust'
+                Result, Floor, Ceil = (gd[object]() for _i in range(3))
+                if self.RunCount == 1:
+                    def _do_main(tuple_data):
+                        a_part_trunk, b_part_trunk, origin_path = tuple_data
+                        new_list_data = list(b_part_trunk)
+                        new_list_data.insert(self.max_index, a_part_trunk)  # 将最长的数据插入到原列表中
 
-                if result is not None:
-                    if not hasattr(result, '__getitem__'):
-                        self.marshal.SetOutput(result, DA, 0, True)
+                        match_Decimal, match_Precision = new_list_data
+                        Decimal, Precision = self.match_list(match_Decimal, match_Precision)  # 将数据二次匹配列表里面的数据
+
+                        turn__Decimal = ghp.run(self._trun_object, Decimal)
+                        turn__Precision = ghp.run(self._trun_object, Precision)
+
+                        zip_list = zip(turn__Decimal, turn__Precision)
+                        zip_ungroup_data = ghp.run(self.run_main, zip_list)  # 传入获取主方法中
+
+                        Result, Floor, Ceil = zip(*zip_ungroup_data)
+
+                        ungroup_data = map(lambda x: self.split_tree(x, origin_path), [Result, Floor, Ceil])
+                        Rhino.RhinoApp.Wait()
+                        return ungroup_data
+
+                    def temp_by_match_tree(*args):
+                        # 参数化匹配数据
+                        value_list, trunk_paths = zip(*map(self.Branch_Route, args))
+                        len_list = map(lambda x: len(x), value_list)  # 得到最长的树
+                        max_index = len_list.index(max(len_list))  # 得到最长的树的下标
+                        self.max_index = max_index
+                        max_trunk = [_ if len(_) != 0 else [None] for _ in value_list[max_index]]
+                        ref_trunk_path = trunk_paths[max_index]
+                        other_list = [
+                            map(lambda x: x if len(x) != 0 else [None], value_list[_]) if len(value_list[_]) != 0 else [
+                                [None]]
+                            for _ in range(len(value_list)) if _ != max_index]  # 剩下的树, 没有的值加了个None进去方便匹配数据
+                        matchzip = zip([max_trunk] * len(other_list), other_list)
+
+                        def sub_match(tuple_data):
+                            # 子树匹配
+                            target_tree, other_tree = tuple_data
+                            t_len, o_len = len(target_tree), len(other_tree)
+                            if o_len == 0:
+                                new_tree = [other_tree] * len(target_tree)
+                            else:
+                                new_tree = other_tree + [other_tree[-1]] * (t_len - o_len)
+                            return new_tree
+
+                        # 打包数据结构
+                        other_zip_trunk = zip(*map(sub_match, matchzip))
+
+                        zip_list = zip(max_trunk, other_zip_trunk, ref_trunk_path)
+                        # 多进程函数运行
+                        iter_ungroup_data = zip(*ghp.run(_do_main, zip_list))
+                        Result, Floor, Ceil = ghp.run(lambda single_tree: self.format_tree(single_tree),
+                                                      iter_ungroup_data)
+                        return Result, Floor, Ceil
+
+                    p0 = self.Params.Input[0].VolatileData
+                    p1 = self.Params.Input[1].VolatileData
+                    j_list = any([len(_i) for _i in self.Branch_Route(p0)[0]])
+
+                    re_mes = Message.RE_MES([j_list], ['D'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
                     else:
-                        self.marshal.SetOutput(result[0], DA, 0, True)
-                        self.marshal.SetOutput(result[1], DA, 1, True)
-                        self.marshal.SetOutput(result[2], DA, 2, True)
+                        Result, Floor, Ceil = temp_by_match_tree(p0, p1)
+
+                DA.SetDataTree(0, Result)
+                DA.SetDataTree(1, Floor)
+                DA.SetDataTree(2, Ceil)
 
             def get_Internal_Icon_24x24(self):
                 o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAARzSURBVEhLrZZ7UFRlGIfPaP1RQ8OUZk1ljF0clBKQQQiZnEQmMEeckTGz0MS41K4s4HKXaInLAiJXSYggChhuOgreCIQQDSmgErmzAssuu4dllwV2zQD59Z5lmZ2a/ijh2Xlmvu/dnd/77Xe+c3aZ/8A6cs3icOUxJ6Wkjuwmc0lP8jlyReBWD3KQTCfvkA+N1pHvkcviWZJrUG+YLbKKdCP7SO69j8hH5p8NNpF+ZA2pJztJa/KR4RpwQSqSC+OaTZNcA+5aPEYuC67BJMkFK0lHckVZ+gbjpJZsIrltWjGWrsEVcjPZY5wHkyvCUoMbhhnDrCZTSK7WQG4gl8XSffCLYWZiG9lPcjfgAa6wHCrJ8MUhs3oH85lZNnPXzIHZZ7eWWd+yfpXl7YNPRHh+YBbhJ7TOigqwE7saP2vC105sHmKf7iJyz90v3Jrq47UmKtzrmcikoy+I8niviIv5G1MuhztndqR7lwyGOqUpY9xydIn7Cx+c+bhqJtunfKEguBrlonqId5aCbyWuMMaaCLCN3xJmn4Vo5zx8L7yK+rw2XM9vw62KTnRc68dQhxLDd5WQDpASJRRyFVQTGihYFpKRe5Cxcujmdcg6WgGfDbHNxlgTYbvE5gE2SRrfl+NwMbsBc5iF9v4UJnVa/Lkwi3l6qbUasCqVQSU7jjEFi76+AXR190IqlWNSr0VRRA2OWYhGfO1yHzdGmxDYJN3hvZaM3KBKqKc1kMkUUCjGodPfh1qjxejoGGRyhaEuH1NiUDKEzs5uQxM51TUzGlSdqsMnFqIHx98Uv2SMNSGwTa4RWJ5G6uEisGoVRmVjYFkVZnR6w2pHR+WGGtdgRCpDV1cPNeiCRDJsaDwxpUZdSQt4r4tBWW8ZY01QMf3EGxn4YvdZw2q5sAnaZ26vpRQuk1P4mAJjSlr9PQl6+nvRLxmAUs1CpZ3A9NwUfm/thXBLBnhW8QeNsSYCbFP4oTZZEDqexpBECv1DPfSzerCacSjGWUP4yLAMvV0StPzYjqart1FXdRONVa24VtSMmtxGFEZdAB1V8K2TE4yxJgQ2Yvcwu2wIrJORH3oO5Ym1yAuuQpp3MU4f+Q7i9wsR5/E1Pnf9CqFOGQhxzEC8RwFO7syhcZrBaJczSD1UjEDrdJ2/Vdy7xuhFgnfErBXYJo6Hb8tCafRlVHINAipQnnAJSQe+QapXIVI+zEeRqAznsy7RasvQWNaM+uJmNJW0o0xUi466Luj1U2gq+A3HLZPn+ZuSdxnjFwlyin6HbyleKI28AtDR/IP2FXRodVPTUCtUdB8M4debt9D9cwfa639CW20rBltH0HtjBG3V3WgqbkN1ZgO+PXkewfYpczybWO6n9u8E2ov8BZanUCS8iAtp11EQeW7hbFCZLuPTIjbFK38wZm9mW4hrwg8n3o4v422NzTnyqvBLz3X+gXue8vZyYQ7tsWPct9swbpsPO/q9yHPh/fu/Ef72UHePp4/tdmD2OlgyzhufZCyep7IZyT1N/wcM8xeTS7i+To9tBwAAAABJRU5ErkJggg=="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
-
-            def __init__(self):
-                pass
-
-            def message1(self, msg1):  # 报错红
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):  # 警告黄
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):  # 提示白
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
-
-            def mes_box(self, info, button, title):
-                return rs.MessageBox(info, button, title)
 
             def Branch_Route(self, Tree):
                 """分解Tree操作，树形以及多进程框架代码"""
@@ -669,31 +830,57 @@ try:
                             stock_tree.Insert(item, path, index)
                 return stock_tree
 
-            def RunScript(self, Decimal, Precision):
-                try:
-                    decimal.getcontext().prec = 10000
-                    Precision = 0 if Precision is None else Precision
-                    Result, Floor, Ceil = (gd[object]() for _ in range(3))
-
-                    temp_geo_list = self.Branch_Route(self.Params.Input[0].VolatileData)[0]
-                    length_list = [len(filter(None, _)) for _ in temp_geo_list]
-                    Abool_factor = any(length_list)
-                    re_mes = Message.RE_MES([Abool_factor], ['D'])
-                    if len(re_mes) > 0:
-                        for mes_i in re_mes:
-                            Message.message2(self, mes_i)
+            def _trun_object(self, ref_obj):
+                """引用物体转换为GH内置物体"""
+                if ref_obj is None:
+                    return None
+                elif 'ReferenceID' in dir(ref_obj):
+                    if ref_obj.IsReferencedGeometry:
+                        test_pt = ref_obj.Value
                     else:
-                        if Decimal is not None:
-                            Result = str(dd(Decimal).quantize(dd("1e-{}".format(Precision)),
-                                                              rounding="ROUND_HALF_UP")) if "e" in str(
-                                Decimal) else NewRound().handle_str(Decimal, Precision)
-                            Floor = math.floor(Decimal)
-                            Ceil = math.ceil(Decimal)
-                        else:
-                            Result, Floor, Ceil = (None for _ in range(3))
-                    return Result, Floor, Ceil
-                finally:
-                    self.Message = 'Half Adjust'
+                        test_pt = ref_obj.Value
+                else:
+                    test_pt = ref_obj.Value
+                return test_pt
+
+            def match_list(self, *args):
+                """匹配列表里面的数据"""
+                zip_list = list(args)
+                len_list = map(lambda x: len(x), zip_list)  # 得到最长的树
+                max_index = len_list.index(max(len_list))  # 得到最长的树的下标
+                max_list = zip_list[max_index]  # 最长的列表
+                other_list = [zip_list[_] for _ in range(len(zip_list)) if _ != max_index]  # 剩下的列表
+                matchzip = zip([max_list] * len(other_list), other_list)
+
+                def sub_match(tuple_data):  # 数据匹配
+                    target_tree, other_tree = tuple_data
+                    t_len, o_len = len(target_tree), len(other_tree)
+                    if o_len == 0:
+                        return other_tree
+                    else:
+                        new_tree = other_tree + [other_tree[-1]] * (t_len - o_len)
+                        return new_tree
+
+                iter_group = map(sub_match, matchzip)  # 数据匹配
+                iter_group.insert(max_index, max_list)  # 将最长的数据插入进去
+
+                return iter_group
+
+            def run_main(self, tuple_data):
+                """运行主方法"""
+                Decimal, Precision = tuple_data
+                decimal.getcontext().prec = 10000
+                Precision = 0 if Precision is None else Precision
+                if Decimal is not None:
+                    Result = str(
+                        dd(Decimal).quantize(dd("1e-{}".format(Precision)), rounding="ROUND_HALF_UP")) if "e" in str(
+                        Decimal) else NewRound().handle_str(Decimal, Precision)
+                    Floor = math.floor(Decimal)
+                    Ceil = math.ceil(Decimal)
+                else:
+                    Result, Floor, Ceil = (None for _ in range(3))
+
+                return Result, Floor, Ceil
 
 
         # 数字格式化
