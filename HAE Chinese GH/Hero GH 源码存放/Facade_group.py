@@ -2970,6 +2970,239 @@ try:
                     self.Message = 'Deconstruct Block'
 
 
+        # 在犀牛空间创建一个文本注解
+        class Create_Text(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP_创建文本标注", "RPP_CreateText", """在犀牛空间创建一个文本注解""", "Scavenger", "H-Facade")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("07661e79-4bdc-4b45-8902-98e761c26c90")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.secondary
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Plane()
+                self.SetUpParam(p, "Plane", "P", "平面")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_String()
+                self.SetUpParam(p, "Text", "T", "文字")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_String()
+                self.SetUpParam(p, "Style", "S", "标注样式")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Text", "T", "文字")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                p1 = self.marshal.GetInput(DA, 1)
+                p2 = self.marshal.GetInput(DA, 2)
+                result = self.RunScript(p0, p1, p2)
+
+                if result is not None:
+                    self.marshal.SetOutput(result, DA, 0, True)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAASDSURBVEhLnZQLUJRVFMcXvmUXRN47I4OQOk5NM2YSBGalmWYDueKEjizrg0DK5GXaSNhUoERINcLwEHeIQClCVEhwyEcSomBMJINoRKiIgMhrP2B3eazgv+/c3YJ1khjOzH/m7P3uOb9zzz17RU8ye5lM7ujkzDs4OGAqOcqcedprDJu+OTrN4ZNV53C9eQTV9UM496sWJ8s1yD0zgNTjPBJy+hCd1g15yCkGMYZN36i6kkoNlvhmwO05BTzlh7H+o068vc8g8v323seanc3sJMaw6RsFqYr78dRiBdwW+WOBuxIBcV0IPNDNRP6mz7rgG9E0c8D+b9V4yf8IFnoosVyhQlBSL4K/6mMif2tiD9ZG3Zw5IPxQL7Yk9LCEoclq7EjlsTPdIPJpbV3U9f8BcF5yc85buCR3YdOErKzmmfz+Rx9kDzLtyhpEeGa/ALiG+ZaWWCwSmcjTQsR7cCK5yIzz4pMzK3Hr3ijq/hzGpWtDKLuqw4kKLY5d0EJVpkVKiRZJxTrEHtchJt+g6Dwt9uRosC6ihp1g9E4BhmrjMHBWgd6jS3AmyAKeYpFaOII7Lv+uw4rQu3gzso1NBl0e9ZdaQFVSIkr66YlhxBWNMJFPa/KwKgboz7eFOnc2elXW6E6zwu1PJOwkDFB6aRAr32uFz652Nn40IXSJ1GdqBVVLCeNLRnHwp4dM5NOa77sVDDBQ6AT+mA36sgRAuhX+ipFOAPJK+/G6EUAzTmO4Ob4Dythb2BzXhG0HGhH8+U1sT2hA6Bf1CIqrxaa91fALq8AyvxTMd3XSa36cBz5PAHxjjZ6MWfjjw0knSP2+zwSwYV8rViqzH7nOddFTdVNpgZtMf/rgwkeaIhcTQEPkJEBsZrdJi3zCb2Cui4u+vDAWY90VGOsswVhHHsbb0jHemoDx29EYa9wBfV0ARqpWQVf2NAYK7ExaVPf+JEBEYqfJJa8KqWXV6VsKoDlpB12JA4bPOmLkZyeMlsuYyKc1+kZ7Hr/k34ItJgCB0W14Nfgu3gi7h7V7OrBcWc0AI42ZQmW20BTZs0RDZY4sKYl8llz4RntYe7KF9mTOQleKJa4qJwFWh7bg5W0t/97DUn/DZAzVJaD/OxsDRKhSW2wP7WmjBJ/W6BvtUedMVP/gkCWubBQbAGbmXrzrC0fx7OpfsGjNRTzvcwHuvucZQHtlNwuk6qgFlGyw0A7qPFt0ZdmgI202WpKs0RwnTE20JeojpajdLmHV57/G0R9NeCGEp8LsP54KAgyeD2JV0dGpv3SJVNV0RMnZU/EkIwB/6i12ZOorAwkTwv/wDDQXt2C4IQ0Pu2pARnuNYdM3CurN9Wb9pEsjEI0fzbgqWArlMg5H3pGgIUoyc8CD1AW4nyhB55dSdH4tZTBS4FIO/h4cAr05XN4gnjmgLd4G7fst0B5vgY4ECYORDivEULxojowAMUpfMZ8ZYI7Mni/cKkHrxxzuxIjRtFuMG2Ec6kI41Cg5VG3kULneHOkrpHAW9hrDpm8ymb2cAqm6qUR7aK8x7DETif4GWQPKTm78ggMAAAAASUVORK5CYII="
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def __init__(self):
+                pass
+
+            def Branch_Route(self, Tree):
+                """分解Tree操作，树形以及多进程框架代码"""
+                Tree_list = [list(_) for _ in Tree.Branches]
+                Tree_Path = [list(_) for _ in Tree.Paths]
+                return Tree_list, Tree_Path
+
+            def split_tree(self, tree_data, tree_path):
+                """操作树单枝的代码"""
+                new_tree = ght.list_to_tree(tree_data, True, tree_path)  # 此处可替换复写的Tree_To_List（源码参照Vector组-点集根据与曲线距离分组）
+                result_data, result_path = self.Branch_Route(new_tree)
+                if list(chain(*result_data)):
+                    return result_data, result_path
+                else:
+                    return [[]], result_path
+
+            def format_tree(self, result_tree):
+                """匹配树路径的代码，利用空树创造与源树路径匹配的树形结构分支"""
+                stock_tree = gd[object]()
+                for sub_tree in result_tree:
+                    fruit, branch = sub_tree
+                    for index, item in enumerate(fruit):
+                        path = gk.Data.GH_Path(System.Array[int](branch[index]))
+                        if hasattr(item, '__iter__'):
+                            if item:
+                                for sub_index in range(len(item)):
+                                    stock_tree.Insert(item[sub_index], path, sub_index)
+                            else:
+                                stock_tree.AddRange(item, path)
+                        else:
+                            stock_tree.Insert(item, path, index)
+                return stock_tree
+
+            def parameter_judgment(self, tree_par_data):
+                # 获取输入端参数所有数据
+                geo_list, geo_path = self.Branch_Route(tree_par_data)
+                if geo_list:
+                    j_list = any(ghp.run(lambda x: len(list(filter(None, x))), geo_list))  # 去空操作, 判断是否为空
+                else:
+                    j_list = False
+                return j_list, geo_list, geo_path
+
+            def match_tree(self, data_1, data_2):
+                one_trunk, two_trunk = zip(*map(self.Branch_Route, [data_1, data_2]))[0]
+                zip_list = [one_trunk, two_trunk]
+                len_list = map(lambda x: len(x), zip_list)  # 得到最长的树
+                max_index = len_list.index(max(len_list))  # 得到最长的树的下标
+                max_trunk = zip_list[max_index]
+                other_list = [zip_list[_] for _ in range(len(zip_list)) if _ != max_index]  # 剩下的树
+                matchzip = zip([max_trunk] * len(other_list), other_list)
+
+                def sub_match(tuple_data):
+                    target_tree, other_tree = tuple_data
+                    t_len, o_len = len(target_tree), len(other_tree)
+                    if o_len == 0:
+                        return other_tree
+                    else:
+                        new_tree = other_tree + [other_tree[-1]] * (t_len - o_len)
+                        return new_tree
+
+                return max_index, map(sub_match, matchzip), max_trunk
+
+            def Find_DimStyle(self, dimstyle):
+                """获取标注样式"""
+                Style = sc.doc.DimStyles.FindName(str(dimstyle))
+                if dimstyle is None:
+                    # 输入为空时，给默认值
+                    Style = sc.doc.DimStyles.FindIndex(0)
+
+                if Style is None:
+                    # 若标注样式不存在，根据索引0返回第一个标注样式
+                    Message.message2(self, "DimStyle: {} non-existent".format(dimstyle))
+                    Style = sc.doc.DimStyles.FindIndex(0)
+                return Style
+
+            def Creat_TextEntity(self, tuple):
+                """创建文本标注"""
+                plane, text = tuple
+                if plane and text:
+                    TextEntity = rg.TextEntity.Create(text, plane, self.DimStyle, True, 0, 0)
+                    TextEntity.Justification = rg.TextJustification.MiddleCenter  # 设置对齐方式
+                else:
+                    TextEntity = None
+
+                return TextEntity
+
+            # -------------修改----------------
+            def match_list(self, data1, data2):
+                """匹配两个列表的数据"""
+                zip_list = [data1, data2]
+                len_list = map(lambda x: len(x), zip_list)  # 得到最长的树
+                max_index = len_list.index(max(len_list))  # 得到最长的树的下标
+                max_list = zip_list[max_index]  # 最长的列表
+                other_list = [zip_list[_] for _ in range(len(zip_list)) if _ != max_index]  # 剩下的列表
+                matchzip = zip([max_list] * len(other_list), other_list)
+
+                def sub_match(tuple_data):  # 数据匹配
+                    target_tree, other_tree = tuple_data
+                    t_len, o_len = len(target_tree), len(other_tree)
+                    if o_len == 0:
+                        return other_tree
+                    else:
+                        new_tree = other_tree + [other_tree[-1]] * (t_len - o_len)
+                        return new_tree
+
+                iter_group = map(sub_match, matchzip)  # 数据匹配
+                iter_group.insert(max_index, max_list)  # 将最长的数据插入进去
+
+                return iter_group
+                # -------------修改----------------
+
+            def run_main(self, tuple):
+                Plane, Text, Path = tuple
+                if len(Plane) == 0 or len(Text) == 0:
+                    Text_List = []
+                else:
+                    # -------------修改----------------
+                    match_Plane, match_Text = self.match_list(Plane, Text)
+                    Text_List = map(self.Creat_TextEntity, zip(match_Plane, match_Text))
+                    # -------------修改----------------
+
+                ungroup_data = self.split_tree(Text_List, Path)
+                Rhino.RhinoApp.Wait()
+                return ungroup_data
+
+            def RunScript(self, Plane, Text, Style):
+                try:
+                    Text_result = gd[object]()
+                    sc.doc = Rhino.RhinoDoc.ActiveDoc
+
+                    re_mes = Message.RE_MES([Plane, Text], ['Plane', 'Text'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                    else:
+                        self.DimStyle = self.Find_DimStyle(Style)  # 查找标注样式
+
+                        max_index, iter_group, max_group = self.match_tree(Plane, Text)
+
+                        iter_group.insert(max_index, max_group)  # 将得到的最长的列表插入到匹配后的数据中
+                        target_Path = self.Branch_Route(self.Params.Input[max_index].VolatileData)[1]  # 得到最长的目标路径
+                        if len(target_Path) == 0: target_Path = [[0]]  # 如果目标路径为0, 给一个默认的路径
+
+                        Plane_trunk_list = iter_group[0]
+                        Text_trunk_list = iter_group[1]
+
+                        zip_list = zip(Plane_trunk_list, Text_trunk_list, target_Path)
+
+                        iter_ungroup_data = map(self.run_main, zip_list)
+                        Text_result = self.format_tree(iter_ungroup_data)
+
+                    no_rendering_line = self.Branch_Route(Text_result)[0]
+                    self.dim = filter(None, list(chain(*no_rendering_line)))
+                    self.bbox = rg.BoundingBox.Empty  # 覆写zoom方法
+                    for _ in self.dim:
+                        if _:
+                            self.bbox.Union(_.GetBoundingBox(True))
+
+                    sc.doc.Views.Redraw()
+                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                    sc.doc = ghdoc
+
+                    return Text_result
+                finally:
+                    self.Message = 'Text'
+
+            def DrawViewportWires(self, args):
+                try:
+                    for sub_dim in self.dim:
+                        args.Display.DrawAnnotation(sub_dim, System.Drawing.Color.FromArgb(0, 150, 0))
+                except:
+                    pass
+
+            def get_ClippingBox(self):
+                return self.bbox
+
+
         # 获取CAD图框信息
         clr.AddReference("Interop.AutoCAD")
         from AutoCAD.AcadApplication import ActiveDocument
