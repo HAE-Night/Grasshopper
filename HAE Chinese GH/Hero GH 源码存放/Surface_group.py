@@ -166,17 +166,45 @@ try:
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
-                p0 = self.marshal.GetInput(DA, 0)
-                if isinstance(p0, Rhino.Geometry.Brep) and p0.Faces.Count == 1: p0 = p0.Faces[0].DuplicateSurface()
-                result = self.RunScript(p0)
+                self.Message = 'HAE Area ordering'
+                Face, Area, Centroid = (gd[object]() for _ in range(3))
+                if self.RunCount == 1:
+                    def bubbling(tuple_data):
+                        origin_path, Geo = tuple_data
+                        origin_geo = filter(None, Geo)
+                        Face = map(self._trun_object, origin_geo)  # 转为GH内置物体
+                        FaceAMP = [rg.AreaMassProperties.Compute(i) for i in Face]  # 面积质量属性
 
-                if result is not None:
-                    if not hasattr(result, '__getitem__'):
-                        self.marshal.SetOutput(result, DA, 0, True)
+                        Area_Arc = [ap.Area for ap in FaceAMP]  # 面积
+                        Centroid = [ap.Centroid for ap in FaceAMP]  # 质心
+                        nice = zip(origin_geo, Area_Arc, Centroid)
+                        # 字典遍历元组排序
+                        AREAS = sorted(nice, key=lambda x: x[1], reverse=False)
+
+                        # 取值
+                        Faces = [_i[0] for _i in AREAS]  # 物体
+                        Area_Arcs = [_i[1] for _i in AREAS]  # 面积
+                        Centroids = [_i[2] for _i in AREAS]  # 质心
+
+                        ungroup_data = map(lambda x: self.split_tree(x, origin_path), [Faces, Area_Arcs, Centroids])
+                        Rhino.RhinoApp.Wait()
+                        return ungroup_data
+
+                    p0 = self.Params.Input[0].VolatileData
+                    j_list = any([len(_i) for _i in self.Branch_Route(p0)[0]])
+                    re_mes = Message.RE_MES([j_list], ['Geometry'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
                     else:
-                        self.marshal.SetOutput(result[0], DA, 0, True)
-                        self.marshal.SetOutput(result[1], DA, 1, True)
-                        self.marshal.SetOutput(result[2], DA, 2, True)
+                        Geometrys, origin_path = self.Branch_Route(self.Params.Input[0].VolatileData)
+                        zip_list = zip(origin_path, Geometrys)
+                        iter_ungroup_data = zip(*ghp.run(bubbling, zip_list))
+                        Face, Area, Centroid = ghp.run(lambda single_tree: self.format_tree(single_tree), iter_ungroup_data)
+
+                DA.SetDataTree(0, Face)
+                DA.SetDataTree(1, Area)
+                DA.SetDataTree(2, Centroid)
 
             def get_Internal_Icon_24x24(self):
                 o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAARgSURBVEhL3ZVtTFtlFMdvQFcGYxSHvOiKbFEKvb1vbXmRAR0DWgrYoTEOcMbXD5tmyLLFD2Yf1C8zm8TE6TQh84O6jTIwgxZKgRYKyAqbM5uJi24xcdEQY9wSk8VkmR7Pee7T0o5Pzm/+k39yn3PPvb/znPPcVvj/yK4olQ6Ho1NV1Qd5KEWaJtU7HFqnJEm5PFSB/gz9OfoL9Cn0afQA2oc+iTaidUlW8apN00CW5SgPJYRgTZElsON9BLzKwx+XZG2BTlMXPGPaBV2mbnb9QsmLoBgVwPvX0GkskySKliuS1QqKLENNTY2Dh5nwpSdUjCuSBLLV2sPDsdcf64Ur7u/h3I6lhL/D9ZMPP0WA43oalyiWX8WX/yZL0h1FUWjrTBUVFZusongL712jAtTVHVw/LL0LCw2LMFE3yRyqm4Lo9nlQjRoBDuppXKLF8rOmqmGsdgAhtxsbGzdRHFvWoyoK2O3afkkUAWe0lz0gCDePaR/B3PaFFEDEOQtl2WUEeElP4yIAvmi62m7fZtNUsNlsr1Ecq/8RK/+hvqqqnNqnyfIe9oAg/HHc9gmr+G6AOdtMgOf1NC4GUNUldl1eviJJ1ouVlZV1uCuwKUqv0+nMo50ktWjlPaUP5hu+SgEQUMlhQ+7V07j4Di6wa1F8i6rFyn9B36aX41xKaNA45H3sAUG4eKD0IBtsHEBe3BEDV4GbAB/oaVzYihUEfE3XimIuwfXfVLEsS2MU0zSxXJUVkCyW/bRGfeopbEXAcgqAgHu27iXAnJ7GZbVYrmOLzvElrf2sPTZbO61L5eItbFeiGG/RroKMAhivnYCp+nACQEM/pn1IgFvofJZJwtOztaO2o3TSMxUNtk4+h/3faLfbyy63Xc6dbZtdOOv2e7FNotlszuaP5KBvHpVT5zBZP81syjQR5BWWGRcApM+2RcHvHnubh4SoO1q05F2GUXcwfnqSFegufnZNm2K47iruJkBQT+MK7Q5lTbhDdxDwJg8JQXewKNI6AyMt4y/zULLesBntrC10guIA+viOyEcJ8KuexnUPgNaijKI1c6Bv4WTVaViXto4gq7oHgLbhvg1w5vFhCDtnEgCCjW4LQJ4h7z8DLIZ0A6uWqk4GjNUGoTCjMBVAIsCoK5D4oRpsGswhwJctgd08lCwtMz0TfNVnUgDT9ZG1Owg1h7IWnz5fGXRP/BVujbwf3blsoljMG2sIeyIQbp8/RDGeHldzviGfzYAA8SNKPxcD1YNgSDOsAkbbR/NCnqnfI55ZWPJeoGPZE2gL5E56pv+cRkAMj+pIS+DuNu2zbrTCjDOacorou+Cn6IaexjXS7D/8TcclGHdN3Oh39T9AMb/L33+p41sYc43/1Ffdt54lrmqKWlSc+QhsXr85YVob7zcSIPXfcbh5OH+ubQFGXP4jPCT4XL5Hl7znMTZygIeS5UJ3oHdye9FPcNNPjBmdqqHmoUM+ty/lxlDT0Dunms4+xJf/QoLwD/EreY+V3S4zAAAAAElFTkSuQmCC"
@@ -224,52 +252,6 @@ try:
                 else:
                     test_pt = ref_obj
                 return test_pt
-
-            def bubbling(self, Face, origin_geo):
-                # 面积质量属性
-                FaceAMP = [rg.AreaMassProperties.Compute(i) for i in Face]
-
-                Area_Arc = [ap.Area for ap in FaceAMP]  # 面积
-                Centroid = [ap.Centroid for ap in FaceAMP]  # 质心
-                nice = zip(origin_geo, Area_Arc, Centroid)
-
-                # 字典遍历元组排序
-                AREAS = sorted(nice, key=lambda x: x[1], reverse=False)
-                # 取值
-                Faces = [_i[0] for _i in AREAS]
-                Area_Arcs = [_i[1] for _i in AREAS]
-                Centroids = [_i[2] for _i in AREAS]
-                return Faces, Area_Arcs, Centroids
-
-            def RunScript(self, Geometry):
-                try:
-                    Face, Area, Centroid = (gd[object]() for _ in range(3))
-                    # 判断输入的列表是否都为空
-                    structure_tree = self.Params.Input[0].VolatileData
-                    temp_geo_list = [list(i) for i in structure_tree.Branches]  # 获取所有数据
-                    j_list = filter(None, list(chain(*temp_geo_list)))
-
-                    re_mes = Message.RE_MES([j_list], ['Geometry'])
-                    if len(re_mes) > 0:
-                        for mes_i in re_mes:
-                            Message.message2(self, mes_i)
-                    else:
-                        if Geometry:
-                            structure_tree = self.Params.Input[0].VolatileData
-                            origin_surface = filter(None, self.Branch_Route(structure_tree)[0][self.RunCount - 1])
-                            if origin_surface:
-                                gh_surface = map(self._trun_object, origin_surface)
-                                Face, Area, Centroid = self.bubbling(gh_surface, origin_surface)
-                            else:
-                                Face, Area, Centroid = (Geometry for _ in range(3))
-                        else:
-                            Face, Area, Centroid = ([] for _ in range(3))
-
-                    return Face, Area, Centroid
-                except Exception as e:
-                    Message.message1(self, "Run error：\n{}".format(str(e)))
-                finally:
-                    self.Message = 'HAE Area ordering'
 
 
         # 计算Surface面积
