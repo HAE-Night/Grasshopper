@@ -778,7 +778,11 @@ try:
                                     new_row = new_sheet.CreateRow(int(Cell_N) + index_Data - 1)
                                     for _ in range(0, len(List_Data)):
                                         new_cell = new_row.CreateCell(row + _ - 1)
-                                        new_cell.SetCellValue(List_Data[_])
+                                        temp = List_Data[_]
+                                        # 判断是否为数字
+                                        if self.IsFloatNum(temp):
+                                            temp = round(float(List_Data[_]), 2)
+                                        new_cell.SetCellValue(temp)
                                 new_excel.Write(file_stream)
                                 new_excel.Close()
                             else:
@@ -791,7 +795,11 @@ try:
                                     new_row = xs_sheet.GetRow(int(Cell_N) + index_Data - 1) or xs_sheet.CreateRow(int(Cell_N) + index_Data - 1)
                                     for _ in range(0, len(List_Data)):
                                         new_cell = new_row.GetCell(row + _ - 1) or new_row.CreateCell(row + _ - 1)
-                                        new_cell.SetCellValue(List_Data[_])
+                                        temp = List_Data[_]
+                                        # 判断是否为数字
+                                        if self.IsFloatNum(temp):
+                                            temp = round(float(List_Data[_]), 2)
+                                        new_cell.SetCellValue(temp)
                                 ne_file = File.Create(Path)
                                 xs_excel.Write(ne_file)
                                 xs_excel.Close()
