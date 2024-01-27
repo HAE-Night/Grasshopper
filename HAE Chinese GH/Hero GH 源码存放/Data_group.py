@@ -1564,16 +1564,23 @@ try:
             def __init__(self):
                 pass
 
+            # 数据转换成树原树路径
+            def Restore_Tree(self, Before_Tree, Tree):
+                Tree_Path = [_ for _ in Tree.Paths]
+                After_Tree = gd[object]()
+                for i in range(Tree.BranchCount):
+                    for da_ in Before_Tree[i]:
+                        After_Tree.AddRange(da_, Tree_Path[i])
+                return After_Tree
+
             def RunScript(self, Data):
                 try:
-                    re_mes = Message.RE_MES([Data], ['Data'])
-                    if len(re_mes) > 0:
-                        for mes_i in re_mes:
-                            Message.message2(self, mes_i)
-                        return gd[object]()
-                    else:
-                        tree_Data = [list(data_) for data_ in Data.Branches]
-                        return ght.list_to_tree(tree_Data)
+                    Data.Graft(True)
+                    Tree_path = [_ for _ in Data.Paths]
+                    tree_Data = [data_ for data_ in Data.Branches]
+                    ListTree = self.Restore_Tree(tree_Data, Data)
+
+                    return ListTree
                 finally:
                     self.Message = 'PyList to Tree'
 
@@ -1850,7 +1857,7 @@ try:
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                p = Grasshopper.Kernel.Parameters.Param_String()
                 self.SetUpParam(p, "Path", "P", "Tree path\nIf the data is short as a string，connect the Path plug-in first")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
@@ -1913,10 +1920,8 @@ try:
 
             def Str_to_GHPath(self, Str):
                 try:
-                    number_list = []
-                    for _s in Str:
-                        if _s.isdigit():
-                            number_list.append(eval(_s))
+                    numbers = re.findall(r'\d+', Str)
+                    number_list = list(map(int, numbers))
                     path = GH_Path(tuple(number_list))
                     return path
                 except Exception as e:
@@ -2124,11 +2129,15 @@ try:
 
 
         # 通过下标取树形数据
-        class GetTreeDataByIndex(component):
+        class GetTreeDataByIndex(component, gk.IGH_VariableParameterComponent):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
                                                                    "RPP_GetTreeByIndex", "D14", """The way data tree is extracted according to subscripts；Multiple subscripts are supported（The mode of the tree path is{0; NTH list - 1; Fruit data}permutation）""", "Scavenger", "G-Data")
                 return instance
+
+            def __init__(self):
+                self.name = None
+                self.input_count = 0
 
             def get_ComponentGuid(self):
                 return System.Guid("e9722fda-2f6c-4564-baaf-e8f5f94729a9")
@@ -2144,36 +2153,130 @@ try:
                 p.Optional = True
 
             def RegisterInputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Tree_Data", "T", "Original tree data")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
-                self.Params.Input.Add(p)
-
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
-                self.SetUpParam(p, "Index", "I", "subscript")
+                self.SetUpParam(p, "Index", "I", "Subscript To Get")
                 INT_NUMBER = 0
                 p.SetPersistentData(gk.Types.GH_Integer(INT_NUMBER))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "A", "A", "Tree or List")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+                self.Params.Input.Add(p)
+
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Result", "R", "Final data")
+                self.SetUpParam(p, "*", "*", "Placeholder")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Output.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "A", "A", "Get the tree trunk or Fruit")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
-                p0 = self.marshal.GetInput(DA, 0)
-                p1 = self.marshal.GetInput(DA, 1)
-                result = self.RunScript(p0, p1)
+                count = 0
+                for i in range(self.Params.Input.Count):
+                    if self.Params.Input[i].VolatileDataCount != 0:
+                        count += 1
+                if self.input_count == self.Params.Input.Count:
+                    p_i = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                    self.SetUpParam(p_i, self.name, self.name, "树或者列表")
+                    p_i.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+                    self.Params.RegisterInputParam(p_i, count + 1)
+                    self.Params.Input.Add(p_i)
+                    self.Params.OnParametersChanged()
 
+                # 可变化参数后,需修改输入端输出端传入方式
+                p_list = []
+                if self.Params.Input.Count == 1:
+                    p_input = self.marshal.GetInput(DA, 0)
+                    result = self.RunScript(p_input)
+                else:
+                    for input_index in range(self.Params.Input.Count):
+                        p_input = self.marshal.GetInput(DA, input_index)
+                        p_list.append(p_input)
+                    result = self.RunScript(p_list)[0]
                 if result is not None:
-                    self.marshal.SetOutput(result, DA, 0, True)
+                    if not hasattr(result, '__getitem__'):
+                        self.marshal.SetOutput(result, DA, 0, True)
+                    else:
+                        for output_index in range(self.Params.Output.Count):
+                            if output_index == 0:
+                                self.marshal.SetOutput(result[0], DA, 0, True)
+                            else:
+                                structure_tree = self.Params.Input[output_index].VolatileData
+                                if 'empty structure' != str(structure_tree):
+                                    origin_data, origin_path = self.Branch_Route(structure_tree)
+                                    # 判断输入端是否为列表
+                                    if len(origin_data) != 1:
+                                        origin_data = origin_data
+                                    else:
+                                        origin_data = list(chain(*origin_data))
+                                    # 判断下标是否越界
+                                    if result[0] >= len(origin_data):
+                                        Message.message2(self, "Out of index range!")
+                                        temp_result = gd[object]()
+                                    else:
+                                        out_data = [origin_data[result[0]]]
+                                        # 输出端的数据结构与输入端保持一致
+                                        out_path = origin_path[0] if len(origin_path) <= 1 else origin_path[result[0]]
+
+                                        zip_list = zip([out_data], [out_path])
+                                        # 分割树
+                                        if len(origin_path) == 1:
+                                            ungroup_data = map(lambda x: self.split_tree(x[0], x[1]), zip_list)
+                                        else:
+                                            ungroup_data = map(lambda x: self.split_tree(x[0][0], x[1]), zip_list)
+                                        iter_ungroup_data = ungroup_data
+                                        temp_result = self.format_tree(iter_ungroup_data)
+                                else:
+                                    temp_result = gd[object]()
+                                self.marshal.SetOutput(temp_result, DA, output_index, True)
 
             def get_Internal_Icon_24x24(self):
                 o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAVaSURBVEhLnZULTFNnFMe7RygUbH1E4sLmk2QqOnG6KHOKQ0BA0TnQyYa2FltoodJSoC+hQF/0/bi0lEJhoDIjizJFoiI+lokmqKSCiDgdCmKcTtEZGK7cs9tys8QxN/CXnLb3f87/fPd891HCv4GijUQA8EXR8++haNe6ly97VqHovaBnz/qmDQ93L3W7e3eg6PWlePnE6bu5P3Tg0YnuEfflFwB3sLVuAYq6BkfgygDAVey4Fzs+24iXv5aqqipf74fZbH7fI6Ao6v/y+THW0O8NrQCXsUYuLC5i0YLFT1g0Y3ECi5PQ3+Xo9nZ5DQiChKlUKiZBKpW+LZNpIk82lKb0dpVdfXpvPzy5tw/cgz/A4LN6rNmp0aaDR+DBjVI4d0wBPx7N/63OyUXwXmOw263JWPODPB5vKi4RCC0n1R13223QcckEroum4fuddrjtckLPdQd0XdLD6e+FzyutggecdJZBmk2dgdvGUFdbG6LX669zOJzpuDTKzXr5kWuntdB6TufqbEUu3HGVtjfUChBh1u59iJK+ySilzs7kcNvDwuJm2e0VWVKtNhC3/k1lpWO1SqnoEggEEbg0CvthdqjwgaDRckLQdrRK0XGlWa7IpIZP9uSiNybN35xAXZuTk7NjF412pq4OO0OjqQk7Q6LXjGOxmHLz8/P66HR6GC6NwunmEOP6qL3LIQXm9m3p2FvIb+NQxSvxtBcOJ50jEgoGUlIYLKez3KnS6NLxlBetuviwSCRqioqKGjMVgXmUSVpaH/1o4aVY+LBmjZuVy2kT8SVFeNoLLzU1iMnYDVwuT2+32U5pzCWbPbrRaJytKVbV8vlZTeHhSybz+RlzMPktT+4VFis+Xb3Asqo8RLT8y8y0Pdq8vPwb5TU1wTabbZEnHxMTTPwqMWGQSt11vAQxq62lZWUqlXxDcbGSKxGLgU6nsVkMRjiTyaR4G/4fEpHocLFGe8RqtcY7HI45JRrpDGYKfTAjgwNqtabZYNA/EYvFoXJZwXc52fxOBo22GLeOm3fzJJIutc5QgW3DF4jZ1MTPygI2izWE3d+QlSuWStOSA9lpTIiJiZmHeybG1ri4Gdgk/Y4K53GtVtuUzmbd5WXueVhQUADCIt0yNjPl0NbEhPN4+ZvxTWLiQrlMjsqVKsfuXbSejHR2v0KhGCksyG+m7Ux2x8bGTnhrxiDdK6qXFRUBbecOSE9L65QVFaLYNP3x8fGvPkzjYh4xmKT/6KwfdabnPvfzSA4bwtXpdPB10vYh7Bo83SsRQ3Iy9ZXn4D8hBpPn+dBnbvCZFTCfpF50YMrQFgioD/sTS3nGD4yJiFhYglieMxmMkdTUVMBejpCxh5vrNY8H0ufTo8ktERBwavUg+cyax5TbsTDpwtoX/pXLW/0PrhggkAgf77OW5ctlRZC0PQlkcgVkZ+cW4vb/x3fn7G2Utiig/BIH5JvrgdwWCeSOaKDc3+j9/c5nlHUtPL2fUa95yGalAZfHA6FYYsDt44A1c0qAOfQg5edYILuigNweDeRr2IJ3YiHg0MoO4obAuZ6yIqlwk16j/AN7FYM4r7DG6x0PPiFTFwTUrrg7+dd48GwP+UokUG7FeCeY1LBq2GdzUAJeStCrlT3l5RVQIFN24tI4mEXw9UuZE0/KW1DrX/3JDT9ZyGOSY5nL37Skkbh2+nq8ioBoCreUlZaA2WwBgwmBbIksEk9NiBU+24LisG/Pf8EUr4LhtBnmmvXFPWaTcXQBowk0BvMtmc76AV7yZtTYbIHOcntemd0GlRUOcNqt8G11NVhKbLD/QC2UOircVkelAEGqp+GWf0Ag/AUVLJ/81QCJnwAAAABJRU5ErkJggg=="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
-            def __init__(self):
+            def CanInsertParameter(self, side, index):
+                # 是否可添加
+                if side != gk.GH_ParameterSide.Output and (index != 0 and index != 1):
+                    return True
+                return False
+
+            def CanRemoveParameter(self, side, index):
+                # 是否可移除
+                if side != gk.GH_ParameterSide.Output and (index != 0 and index != 1):
+                    return True
+                return False
+
+            def CreateParameter(self, side, index):
+                # 重定义输入端下标
+                index = self.Params.Input.Count
+                # 可添加输入端名字集合
+                self.name = gk.GH_ComponentParamServer.InventUniqueNickname("ABCDEFGHIJKLMNOPQRSTUVWXYZ", self.Params.Input)
+                # 添加输入端
+                p_input = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p_input, self.name, self.name, "Tree or List")
+                p_input.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+                self.Params.RegisterInputParam(p_input, index)
+
+                # 添加输出端
+                p_out = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p_out, self.name, self.name, "Get the tree trunk or Fruit")
+                p_out.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+                self.Params.RegisterOutputParam(p_out, index)
+                self.Params.OnParametersChanged()
+                return p_input
+
+            def DestroyParameter(self, side, index):
+                # 销毁已注册的输出端
+                self.Params.UnregisterOutputParameter(self.Params.Output[index])
+                return True
+
+            def VariableParameterMaintenance(self):
                 pass
 
             def Branch_Route(self, Tree):
@@ -2208,42 +2311,9 @@ try:
                             stock_tree.Insert(item, path, index)
                 return stock_tree
 
-            def RunScript(self, Tree_Data, Index):
+            def RunScript(self, *kwargs):
                 try:
-                    re_mes = Message.RE_MES([Tree_Data], ['T end'])
-                    Result = gd[object]()
-                    if len(re_mes) > 0:
-                        for mes_i in re_mes:
-                            Message.message2(self, mes_i)
-                    else:
-                        # 输入端参数构造
-                        structure_tree = self.Params.Input[0].VolatileData
-                        origin_data, origin_path = self.Branch_Route(structure_tree)
-                        # 判断输入端是否为列表
-                        if len(origin_data) != 1:
-                            origin_data = origin_data
-                        else:
-                            origin_data = list(chain(*origin_data))
-
-                        # 判断下标是否越界
-                        if Index >= len(origin_data):
-                            Message.message2(self, "Out of index range!")
-                        else:
-                            out_data = [origin_data[Index]]
-                            # 输出端的数据结构与输入端保持一致
-                            out_path = origin_path[0] if len(origin_path) <= 1 else origin_path[Index]
-
-                            zip_list = zip([out_data], [out_path])
-                            # 分割树
-                            new_tree = self.split_tree(zip_list[0][0], zip_list[0][1])
-                            if len(origin_path) == 1:
-                                ungroup_data = map(lambda x: self.split_tree(x[0], x[1]), zip_list)
-                            else:
-                                ungroup_data = map(lambda x: self.split_tree(x[0][0], x[1]), zip_list)
-                            iter_ungroup_data = ungroup_data
-                            # 匹配树
-                            Result = self.format_tree(iter_ungroup_data)
-                    return Result
+                    return kwargs
                 finally:
                     self.Message = 'Tree data values'
 
