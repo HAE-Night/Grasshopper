@@ -4051,7 +4051,7 @@ class AssemblyInfo(GhPython.Assemblies.PythonAssemblyInfo):
         return System.Guid("86c4ead2-84fa-4dff-a70f-099478c2ccca")
 
     def get_AuthorContact(self):
-        return "smblscr47@163.com"
+        return "software_team@heroesae.com"
 
 
 class Listener(gk.GH_AssemblyPriority):
