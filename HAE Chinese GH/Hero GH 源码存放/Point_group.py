@@ -592,7 +592,6 @@ try:
                     # 将结果添加进输出端
                 DA.SetDataTree(0, Sort_Pt)
 
-
             def get_Internal_Icon_24x24(self):
                 o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAKrSURBVEhLrZVLaBNBGMcHd2d2ZyZRsQcPCoKoiIpUPXjxIHrz5KEBg0LM7mRjk9YXiiBqrY/4rqFFRHoRj6IUqkItBS8Fbx706lk96UFQRCT+Z/NV8mhNAvuDYXf+3+z3n9l5sQXEUGozG1i+iqoJMsw8N1TPeEnXeFF/dvP+Hookg2P0Pn4cyQuqxk/gGcoZCjFm5Fo+JEe90NtASu9wo7fyY0g+jOSnUzBQ4xRiwqgRcTFd40aNkbQ4uRUrWahXU60dYeQAH9IzPFITLOhLkwxzWRFnYGpUlaRFQXweI//KcswnqTvw0fXYIFT3SGoDyftdI9+5oXzPjZ8luTswghs0grsktQHzKuZv2i3ISbSfJbk78MGt+gjkbZKawS9B7BMfVG/cSL6A2W9WlGso2hkY3CGDmyQ1wQO9DbHXVGWuUc+dUB2gamfsv48NAlkhqQlxNL0R+yeLdjmUPBZKFr9zF4U7g8Zj9TmQ10hqJsMcFjHFjjAdF/seMU7RzqBX92ODgrxKUrLAYJxGMEpSsuAXTdAkXyYpWTCCB9YAh+ElkpIFBg9jg0BdIKkZTCgP1A67ckQ5vckP/HUUWQKsgsZG2P6PGg3cvNztFvWpeLVYyuk+JJ/DIpjlg/qPG8jJWF8KNJ7CqfoLG+Y81avirJ0DZXiot/Oi+iHOpWpOoPfHHxAikAexEL7JTrsYjSr8JI5tFPTmMYyeChzjeE4h9iU+zo18xUosRZ8wmxQd+O6E3l6S/g96HaKnP4U1spdQiGLvi7iO5I0bCUYw/4g2b3lJ9YsI12432IlzI/UhvoSsSXzjtSQHIi+24A6Zh8k0L6s5x8grFOqCDHoXySeinvxla3KLl/fW87I+ZO8BXvQP93TQLYCe7cRjWb3Wwgj0DBP/Si/nUDIw9heQCbZf5May/wAAAABJRU5ErkJggg=="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
