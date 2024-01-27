@@ -30,6 +30,11 @@ try:
                                                                    "RPP_RotatePlane", "S2", """The plane rotation and the two objects that follow the plane rotation ，Direction（Direction of the axis of rotation）""", "Scavenger", "F-Plane")
                 return instance
 
+            def __init__(self):
+                super(RotatePlane, self).__init__()
+                self.selective_index = 'X'
+                self.switch = None
+
             def get_ComponentGuid(self):
                 return System.Guid("63f44167-e9c5-40e5-9040-9bb9cccbc6fe")
 
@@ -84,29 +89,148 @@ try:
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
-                p0 = self.marshal.GetInput(DA, 0)
-                p1 = self.marshal.GetInput(DA, 1)
-                p2 = self.marshal.GetInput(DA, 2)
-                p3 = self.marshal.GetInput(DA, 3)
-                p4 = self.marshal.GetInput(DA, 4)
-                result = self.RunScript(p0, p1, p2, p3, p4)
+                self.Message = 'Plane rotation'
+                New_Plane, Rotated_object1, Rotated_object2 = (gd[object]() for _i in range(3))
+                if self.RunCount == 1:
+                    def run_main(tuple):
+                        Plane, Angle, F1, F2 = tuple
+                        Direction = self.selective_index
+                        if Plane is not None:
+                            center_point = Plane.Origin
+                            New_Plane, Rotated_object1, Rotated_object2 = self.get_new_plane(Plane, F1, F2, Angle,
+                                                                                             Direction, center_point)
+                        else:
+                            New_Plane, Rotated_object1, Rotated_object2 = (None for _i in range(3))
 
-                if result is not None:
-                    if not hasattr(result, '__getitem__'):
-                        self.marshal.SetOutput(result, DA, 0, True)
+                        return New_Plane, Rotated_object1, Rotated_object2
+
+                    def _do_main(tuple_data):
+                        a_part_trunk, b_part_trunk, origin_path = tuple_data
+                        new_list_data = list(b_part_trunk)
+                        new_list_data.insert(self.max_index, a_part_trunk)  # 将最长的数据插入到原列表中
+                        match_orgin, match_x, match_y, match_z = new_list_data
+
+                        Plane, Angle, F1, F2 = self.match_list(match_orgin, match_x, match_y, match_z)  # 将数据二次匹配列表里面的数据
+
+                        trun_Plane = ghp.run(self._trun_object, Plane)  # 将引用数据转为Rhino内置数据
+                        trun_Angle = ghp.run(self._trun_object, Angle)
+                        # trun_Angle = [_.Value if _ is not None else _ for _ in Angle]
+                        trun_F1 = ghp.run(self._trun_object, F1)
+                        trun_F2 = ghp.run(self._trun_object, F2)
+
+                        zip_list = zip(trun_Plane, trun_Angle, trun_F1, trun_F2)
+                        zip_ungroup_data = ghp.run(run_main, zip_list)  # 传入获取主方法中
+
+                        New_Plane, Rotated_object1, Rotated_object2 = zip(*zip_ungroup_data)
+
+                        ungroup_data = map(lambda x: self.split_tree(x, origin_path),
+                                           [New_Plane, Rotated_object1, Rotated_object2])
+
+                        Rhino.RhinoApp.Wait()
+                        return ungroup_data
+
+                    def temp_by_match_tree(*args):
+                        # 参数化匹配数据
+                        value_list, trunk_paths = zip(*map(self.Branch_Route, args))
+                        len_list = map(lambda x: len(x), value_list)  # 得到最长的树
+                        max_index = len_list.index(max(len_list))  # 得到最长的树的下标
+                        self.max_index = max_index
+                        max_trunk = [_ if len(_) != 0 else [None] for _ in value_list[max_index]]
+                        ref_trunk_path = trunk_paths[max_index]
+                        other_list = [
+                            map(lambda x: x if len(x) != 0 else [None], value_list[_]) if len(value_list[_]) != 0 else [
+                                [None]]
+                            for _ in range(len(value_list)) if _ != max_index]  # 剩下的树, 没有的值加了个None进去方便匹配数据
+                        matchzip = zip([max_trunk] * len(other_list), other_list)
+
+                        def sub_match(tuple_data):
+                            # 子树匹配
+                            target_tree, other_tree = tuple_data
+                            t_len, o_len = len(target_tree), len(other_tree)
+                            if o_len == 0:
+                                new_tree = [other_tree] * len(target_tree)
+                            else:
+                                new_tree = other_tree + [other_tree[-1]] * (t_len - o_len)
+                            return new_tree
+
+                        # 打包数据结构
+                        other_zip_trunk = zip(*map(sub_match, matchzip))
+
+                        zip_list = zip(max_trunk, other_zip_trunk, ref_trunk_path)
+                        # 多进程函数运行
+                        iter_ungroup_data = zip(*ghp.run(_do_main, zip_list))
+                        New_Plane, Rotated_object1, Rotated_object2 = ghp.run(
+                            lambda single_tree: self.format_tree(single_tree), iter_ungroup_data)
+                        return New_Plane, Rotated_object1, Rotated_object2
+
+                    p0 = self.Params.Input[0].VolatileData
+                    p1 = self.Params.Input[1].VolatileData
+                    p2 = self.marshal.GetInput(DA, 2)
+                    p3 = self.Params.Input[3].VolatileData
+                    p4 = self.Params.Input[4].VolatileData
+
+                    j_list = any([len(_i) for _i in self.Branch_Route(p0)[0]])
+
+                    re_mes = Message.RE_MES([j_list], ['Rotated_Plane'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
                     else:
-                        self.marshal.SetOutput(result[0], DA, 0, True)
-                        self.marshal.SetOutput(result[1], DA, 1, True)
-                        self.marshal.SetOutput(result[2], DA, 2, True)
+                        self.selective_index = p2 if p2 is not None else 'X'
+                        New_Plane, Rotated_object1, Rotated_object2 = temp_by_match_tree(p0, p1, p3, p4)
+
+                DA.SetDataTree(0, New_Plane)
+                DA.SetDataTree(1, Rotated_object1)
+                DA.SetDataTree(2, Rotated_object2)
 
             def get_Internal_Icon_24x24(self):
                 o = "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"
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
-            def __init__(self):
-                super(RotatePlane, self).__init__()
-                self.selective_index = 'X'
-                self.switch = None
+            def Branch_Route(self, Tree):
+                """分解Tree操作，树形以及多进程框架代码"""
+                Tree_list = [list(_) for _ in Tree.Branches]
+                Tree_Path = [list(_) for _ in Tree.Paths]
+                return Tree_list, Tree_Path
+
+            def split_tree(self, tree_data, tree_path):
+                """操作树单枝的代码"""
+                new_tree = ght.list_to_tree(tree_data, True, tree_path)  # 此处可替换复写的Tree_To_List（源码参照Vector组-点集根据与曲线距离分组）
+                result_data, result_path = self.Branch_Route(new_tree)
+                if list(chain(*result_data)):
+                    return result_data, result_path
+                else:
+                    return [[]], result_path
+
+            def format_tree(self, result_tree):
+                """匹配树路径的代码，利用空树创造与源树路径匹配的树形结构分支"""
+                stock_tree = gd[object]()
+                for sub_tree in result_tree:
+                    fruit, branch = sub_tree
+                    for index, item in enumerate(fruit):
+                        path = gk.Data.GH_Path(System.Array[int](branch[index]))
+                        if hasattr(item, '__iter__'):
+                            if item:
+                                for sub_index in range(len(item)):
+                                    stock_tree.Insert(item[sub_index], path, sub_index)
+                            else:
+                                stock_tree.AddRange(item, path)
+                        else:
+                            stock_tree.Insert(item, path, index)
+                return stock_tree
+
+            def _trun_object(self, ref_obj):
+                """引用物体转换为GH内置物体"""
+                if ref_obj is None:
+                    return None
+                elif 'ReferenceID' in dir(ref_obj):
+                    if ref_obj.IsReferencedGeometry:
+                        test_pt = ref_obj.Value
+                    else:
+                        test_pt = ref_obj.Value
+                else:
+                    test_pt = ref_obj.Value
+                return test_pt
 
             def get_new_plane(self, plane, f1, f2, angle, dire, point):
                 vector = None
@@ -140,31 +264,29 @@ try:
                         return alphabet_list, False
                 return alphabet_list, None
 
-            def RunScript(self, Rotated_Plane, Angle, Direction, Follow_rotation1, Follow_rotation2):
-                try:
+            def match_list(self, *args):
+                """匹配子树"""
+                """匹配列表里面的数据"""
+                zip_list = list(args)
+                len_list = map(lambda x: len(x), zip_list)  # 得到最长的树
+                max_index = len_list.index(max(len_list))  # 得到最长的树的下标
+                max_list = zip_list[max_index]  # 最长的列表
+                other_list = [zip_list[_] for _ in range(len(zip_list)) if _ != max_index]  # 剩下的列表
+                matchzip = zip([max_list] * len(other_list), other_list)
 
-                    # 判断输入的列表是否都为空
-                    structure_tree = self.Params.Input[0].VolatileData
-                    temp_geo_list = [list(i) for i in structure_tree.Branches]  # 获取所有数据
-                    j_list = filter(None, list(chain(*temp_geo_list)))
-                    re_mes = Message.RE_MES([j_list], ['Rotated_Plane'])
-                    if len(re_mes) > 0:
-                        for mes_i in re_mes:
-                            Message.message2(self, mes_i)
-                        return gd[object](), gd[object](), gd[object]()
+                def sub_match(tuple_data):  # 数据匹配
+                    target_tree, other_tree = tuple_data
+                    t_len, o_len = len(target_tree), len(other_tree)
+                    if o_len == 0:
+                        return other_tree
                     else:
-                        if Rotated_Plane is not None:
-                            center_point = Rotated_Plane.Origin
-                            New_Plane, Rotated_object1, Rotated_object2 = self.get_new_plane(Rotated_Plane,
-                                                                                             Follow_rotation1,
-                                                                                             Follow_rotation2, Angle,
-                                                                                             Direction,
-                                                                                             center_point)
-                        else:
-                            New_Plane, Rotated_object1, Rotated_object2 = ([] for _ in range(3))
-                        return New_Plane, Rotated_object1, Rotated_object2
-                finally:
-                    self.Message = 'Plane rotation'
+                        new_tree = other_tree + [other_tree[-1]] * (t_len - o_len)
+                        return new_tree
+
+                iter_group = map(sub_match, matchzip)  # 数据匹配
+                iter_group.insert(max_index, max_list)  # 将最长的数据插入进去
+
+                return iter_group
 
 
         # 重构XY轴平面
