@@ -2332,10 +2332,15 @@ try:
                     else:
                         self.message2("Terminal A cannot be empty!")
 
+                    if isinstance(Layer_Name, (list, tuple)):
+                        Layer_Name = Layer_Name
+                    else:
+                        Layer_Name = [Layer_Name]
+
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
                     sc.doc = ghdoc
-                    return Keys, Values, Name, [Layer_Name], Color, Material
+                    return Keys, Values, Name, Layer_Name, Color, Material
                 finally:
                     self.Message = 'Deconstruct Attributes'
 
@@ -3103,7 +3108,7 @@ try:
             def Branch_Route(self, Tree):
                 """分解Tree操作，树形以及多进程框架代码"""
                 Tree_list = [list(_) for _ in Tree.Branches]
-                Tree_Path = [_ for _ in Tree.Paths]
+                Tree_Path = [list(_) for _ in Tree.Paths]
                 return Tree_list, Tree_Path
 
             def split_tree(self, tree_data, tree_path):
@@ -3177,6 +3182,14 @@ try:
                     ref_brep_list.append(rh_obj)
                 return ref_brep_list
 
+            def Graft_Tree(self, tuple):
+                """得到升树后的树形结构分支Path"""
+                value, orgin_path = tuple
+                ungroup_data = map(lambda x: self.split_tree([x[1]], orgin_path + [x[0]]), enumerate(value))
+                Data_Tree = self.format_tree(ungroup_data)
+                v, v_path = self.Branch_Route(Data_Tree)
+                return v_path
+
             def RunScript(self, key, val, T):
                 try:
                     sc.doc = Rhino.RhinoDoc.ActiveDoc
@@ -3191,18 +3204,16 @@ try:
                             attr = self.Get_ALL_Objects()
                             attr_str = [str(_) for _ in attr]
                             All_Objects = self.decorate_obj(attr_str)
-
                             value, value_path = self.Branch_Route(val)  # 得到输入的value和path
+                            Data_Path = map(self.Graft_Tree, zip(value, value_path))
                             value_list = [[item] for sublist in value for item in sublist]  # 将嵌套的列表每个数据展开
-                            v, v_Path = self.Branch_Route(ght.list_to_tree(value_list))  # 将value_list转为树形结构得到它的Path
-
+                            new_Path = [item for sublist in Data_Path for item in sublist]  # 得到新的路径
                             for i in range(len(value_list)):
                                 O = self.HaveKey(attr, key, value_list[i])
                                 for _ in O:
-                                    Obj.Add(All_Objects[_], v_Path[i])
+                                    Obj.Add(All_Objects[_], GH_Path(tuple(new_Path[i])))
                     else:
                         Obj = None
-
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
                     sc.doc = ghdoc
@@ -3487,6 +3498,109 @@ try:
                     return val_Tree
                 finally:
                     self.Message = 'Get User Value'
+
+
+        class Dekete_Object(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "Dekete_Object", "Dekete_Object", """Dekete_Object""",
+                                                                   "Scavenger", "K-Object")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("d98b9537-d5cb-437d-9ebb-715527f90bb7")
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Guid()
+                self.SetUpParam(p, "Guid", "Guid", "犀牛物件或者物件的ID")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Boolean()
+                self.SetUpParam(p, "Boolean", "Boolean", "如果为True则删除输入的物件")
+                p.SetPersistentData(gk.Types.GH_Boolean(False))
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                pass
+
+            def SolveInstance(self, DA):
+                self.Message = '删除物体'
+                if self.RunCount == 1:
+                    p0 = self.Params.Input[0].VolatileData
+                    p1 = self.marshal.GetInput(DA, 1)
+
+                    guids = self.Branch_Route(p0)[0]
+
+                    def Delete_obj_by_id(guids):
+                        for guid in filter(None, guids):
+                            new_guid = System.Guid(str(guid))
+                            sc.doc.Objects.Delete(new_guid, True)
+
+                    sc.doc = Rhino.RhinoDoc.ActiveDoc
+                    re_mes = Message.RE_MES([guids], ['G end'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                    else:
+                        if p1:
+                            map(Delete_obj_by_id, guids)
+                    sc.doc.Views.Redraw()
+                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                    sc.doc = ghdoc
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAASDSURBVEhLnZQLUJRVFMcXvmUXRN47I4OQOk5NM2YSBGalmWYDueKEjizrg0DK5GXaSNhUoERINcLwEHeIQClCVEhwyEcSomBMJINoRKiIgMhrP2B3eazgv+/c3YJ1khjOzH/m7P3uOb9zzz17RU8ye5lM7ujkzDs4OGAqOcqcedprDJu+OTrN4ZNV53C9eQTV9UM496sWJ8s1yD0zgNTjPBJy+hCd1g15yCkGMYZN36i6kkoNlvhmwO05BTzlh7H+o068vc8g8v323seanc3sJMaw6RsFqYr78dRiBdwW+WOBuxIBcV0IPNDNRP6mz7rgG9E0c8D+b9V4yf8IFnoosVyhQlBSL4K/6mMif2tiD9ZG3Zw5IPxQL7Yk9LCEoclq7EjlsTPdIPJpbV3U9f8BcF5yc85buCR3YdOErKzmmfz+Rx9kDzLtyhpEeGa/ALiG+ZaWWCwSmcjTQsR7cCK5yIzz4pMzK3Hr3ijq/hzGpWtDKLuqw4kKLY5d0EJVpkVKiRZJxTrEHtchJt+g6Dwt9uRosC6ihp1g9E4BhmrjMHBWgd6jS3AmyAKeYpFaOII7Lv+uw4rQu3gzso1NBl0e9ZdaQFVSIkr66YlhxBWNMJFPa/KwKgboz7eFOnc2elXW6E6zwu1PJOwkDFB6aRAr32uFz652Nn40IXSJ1GdqBVVLCeNLRnHwp4dM5NOa77sVDDBQ6AT+mA36sgRAuhX+ipFOAPJK+/G6EUAzTmO4Ob4Dythb2BzXhG0HGhH8+U1sT2hA6Bf1CIqrxaa91fALq8AyvxTMd3XSa36cBz5PAHxjjZ6MWfjjw0knSP2+zwSwYV8rViqzH7nOddFTdVNpgZtMf/rgwkeaIhcTQEPkJEBsZrdJi3zCb2Cui4u+vDAWY90VGOsswVhHHsbb0jHemoDx29EYa9wBfV0ARqpWQVf2NAYK7ExaVPf+JEBEYqfJJa8KqWXV6VsKoDlpB12JA4bPOmLkZyeMlsuYyKc1+kZ7Hr/k34ItJgCB0W14Nfgu3gi7h7V7OrBcWc0AI42ZQmW20BTZs0RDZY4sKYl8llz4RntYe7KF9mTOQleKJa4qJwFWh7bg5W0t/97DUn/DZAzVJaD/OxsDRKhSW2wP7WmjBJ/W6BvtUedMVP/gkCWubBQbAGbmXrzrC0fx7OpfsGjNRTzvcwHuvucZQHtlNwuk6qgFlGyw0A7qPFt0ZdmgI202WpKs0RwnTE20JeojpajdLmHV57/G0R9NeCGEp8LsP54KAgyeD2JV0dGpv3SJVNV0RMnZU/EkIwB/6i12ZOorAwkTwv/wDDQXt2C4IQ0Pu2pARnuNYdM3CurN9Wb9pEsjEI0fzbgqWArlMg5H3pGgIUoyc8CD1AW4nyhB55dSdH4tZTBS4FIO/h4cAr05XN4gnjmgLd4G7fst0B5vgY4ECYORDivEULxojowAMUpfMZ8ZYI7Mni/cKkHrxxzuxIjRtFuMG2Ec6kI41Cg5VG3kULneHOkrpHAW9hrDpm8ymb2cAqm6qUR7aK8x7DETif4GWQPKTm78ggMAAAAASUVORK5CYII="
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def __init__(self):
+                pass
+
+            def Branch_Route(self, Tree):
+                """分解Tree操作，树形以及多进程框架代码"""
+                Tree_list = [list(_) for _ in Tree.Branches]
+                Tree_Path = [list(_) for _ in Tree.Paths]
+                return Tree_list, Tree_Path
+
+            def split_tree(self, tree_data, tree_path):
+                """操作树单枝的代码"""
+                new_tree = ght.list_to_tree(tree_data, True, tree_path)  # 此处可替换复写的Tree_To_List（源码参照Vector组-点集根据与曲线距离分组）
+                result_data, result_path = self.Branch_Route(new_tree)
+                if list(chain(*result_data)):
+                    return result_data, result_path
+                else:
+                    return [[]], result_path
+
+            def format_tree(self, result_tree):
+                """匹配树路径的代码，利用空树创造与源树路径匹配的树形结构分支"""
+                stock_tree = gd[object]()
+                for sub_tree in result_tree:
+                    fruit, branch = sub_tree
+                    for index, item in enumerate(fruit):
+                        path = gk.Data.GH_Path(System.Array[int](branch[index]))
+                        if hasattr(item, '__iter__'):
+                            if item:
+                                for sub_index in range(len(item)):
+                                    stock_tree.Insert(item[sub_index], path, sub_index)
+                            else:
+                                stock_tree.AddRange(item, path)
+                        else:
+                            stock_tree.Insert(item, path, index)
+                return stock_tree
+
+            def RunScript(self, Guid, Boolean):
+                try:
+                    pass
+                finally:
+                    self.Message = '删除物体'
+
 
 
     else:
