@@ -1263,8 +1263,8 @@ try:
                             HoleCir = [HoleCir] * len(Plane)
 
                             # 使用ghpythonlib.parallel.run并行计算 这里使用run函数并行计算多个圆柱体的生成
-                            Geometry = map(self.circle, zip(Plane, Radi, CriVec, HoleCir))
-                            #                    # 解包结果
+                            Geometry = ghp.run(self.circle, zip(Plane, Radi, CriVec, HoleCir))
+                            # 解包结果
                             CirBrepList, HoleCirBrepList = zip(*Geometry)
                         else:
                             pass
