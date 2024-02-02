@@ -506,21 +506,115 @@ try:
                 self.SetUpParam(p, "Sort_Pts", "P", "set of point after sort")
                 self.Params.Output.Add(p)
 
-            def SolveInstance(self, DA):
-                p0 = self.marshal.GetInput(DA, 0)
-                p1 = self.marshal.GetInput(DA, 1)
-                p2 = self.marshal.GetInput(DA, 2)
-                result = self.RunScript(p0, p1, p2)
+            def sort_pt(self, set_data):
+                # 获取片段集合中所有点和平面
+                origin_pts, pl = set_data
+                if len(origin_pts):
+                    pts = map(self._trun_object, origin_pts)
+                    pl = self._trun_object(pl)
+                    # 新建字典
+                    dict_pt_data = dict()
+                    from_plane = rg.Plane.WorldXY
+                    # 获取转换过程
+                    xform = rg.Transform.PlaneToPlane(pl, from_plane)
+                    # 复制点列表
+                    copy_pt = [rg.Point3d(_) for _ in pts]
+                    # 将转换过程映射至点集合副本中
+                    [_.Transform(xform) for _ in copy_pt]
+                    dict_pt_data['X'] = [_.X for _ in copy_pt]
+                    dict_pt_data['Y'] = [_.Y for _ in copy_pt]
+                    dict_pt_data['Z'] = [_.Z for _ in copy_pt]
+                    # 按轴排序，最后结果映射只源点列表中
+                    zip_list_sort = zip(dict_pt_data[self.axis], origin_pts)
+                    res_origin_pt = zip(*sorted(zip_list_sort))[1]
+                else:
+                    res_origin_pt = []
+                return res_origin_pt
 
-                if result is not None:
-                    self.marshal.SetOutput(result, DA, 0, True)
+            def SolveInstance(self, DA):
+                # 插件名称
+                self.Message = 'Sort Point'
+                # 初始化输出端数据内容
+                Sort_Pt = gd[object]()
+                if self.RunCount == 1:
+                    # 获取输入端
+                    p0 = self.Params.Input[0].VolatileData
+                    p1 = self.Params.Input[1].VolatileData
+                    p2 = self.Params.Input[2].VolatileData
+                    # 确定不变全局参数
+                    self.axis = str(p1[0][0]).upper()
+                    self.j_bool_f1 = self.parameter_judgment(p0)[0]
+                    re_mes = Message.RE_MES([self.j_bool_f1], ['P end'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                    else:
+                        # 多进程方法
+                        def temp(tuple_data):
+                            # 解包元组元素
+                            origin_pt_list, origin_pl_list, origin_path = tuple_data
+                            # 若平面有多个，重新赋值
+                            o_pl_len = len(origin_pl_list)
+                            if o_pl_len == 1:
+                                origin_pt_list = [origin_pt_list]
+                            else:
+                                origin_pt_list = [origin_pt_list[:] for _ in range(o_pl_len)]
+                            # 每个单元切片进行主方法排序
+                            sub_zip_list = zip(origin_pt_list, origin_pl_list)
+                            res_pt_list = map(self.sort_pt, sub_zip_list)
+                            # 每个单元切片是否有数据输出
+                            if res_pt_list:
+                                ungroup_data = self.split_tree(res_pt_list, origin_path)
+                            else:
+                                ungroup_data = self.split_tree([[]], origin_path)
+                            return ungroup_data
+
+                        # 数据匹配
+                        pt_trunk, pt_path_trunk = self.Branch_Route(p0)
+                        pl_trunk, pl_path_trunk = self.Branch_Route(p2)
+                        pt_len, pl_len = len(pt_trunk), len(pl_trunk)
+                        if pt_len > pl_len:
+                            new_pt_trunk = pt_trunk
+                            new_pl_trunk = pl_trunk + [pl_trunk[-1]] * (pt_len - pl_len)
+                            path_trunk = pt_path_trunk
+                        elif pt_len < pl_len:
+                            new_pt_trunk = pt_trunk + [pt_trunk[-1]] * (pl_len - pt_len)
+                            new_pl_trunk = pl_trunk
+                            path_trunk = pl_path_trunk
+                        else:
+                            new_pt_trunk = pt_trunk
+                            new_pl_trunk = pl_trunk
+                            path_trunk = pt_path_trunk
+                        zip_list = zip(new_pt_trunk, new_pl_trunk, path_trunk)
+                        # 获得结果树列表
+                        iter_ungroup_data = ghp.run(temp, zip_list)
+                        Sort_Pt = self.format_tree(iter_ungroup_data)
+                    # 将结果添加进输出端
+                DA.SetDataTree(0, Sort_Pt)
 
             def get_Internal_Icon_24x24(self):
                 o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAKrSURBVEhLrZVLaBNBGMcHd2d2ZyZRsQcPCoKoiIpUPXjxIHrz5KEBg0LM7mRjk9YXiiBqrY/4rqFFRHoRj6IUqkItBS8Fbx706lk96UFQRCT+Z/NV8mhNAvuDYXf+3+z3n9l5sQXEUGozG1i+iqoJMsw8N1TPeEnXeFF/dvP+Hookg2P0Pn4cyQuqxk/gGcoZCjFm5Fo+JEe90NtASu9wo7fyY0g+jOSnUzBQ4xRiwqgRcTFd40aNkbQ4uRUrWahXU60dYeQAH9IzPFITLOhLkwxzWRFnYGpUlaRFQXweI//KcswnqTvw0fXYIFT3SGoDyftdI9+5oXzPjZ8luTswghs0grsktQHzKuZv2i3ISbSfJbk78MGt+gjkbZKawS9B7BMfVG/cSL6A2W9WlGso2hkY3CGDmyQ1wQO9DbHXVGWuUc+dUB2gamfsv48NAlkhqQlxNL0R+yeLdjmUPBZKFr9zF4U7g8Zj9TmQ10hqJsMcFjHFjjAdF/seMU7RzqBX92ODgrxKUrLAYJxGMEpSsuAXTdAkXyYpWTCCB9YAh+ElkpIFBg9jg0BdIKkZTCgP1A67ckQ5vckP/HUUWQKsgsZG2P6PGg3cvNztFvWpeLVYyuk+JJ/DIpjlg/qPG8jJWF8KNJ7CqfoLG+Y81avirJ0DZXiot/Oi+iHOpWpOoPfHHxAikAexEL7JTrsYjSr8JI5tFPTmMYyeChzjeE4h9iU+zo18xUosRZ8wmxQd+O6E3l6S/g96HaKnP4U1spdQiGLvi7iO5I0bCUYw/4g2b3lJ9YsI12432IlzI/UhvoSsSXzjtSQHIi+24A6Zh8k0L6s5x8grFOqCDHoXySeinvxla3KLl/fW87I+ZO8BXvQP93TQLYCe7cRjWb3Wwgj0DBP/Si/nUDIw9heQCbZf5May/wAAAABJRU5ErkJggg=="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
-            def __init__(self):
-                pass
+            def _trun_object(self, ref_obj):
+                """引用物体转换为GH内置物体"""
+                if 'ReferenceID' in dir(ref_obj):
+                    if ref_obj.IsReferencedGeometry:
+                        test_pt = ref_obj.Value
+                    else:
+                        test_pt = ref_obj.Value
+                else:
+                    test_pt = ref_obj
+                return test_pt
+
+            def parameter_judgment(self, tree_par_data):
+                # 获取输入端参数所有数据
+                geo_list, geo_path = self.Branch_Route(tree_par_data)
+                if geo_list:
+                    j_list = any(ghp.run(lambda x: len(list(filter(None, x))), geo_list))  # 去空操作, 判断是否为空
+                else:
+                    j_list = False
+                return j_list, geo_list, geo_path
 
             def Branch_Route(self, Tree):
                 """分解Tree操作，树形以及多进程框架代码"""
@@ -554,46 +648,45 @@ try:
                             stock_tree.Insert(item, path, index)
                 return stock_tree
 
-
-            def RunScript(self, Pts, Axis, CP):
-                try:
-                    Sort_P = gd[object]()
-
-                    "----------------------------"
-                    # 添加列表判空操作，如有空值就删掉，如有空树枝就返回
-                    temp_geo_list = self.Branch_Route(self.Params.Input[0].VolatileData)[0]
-                    length_list = [len(filter(None, _)) for _ in temp_geo_list]
-                    Abool_factor = any(length_list)
-
-                    re_mes = Message.RE_MES([Abool_factor], ['Pts'])
-                    if len(re_mes) > 0:
-                        for mes_i in re_mes:
-                            Message.message2(self, mes_i)
-                    else:
-                        structure_tree = self.Params.Input[0].VolatileData
-                        origin_pts = filter(None, TreeFun.Branch_Route(structure_tree)[0][self.RunCount - 1])
-
-                        "----------------------------"
-                        gh_origin_pts = map(TreeFun._trun_object, origin_pts)
-                        if len(origin_pts) <= 1:
-                            Sort_P = origin_pts
-                        else:
-                            Axis = Axis.upper()
-                            dict_pt_data = dict()
-                            from_plane = rg.Plane.WorldXY
-                            to_plane = CP
-                            xform = rg.Transform.PlaneToPlane(to_plane, from_plane)
-                            copy_pt = [rg.Point3d(_) for _ in gh_origin_pts]
-                            [_.Transform(xform) for _ in copy_pt]
-                            dict_pt_data['X'] = [_.X for _ in copy_pt]
-                            dict_pt_data['Y'] = [_.Y for _ in copy_pt]
-                            dict_pt_data['Z'] = [_.Z for _ in copy_pt]
-                            zip_list_sort = zip(dict_pt_data[Axis], origin_pts)
-                            Sort_P = zip(*sorted(zip_list_sort))[1]
-
-                    return Sort_P
-                finally:
-                    self.Message = 'Sort Point'
+            # def RunScript(self, Pts, Axis, CP):
+            #     try:
+            #         Sort_P = gd[object]()
+            #
+            #         "----------------------------"
+            #         # 添加列表判空操作，如有空值就删掉，如有空树枝就返回
+            #         temp_geo_list = self.Branch_Route(self.Params.Input[0].VolatileData)[0]
+            #         length_list = [len(filter(None, _)) for _ in temp_geo_list]
+            #         Abool_factor = any(length_list)
+            #
+            #         re_mes = Message.RE_MES([Abool_factor], ['Pts'])
+            #         if len(re_mes) > 0:
+            #             for mes_i in re_mes:
+            #                 Message.message2(self, mes_i)
+            #         else:
+            #             structure_tree = self.Params.Input[0].VolatileData
+            #             origin_pts = filter(None, TreeFun.Branch_Route(structure_tree)[0][self.RunCount - 1])
+            #
+            #             "----------------------------"
+            #             gh_origin_pts = map(TreeFun._trun_object, origin_pts)
+            #             if len(origin_pts) <= 1:
+            #                 Sort_P = origin_pts
+            #             else:
+            #                 Axis = Axis.upper()
+            #                 dict_pt_data = dict()
+            #                 from_plane = rg.Plane.WorldXY
+            #                 to_plane = CP
+            #                 xform = rg.Transform.PlaneToPlane(to_plane, from_plane)
+            #                 copy_pt = [rg.Point3d(_) for _ in gh_origin_pts]
+            #                 [_.Transform(xform) for _ in copy_pt]
+            #                 dict_pt_data['X'] = [_.X for _ in copy_pt]
+            #                 dict_pt_data['Y'] = [_.Y for _ in copy_pt]
+            #                 dict_pt_data['Z'] = [_.Z for _ in copy_pt]
+            #                 zip_list_sort = zip(dict_pt_data[Axis], origin_pts)
+            #                 Sort_P = zip(*sorted(zip_list_sort))[1]
+            #
+            #         return Sort_P
+            #     finally:
+            #         self.Message = 'Sort Point'
 
 
         # 点依次排序
@@ -1400,19 +1493,19 @@ try:
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Point()
                 self.SetUpParam(p, "Points", "Pi", "Point List ")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
                 self.SetUpParam(p, "FirstIndex", "F", "Specifies the starting element subscript")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Plane()
                 self.SetUpParam(p, "Plane", "P", "Sorting plane")
                 NORMAL_PLANE = rg.Plane.WorldXY
                 p.SetPersistentData(gk.Types.GH_Plane(NORMAL_PLANE))
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
@@ -1488,6 +1581,15 @@ try:
                             stock_tree.Insert(item, path, index)
                 return stock_tree
 
+            def parameter_judgment(self, tree_par_data):
+                # 获取输入端参数所有数据
+                geo_list, geo_path = self.Branch_Route(tree_par_data)
+                if geo_list:
+                    j_list = any(ghp.run(lambda x: len(list(filter(None, x))), geo_list))  # 去空操作, 判断是否为空
+                else:
+                    j_list = False
+                return j_list, geo_list, geo_path
+
             def is_nan(self, angle):
                 # 判断是否为失效值
                 nan_bool = (not float('-inf')) < angle < float('inf')
@@ -1525,50 +1627,81 @@ try:
                 sort_zip_list = sorted(zip(distance_list, zip_coll))
                 return sort_zip_list
 
+            def temp(self, tuple_data):
+                # 解包数据
+                pt_list, origin_pt_list, _index, ref_pln, origin_path = tuple_data
+                if pt_list:
+                    _index = _index[0]
+                    ref_pln = ref_pln[0]
+                    # 得到平面基础数据
+                    base_pt, ref_vector = ref_pln.Origin, ref_pln.XAxis
+                    # 平面投影
+                    xform = rg.Transform.PlaneToPlane(ref_pln, rg.Plane.WorldXY)
+                    projected_point_set = [rg.Point3d(_) for _ in pt_list]
+                    # 投影点重排序并输出下标
+                    temp_index = self.right_hand_rule(projected_point_set, base_pt, ref_vector, ref_pln)
+                    # 判断F端是否为失效值
+                    if _index is not None:
+                        # 判断F端是否为负数
+                        if _index < 0:
+                            _index += len(temp_index)
+                        # 若F端在正常范围内
+                        elif 0 <= _index < len(temp_index):
+                            pass
+                        else:
+                            _index = len(temp_index)
+                            Message.message2(self, 'The index subscript is not in the range！')
+                        split_index = temp_index.index(_index)
+                        a_temp_list, b_temp_list = temp_index[split_index:], temp_index[:split_index]
+                        res_indexes = a_temp_list + b_temp_list
+                        res_pts = [origin_pt_list[single_index] for single_index in res_indexes]
+                    # 若F端未输入数据
+                    else:
+                        res_pts = [origin_pt_list[single_index] for single_index in temp_index]
+                        res_indexes = temp_index
+                else:
+                    res_pts, res_indexes = [], []
+                # 解包数据
+                ungroup_data = map(lambda x: self.split_tree(x, origin_path), [res_pts, res_indexes])
+                Rhino.RhinoApp.Wait()
+                return ungroup_data
+
             def RunScript(self, Points, FirstIndex, Plane):
                 try:
                     sc.doc = Rhino.RhinoDoc.ActiveDoc
                     Points_Result, index = (gd[object]() for _ in range(2))
-
-                    "----------------------------"
-                    if Plane:
-                        base_pt, ref_vector = Plane.Origin, Plane.XAxis
+                    # 获取输入端数据
+                    j_bool_f1, origin_pts, _path = self.parameter_judgment(self.Params.Input[0].VolatileData)
+                    re_mes = Message.RE_MES([j_bool_f1], ['P end'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
                     else:
-                        Plane = rg.Plane.WorldXY
-                        base_pt, ref_vector = Plane.Origin, Plane.XAxis
-                    "----------------------------"
-
-                    structure_tree = self.Params.Input[0].VolatileData
-                    temp_geo_list = [list(i) for i in structure_tree.Branches]
-                    if len(temp_geo_list) < 1:
-                        Message.message2(self, 'The p-terminal cannot be empty！')
-                        return gd[object](), gd[object]()
-                    if Points:
-                        # 平面投影
-                        projected_point_set = [Plane.ClosestPoint(_) if _ else None for _ in Points]
-                        # 投影点重排序并输出下标
-                        temp_index = self.right_hand_rule(projected_point_set, base_pt, ref_vector, Plane)
-                        structure_tree = self.Params.Input[0].VolatileData
-                        origin_pts = self.Branch_Route(structure_tree)[0][self.RunCount - 1]
-                        "----------------------------"
-                        # 判断F端是否为负数
-                        if FirstIndex is not None:
-                            if FirstIndex < 0:
-                                FirstIndex += len(temp_index)
-                            if 0 <= FirstIndex < len(temp_index):
-                                split_index = temp_index.index(FirstIndex)
-                                a_temp_list, b_temp_list = temp_index[split_index:], temp_index[:split_index]
-                                index = a_temp_list + b_temp_list
-                                Points_Result = [origin_pts[single_index] for single_index in index]
-                            else:
-                                Message.message1(self, 'The index subscript is not in the range！')
+                        # 数据匹配
+                        pt_trunk, pt_path = self.Branch_Route(Points)
+                        index_trunk, index_path = self.Branch_Route(FirstIndex)
+                        pl_trunk, pl_path = self.Branch_Route(Plane)
+                        pt_len, index_len, pl_len = len(pt_trunk), len(index_trunk), len(pl_trunk)
+                        if pt_len > pl_len:
+                            new_pt_trunk = pt_trunk
+                            new_pl_trunk = pl_trunk + [pl_trunk[-1]] * (pt_len - pl_len)
                         else:
-                            Points_Result = [origin_pts[single_index] for single_index in temp_index]
-                            index = temp_index
-                        "----------------------------"
-                    else:
-                        Points_Result, index = [], []
+                            new_pt_trunk = pt_trunk
+                            new_pl_trunk = pl_trunk
 
+                        # 输入失效值时的F端数据结构
+                        if not index_trunk:
+                            index_trunk = [[None]]
+
+                        if len(new_pt_trunk) > index_len:
+                            new_index_trunk = index_trunk + [index_trunk[-1]] * (len(new_pt_trunk) - index_len)
+                        else:
+                            new_index_trunk = index_trunk
+                        zip_list = zip(new_pt_trunk, origin_pts, new_index_trunk, new_pl_trunk, pt_path)
+                        # 多进程处理数据
+                        iter_ungroup_data = zip(*ghp.run(self.temp, zip_list))
+                        # 匹配树形并分配输出端
+                        Points_Result, index = ghp.run(lambda single_tree: self.format_tree(single_tree), iter_ungroup_data)
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
                     sc.doc = ghdoc
@@ -1762,8 +1895,11 @@ try:
                     set_origin_list = [origin_pts_list] * len(plane_list)
                     sub_zip_list = zip(set_pts_list, plane_list, set_origin_list)
                     need_indexes, no_indexes, need_list, no_list = zip(*map(self.coplanar_pts, sub_zip_list))
-                ungroup_data = map(lambda x: self.split_tree(x, origin_path),
-                                   [need_indexes, no_indexes, need_list, no_list])
+                # "--------------------------------"
+                need_list = [[]] if len(need_list) == 0 else need_list
+                need_indexes = [[]] if len(need_indexes) == 0 else need_indexes
+                # "--------------------------------"
+                ungroup_data = map(lambda x: self.split_tree(x, origin_path), [need_indexes, no_indexes, need_list, no_list])
                 Rhino.RhinoApp.Wait()
                 return ungroup_data
 

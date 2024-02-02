@@ -399,7 +399,7 @@ try:
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_Geometry()
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
                 self.SetUpParam(p, "Geo", "G", "Extracted data（Rhino real existing object）")
                 self.Params.Output.Add(p)
 
@@ -417,6 +417,9 @@ try:
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
+                # "--------------------"
+                self.text_dim = []
+                # "--------------------"
                 self.which = {0: gk.Types.GH_GeometricGoo, 1: gk.Types.GH_Point, 2: gk.Types.GH_Surface, 3: gk.Types.GH_Curve, 4: gk.Types.GH_Brep}
 
             def filter_layers(self, name):
@@ -1295,7 +1298,7 @@ try:
                 settings.NormalObjects = True
                 settings.LockedObjects = True
                 settings.HiddenObjects = True
-                settings.ReferenceObjects = False
+                settings.ReferenceObjects = True
                 all_objects = [obj for obj in sc.doc.Objects.GetObjectList(settings)]
 
                 return all_objects
@@ -1485,7 +1488,7 @@ try:
                 settings.NormalObjects = True
                 settings.LockedObjects = True
                 settings.HiddenObjects = True
-                settings.ReferenceObjects = False
+                settings.ReferenceObjects = True
                 all_objects = [obj for obj in sc.doc.Objects.GetObjectList(settings)]
 
                 return all_objects
@@ -1933,45 +1936,6 @@ try:
                 finally:
                     self.Message = 'Define Attributes'
 
-                # try:
-                #     Attributes = gd[object]()
-                #     sc.doc = Rhino.RhinoDoc.ActiveDoc
-                #     default_attr = sc.doc.CreateDefaultAttributes()
-                #     k_len, v_len = len(Keys), len(Values)
-                #
-                #     if k_len == v_len:
-                #         if Material is not None:
-                #             new_material = self.craete_new_mater(Material)
-                #             matIndex = sc.doc.Materials.Add(new_material)
-                #         else:
-                #             matIndex = -1
-                #
-                #         zip_list = zip(Keys, Values)
-                #         for k_v in zip_list:
-                #             k, v = k_v
-                #             default_attr.SetUserString(k, v)
-                #
-                #         if Colour:
-                #             default_attr.ObjectColor = Colour
-                #             default_attr.ColorSource = Rhino.DocObjects.ObjectColorSource.ColorFromObject
-                #
-                #         default_attr.MaterialIndex = matIndex
-                #         default_attr.MaterialSource = Rhino.DocObjects.ObjectMaterialSource.MaterialFromObject
-                #
-                #         default_attr.Name = Name
-                #
-                #         if not LayerName:
-                #             LayerName = str(sc.doc.Layers.FindIndex(0))
-                #         Attributes = HAEAttributes(default_attr, LayerName)
-                #     else:
-                #         self.message2("The K value and the V value must be a one-to-one correspondence!")
-                #     sc.doc.Views.Redraw()
-                #     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
-                #     sc.doc = ghdoc
-                #     return Attributes
-                # finally:
-                #     self.Message = 'Define Attributes'
-
 
         # 烘培GH空间中的物体，并附加上物体属性以及用户属性
         class BakeGeometry(component):
@@ -2368,6 +2332,11 @@ try:
                     else:
                         self.message2("Terminal A cannot be empty!")
 
+                    if isinstance(Layer_Name, (list, tuple)):
+                        Layer_Name = Layer_Name
+                    else:
+                        Layer_Name = [Layer_Name]
+
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
                     sc.doc = ghdoc
@@ -2403,37 +2372,37 @@ try:
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
                 self.SetUpParam(p, "Attributes or Referenced", "A", "HAE attribute to be modified")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
                 self.SetUpParam(p, "Keys", "K", "Modified key")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
                 self.SetUpParam(p, "Values", "V", "Modified value")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
                 self.SetUpParam(p, "Name", "N", "Name of object")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
                 self.SetUpParam(p, "LayerName", "L", "Object layer")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Colour()
                 self.SetUpParam(p, "Colour", "C", "Object color")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
                 self.SetUpParam(p, "Material", "M", "Material of an object")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
@@ -2505,7 +2474,17 @@ try:
                             stock_tree.Insert(item, path, index)
                 return stock_tree
 
+            def parameter_judgment(self, tree_par_data):
+                # 获取输入端参数所有数据
+                geo_list, geo_path = self.Branch_Route(tree_par_data)
+                if geo_list:
+                    j_list = any(ghp.run(lambda x: len(list(filter(None, x))), geo_list))  # 去空操作, 判断是否为空
+                else:
+                    j_list = False
+                return j_list, geo_list, geo_path
+
             def craete_new_mater(self, material):
+                # 新建材质
                 empty_material = Rhino.DocObjects.Material.DefaultMaterial
                 if type(material) is Rhino.Display.DisplayMaterial:
                     empty_material.DiffuseColor = material.Diffuse
@@ -2516,8 +2495,10 @@ try:
                 return empty_material
 
             def attr_modify(self, obj_attr, key_list, value_list, name, colour, material):
+                # 备份一份新属性值
                 copy_obj_attr = obj_attr.Duplicate()
 
+                # 修改kv键值对
                 attr_dict = copy_obj_attr.GetUserStrings()
                 origin_key_list, origin_value_list = ([] for _ in range(2))
                 for k in attr_dict.AllKeys:
@@ -2528,51 +2509,115 @@ try:
                 for k_index, k_item in enumerate(new_key_list):
                     copy_obj_attr.SetUserString(k_item, new_value_list[k_index])
 
+                # 若存在新颜色则修改
                 if colour:
-                    copy_obj_attr.ObjectColor = colour
+                    copy_obj_attr.ObjectColor = colour[0]
 
-                if type(material) is Rhino.Display.DisplayMaterial:
-                    new_material = self.craete_new_mater(material)
-                    matIndex = sc.doc.Materials.Add(new_material)
-                elif type(material) is str:
-                    matIndex = int(material)
+                # 若存在新材质则修改
+                if material:
+                    material = material[0]
+                    if type(material) is Rhino.Display.DisplayMaterial:
+                        new_material = self.craete_new_mater(material)
+                        matIndex = new_material.Index
+                    #            matIndex = sc.doc.Materials.Add(new_material)
+                    elif type(material) is str:
+                        matIndex = int(material)
                 else:
                     matIndex = -1
                 copy_obj_attr.MaterialIndex = matIndex
 
+                # 若存在名字
                 if name:
-                    copy_obj_attr.Name = name
+                    copy_obj_attr.Name = name[0]
 
                 return copy_obj_attr
+
+            def _get_attr(self, _hea_attr):
+                _hea_attr = _hea_attr.Value
+                # 获取HAE内置属性
+                if '_HAEAttributes__hae_param' in dir(_hea_attr):
+                    attr = _hea_attr._HAEAttributes__hae_param
+                    temp_layer_name = _hea_attr.Layer_name
+                elif 'NewGuid' not in dir(_hea_attr):
+                    ref_rh_id = _hea_attr.ReferenceID
+                    attr = sc.doc.Objects.Find(ref_rh_id).Attributes
+                    temp_layer_name = str(sc.doc.Layers.FindIndex(attr.LayerIndex))
+                else:
+                    self.message2("Only the attribute value and the object being referenced can be modified!")
+                    attr, temp_layer_name = None, None
+                return attr, temp_layer_name
+
+            def _do_main(self, tuple_data):
+                # 按最长树的下标将树重新插入获得新数据
+                a_part_trunk, b_part_trunk, origin_path = tuple_data
+                new_list_data = list(b_part_trunk)
+                new_list_data.insert(self.max_index, a_part_trunk)
+                aor_list, k_list, v_list, name_list, layer_list, col_list, mater_list = new_list_data
+
+                # 获取hae属性，以及所在图层
+                hae_attrs, layer_name_list = zip(*map(self._get_attr, aor_list))
+                res_hae_attr = []
+                # 单个获取修改后的属性值
+                for hae_attr in hae_attrs:
+                    if hae_attr:
+                        k_len, v_len = len(k_list), len(v_list)
+                        if k_len != v_len:
+                            new_attr = hae_attr
+                            self.message2("The K value and the V value must be a one-to-one correspondence!")
+                        else:
+                            new_attr_obj = self.attr_modify(hae_attr, k_list, v_list, name_list, col_list, mater_list)
+                            # 若更新图层则新增至新属性值中
+                            LayerName = layer_list[0] if layer_list else layer_name_list[0]
+                            new_attr = HAEAttributes(new_attr_obj, LayerName)
+                    else:
+                        new_attr = hae_attr
+                    res_hae_attr.append(new_attr)
+                ungroup_data = self.split_tree(res_hae_attr, origin_path)
+                Rhino.RhinoApp.Wait()
+                return ungroup_data
+
+            def temp_by_match_tree(self, *args):
+                # 参数化匹配数据
+                value_list, trunk_paths = zip(*map(self.Branch_Route, args))
+                len_list = map(lambda x: len(x), value_list)  # 得到最长的树
+                max_index = len_list.index(max(len_list))  # 得到最长的树的下标
+                self.max_index = max_index
+                max_trunk = value_list[max_index]
+                ref_trunk_path = trunk_paths[max_index]
+                other_list = [value_list[_] for _ in range(len(value_list)) if _ != max_index]  # 剩下的树
+                matchzip = zip([max_trunk] * len(other_list), other_list)
+
+                def sub_match(tuple_data):
+                    # 子树匹配
+                    target_tree, other_tree = tuple_data
+                    t_len, o_len = len(target_tree), len(other_tree)
+                    if o_len == 0:
+                        new_tree = [other_tree] * len(target_tree)
+                    else:
+                        new_tree = other_tree + [other_tree[-1]] * (t_len - o_len)
+                    return new_tree
+
+                # 打包数据结构
+                other_zip_trunk = zip(*map(sub_match, matchzip))
+                zip_list = zip(max_trunk, other_zip_trunk, ref_trunk_path)
+                # 多进程函数运行
+                iter_ungroup_data = ghp.run(self._do_main, zip_list)
+                temp_data = self.format_tree(iter_ungroup_data)
+                return temp_data
 
             def RunScript(self, AOR, Keys, Values, Name, LayerName, Colour, Material):
                 try:
                     Attributes = gd[object]()
                     sc.doc = Rhino.RhinoDoc.ActiveDoc
-                    if AOR:
-                        if '_HAEAttributes__hae_param' in dir(AOR):
-                            attr = AOR._HAEAttributes__hae_param
-                            temp_layer_name = AOR.Layer_name
-                        elif 'NewGuid' not in dir(AOR):
-                            structure_tree = self.Params.Input[0].VolatileData
-                            structure_list = list(chain(*self.Branch_Route(structure_tree)[0]))
-                            ref_rh_id = structure_list[self.RunCount - 1].ReferenceID
-                            attr = sc.doc.Objects.Find(ref_rh_id).Attributes
-                            temp_layer_name = str(sc.doc.Layers.FindIndex(attr.LayerIndex))
-                        else:
-                            self.message2("Only the attribute value and the object being referenced can be modified!")
-                            attr, temp_layer_name = None, None
-
-                        if attr:
-                            k_len, v_len = len(Keys), len(Values)
-                            if k_len != v_len:
-                                self.message2("The K value and the V value must be a one-to-one correspondence!")
-                            else:
-                                new_attr_obj = self.attr_modify(attr, Keys, Values, Name, Colour, Material)
-                                LayerName = LayerName if LayerName else temp_layer_name
-                                Attributes = HAEAttributes(new_attr_obj, LayerName)
+                    # 树形匹配
+                    gh_data_tree = self.Params.Input[0].VolatileData
+                    j_bool_f1 = self.parameter_judgment(gh_data_tree)[0]
+                    re_mes = Message.RE_MES([j_bool_f1], ['A end'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
                     else:
-                        self.message2("Terminal A cannot be empty!")
+                        Attributes = self.temp_by_match_tree(gh_data_tree, Keys, Values, Name, LayerName, Colour, Material)
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
                     sc.doc = ghdoc
@@ -2604,16 +2649,17 @@ try:
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
                 self.SetUpParam(p, "Geometry", "G", "Object to be replaced")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
                 self.SetUpParam(p, "Attributes", "A", "Attributes of the object to be replaced")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Boolean()
                 self.SetUpParam(p, "Replace", "R", "Replacement button")
+                p.SetPersistentData(gk.Types.GH_Boolean(False))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
@@ -2631,19 +2677,7 @@ try:
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
-                pass
-
-            def message1(self, msg1):  # 报错红
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):  # 警告黄
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):  # 提示白
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
-
-            def mes_box(self, info, button, title):
-                return rs.MessageBox(info, button, title)
+                self.switch = None
 
             def Branch_Route(self, Tree):
                 """分解Tree操作，树形以及多进程框架代码"""
@@ -2677,63 +2711,103 @@ try:
                             stock_tree.Insert(item, path, index)
                 return stock_tree
 
+            def parameter_judgment(self, tree_par_data):
+                # 获取输入端参数所有数据
+                geo_list, geo_path = self.Branch_Route(tree_par_data)
+                if geo_list:
+                    j_list = any(ghp.run(lambda x: len(list(filter(None, x))), geo_list))  # 去空操作, 判断是否为空
+                else:
+                    j_list = False
+                return j_list, geo_list, geo_path
+
+            def Run_HAE_Attri(self, haezip_data):
+                # 分解主数据包
+                geo, attr = haezip_data
+                # 获取传入attr中的数据
+                if '_HAEAttributes__hae_param' in dir(attr):
+                    attr_data = attr._HAEAttributes__hae_param
+                    layer_name = attr.Layer_name
+                # 若属性数据为引用数据
+                elif 'Ref' in str(attr):
+                    ref_rh_id = attr.ReferenceID
+                    attr_data = sc.doc.Objects.Find(ref_rh_id).Attributes
+                    layer_index = attr_data.LayerIndex
+                    layer_name = str(sc.doc.Layers.FindIndex(layer_index))
+                # 若属性数据为犀牛id
+                elif type(attr) is gk.Types.GH_Guid:
+                    attr_data = sc.doc.Objects.Find(System.Guid(attr.ToString())).Attributes
+                    layer_index = attr_data.LayerIndex
+                    layer_name = str(sc.doc.Layers.FindIndex(layer_index))
+                else:
+                    attr_data, layer_name = None, None
+                # 若存在属性
+                if attr_data:
+                    # 获取源模型属性
+                    ref_rh_id = System.Guid(geo.ToString()) if type(geo) is gk.Types.GH_Guid else geo.ReferenceID
+                    origin_rh_attr = sc.doc.Objects.Find(ref_rh_id)
+                    # 源模型属性和替换属性的K-V值
+                    rh_attr_dict = origin_rh_attr.Attributes.GetUserStrings()
+                    replace_attr_dict = attr_data.GetUserStrings()
+                    # 替换K-V值或新增K-V值
+                    rh_key_list = [_ for _ in rh_attr_dict.AllKeys]
+                    rh_value_list = [rh_attr_dict[_] for _ in rh_attr_dict.AllKeys]
+                    replace_key_list = [_ for _ in replace_attr_dict.AllKeys]
+                    replace_value_list = [replace_attr_dict[_] for _ in replace_attr_dict.AllKeys]
+
+                    new_key_list = rh_key_list + replace_key_list
+                    new_value_list = rh_value_list + replace_value_list
+
+                    if self.switch:
+                        # 新建图层或修改所在图层
+                        BakeGeometry().create_layer(layer_name)
+                        # 新图层的index
+                        layer_index = sc.doc.Layers.FindByFullPath(layer_name, True)
+                        attr_data.LayerIndex = layer_index
+                        # 源模型属性重新赋值
+                        origin_rh_attr.Attributes = attr_data
+                        for k_index, k_item in enumerate(new_key_list):
+                            origin_rh_attr.Attributes.SetUserString(k_item, new_value_list[k_index])
+                        # 重新提交至犀牛空间
+                        origin_rh_attr.CommitChanges()
+
+            def temp(self, tuple_data):
+                geo_list, attr_list = tuple_data
+                # 子列表匹配
+                gl_len, al_len = len(geo_list), len(attr_list)
+                if gl_len > al_len:
+                    new_attr_list = attr_list + [attr_list[-1]] * (gl_len - al_len)
+                else:
+                    new_attr_list = attr_list
+                # 子列表打包数据
+                sub_zip_list = zip(geo_list, new_attr_list)
+                map(self.Run_HAE_Attri, sub_zip_list)
+
             def RunScript(self, Geometry, Attributes, Replace):
                 try:
                     sc.doc = Rhino.RhinoDoc.ActiveDoc
-                    if not (Geometry or Attributes):
-                        self.message2("No data is entered on end G and end A!")
-                    elif not Geometry:
-                        self.message2("No data is entered on the G end!")
-                    elif not Attributes:
-                        self.message2("No data is entered on end A!")
+                    j_bool_f1, geo_trunk, geo_path = self.parameter_judgment(self.Params.Input[0].VolatileData)
+                    j_bool_f2 = self.parameter_judgment(self.Params.Input[1].VolatileData)[0]
+                    re_mes = Message.RE_MES([j_bool_f1, j_bool_f2], ['G end', 'A end'])
+                    self.switch = Replace
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                    # 匹配数据
                     else:
-                        if '_HAEAttributes__hae_param' in dir(Attributes):
-                            attr = Attributes._HAEAttributes__hae_param
-                            Layer_name = Attributes.Layer_name
-                        elif 'NewGuid' not in dir(Attributes):
-                            structure_tree = self.Params.Input[1].VolatileData
-                            structure_list = list(chain(*self.Branch_Route(structure_tree)[0]))
-                            ref_rh_id = structure_list[self.RunCount - 1].ReferenceID
-                            attr = sc.doc.Objects.Find(ref_rh_id).Attributes
-                            Layer_index = attr.LayerIndex
-                            Layer_name = str(sc.doc.Layers.FindIndex(Layer_index))
+                        attr_trunk, attr_path = self.Branch_Route(Attributes)
+                        g_len, a_len = len(geo_trunk), len(attr_trunk)
+                        if g_len > a_len:
+                            new_geo_trunk = geo_trunk
+                            new_attr_trunk = attr_trunk + [attr_trunk[-1]] * (g_len - a_len)
+                        elif g_len < a_len:
+                            new_geo_trunk = geo_trunk + [geo_trunk[-1]] * (a_len - g_len)
+                            new_attr_trunk = attr_trunk
                         else:
-                            self.message2("Only the attribute value and the object being referenced can be modified!")
-                            attr, Layer_name = None, None
-
-                        if attr:
-
-                            structure_tree = self.Params.Input[0].VolatileData
-                            structure_list = list(chain(*self.Branch_Route(structure_tree)[0]))
-
-                            if self.RunCount > len(structure_list):
-                                self.message2("Data mismatch between G-end and A-end!")
-                            else:
-                                ref_rh_obj = structure_list[self.RunCount - 1]
-                                ref_rh_id = System.Guid(ref_rh_obj.ToString()) if type(ref_rh_obj) is gk.Types.GH_Guid else ref_rh_obj.ReferenceID
-                                rh_obj = sc.doc.Objects.Find(ref_rh_id)
-
-                                rh_attr_dict = rh_obj.Attributes.GetUserStrings()
-                                replace_attr_dict = attr.GetUserStrings()
-
-                                rh_key_list = [_ for _ in rh_attr_dict.AllKeys]
-                                rh_value_list = [rh_attr_dict[_] for _ in rh_attr_dict.AllKeys]
-                                replace_key_list = [_ for _ in replace_attr_dict.AllKeys]
-                                replace_value_list = [replace_attr_dict[_] for _ in replace_attr_dict.AllKeys]
-
-                                new_key_list = rh_key_list + replace_key_list
-                                new_value_list = rh_value_list + replace_value_list
-
-                                if Replace:
-                                    BakeGeometry().create_layer(Layer_name)
-                                    layer_index = sc.doc.Layers.FindByFullPath(Layer_name, True)
-                                    attr.LayerIndex = layer_index
-                                    rh_obj.Attributes = attr
-
-                                    for k_index, k_item in enumerate(new_key_list):
-                                        rh_obj.Attributes.SetUserString(k_item, new_value_list[k_index])
-
-                                    rh_obj.CommitChanges()
+                            new_geo_trunk = geo_trunk
+                            new_attr_trunk = attr_trunk
+                        # 生成打包数据
+                        zip_list = zip(new_geo_trunk, new_attr_trunk)
+                        ghp.run(self.temp, zip_list)
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
                     sc.doc = ghdoc
@@ -2804,7 +2878,7 @@ try:
                 settings.NormalObjects = True
                 settings.LockedObjects = True
                 settings.HiddenObjects = True
-                settings.ReferenceObjects = False
+                settings.ReferenceObjects = True
                 all_objects = [obj for obj in sc.doc.Objects.GetObjectList(settings)]
 
                 return all_objects
@@ -3034,7 +3108,7 @@ try:
             def Branch_Route(self, Tree):
                 """分解Tree操作，树形以及多进程框架代码"""
                 Tree_list = [list(_) for _ in Tree.Branches]
-                Tree_Path = [_ for _ in Tree.Paths]
+                Tree_Path = [list(_) for _ in Tree.Paths]
                 return Tree_list, Tree_Path
 
             def split_tree(self, tree_data, tree_path):
@@ -3062,6 +3136,7 @@ try:
                         else:
                             stock_tree.Insert(item, path, index)
                 return stock_tree
+
             def Get_ALL_Objects(self):
                 """获取到Rhino空间中所有的物件"""
                 settings = Rhino.DocObjects.ObjectEnumeratorSettings()
@@ -3070,7 +3145,7 @@ try:
                 settings.NormalObjects = True
                 settings.LockedObjects = True
                 settings.HiddenObjects = True
-                settings.ReferenceObjects = False
+                settings.ReferenceObjects = True
                 all_objects = sc.doc.Objects.GetObjectList(settings)
 
                 object_guids = [obj.Id for obj in all_objects]
@@ -3107,6 +3182,14 @@ try:
                     ref_brep_list.append(rh_obj)
                 return ref_brep_list
 
+            def Graft_Tree(self, tuple):
+                """得到升树后的树形结构分支Path"""
+                value, orgin_path = tuple
+                ungroup_data = map(lambda x: self.split_tree([x[1]], orgin_path + [x[0]]), enumerate(value))
+                Data_Tree = self.format_tree(ungroup_data)
+                v, v_path = self.Branch_Route(Data_Tree)
+                return v_path
+
             def RunScript(self, key, val, T):
                 try:
                     sc.doc = Rhino.RhinoDoc.ActiveDoc
@@ -3121,18 +3204,16 @@ try:
                             attr = self.Get_ALL_Objects()
                             attr_str = [str(_) for _ in attr]
                             All_Objects = self.decorate_obj(attr_str)
-
                             value, value_path = self.Branch_Route(val)  # 得到输入的value和path
+                            Data_Path = map(self.Graft_Tree, zip(value, value_path))
                             value_list = [[item] for sublist in value for item in sublist]  # 将嵌套的列表每个数据展开
-                            v, v_Path = self.Branch_Route(ght.list_to_tree(value_list))  # 将value_list转为树形结构得到它的Path
-
+                            new_Path = [item for sublist in Data_Path for item in sublist]  # 得到新的路径
                             for i in range(len(value_list)):
                                 O = self.HaveKey(attr, key, value_list[i])
                                 for _ in O:
-                                    Obj.Add(All_Objects[_], v_Path[i])
+                                    Obj.Add(All_Objects[_], GH_Path(tuple(new_Path[i])))
                     else:
                         Obj = None
-
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
                     sc.doc = ghdoc
@@ -3417,6 +3498,109 @@ try:
                     return val_Tree
                 finally:
                     self.Message = 'Get User Value'
+
+
+        class Dekete_Object(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "Dekete_Object", "Dekete_Object", """Dekete_Object""",
+                                                                   "Scavenger", "K-Object")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("d98b9537-d5cb-437d-9ebb-715527f90bb7")
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Guid()
+                self.SetUpParam(p, "Guid", "Guid", "犀牛物件或者物件的ID")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Boolean()
+                self.SetUpParam(p, "Boolean", "Boolean", "如果为True则删除输入的物件")
+                p.SetPersistentData(gk.Types.GH_Boolean(False))
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                pass
+
+            def SolveInstance(self, DA):
+                self.Message = '删除物体'
+                if self.RunCount == 1:
+                    p0 = self.Params.Input[0].VolatileData
+                    p1 = self.marshal.GetInput(DA, 1)
+
+                    guids = self.Branch_Route(p0)[0]
+
+                    def Delete_obj_by_id(guids):
+                        for guid in filter(None, guids):
+                            new_guid = System.Guid(str(guid))
+                            sc.doc.Objects.Delete(new_guid, True)
+
+                    sc.doc = Rhino.RhinoDoc.ActiveDoc
+                    re_mes = Message.RE_MES([guids], ['G end'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                    else:
+                        if p1:
+                            map(Delete_obj_by_id, guids)
+                    sc.doc.Views.Redraw()
+                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                    sc.doc = ghdoc
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAASDSURBVEhLnZQLUJRVFMcXvmUXRN47I4OQOk5NM2YSBGalmWYDueKEjizrg0DK5GXaSNhUoERINcLwEHeIQClCVEhwyEcSomBMJINoRKiIgMhrP2B3eazgv+/c3YJ1khjOzH/m7P3uOb9zzz17RU8ye5lM7ujkzDs4OGAqOcqcedprDJu+OTrN4ZNV53C9eQTV9UM496sWJ8s1yD0zgNTjPBJy+hCd1g15yCkGMYZN36i6kkoNlvhmwO05BTzlh7H+o068vc8g8v323seanc3sJMaw6RsFqYr78dRiBdwW+WOBuxIBcV0IPNDNRP6mz7rgG9E0c8D+b9V4yf8IFnoosVyhQlBSL4K/6mMif2tiD9ZG3Zw5IPxQL7Yk9LCEoclq7EjlsTPdIPJpbV3U9f8BcF5yc85buCR3YdOErKzmmfz+Rx9kDzLtyhpEeGa/ALiG+ZaWWCwSmcjTQsR7cCK5yIzz4pMzK3Hr3ijq/hzGpWtDKLuqw4kKLY5d0EJVpkVKiRZJxTrEHtchJt+g6Dwt9uRosC6ihp1g9E4BhmrjMHBWgd6jS3AmyAKeYpFaOII7Lv+uw4rQu3gzso1NBl0e9ZdaQFVSIkr66YlhxBWNMJFPa/KwKgboz7eFOnc2elXW6E6zwu1PJOwkDFB6aRAr32uFz652Nn40IXSJ1GdqBVVLCeNLRnHwp4dM5NOa77sVDDBQ6AT+mA36sgRAuhX+ipFOAPJK+/G6EUAzTmO4Ob4Dythb2BzXhG0HGhH8+U1sT2hA6Bf1CIqrxaa91fALq8AyvxTMd3XSa36cBz5PAHxjjZ6MWfjjw0knSP2+zwSwYV8rViqzH7nOddFTdVNpgZtMf/rgwkeaIhcTQEPkJEBsZrdJi3zCb2Cui4u+vDAWY90VGOsswVhHHsbb0jHemoDx29EYa9wBfV0ARqpWQVf2NAYK7ExaVPf+JEBEYqfJJa8KqWXV6VsKoDlpB12JA4bPOmLkZyeMlsuYyKc1+kZ7Hr/k34ItJgCB0W14Nfgu3gi7h7V7OrBcWc0AI42ZQmW20BTZs0RDZY4sKYl8llz4RntYe7KF9mTOQleKJa4qJwFWh7bg5W0t/97DUn/DZAzVJaD/OxsDRKhSW2wP7WmjBJ/W6BvtUedMVP/gkCWubBQbAGbmXrzrC0fx7OpfsGjNRTzvcwHuvucZQHtlNwuk6qgFlGyw0A7qPFt0ZdmgI202WpKs0RwnTE20JeojpajdLmHV57/G0R9NeCGEp8LsP54KAgyeD2JV0dGpv3SJVNV0RMnZU/EkIwB/6i12ZOorAwkTwv/wDDQXt2C4IQ0Pu2pARnuNYdM3CurN9Wb9pEsjEI0fzbgqWArlMg5H3pGgIUoyc8CD1AW4nyhB55dSdH4tZTBS4FIO/h4cAr05XN4gnjmgLd4G7fst0B5vgY4ECYORDivEULxojowAMUpfMZ8ZYI7Mni/cKkHrxxzuxIjRtFuMG2Ec6kI41Cg5VG3kULneHOkrpHAW9hrDpm8ymb2cAqm6qUR7aK8x7DETif4GWQPKTm78ggMAAAAASUVORK5CYII="
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def __init__(self):
+                pass
+
+            def Branch_Route(self, Tree):
+                """分解Tree操作，树形以及多进程框架代码"""
+                Tree_list = [list(_) for _ in Tree.Branches]
+                Tree_Path = [list(_) for _ in Tree.Paths]
+                return Tree_list, Tree_Path
+
+            def split_tree(self, tree_data, tree_path):
+                """操作树单枝的代码"""
+                new_tree = ght.list_to_tree(tree_data, True, tree_path)  # 此处可替换复写的Tree_To_List（源码参照Vector组-点集根据与曲线距离分组）
+                result_data, result_path = self.Branch_Route(new_tree)
+                if list(chain(*result_data)):
+                    return result_data, result_path
+                else:
+                    return [[]], result_path
+
+            def format_tree(self, result_tree):
+                """匹配树路径的代码，利用空树创造与源树路径匹配的树形结构分支"""
+                stock_tree = gd[object]()
+                for sub_tree in result_tree:
+                    fruit, branch = sub_tree
+                    for index, item in enumerate(fruit):
+                        path = gk.Data.GH_Path(System.Array[int](branch[index]))
+                        if hasattr(item, '__iter__'):
+                            if item:
+                                for sub_index in range(len(item)):
+                                    stock_tree.Insert(item[sub_index], path, sub_index)
+                            else:
+                                stock_tree.AddRange(item, path)
+                        else:
+                            stock_tree.Insert(item, path, index)
+                return stock_tree
+
+            def RunScript(self, Guid, Boolean):
+                try:
+                    pass
+                finally:
+                    self.Message = '删除物体'
+
 
 
     else:

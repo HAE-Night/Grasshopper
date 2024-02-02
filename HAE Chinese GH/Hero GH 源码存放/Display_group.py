@@ -19,6 +19,7 @@ import Grasshopper.DataTree as gd
 import Grasshopper.Kernel as gk
 from itertools import chain
 import math
+import copy
 import initialization
 import Geometry_group
 
@@ -340,26 +341,43 @@ try:
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
-                self.vector_surface, self.bb_pts, self.breps = None, None, None
+                self.vector_surface, self.bb_pts, self.brep_trunk = (None for _ in range(3))
 
-            def mes_box(self, info, button, title):
-                return rs.MessageBox(info, button, title)
+            def Branch_Route(self, Tree):
+                """分解Tree操作，树形以及多进程框架代码"""
+                Tree_list = [list(_) for _ in Tree.Branches]
+                Tree_Path = [list(_) for _ in Tree.Paths]
+                return Tree_list, Tree_Path
+
+            def parameter_judgment(self, tree_par_data):
+                # 获取输入端参数所有数据
+                geo_list, geo_path = self.Branch_Route(tree_par_data)
+                if geo_list:
+                    j_list = any(ghp.run(lambda x: len(list(filter(None, x))), geo_list))  # 去空操作, 判断是否为空
+                else:
+                    j_list = False
+                return j_list, geo_list, geo_path
 
             def _get_data(self, obj):
-                zip_list = []
-
-                origin_data = ghc.DeconstructBrep(obj)['faces']
-                for face in origin_data if isinstance(origin_data, (tuple, list)) else [origin_data]:
+                # 数据集合列表
+                set_list = []
+                # 获取所有面
+                origin_faces = ghc.DeconstructBrep(obj)['faces']
+                if type(origin_faces) is not list:
+                    origin_faces = [origin_faces]
+                # 遍历面并获取每个面的朝向
+                for face in origin_faces:
                     pl_list = ghc.SurfaceFrames(face, 10, 10)['frames']
                     if pl_list:
                         for pl in pl_list:
                             prune_vector = pl.ZAxis
                             prune_vector.Unitize()
                             prune_vector *= 0.8
-                            zip_list.append((pl.Origin, pl.ZAxis))
-                return zip_list
+                            set_list.append((pl.Origin, pl.ZAxis))
+                return set_list
 
             def _get_center_obj(self, objs):
+                # 获取物体的中心点
                 pt_list = []
                 for _ in objs:
                     if _:
@@ -367,25 +385,31 @@ try:
                 return pt_list
 
             def temp_fun(self, data):
+                # 临时方法
                 temp_data = list(chain(*map(self._get_data, data)))
                 return temp_data
 
             def RunScript(self, Brep):
                 try:
                     sc.doc = Rhino.RhinoDoc.ActiveDoc
-                    temp_pt_vect, center_pts, _cen_pt = None, None, gd[object]()
-                    trunk_list = [list(_) for _ in Brep.Branches]
-                    if trunk_list:
-                        temp_pt_vect = list(chain(*map(self.temp_fun, trunk_list)))
-                        _cen_pt = map(self._get_center_obj, trunk_list)
+                    _cen_pt = gd[object]()
+                    j_bool_f1 = self.parameter_judgment(self.Params.Input[0].VolatileData)[0]
+                    re_mes = Message.RE_MES([j_bool_f1], ['B end'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                        temp_pt_vect, center_pts, brep_trunk = None, None, None
+                    else:
+                        # 将数据传入temp函数
+                        brep_trunk, brep_path = self.Branch_Route(Brep)
+                        temp_pt_vect = list(chain(*ghp.run(self.temp_fun, brep_trunk)))
+                        _cen_pt = map(self._get_center_obj, brep_trunk)
                         center_pts = list(chain(*_cen_pt))
                         _cen_pt = ght.list_to_tree(_cen_pt)
-                    else:
-                        Message.message2(self, "End B is empty！！")
-
+                    # 将绘制图像全局变量命名
                     self.vector_surface = temp_pt_vect
                     self.bb_pts = rg.BoundingBox(center_pts) if center_pts else rg.BoundingBox.Empty
-                    self.breps = list(chain(*trunk_list))
+                    self.brep_trunk = brep_trunk
 
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
@@ -395,19 +419,237 @@ try:
                     self.Message = 'Display face orientation'
 
             def DrawViewportWires(self, args):
-                material = Rhino.Display.DisplayMaterial(Rhino.DocObjects.Material.DefaultMaterial)
-                material.Emission = System.Drawing.Color.FromArgb(255, 0, 150, 0)
-                material.Transparency = 0.5
                 try:
                     for item in self.vector_surface:
                         args.Display.DrawDirectionArrow(item[0], item[1], System.Drawing.Color.FromArgb(67, 15, 137))
-                    for brep in self.breps:
-                        args.Display.DrawBrepShaded(brep, material)
+                    if self.brep_trunk:
+                        breps = list(chain(*self.brep_trunk))
+                        for brep in breps:
+                            args.Display.DrawBrepWires(brep, System.Drawing.Color.FromArgb(0, 150, 0))
                 except:
                     pass
 
             def get_ClippingBox(self):
                 return self.bb_pts
+
+
+        # 显示点向量
+        class PointVector(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP_PointVector", "Z4", """Display point vector""", "Scavenger", "I-Display")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("b0e4682f-691c-4715-861f-b57a16858298")
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Point()
+                self.SetUpParam(p, "PointA", "P", "Vector display origin")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Vector()
+                self.SetUpParam(p, "Vector", "V", "The vector to display")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Integer()
+                self.SetUpParam(p, "Size", "S", "The magnitude of the vector ")
+                p.SetPersistentData(gk.Types.GH_Integer(1))
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "ActualVector", "A", "Actual vector (original Size multiplied by size) ")
+                self.Params.Output.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "UnitVector", "UV", "Unit vector (original Size multiplied by size) ")
+                self.Params.Output.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "UnitRVector", "R", "The inverse vector of the unit vector (original Size multiplied by size)")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                p1 = self.marshal.GetInput(DA, 1)
+                p2 = self.marshal.GetInput(DA, 2)
+                result = self.RunScript(p0, p1, p2)
+
+                if result is not None:
+                    if not hasattr(result, '__getitem__'):
+                        self.marshal.SetOutput(result, DA, 0, True)
+                    else:
+                        self.marshal.SetOutput(result[0], DA, 0, True)
+                        self.marshal.SetOutput(result[1], DA, 1, True)
+                        self.marshal.SetOutput(result[2], DA, 2, True)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAI6SURBVEhLvZXPa9RAFMffJLus292qYJcKzWTdsgcPIuoieFLQk3c9CXoVxIN4FXvw0N0km3bdVl1B6EFsErW7XbU/wEpvXjwUVPTgwYOC6EWSqG3aZnyTzn+Q0Q88HjPfx3uZN5MZ+C8MzsX7yNP1+0o/WuOej4UkAY+pxPFX4BVj0ENDT5zwJXieKiLSkXN/VuHJBgPvNwMn2PE4TuZlMOCF+8msvwVzmwxmsQB6Pi7Mx8MiJD2KE96ARWzPMhr6ZCwb9XFwBpa2riYeaQ0crFm7KhcS8V8wsae8t6HQH21FX7Vzo6fFtFyMjH7lAZTZBKHMVvT5Zr56QkhyMIcPF+pE+2aDxm4DZU0s1FT1R2a+cnwMTmVEWDpwFWNTmHwcRlgD7S7ozFTox8lCRc4paxWrJYNogYnJ62gtLNZQtRkhy6Gh0nYHvzxJjkUmuc/oN4WcHrMweshS6EqdUIMn56tp8yKKdl2ESACvKO4MQm/xPeFF+MbjUb6c6DLBPbGnsWWW2JNxhV4UkjwMlXamMbmFR9jG41tX6CUhyQPb9ZC36x7+jG3YvXDuWjOfe80OMICknVLAIkt3YHC5PPP+LDzf/kC66xHpRmtZLzwiQtLRgVq2ZvWHoBt9gRd4G/P3BG9l4vpv4Q3LirCULMbHoI/JnVA8Wn8YuCHLu79GREQ6iq5fIm4YwjNRBN8U4gafYCHOiZD0qE5wnvQ2v0N/m5Fe9Dnj+CeFJI9i5+tQdjU+Wpp6V9yZAfgLJ3j+4e4qOocAAAAASUVORK5CYII="
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def __init__(self):
+                self.line = []
+
+            def Branch_Route(self, Tree):
+                """分解Tree操作，树形以及多进程框架代码"""
+                Tree_list = [list(_) for _ in Tree.Branches]
+                Tree_Path = [list(_) for _ in Tree.Paths]
+                return Tree_list, Tree_Path
+
+            def split_tree(self, tree_data, tree_path):
+                """操作树单枝的代码"""
+                new_tree = ght.list_to_tree(tree_data, True, tree_path)  # 此处可替换复写的Tree_To_List（源码参照Vector组-点集根据与曲线距离分组）
+                result_data, result_path = self.Branch_Route(new_tree)
+                if list(chain(*result_data)):
+                    return result_data, result_path
+                else:
+                    return [[]], result_path
+
+            def format_tree(self, result_tree):
+                """匹配树路径的代码，利用空树创造与源树路径匹配的树形结构分支"""
+                stock_tree = gd[object]()
+                for sub_tree in result_tree:
+                    fruit, branch = sub_tree
+                    for index, item in enumerate(fruit):
+                        path = gk.Data.GH_Path(System.Array[int](branch[index]))
+                        if hasattr(item, '__iter__'):
+                            if item:
+                                for sub_index in range(len(item)):
+                                    stock_tree.Insert(item[sub_index], path, sub_index)
+                            else:
+                                stock_tree.AddRange(item, path)
+                        else:
+                            stock_tree.Insert(item, path, index)
+                return stock_tree
+
+            def parameter_judgment(self, tree_par_data):
+                # 获取输入端参数所有数据
+                geo_list, geo_path = self.Branch_Route(tree_par_data)
+                if geo_list:
+                    j_list = any(ghp.run(lambda x: len(list(filter(None, x))), geo_list))  # 去空操作, 判断是否为空
+                else:
+                    j_list = False
+                return j_list, geo_list, geo_path
+
+            # 单对单
+            def AmplificationVector(self, PVS_Zip):
+                PointA, VectorB, Size = PVS_Zip
+                Vector = copy.deepcopy(VectorB)
+                # 单对单处理向量
+                if not PointA:
+                    Message.message2(self, "输入参数PointA有空值")
+                    return None, None, None, None
+                elif not Vector:
+                    Message.message2(self, "输入参数Vector有空值")
+                    return None, None, None, None
+                else:
+                    ActualVector = rg.Vector3d.Multiply(Size, Vector)
+                    line = rg.Line(PointA, ActualVector)
+                    Vector.Unitize()
+                    UnitVector = rg.Vector3d.Multiply(Size, Vector)
+                    Vector.Reverse()
+                    UnitRVector = rg.Vector3d.Multiply(Size, Vector)
+                    return line, ActualVector, UnitVector, UnitRVector
+
+            # 列表对列表
+            def temp(self, tuple_data):
+                List_PointA, List_Vector, List_Size, new_geo_path = tuple_data
+                P_len = len(List_PointA)
+                V_len = len(List_Vector)
+                S_len = len(List_Size)
+
+                if P_len > 0 and V_len > 0:
+                    # 子树大小进行匹配
+                    Len_difference = P_len - V_len
+                    if Len_difference > 0:
+                        List_Vector += [List_Vector[-1]] * Len_difference
+                        if P_len > S_len:
+                            List_Size += [List_Size[-1]] * (P_len - S_len)
+                    elif Len_difference < 0:
+                        List_PointA += [List_PointA[-1]] * abs(Len_difference)
+                        if V_len > S_len:
+                            List_Size += [List_Size[-1]] * (V_len - S_len)
+                    else:
+                        if V_len > S_len:
+                            List_Size += [List_Size[-1]] * (V_len - S_len)
+                    PVS_Zip = zip(List_PointA, List_Vector, List_Size)
+                    List_info = ghp.run(self.AmplificationVector, PVS_Zip)
+                    list_line, list_ActualVector, list_UnitVector, list_UnitRVector = zip(*List_info)
+
+                else:
+                    Message.message3(self, "输入参数Point和Vector有空树")
+                    list_ActualVector = []
+                    list_UnitVector = []
+                    list_UnitRVector = []
+                    list_line = []
+                ungroup_data = map(lambda x: self.split_tree(x, new_geo_path), [list_ActualVector, list_UnitVector, list_UnitRVector, list_line])
+
+                return ungroup_data
+
+            def RunScript(self, PointA, Vector, Size):
+                try:
+                    List_PointA, Path_Point = self.Branch_Route(PointA)
+                    List_Vector, Path_Vector = self.Branch_Route(Vector)
+                    List_Size, Path_Size = self.Branch_Route(Size)
+
+                    # 兴建一个最新的数据地址(以最长的数据为准)
+                    new_geo_path = Path_Point
+                    result, result1, result2 = (gd[object]() for _ in range(3))
+                    re_mes = Message.RE_MES([List_PointA, List_Vector, List_Size], ['P end', 'V end', "S end"])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                        return gd[object](), gd[object](), gd[object]()
+                    else:
+                        # 判断点和向量长度大小进行匹配
+                        P_len = len(List_PointA)
+                        V_len = len(List_Vector)
+                        S_len = len(List_Size)
+                        Len_difference = P_len - V_len
+                        # 进行父树结构匹配
+                        if Len_difference > 0:
+                            List_Vector += [List_Vector[-1]] * Len_difference
+                            new_geo_path = Path_Point
+                            if P_len > S_len:
+                                List_Size += [List_Size[-1]] * (P_len - S_len)
+                        elif Len_difference < 0:
+                            List_PointA += [List_PointA[-1]] * abs(Len_difference)
+                            new_geo_path = Path_Vector
+                            if V_len > S_len:
+                                List_Size += [List_Size[-1]] * (V_len - S_len)
+                        else:
+                            if V_len > S_len:
+                                List_Size += [List_Size[-1]] * (V_len - S_len)
+                        origin_list = zip(List_PointA, List_Vector, List_Size, new_geo_path)
+                        tree_info = zip(*ghp.run(self.temp, origin_list))
+
+                        tree_ActualVector, tree_UnitVector, tree_UnitRVector, tree_line = ghp.run(lambda single_tree: self.format_tree(single_tree), tree_info)
+
+                        self.line, line_path = self.Branch_Route(tree_line)
+                        return tree_ActualVector, tree_UnitVector, tree_UnitRVector
+                finally:
+                    self.Message = 'Display vector'
+
+            def DrawViewportWires(self, arg):
+                try:
+                    for _ in self.line:
+                        for __ in _:
+                            if __ is None:
+                                pass
+                            else:
+                                arg.Display.DrawArrow(__, System.Drawing.Color.Green)
+                except Exception as e:
+                    Message.message1(self, e)
 
 
     else:

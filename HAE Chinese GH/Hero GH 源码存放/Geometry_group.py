@@ -20,7 +20,7 @@ import math
 import initialization
 from itertools import chain
 
-Result = initialization.decryption()
+Result = initialization.Result
 Message = initialization.message()
 try:
     if Result is True:
@@ -501,7 +501,8 @@ try:
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
                                                                    "Geo_PLane_Group", "A3",
-                                                                   """Groups geometry according to Plane，all Z-axes direction need to be the same as the first Plane，and the first plane must face outward with its z-axis""",
+                                                                   """Groups geometry according to Plane，all Z-axes direction need to be the same as the first Plane，and the first plane must face outward with its z-axis
+                                                                   (平面朝向部分情况需要使用Flip)""",
                                                                    "Scavenger", "E-Geometry")
                 return instance
 
@@ -619,7 +620,7 @@ try:
             def Brep_Plane_split(self, BPSdatas):
                 _brep_list = list(map(self._trun_object, BPSdatas[0]))
                 _brep_dict = zip(_brep_list, range(0, len(_brep_list)))
-                _plane_list = list(filter(None, BPSdatas[1]))
+                _plane_list = BPSdatas[1]
 
                 brep_positive, brep_positive_index = [], []  # 返回值保存
                 end_brep = []  # 保存剩余数据
@@ -894,19 +895,21 @@ try:
                             Message.message2(self, mes_i)
                         return gd[object](), gd[object](), gd[object](), gd[object](), gd[object](), gd[object]()
                     else:
-                        temp_geo = Geometry
-                        Vertex, Edge, Face, Plane = None, None, None, None
-                        if "ToNurbsCurve" in dir(temp_geo):
-                            temp_geo = temp_geo.ToNurbsCurve()
-                            Vertex, Edge, Face, Plane = self.explode_curve__get_plane(temp_geo)
-
-                        if "ToBrep" in dir(temp_geo):
-                            temp_geo = temp_geo.ToBrep()
-                            Vertex, Edge, Face, Plane = self.explode_brep__get_plane(temp_geo)
-                        elif isinstance(temp_geo, rg.Brep) is True:
-                            Vertex, Edge, Face, Plane = self.explode_brep__get_plane(temp_geo)
-                        PlaneA, PlaneB, PlaneC = Plane, self.base_rotate(Plane, 1), self.base_rotate(Plane, 2)
-                    return Vertex, Edge, Face, PlaneA, PlaneB, PlaneC
+                        if Geometry is None:
+                            Vertex, Edge, Face, PlaneA, PlaneB, PlaneC = ([] for _ in range(6))
+                        else:
+                            temp_geo = Geometry
+                            Vertex, Edge, Face, Plane = None, None, None, None
+                            if isinstance(temp_geo, (
+                                    rg.Curve, rg.PolyCurve, rg.Polyline, rg.PolylineCurve, rg.NurbsCurve, rg.Rectangle3d,
+                                    rg.Circle,)) is True:
+                                temp_geo = temp_geo.ToNurbsCurve()
+                                Vertex, Edge, Face, Plane = self.explode_curve__get_plane(temp_geo)
+                            elif isinstance(temp_geo, (rg.Brep, rg.Surface, rg.NurbsSurface, rg.Box)) is True:
+                                temp_geo = temp_geo.ToBrep() if "ToBrep" in dir(temp_geo) else temp_geo
+                                Vertex, Edge, Face, Plane = self.explode_brep__get_plane(temp_geo)
+                            PlaneA, PlaneB, PlaneC = Plane, self.base_rotate(Plane, 1), self.base_rotate(Plane, 2)
+                        return Vertex, Edge, Face, PlaneA, PlaneB, PlaneC
                 finally:
                     self.Message = 'Geometric decomposition'
 
@@ -1349,6 +1352,7 @@ try:
 
                 p = Grasshopper.Kernel.Parameters.Param_Plane()
                 self.SetUpParam(p, "Plane", "P", "Reference plane")
+                p.SetPersistentData(gk.Types.GH_Plane(rg.Plane.WorldXY))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
@@ -1396,7 +1400,8 @@ try:
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
-                pass
+                self.pln = None
+                self.xvector, self.yvector, self.zvector = ([] for _ in range(3))
 
             def message1(self, msg1):  # 报错红
                 return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
@@ -1674,10 +1679,8 @@ try:
             def object_move(self, tuple_data):
                 obj_list, init_pt_list, move_pt_list, origin_path = tuple_data
 
-                init_pt_list = init_pt_list + [init_pt_list[-1]] * (len(obj_list) - len(init_pt_list)) if len(
-                    obj_list) > len(init_pt_list) else init_pt_list
-                move_pt_list = move_pt_list + [move_pt_list[-1]] * (len(obj_list) - len(move_pt_list)) if len(
-                    obj_list) > len(move_pt_list) else move_pt_list
+                init_pt_list = init_pt_list + [init_pt_list[-1]] * (len(obj_list) - len(init_pt_list)) if len(obj_list) > len(init_pt_list) else init_pt_list
+                move_pt_list = move_pt_list + [move_pt_list[-1]] * (len(obj_list) - len(move_pt_list)) if len(obj_list) > len(move_pt_list) else move_pt_list
 
                 dif_vector, xform = zip(*map(self.get_xform, zip(init_pt_list, move_pt_list)))
                 if len(obj_list) == 0:
@@ -1705,27 +1708,22 @@ try:
                     target_trunk_path = [trunk_path, init_trunk_path, move_trunk_path][
                         trunk_path_list.index(max(trunk_path_list))]
 
-                    g_len, i_len, m_len, target_len = len(trunk_geo), len(init_pt_trunk), len(move_pt_trunk), len(
-                        target_trunk_path)
+                    g_len, i_len, m_len, target_len = len(trunk_geo), len(init_pt_trunk), len(move_pt_trunk), len(target_trunk_path)
 
                     re_mes = Message.RE_MES([Geometry, Point_A, Point_B], ['G', 'A', 'B'])
                     if len(re_mes) > 0:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
                     else:
-                        trunk_geo = trunk_geo + [trunk_geo[-1]] * (
-                                target_len - g_len) if target_len > g_len else trunk_geo
-                        init_pt_trunk = init_pt_trunk + [init_pt_trunk[-1]] * (
-                                target_len - i_len) if target_len > i_len else init_pt_trunk
-                        move_pt_trunk = move_pt_trunk + [move_pt_trunk[-1]] * (
-                                target_len - m_len) if target_len > m_len else move_pt_trunk
+                        trunk_geo = trunk_geo + [trunk_geo[-1]] * (target_len - g_len) if target_len > g_len else trunk_geo
+                        init_pt_trunk = init_pt_trunk + [init_pt_trunk[-1]] * (target_len - i_len) if target_len > i_len else init_pt_trunk
+                        move_pt_trunk = move_pt_trunk + [move_pt_trunk[-1]] * (target_len - m_len) if target_len > m_len else move_pt_trunk
 
                         zip_list = zip(trunk_geo, init_pt_trunk, move_pt_trunk, target_trunk_path)
 
                         iter_ungroup_data = zip(*ghp.run(self.object_move, zip_list))
 
-                        Moved, Vector, Transform = ghp.run(lambda single_tree: self.format_tree(single_tree),
-                                                           iter_ungroup_data)
+                        Moved, Vector, Transform = ghp.run(lambda single_tree: self.format_tree(single_tree), iter_ungroup_data)
 
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()

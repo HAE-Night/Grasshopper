@@ -28,6 +28,7 @@ import System.Management
 from itertools import chain
 import math
 import copy
+from System import Array
 
 Result = initialization.Result
 Message = initialization.message()
@@ -435,7 +436,7 @@ try:
                             if sub_dis_list[count - 1]:
                                 new_item = c_item.Offset(curve_planar, sub_dis_list[count - 1],
                                                          sc.doc.ModelAbsoluteTolerance, rg.CurveOffsetCornerStyle.
-                                None)[0]
+                                                         None)[0]
                             else:
                                 new_item = c_item
                             offset_line_list.append(new_item)
@@ -489,8 +490,8 @@ try:
                     no_rendering_line = []
 
                     trunk_list_curve, trunk_list_index, trunk_list_dis = self.Branch_Route(Curve)[0], \
-                                                                         self.Branch_Route(Indexs)[0], \
-                                                                         self.Branch_Route(Distance)[0]
+                        self.Branch_Route(Indexs)[0], \
+                        self.Branch_Route(Distance)[0]
                     trunk_list_curve = map(lambda x: filter(None, x), trunk_list_curve)
 
                     curve_len, index_len, dis_len = len(trunk_list_curve), len(trunk_list_index), len(trunk_list_dis)
@@ -680,7 +681,9 @@ try:
 
                     re_mes = Message.RE_MES([Curve, Distance], ['Curve', 'Distance'])
                     if len(re_mes) > 0:
-                        return []
+                        # "--------------------------"
+                        return None
+                        # "--------------------------"
                     else:
                         self.factor = Curve.IsClosed
                         if Simply == False:
@@ -798,7 +801,6 @@ try:
                         else:
                             stock_tree.Insert(item, path, index)
                 return stock_tree
-
 
             def _judge_curve(self, index_curve, curves):
                 for _ in curves:
@@ -1188,11 +1190,13 @@ try:
 
                     re_mes = Message.RE_MES([Geo, RefCurve], ['Geo', 'RefCurve'])
                     if len(re_mes) > 0:
-                        return [], []
+                        # "--------------------------"
+                        return None, None
+                        # "--------------------------"
                     else:
                         new_point = None
                         if isinstance(Geo, (
-                        rg.Line, rg.Curve, rg.PolyCurve, rg.Polyline, rg.PolylineCurve, rg.NurbsCurve)) is True:
+                                rg.Line, rg.Curve, rg.PolyCurve, rg.Polyline, rg.PolylineCurve, rg.NurbsCurve)) is True:
                             new_point = self.__get_line_curve(Geo, RefCurve)
                         elif isinstance(Geo, (rg.Point3d)) is True:
                             new_point = self.__get_line_point(RefCurve, rg.Point(Geo).Location)
@@ -1272,7 +1276,7 @@ try:
             def RunScript(self, Curve, Number):
                 if Number:
                     Number = math.fabs(Number)
-                digit = ".%uF" % Number if Number else ".1F"
+                digit = ".%uF" % Number if Number else ".0F"
                 Length = gd[object]()
                 List_Length = []
                 struct_tree = self.Params.Input[0].VolatileData
@@ -1683,6 +1687,10 @@ try:
                                                                    "Scavenger", "B-Curve")
                 return instance
 
+            def __init__(self):
+                self.bool_factor = False
+                pass
+
             def get_ComponentGuid(self):
                 return System.Guid("ff552258-2c50-4fe8-b032-9ec25ef804b5")
 
@@ -1721,31 +1729,118 @@ try:
                 self.SetUpParam(p, "Sort_Curve", "C", "Sorted list of curves")
                 self.Params.Output.Add(p)
 
-            def SolveInstance(self, DA):
-                p0 = self.marshal.GetInput(DA, 0)
-                p1 = self.marshal.GetInput(DA, 1)
-                p2 = self.marshal.GetInput(DA, 2)
-                result = self.RunScript(p0, p1, p2)
+            def sort_cur(self, set_data):
+                # 获取片段集合中所有点和平面
+                origin_curs, pl = set_data
+                curs = map(self._trun_object, origin_curs)
+                pl = self._trun_object(pl)
+                if len(curs):
+                    # 新建字典
+                    dict_pt_data = dict()
+                    from_plane = rg.Plane.WorldXY
+                    # 获取转换过程
+                    xform = rg.Transform.PlaneToPlane(pl, from_plane)
+                    # 取线的中心点
+                    pts = [rs.CurveMidPoint(cur) for cur in curs]
+                    # 复制点列表
+                    copy_pt = [rg.Point3d(_) for _ in pts]
+                    # 将转换过程映射至点集合副本中
+                    [_.Transform(xform) for _ in copy_pt]
+                    dict_pt_data['X'] = [_.X for _ in copy_pt]
+                    dict_pt_data['Y'] = [_.Y for _ in copy_pt]
+                    dict_pt_data['Z'] = [_.Z for _ in copy_pt]
+                    # 按轴排序，最后结果映射只源点列表中
+                    zip_list_sort = zip(dict_pt_data[self.axis], origin_curs)
+                    res_origin_curs = zip(*sorted(zip_list_sort))[1]
+                else:
+                    res_origin_curs = []
+                return res_origin_curs
 
-                if result is not None:
-                    self.marshal.SetOutput(result, DA, 0, True)
+            def SolveInstance(self, DA):
+                # 插件名称
+                self.Message = 'Sort Curve'
+                # 初始化输出端数据内容
+                Sort_Cur = gd[object]()
+                if self.RunCount == 1:
+                    # 获取输入端
+                    p0 = self.Params.Input[0].VolatileData
+                    p1 = self.Params.Input[1].VolatileData
+                    p2 = self.Params.Input[2].VolatileData
+                    # 确定不变全局参数
+                    self.axis = str(p1[0][0]).upper()
+                    self.j_bool_f1 = self.parameter_judgment(p0)[0]
+                    re_mes = Message.RE_MES([self.j_bool_f1], ['C end'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                    else:
+                        # 多进程方法
+                        def temp(tuple_data):
+                            # 解包元组元素
+                            origin_cur_list, origin_pl_list, origin_path = tuple_data
+                            # 若平面有多个，重新赋值
+                            o_pl_len = len(origin_pl_list)
+                            if o_pl_len == 1:
+                                origin_cur_list = [origin_cur_list]
+                            else:
+                                origin_cur_list = [origin_cur_list[:] for _ in range(o_pl_len)]
+                            # 每个单元切片进行主方法排序
+                            sub_zip_list = zip(origin_cur_list, origin_pl_list)
+                            res_cur_list = map(self.sort_cur, sub_zip_list)
+                            # 每个单元切片是否有数据输出
+                            if res_cur_list:
+                                ungroup_data = self.split_tree(res_cur_list, origin_path)
+                            else:
+                                ungroup_data = self.split_tree([[]], origin_path)
+                            return ungroup_data
+
+                        # 数据匹配
+                        cur_trunk, cur_path_trunk = self.Branch_Route(p0)
+                        pl_trunk, pl_path_trunk = self.Branch_Route(p2)
+                        cur_len, pl_len = len(cur_trunk), len(pl_trunk)
+                        if cur_len > pl_len:
+                            new_cur_trunk = cur_trunk
+                            new_pl_trunk = pl_trunk + [pl_trunk[-1]] * (cur_len - pl_len)
+                            path_trunk = cur_path_trunk
+                        elif cur_len < pl_len:
+                            new_cur_trunk = cur_trunk + [cur_trunk[-1]] * (pl_len - cur_len)
+                            new_pl_trunk = pl_trunk
+                            path_trunk = pl_path_trunk
+                        else:
+                            new_cur_trunk = cur_trunk
+                            new_pl_trunk = pl_trunk
+                            path_trunk = cur_path_trunk
+                        zip_list = zip(new_cur_trunk, new_pl_trunk, path_trunk)
+                        # 获得结果树列表
+                        iter_ungroup_data = ghp.run(temp, zip_list)
+                        Sort_Cur = self.format_tree(iter_ungroup_data)
+
+                # 将结果添加进输出端
+                DA.SetDataTree(0, Sort_Cur)
 
             def get_Internal_Icon_24x24(self):
                 o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAANlSURBVEhLvZVbSBRRGMfXygiLHqKQCFKIkAy6sHjJdefM7O7MmZm92IV9KKhAy4cIesmnHjZ6LCjooadehAhLMNDoQkJBXnZ3ZnZX3TRvmYkvFhhCEBaevjN9LW7tFGb0Axnnf/Z8l/N93xnXf4eEzK2CmmyMxdgalP4tomzUqEfnmFc1FJRswGmVqKZi0Wh2PUp/h9ttFotaek6gZjtKNoJq3tWjH5kUtNwo/UxRDX1c7orF/py5QJM3CbU+LY9W1Kz7yuEZ5lWSdSjlAQF55YYpJlKTouQMOIj4Q6+ZEOjfjZKLqGabcvgdg2ctSnkI1Lgm6UPjsPcWSs6ImuHxh0cZkRMHUAIHxj0eIdTiIEo5eEOAgwGBpq7Dc5SQ5+twqTBeOd7iC75i9WpqG0q/dUCoIRI1tSjqA11Qv0VCkwFc+hVZzmwE4/OQ6lOUbMBBm6MDxTgPNbvM/4dmiMHeC/ZCIcB7q9wwzQTd2oOSDUTZIUfeOGSQFuXwZBMYPyeHx5ocMyA0FdCOvWeC0n8JpRxwtl3cAdHTubr8oBK6LRSaLeHZ86fDrLAiiHJY1AZGUMiDULNTjkzCHKT2o7QyIM1y3jmCkjiBUh6CanQFwuNQ+HglSitDoskKf3jMcVBW7YCfIwzRgkDjd1DKg2hm56occCDKq/yYvNTYjlIOQbWe8Aw9NLEXpRy1St8WXzBbXR+29tXRngpeT1zKx+frL7WvCGrd4O+SauyyFwC4a7r9kIGkW2UwqRv8oZEWX3iw1F7TDBkC6xX1oWlo4/FolK21NxUCinwbWnJe0FKafV2oVivXeRf5gsNLnpC5E9YfRI5/hZmwmu1NCMxBFgbuJL4WxqsY1VJwiEHLngHjH/hcwOB0QAY9YOALGO+mR2aZqKWmfMG+HbgNjCevwBE/xFdnCO0vh/SZV7cE3llwQ86gQcjGYAEYNkkbXPDQl7laSIrl5kFJWuYUOKpyrAEHotADkQkmKd8H6pDUWwbDl7EN64MwaNklmHTZ/jEiqsZpf2TiBQTzDNq8nRDmfJt6aeIRnPfc8iu3Wo1vJlqmW254C5/SeBPKOUQ1SXz8DtLSZ6EujbB3Ey7lw6PmXy2Yh4so5eCf0kIXHYd3jbuZFbubTfvP8Yj4tMJZfnaHzBKUVonL9Q2mpZtIkFobPgAAAABJRU5ErkJggg=="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
-            def __init__(self):
-                self.bool_factor = False
-                pass
+            def _trun_object(self, ref_obj):
+                """引用物体转换为GH内置物体"""
+                if 'ReferenceID' in dir(ref_obj):
+                    if ref_obj.IsReferencedGeometry:
+                        test_pt = ref_obj.Value
+                    else:
+                        test_pt = ref_obj.Value
+                else:
+                    test_pt = ref_obj
+                return test_pt
 
-            # def _sort_by_length(self, list_data):
-            #     for f in range(len(list_data)):
-            #         for s in range(len(list_data) - 1 - f):
-            #             first_line = list_data[s].GetLength()
-            #             second_line = list_data[s + 1].GetLength()
-            #             if first_line > second_line:
-            #                 list_data[s], list_data[s + 1] = list_data[s + 1], list_data[s]
-            #     return list_data
+            def parameter_judgment(self, tree_par_data):
+                # 获取输入端参数所有数据
+                geo_list, geo_path = self.Branch_Route(tree_par_data)
+                if geo_list:
+                    j_list = any(ghp.run(lambda x: len(list(filter(None, x))), geo_list))  # 去空操作, 判断是否为空
+                else:
+                    j_list = False
+                return j_list, geo_list, geo_path
 
             def Branch_Route(self, Tree):
                 """分解Tree操作，树形以及多进程框架代码"""
@@ -1779,44 +1874,34 @@ try:
                             stock_tree.Insert(item, path, index)
                 return stock_tree
 
-            def _sort_by_xyz(self, data, axis, coord_pl):
-                xform = rg.Transform.PlaneToPlane(coord_pl, rg.Plane.WorldXY)
-                pt_list = map(lambda x: rs.CurveMidPoint(x), data)
-                copy_pt = [rg.Point3d(_) for _ in pt_list]
-                [_.Transform(xform) for _ in copy_pt]
-                X, Y, Z = zip(*copy_pt)
-                target_axis = eval(axis)
-                tuple_data = zip(target_axis, range(len(target_axis)))
-                index_list = [_[1] for _ in sorted(tuple_data)]
-                return index_list
-
-            def RunScript(self, Curve, Axis, CP):
-                try:
-                    Sort_Curve = gd[object]()
-                    # 判断输入的列表是否都为空
-                    structure_tree = self.Params.Input[0].VolatileData
-                    temp_geo_list, geo_path = self.Branch_Route(structure_tree)
-                    length_list = [len(filter(None, _)) for _ in temp_geo_list]
-
-                    bool_factor = any(length_list)
-                    re_mes = Message.RE_MES([bool_factor], ['Curve'])
-                    Sort_Curve = gd[object]()
-                    if len(re_mes) > 0:
-                        for mes_i in re_mes:
-                            Message.message2(self, mes_i)
-                    else:
-                        origin_curve = self.Branch_Route(structure_tree)[0][self.RunCount - 1]
-                        origin_path = self.Branch_Route(structure_tree)[1][self.RunCount - 1]
-                        if len(origin_curve) == 0:
-                            Sort_Curve.AddRange([], GH_Path(tuple(origin_path)))
-                        else:
-                            Axis = Axis.upper()
-                            index_list = self._sort_by_xyz(filter(None, Curve), Axis, CP)
-                            origin_curve = filter(None, origin_curve)
-                            Sort_Curve.AddRange([origin_curve[_] for _ in index_list], GH_Path(tuple(origin_path)))
-                    return Sort_Curve
-                finally:
-                    self.Message = "Sort Curve"
+            # def RunScript(self, Curve, Axis, CP):
+            #     try:
+            #         Sort_Curve = gd[object]()
+            #         # 判断输入的列表是否都为空
+            #         structure_tree = self.Params.Input[0].VolatileData
+            #         temp_geo_list, geo_path = self.Branch_Route(structure_tree)
+            #         length_list = [len(filter(None, _)) for _ in temp_geo_list]
+            #
+            #         bool_factor = any(length_list)
+            #         re_mes = Message.RE_MES([bool_factor], ['Curve'])
+            #         Sort_Curve = gd[object]()
+            #         if len(re_mes) > 0:
+            #             for mes_i in re_mes:
+            #                 Message.message2(self, mes_i)
+            #         else:
+            #             # "---------------------------"
+            #             origin_curve = filter(None, self.Branch_Route(structure_tree)[0][self.RunCount - 1])
+            #             # "---------------------------"
+            #             origin_path = self.Branch_Route(structure_tree)[1][self.RunCount - 1]
+            #             if len(origin_curve) == 0:
+            #                 Sort_Curve.AddRange([], GH_Path(tuple(origin_path)))
+            #             else:
+            #                 Axis = Axis.upper()
+            #                 index_list = self._sort_by_xyz(filter(None, Curve), Axis, CP)
+            #                 Sort_Curve.AddRange([origin_curve[_] for _ in index_list], GH_Path(tuple(origin_path)))
+            #         return Sort_Curve
+            #     finally:
+            #         self.Message = "Sort Curve"
 
 
         # 均分曲线
@@ -2196,7 +2281,9 @@ try:
                         bool_list = list(chain(*temp_bool_list))
                     ungroup_data = map(lambda x: self.split_tree(x, origin_path), [res_curve_list, bool_list])
                 else:
-                    res_curve_list, bool_list = [], []
+                    # "---------------------------"
+                    res_curve_list, bool_list = [[]], [[]]
+                    # "---------------------------"
                     ungroup_data = map(lambda x: self.split_tree(x, origin_path), [res_curve_list, bool_list])
                 Rhino.RhinoApp.Wait()
                 return ungroup_data
@@ -2335,7 +2422,7 @@ try:
                 new_first_curve, new_sce_cuvre = re_sorted
                 first_line_start_pt, sce_line_strat_pt = [_.PointAtStart for _ in re_sorted]
                 intersection_pt = \
-                rg.Intersect.Intersection.CurveCurve(new_first_curve, new_sce_cuvre, self.tol, self.tol)[0].PointA
+                    rg.Intersect.Intersection.CurveCurve(new_first_curve, new_sce_cuvre, self.tol, self.tol)[0].PointA
                 if first_line_start_pt.DistanceTo(intersection_pt) >= self.tol:
                     new_first_curve.Reverse()
 
@@ -2544,7 +2631,7 @@ try:
                             cfactor, c_Plane = curve.TryGetPlane()
                             c_Plane = c_Plane if cfactor else rg.Plane.WorldXY
                             if curve.Contains(pt, c_Plane) == rg.PointContainment.Inside:
-                            # "--------------------------------"
+                                # "--------------------------------"
                                 inside_curve_index.append(pt_index)
                                 relat_list.append(2)
                             else:
@@ -2848,7 +2935,6 @@ try:
                 return stock_tree
 
             def Tween_Cruve(self, c1, c2, n):
-
                 curve = rg.Curve.CreateTweenCurves(c1, c2, n)
                 return curve
 
@@ -2856,8 +2942,7 @@ try:
                 try:
                     sc.doc = Rhino.RhinoDoc.ActiveDoc
 
-                    structure_tree, structure_tree1 = self.Params.Input[0].VolatileData, self.Params.Input[
-                        1].VolatileData
+                    structure_tree, structure_tree1 = self.Params.Input[0].VolatileData, self.Params.Input[1].VolatileData
                     temp_geo_list = [list(i) for i in structure_tree.Branches]
                     temp_geo_list1 = [list(i) for i in structure_tree1.Branches]
                     if len(temp_geo_list) < 1 or len(temp_geo_list1) < 1:
@@ -3076,16 +3161,89 @@ try:
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
-                p0 = self.marshal.GetInput(DA, 0)
-                p1 = self.marshal.GetInput(DA, 1)
-                result = self.RunScript(p0, p1)
+                Curve, Bool = (gd[object]() for _ in range(2))
+                self.Message = 'Uniform curve direction(anticlockwise)'
+                if self.RunCount == 1:
+                    def run_main(tuple):
+                        curve, plane = tuple
+                        if self.is_curve_closed(curve) is None:
+                            Curve, Bool = None, None
+                        elif self.is_curve_closed(curve):
+                            Curve, Bool = self.unify_curve(curve, plane)
+                        else:
+                            Curve, Bool = None, None
+                            Message.message2(self, "Curve required to be close!")
+                        return Curve, Bool
 
-                if result is not None:
-                    if not hasattr(result, '__getitem__'):
-                        self.marshal.SetOutput(result, DA, 0, True)
+                    def _do_main(tuple_data):
+                        a_part_trunk, b_part_trunk, origin_path = tuple_data
+                        new_list_data = list(b_part_trunk)
+                        new_list_data.insert(self.max_index, a_part_trunk)  # 将最长的数据插入到原列表中
+                        match_Curve, match_Plane = new_list_data
+
+                        Curve, Plane = self.match_list(match_Curve, match_Plane)  # 将数据二次匹配列表里面的数据
+
+                        trun_Curve = ghp.run(self._trun_object, Curve)  # 将引用数据转为Rhino内置数据
+                        trun_Plane = ghp.run(self._trun_object, Plane)
+
+                        zip_list = zip(trun_Curve, trun_Plane)
+                        zip_ungroup_data = ghp.run(run_main, zip_list)  # 传入获取主方法中
+
+                        Curve, Bool = zip(*zip_ungroup_data)
+
+                        ungroup_data = map(lambda x: self.split_tree(x, origin_path), [Curve, Bool])
+
+                        Rhino.RhinoApp.Wait()
+                        return ungroup_data
+
+                    def temp_by_match_tree(*args):
+                        # 参数化匹配数据
+                        value_list, trunk_paths = zip(*map(self.Branch_Route, args))
+                        len_list = map(lambda x: len(x), value_list)  # 得到最长的树
+                        max_index = len_list.index(max(len_list))  # 得到最长的树的下标
+                        self.max_index = max_index
+                        max_trunk = [_ if len(_) != 0 else [None] for _ in value_list[max_index]]
+                        ref_trunk_path = trunk_paths[max_index]
+                        other_list = [
+                            map(lambda x: x if len(x) != 0 else [None], value_list[_]) if len(value_list[_]) != 0 else [
+                                [None]]
+                            for _ in range(len(value_list)) if _ != max_index]  # 剩下的树, 没有的值加了个None进去方便匹配数据
+                        matchzip = zip([max_trunk] * len(other_list), other_list)
+
+                        def sub_match(tuple_data):
+                            # 子树匹配
+                            target_tree, other_tree = tuple_data
+                            t_len, o_len = len(target_tree), len(other_tree)
+                            if o_len == 0:
+                                new_tree = [other_tree] * len(target_tree)
+                            else:
+                                new_tree = other_tree + [other_tree[-1]] * (t_len - o_len)
+                            return new_tree
+
+                        # 打包数据结构
+                        other_zip_trunk = zip(*map(sub_match, matchzip))
+
+                        zip_list = zip(max_trunk, other_zip_trunk, ref_trunk_path)
+                        # 多进程函数运行
+                        iter_ungroup_data = zip(*ghp.run(_do_main, zip_list))
+                        Curve, Bool = ghp.run(lambda single_tree: self.format_tree(single_tree), iter_ungroup_data)
+                        return Curve, Bool
+
+                    p0 = self.Params.Input[0].VolatileData
+                    p1 = self.Params.Input[1].VolatileData
+
+                    j_list_1 = any([len(_i) for _i in self.Branch_Route(p0)[0]])
+                    j_list_2 = any([len(_i) for _i in self.Branch_Route(p1)[0]])
+
+                    re_mes = Message.RE_MES([j_list_1, j_list_2], ['Curve', 'Plane'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
                     else:
-                        self.marshal.SetOutput(result[0], DA, 0, True)
-                        self.marshal.SetOutput(result[1], DA, 1, True)
+                        Curve, Bool = temp_by_match_tree(p0, p1)
+
+                DA.SetDataTree(0, Curve)
+                DA.SetDataTree(1, Bool)
 
             def get_Internal_Icon_24x24(self):
                 o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAQQSURBVEhL7ZV/bFNVFMefGsFFIhiDf0Dbh6/vVwtME2VgDNNs7cZ+w0Ib/UeMSzaD1kCy4Lr29XUt2wDdTzcToiwS/LWEZP5BTIxmkWAgMmZihEHnj23MZEHll8j66717PPftWrcMNRr+Mn6Sm/Z+7+k595x77i33P7eFVJMqm+2uWDoq15GAuJTJt4ebTdJGM65ehTfyAXrXg9mifmdElcDPAfE+ZvLvmX1FKkTnv0LnOjBDcrepyYeh3QXQlw9mTJkxWpRmEhRXMvN/RrJJ8pBWVxK684HsXb6LyVxalx7BLAYgrgL0Y1Yx9Vo2qrTP6m4HM/l7UnukCqNVzUKnC6b3FMS54iua6P+patNuksdMuJSuytkWtZfE1BQtH4kpabNF6UuFFYWZ3JpUUKo1W10EOtaC0SxaO1/lGR0Stl8HvurClLN2un9N9bmNljEyG3La0XEbZnXNyggzw/nb6aC6jpn8QTooPQ3tboBX0XlIaGAyxxd/9rijIgGOyu9hTc0PIJQdL2JLOX7BszCiahAzmYIuPLOIfOXSTvcytozOm5XnYT86P7AWICw8x+QcNu/IGF81iVlMwkNbE11MXkRGU16wui2iDIGPu2tODMkv0k4hbeoNIyQ9QzVHxfmP+LKzccsAsT81XLO68NMye/Gp95z+NAg1iXfY0gLMsDxMM0iGxBIm0QBSgEY1muXjdH6/58xye8nIqOBLgr1sLBfkd2yeLw5bQbZ9+2H9QbibyRztJDOmEizPjxM7+HuYzHH0dqJ4iWDnYGQn1UQxsNReMnpM8KXAUT7WbRnOw150sp9uQKj55pNNuy9a3WVoysvQT8sjH7SM5pPVpE7abqYmRZlEudNRMjJId2uvSLzFtByri04cELbfAL56zHJIItLntNRZTS62DOaTDsr5sM8NRJMnwOebOxyG3XvqkIBBHJXj73Mc3MFkC5vn9McrS8+TwZfqCkhMMPC2z4DuXsKWF2KGpdNzOxC9TMph85zsoSXhK8ePiVvGcw8eX/rl0TzPRPrrRk8n9CqQDSv9bGkxeNgN0LcejaQPmLQAm/dEKy2JozzxlaP8Qp1jy7kOfttlWOE5e5REVw1DhxvQRyEzX8z1JvUB0qLcxIcseVXnVzB5IRum/Hme6YllpTNwr/ci4TZfHuht8D9M9jmTpqZMn6l/NNdVtwRr+K51UcJynOhSQUaTNtNDwyaowHkt2b+kerLxscahnTuODAe2DhD9wV0kyg9CD81c7mFu/pyMJj4Jr+FtxrfI+sQzoRcHenBgYHgdRy8+2V0CQLeI3+kaaq0uyGjyBubmrzHCUjC7Vx0kEeUIXvk3sXX7MP1OU5fbjIisgy43EfzTMXSpHsezRszlzwTlJ9jP/1Nw3G/kbAy8W3WYlQAAAABJRU5ErkJggg=="
@@ -3149,37 +3307,42 @@ try:
                     bool = False
                 return curve_f, bool
 
-            def RunScript(self, curve, plane):
-                try:
-                    sc.doc = Rhino.RhinoDoc.ActiveDoc
-                    Curve, Bool = (gd[object]() for _ in range(2))
-
-                    "---------------------"
-                    temp_geo_list = self.Branch_Route(self.Params.Input[0].VolatileData)[0]
-                    length_list = [len(filter(None, _)) for _ in temp_geo_list]
-                    Abool_factor = any(length_list)
-
-                    re_mes = Message.RE_MES([Abool_factor, plane], ['curve', 'plane'])
-                    if len(re_mes) > 0:
-                        for mes_i in re_mes:
-                            Message.message2(self, mes_i)
-
+            def _trun_object(self, ref_obj):
+                """引用物体转换为GH内置物体"""
+                if ref_obj is None:
+                    return None
+                elif 'ReferenceID' in dir(ref_obj):
+                    if ref_obj.IsReferencedGeometry:
+                        test_pt = ref_obj.Value
                     else:
-                        if self.is_curve_closed(curve) is None:
-                            Curve, Bool = None, None
-                        elif self.is_curve_closed(curve):
-                            Curve, Bool = self.unify_curve(curve, plane)
-                        else:
-                            Message.message2(self, "Curve required to be close!")
+                        test_pt = ref_obj.Value
+                else:
+                    test_pt = ref_obj.Value
+                return test_pt
 
-                            "---------------------"
+            def match_list(self, *args):
+                """匹配子树"""
+                """匹配列表里面的数据"""
+                zip_list = list(args)
+                len_list = map(lambda x: len(x), zip_list)  # 得到最长的树
+                max_index = len_list.index(max(len_list))  # 得到最长的树的下标
+                max_list = zip_list[max_index]  # 最长的列表
+                other_list = [zip_list[_] for _ in range(len(zip_list)) if _ != max_index]  # 剩下的列表
+                matchzip = zip([max_list] * len(other_list), other_list)
 
-                    sc.doc.Views.Redraw()
-                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
-                    sc.doc = ghdoc
-                    return Curve, Bool
-                finally:
-                    self.Message = 'Uniform curve direction（anticlockwise）'
+                def sub_match(tuple_data):  # 数据匹配
+                    target_tree, other_tree = tuple_data
+                    t_len, o_len = len(target_tree), len(other_tree)
+                    if o_len == 0:
+                        return other_tree
+                    else:
+                        new_tree = other_tree + [other_tree[-1]] * (t_len - o_len)
+                        return new_tree
+
+                iter_group = map(sub_match, matchzip)  # 数据匹配
+                iter_group.insert(max_index, max_list)  # 将最长的数据插入进去
+
+                return iter_group
 
 
         # 删除重合曲线
@@ -3188,6 +3351,9 @@ try:
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
                                                                    "RPP_RemoveOverlapCurve", "W12", """Delete overlapping lines and curves，Adjustable tolerances to delete similar overlapping curves""", "Scavenger", "B-Curve")
                 return instance
+
+            def __init__(self):
+                pass
 
             def get_ComponentGuid(self):
                 return System.Guid("3ec4ebc8-1395-44e4-a0d7-9085a1695575")
@@ -3221,22 +3387,43 @@ try:
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
-                p0 = self.marshal.GetInput(DA, 0)
-                p1 = self.marshal.GetInput(DA, 1)
-                result = self.RunScript(p0, p1)
+                self.Message = 'Delete overlap curve'
+                Res_Curve = gd[object]()
+                if self.RunCount == 1:
+                    def do_main(tuple):  # 覆写主方法
+                        orgin_path, orgin_curves = tuple
+                        curves = filter(None, orgin_curves)
+                        if len(curves) != 0:
+                            _trun_curves = ghp.run(self._trun_object, curves)  # 将引用数据转为Rhino内置数据
+                            curve_list = self.unify_curve_direction(_trun_curves[0], _trun_curves)  # 统一曲线方法
+                            Res_Curve = self.remove_duplicate_lines(curve_list, self.tol)  # 得到结果线
+                        else:
+                            Res_Curve = []
 
-                if result is not None:
-                    self.marshal.SetOutput(result, DA, 0, True)
+                        ungroup_data = self.split_tree(Res_Curve, orgin_path)
+                        return ungroup_data
+
+                    p0 = self.Params.Input[0].VolatileData
+                    p1 = self.marshal.GetInput(DA, 1)
+                    self.tol = p1
+
+                    j_list = any([len(_i) for _i in self.Branch_Route(p0)[0]])
+
+                    re_mes = Message.RE_MES([j_list], ['C'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                    else:
+                        tunk_curves, tunk_path = self.Branch_Route(p0)
+                        zip_list = zip(tunk_path, tunk_curves)
+                        iter_ungroup_data = map(do_main, zip_list)
+                        Res_Curve = self.format_tree(iter_ungroup_data)
+
+                DA.SetDataTree(0, Res_Curve)
 
             def get_Internal_Icon_24x24(self):
                 o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAARxSURBVEhL3ZV7TFtVHMd5LD7GEJW4kfmHoobEGMxCYLb0vtrbe2/fLXMwnIvGTaMTQ2Jm4n8mJs74StQIapa5aXRO949xI6W3LS2P0ZYW+uBVpIwycStzmxgmloHt8XfuNZGVFv/3k3zSnn7vub/0nt85t+h/x9PgbrJp4fkDXOCtQdIdtRPiATn6b0guwBPswEP/DDdQAi6BV5S8b9K2ZwH1sEHkJV2/uVhXpXRFfrTgB83NZ25j9NFVtWE0qVD47pSjjbSDaPsObV+j7eJym9aHxjQh5CDEj+Q4L6+DCHzV2Jo+aGxeQhTv75CSPGwB58CUUtMzQJmm0Cnas9pLONNdtLdKumIjd4CT4BpYxZoSTt72MyKFUB0O8/EyiKrut32jtCRvtrPnUzG1H3WrxDY5zgsN4n9x/OCR7AO8bR5RQvCclORhJ5gpLt5ylrJcGDcKoWteyp0VCfF7OS6IF8RFytWGMTuINObRHVKShxQYoAzjLlY3ku4ixYyLcHrkqCC4A3EBnanlj+eEPSlECyFGSnIoBRfBQcI0OWgUhrO9TD9yko7TtfpYLWuMM4xh4gma9z0iXf0v9SAucNjyVLZVB11IC0HcYRtQgKi84lER1uBaGxdAEbofnaR7jtbrR1b0T15FQlMKac0JpBYij8lTJAwgLtDK2y53sOZpKBB5UEpy+AHMPN7w2QhlnUVfqvtRH+FIhwn7fQ3CkKAxTbxE66KvMbowboZiaYbMCRBVVNapWXPiOixyTP75VhpAVLbt4aTKnFh6hg+hiGYIuUnxWJFu+nardfFurXa4QsH77qUNQ1WsdabWuP/3e2BOBZgGPRrz9CHD3kXcpi/CeAP9YGaX8qsEaZlBx+iejJ9wr3xI9SqVupEUZ5mVHo3WcgFx1iTS772OONu8E+YcAVFRSUmr1poMqPWxG42WeDm+4XqkXr6rojZGWpPL+zn/r0F49iLRfaqoGZXSutBRxjD2BSWEPoXvH8Pn+xpT/G2VtrcF5l0Cf2rUnCfx+lDC0Cf4hrmcAdd2KU64leapbCftmQgxA8hBOnbLcUFwK+LFfcG8L/2K0HQZqflwo5SsAx8RV8AIY5wIUrqRhW5SvOQgHDNSujn4nMIFdmots8fVhnHEcdHtUrKOrSBeJDdtmYnyfGjeTYh/wu7tktLN+RbEBUo1xngnXiM4tqulZB243fAhN0nqo/2sPpw+RzpXRMIRktLNeRfEBapNLVdteOELdRDu40xtfUcXAf3fyXjSPqpn1UE7cndsLmoQF3gPDxj96DK8F5I07cWP/RbwwqBt5TUhlWVu8VnOnwnDKWonur+T44LgF9UUeBMs4yzxdvxOIAX/mzjMZQCETjo5RUCvf057VyLqALKrxCY5LogJxP/iNB4w+tg4Z52Ddh0m8Xg90jm0taz6ImlJrBmF4I0+yvOXSDjjcrwpZ0FchNLv+6UGNmKW0g3n3Q9vgId4W/JwnT78zo8qu0IkRUqONgW35tcgPlWLCNZVw7JDlX8DMHzplecfzsMAAAAASUVORK5CYII="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
-
-            def __init__(self):
-                pass
-
-            def mes_box(self, info, button, title):
-                return rs.MessageBox(info, button, title)
 
             def Branch_Route(self, Tree):
                 """分解Tree操作，树形以及多进程框架代码"""
@@ -3269,6 +3456,17 @@ try:
                         else:
                             stock_tree.Insert(item, path, index)
                 return stock_tree
+
+            def _trun_object(self, ref_obj):
+                """引用物体转换为GH内置物体"""
+                if 'ReferenceID' in dir(ref_obj):
+                    if ref_obj.IsReferencedGeometry:
+                        test_pt = ref_obj.Value
+                    else:
+                        test_pt = ref_obj.Value
+                else:
+                    test_pt = ref_obj
+                return test_pt
 
             def unify_curve_direction(self, reference_curve, curve_list):  # 统一曲线方向
                 reference_start_point = reference_curve.PointAtStart
@@ -3312,35 +3510,6 @@ try:
                     if not is_duplicate:
                         unique_lines.append(line)
                 return unique_lines
-
-            def RunScript(self, curves, tol):
-                try:
-                    sc.doc = Rhino.RhinoDoc.ActiveDoc
-                    Res_Curve = gd[object]()
-
-                    curves = filter(None, curves)
-
-                    structure_tree = self.Params.Input[0].VolatileData
-                    temp_geo_list = [list(i) for i in structure_tree.Branches]
-                    if len(temp_geo_list) < 1:
-                        Message.message2(self, 'The p-terminal cannot be empty！')
-                        return gd[object]()
-
-                    re_mes = Message.RE_MES([curves], ['curves'])
-                    if len(re_mes) > 0:
-                        return []
-                    else:
-                        curve_list = self.unify_curve_direction(curves[0], curves)
-
-                        Res_Curve = self.remove_duplicate_lines(curve_list, tol)
-
-                    sc.doc.Views.Redraw()
-                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
-                    sc.doc = ghdoc
-
-                    return Res_Curve
-                finally:
-                    self.Message = 'Delete overlap curve'
 
 
         # 曲线相交位置打断曲线
@@ -3655,12 +3824,12 @@ try:
 
                     re_mes = Message.RE_MES([Curve, Target_Curve], ['Curve', 'Target_Curve'])
                     if len(re_mes) > 0:
-                        return [], [], []
+                        # "-------------------------"
+                        return None, None, None
+                        # "-------------------------"
                     else:
-                        start_curve = Curve.Extend(rg.CurveEnd.Start, 100000,
-                                                   eval('rg.CurveExtensionStyle.{}'.format(self.type_dict[Type])))
-                        end_curve = Curve.Extend(rg.CurveEnd.End, 100000,
-                                                 eval('rg.CurveExtensionStyle.{}'.format(self.type_dict[Type])))
+                        start_curve = Curve.Extend(rg.CurveEnd.Start, 100000, eval('rg.CurveExtensionStyle.{}'.format(self.type_dict[Type])))
+                        end_curve = Curve.Extend(rg.CurveEnd.End, 100000, eval('rg.CurveExtensionStyle.{}'.format(self.type_dict[Type])))
 
                         start_par = self.intersection_curve(start_curve, Target_Curve)
                         end_par = self.intersection_curve(end_curve, Target_Curve)
@@ -3731,12 +3900,12 @@ try:
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Curve()
                 self.SetUpParam(p, "Curve", "C", "orientation of Curve to be determined")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
-                p = Grasshopper.Kernel.Parameters.Param_Geometry()
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
                 self.SetUpParam(p, "Geometry", "G", "A set of objects A that affect the direction of a curve")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Boolean()
@@ -3845,13 +4014,62 @@ try:
                     rcurve.Reverse()
                 return rcurve
 
+            def temp_vector(self, tuple):
+                Points, Curve = tuple
+                new_Point = Points[::-1] if self.Reverse else Points  # 判断点列表是否反转
+
+                rcurve = self.get_vector(new_Point, Curve)  # 根据点列表判断是否反转
+
+                return rcurve
+
+            def temp(self, tuple):
+                Curve, Geometry, Path = tuple
+
+                Cut_None_Geometry = filter(None, Geometry)
+                Cut_None_Curve = filter(None, Curve)
+
+                if len(Cut_None_Curve) == 0:
+                    r_curve = []
+                else:
+                    Curve_Point = map(lambda one_curve: self.compare_distance(one_curve, Cut_None_Geometry), Cut_None_Curve)  # 将单根线和一组物体传入主方法中
+                    zip_list = zip(Curve_Point, Curve)
+                    r_curve = map(self.temp_vector, zip_list)
+
+                iter_group_data = self.split_tree(r_curve, Path)
+
+                return iter_group_data
+
+            def temp_by_match_tree(self, *args):
+                # 参数化匹配数据
+                value_list, trunk_paths = zip(*map(self.Branch_Route, args))
+                len_list = map(lambda x: len(x), value_list)  # 得到最长的树
+                max_index = len_list.index(max(len_list))  # 得到最长的树的下标
+                max_trunk = value_list[max_index]
+                ref_trunk_path = trunk_paths[max_index]
+                other_list = [value_list[_] for _ in range(len(value_list)) if _ != max_index]  # 剩下的树
+                matchzip = zip([max_trunk] * len(other_list), other_list)
+
+                def sub_match(tuple_data):
+                    # 子树匹配
+                    target_tree, other_tree = tuple_data
+                    t_len, o_len = len(target_tree), len(other_tree)
+                    if o_len == 0:
+                        new_tree = [other_tree] * len(target_tree)
+                    else:
+                        new_tree = other_tree + [other_tree[-1]] * (t_len - o_len)
+                    return new_tree
+
+                iter_group = map(sub_match, matchzip)
+                iter_group.insert(max_index, max_trunk)
+
+                return iter_group, ref_trunk_path
+
             def RunScript(self, Curve, Geomertry, Reverse):
                 try:
                     rcurve = gd[object]()
                     sc.doc = Rhino.RhinoDoc.ActiveDoc
 
-                    structure_tree, structure_tree1 = self.Params.Input[0].VolatileData, self.Params.Input[
-                        1].VolatileData
+                    structure_tree, structure_tree1 = self.Params.Input[0].VolatileData, self.Params.Input[1].VolatileData
                     temp_geo_list = [list(i) for i in structure_tree.Branches]
                     temp_geo_list1 = [list(i) for i in structure_tree1.Branches]
                     if len(temp_geo_list) < 1 or len(temp_geo_list1) < 1:
@@ -3862,11 +4080,13 @@ try:
                     if len(re_mes) > 0:
                         return None
                     else:
-                        curve_point = self.compare_distance(Curve, Geomertry)
-                        if Reverse:
-                            rcurve = self.get_vector(curve_point[::-1], Curve)
-                        else:
-                            rcurve = self.get_vector(curve_point, Curve)
+                        self.Reverse = Reverse
+                        iter_group, target_Path = self.temp_by_match_tree(Curve, Geomertry)
+                        trunk_Curve, trunk_Geometry = iter_group
+
+                        zip_list = zip(trunk_Curve, trunk_Geometry, target_Path)
+                        ungroup_data = map(self.temp, zip_list)
+                        rcurve = self.format_tree(ungroup_data)
 
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
@@ -3907,7 +4127,7 @@ try:
                 self.SetUpParam(p, "Plane", "Pl", "Original plane")
                 ORIGIN_PLANE = rg.Plane.WorldXY
                 p.SetPersistentData(gk.Types.GH_Plane(ORIGIN_PLANE))
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
@@ -3988,23 +4208,23 @@ try:
                             stock_tree.Insert(item, path, index)
                 return stock_tree
 
-            def _get_vertex(self, data_list):
+            def _get_vertex(self, data_list, pln):
                 pts_list = []
                 for item_data in data_list:
                     if type(item_data) is rg.Point3d:
                         pts_list.append([item_data])
                     elif isinstance(item_data, (rg.Curve)):
-                        pts_list.append(rg.Box(self.ref_plane, item_data.ToNurbsCurve()).GetCorners())
+                        pts_list.append(rg.Box(pln, item_data.ToNurbsCurve()).GetCorners())
                     elif type(item_data) is rg.Brep:
                         pts_list.append(item_data.GetBoundingBox(True).GetCorners())
                     elif type(item_data) is rg.Rectangle3d:
                         box_line = item_data.ToNurbsCurve()
-                        pts_list.append(rg.Box(self.ref_plane, box_line.ToNurbsCurve()).GetCorners())
+                        pts_list.append(rg.Box(pln, box_line.ToNurbsCurve()).GetCorners())
                 return pts_list
 
-            def get_boxegde(self, obj):
-                pts_list = self._get_vertex(obj)
-                box_egde = rg.Box(self.ref_plane, list(chain(*pts_list)))
+            def get_boxegde(self, obj, pln):
+                pts_list = self._get_vertex(obj, pln)
+                box_egde = rg.Box(pln, list(chain(*pts_list)))
                 return box_egde
 
             def get_sub_box(self, box, pln):
@@ -4043,38 +4263,70 @@ try:
                 pt_two = pts[max_values.index(max(max_values))]
                 return pt_one, pt_two
 
-            def do_main(self, tuple_data):
-                objs, origin_path = tuple_data
+            def _do_main(self, tuple_data):
+                objs, Plane = tuple_data
+
                 objs = list(objs[0]) if 'List[object]' in str(objs) else objs
                 objs = [_ for _ in objs if _ is not None]
                 if len(objs) == 0:
-                    return map(lambda x: self.split_tree(x, origin_path), [[], [], []])
+                    New_BoundingBox, X_Dir, Y_Dir = [], [], []
                 else:
-                    new_box = self.get_boxegde(objs)
+                    new_box = self.get_boxegde(objs, Plane)
                     if type(new_box) == rg.Box:
                         New_BoundingBox = new_box
                         X_Dir = New_BoundingBox.X
                         Y_Dir = New_BoundingBox.Y
                     else:
-                        New_BoundingBox = self.get_sub_box(new_box, self.ref_plane)
+                        New_BoundingBox = self.get_sub_box(new_box, Plane)
                         X_Dir = New_BoundingBox.Width
                         Y_Dir = New_BoundingBox.Height
-                    ungroup_data = map(lambda x: self.split_tree(x, origin_path),
-                                       [[New_BoundingBox], [X_Dir], [Y_Dir]])
-                Rhino.RhinoApp.Wait()
+                return New_BoundingBox, X_Dir, Y_Dir
 
+            def temp(self, tuple_data):
+                # 解包元组元素
+                origin_object_list, origin_pl_list, origin_path = tuple_data
+                # 若平面有多个，重新赋值
+                o_pl_len = len(origin_pl_list)
+                if o_pl_len == 1:
+                    origin_object_list = [origin_object_list]
+                else:
+                    origin_object_list = [origin_object_list[:] for _ in range(o_pl_len)]
+                # 每个单元切片进行主方法排序
+                sub_zip_list = zip(origin_object_list, origin_pl_list)
+                res_object_list = map(self._do_main, sub_zip_list)
+
+                New_BoundingBox, X_Dir, Y_Dir = zip(*res_object_list)
+                ungroup_data = map(lambda x: self.split_tree(x, origin_path), [[New_BoundingBox], [X_Dir], [Y_Dir]])
+                Rhino.RhinoApp.Wait()
                 return ungroup_data
 
             def RunScript(self, Object, Plane):
                 try:
                     sc.doc = Rhino.RhinoDoc.ActiveDoc
                     Bounding, X, Y = (gd[object]() for _ in range(3))
-                    self.ref_plane = Plane
 
                     trunk_object, trunk_path = self.Branch_Route(Object)
                     o_len = len(list(filter(None, (chain(*trunk_object)))))
                     if o_len:
-                        iter_ungroup_data = zip(*ghp.run(self.do_main, zip(trunk_object, trunk_path)))
+                        # 数据匹配
+                        object_trunk, pt_path_trunk = self.Branch_Route(Object)
+                        pl_trunk, pl_path_trunk = self.Branch_Route(Plane)
+                        pt_len, pl_len = len(object_trunk), len(pl_trunk)
+                        if pt_len > pl_len:
+                            new_object_trunk = object_trunk
+                            new_pl_trunk = pl_trunk + [pl_trunk[-1]] * (pt_len - pl_len)
+                            path_trunk = pt_path_trunk
+                        elif pt_len < pl_len:
+                            new_object_trunk = object_trunk + [object_trunk[-1]] * (pl_len - pt_len)
+                            new_pl_trunk = pl_trunk
+                            path_trunk = pl_path_trunk
+                        else:
+                            new_object_trunk = object_trunk
+                            new_pl_trunk = pl_trunk
+                            path_trunk = pt_path_trunk
+                        zip_list = zip(new_object_trunk, new_pl_trunk, path_trunk)
+                        # 获得结果树列表
+                        iter_ungroup_data = zip(*ghp.run(self.temp, zip_list))
                         Bounding, X, Y = ghp.run(lambda single_tree: self.format_tree(single_tree),
                                                  iter_ungroup_data)
                     else:
@@ -4278,8 +4530,7 @@ try:
                     else:
                         nur_cur_list = [_.ToNurbsCurve() for _ in curves]
                         res_box = self._planr_curve_box(nur_cur_list)
-                        frame_curve = \
-                        rg.Curve.JoinCurves([_.ToNurbsCurve() for _ in res_box.GetEdges() if _.IsValid is True])[0]
+                        frame_curve = rg.Curve.JoinCurves([_.ToNurbsCurve() for _ in res_box.GetEdges() if _.IsValid is True])[0]
 
                         new_nur_list = []
                         disjoint_line = []
@@ -4398,6 +4649,1068 @@ try:
                 finally:
                     self.Message = 'Curve plane profile'
 
+
+        # 竖直线、水平线
+        class VHLine(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP_VHLine", "W54", """The line is divided into two kinds: partial vertical and partial horizontal""", "Scavenger", "B-Curve")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("6f6b0933-33aa-480e-b2f5-a8e02315adc7")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.primary
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Curve()
+                self.SetUpParam(p, "Curve", "C", "Straight line，Non-straight lines will be combined by starting and ending lines")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Plane()
+                self.SetUpParam(p, "Plane", "P", "Reference plane，The level corresponds to the X-axis of the plane、The vertical aligns with the Y-axis of the plane")
+                NORMALPLANE = rg.Plane.WorldXY
+                p.SetPersistentData(gk.Types.GH_Plane(NORMALPLANE))
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Number()
+                self.SetUpParam(p, "Angle", "A", "Tolerance Angle")
+                ANGLETOL = 45
+                p.SetPersistentData(gk.Types.GH_Number(ANGLETOL))
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Curve()
+                self.SetUpParam(p, "HorizontalLine", "H", "Horizontal line")
+                self.Params.Output.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Curve()
+                self.SetUpParam(p, "VerticalStraightLine", "V", "Vertical line")
+                self.Params.Output.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Curve()
+                self.SetUpParam(p, "OtherStraightLines", "OL", "Other types of lines")
+                self.Params.Output.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Curve()
+                self.SetUpParam(p, "HorizontalDeviationLine", "HD", "A horizontal line")
+                self.Params.Output.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Curve()
+                self.SetUpParam(p, "SlantedVerticalLine", "SV", "A vertical line")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                p1 = self.marshal.GetInput(DA, 1)
+                p2 = self.marshal.GetInput(DA, 2)
+                result = self.RunScript(p0, p1, p2)
+
+                if result is not None:
+                    if not hasattr(result, '__getitem__'):
+                        self.marshal.SetOutput(result, DA, 0, True)
+                    else:
+                        self.marshal.SetOutput(result[0], DA, 0, True)
+                        self.marshal.SetOutput(result[1], DA, 1, True)
+                        self.marshal.SetOutput(result[2], DA, 2, True)
+                        self.marshal.SetOutput(result[3], DA, 3, True)
+                        self.marshal.SetOutput(result[4], DA, 4, True)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAOkSURBVEhLrVVra1xFGN5qqdJWLZVCW0oRb2goUVIpNN1z5pzZ3XPmXBIv7RLIB8Ev2lZKUSgVhIZYiqWBImirFap+8ULALxpTFLTFJJvsuewtZ2+JtgYq/eJ/iM/MzsbdNmm2sQ8MM+8773memXfemRNjbO4h1fT6qVvsIeTq5qQb7Y6zsDt2v5BMBo8RM/hFt0vzhAVzmlW4Raz8P5pdGCIsn9aN3Au9/dVHZPjakU5HGxJW4VnCwiliFcYgNg6homblq5qVy2EcoH2PBZwmTj5NnMKeVKqwSX7eOVTmB4qZ6UH/uWr5KfJyfgtEj4H8FY3lTmFX30EkC+F5+P7QWN6HPYrxMPqDlEVde91go6RrB08XiG8YRrRVNYNrqhn29zL/KWL6czKkDXGW20adogKxtyFwAWLjGE9DKKPZxZ/A8bEMbYBY4UuENcjQ/66ysC/O02b6QZx5hPbVRlTTH8EizqH/UGXeB4h5XzX8kwrLvoe4Yfgvqiy4ojuVBfQ1QdwEMbw3EDDBx1CfbBHwFDMwqVP7AuQrNsRdRsFcwvgT2lc/D+FBQdwEVv0RAi7L8VSLQF0E/F+A6Ges/LgYLwlkIRB4xPDPUKdyGndliwheC0BUxrZ0MW7dAfNDYnpJ6lR/RVugTjTSm5zcKT7qFLwikP+/FNPfwe1WAfirIgjQrNkDOMAfdLdyk9qVS2py+hk5dXfgYsXlqa9r2G1nUInFFoW/CcpK3UjZ12h/6271W2JHL8qp5YGSOwrS36S5qkATCaf0pO5En4odudUx6pQVOdUO7OAzXsPS7FigCWJnt+tO+Syvf5zTNYxtOdUA0nNVM/23pHnPAk3wF5m65cMJtxaB8xvpXlwHkrpieL3SsWYBDt2p9iPlb6JgeoSDsJldvIISiezjwgGsRQDlewjpyVG3PkeswJVukKHGsZ1ImgL3IkCd0quoJp+6tTpyfwSuBxozEng134XAFWkKdCJA2WwfqieLVc/rdnSMkKH1cqoduMFf4bd5XpoCdwr8B90p2SDNoCz/BPE7XV2jG+TU8kCJTuGJeF2aArcJlNPp0QcVljdAPIF2XbfLJwj58mEZvjJQVuvxvM4vnbhEqwDmAzUZPo8LNa07NZ7jzkGM8GmQLexjM49KlwB8GS6w3wie4zvgC8CTMKga0ymc2Wso6QHFWrnhzRrgf0QIBC4IipJ3CYR5ISciZv4J7OBHxBzGT2QC6cxw8dWaZhUzxAzG/wWq0i7/1hq2PQAAAABJRU5ErkJggg=="
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def __init__(self):
+                pass
+
+            def Branch_Route(self, Tree):
+                """分解Tree操作，树形以及多进程框架代码"""
+                Tree_list = [list(_) for _ in Tree.Branches]
+                Tree_Path = [list(_) for _ in Tree.Paths]
+                return Tree_list, Tree_Path
+
+            def split_tree(self, tree_data, tree_path):
+                """操作树单枝的代码"""
+                new_tree = ght.list_to_tree(tree_data, True, tree_path)  # 此处可替换复写的Tree_To_List（源码参照Vector组-点集根据与曲线距离分组）
+                result_data, result_path = self.Branch_Route(new_tree)
+                if list(chain(*result_data)):
+                    return result_data, result_path
+                else:
+                    return [[]], result_path
+
+            def format_tree(self, result_tree):
+                """匹配树路径的代码，利用空树创造与源树路径匹配的树形结构分支"""
+                stock_tree = gd[object]()
+                for sub_tree in result_tree:
+                    fruit, branch = sub_tree
+                    for index, item in enumerate(fruit):
+                        path = gk.Data.GH_Path(System.Array[int](branch[index]))
+                        if hasattr(item, '__iter__'):
+                            if item:
+                                for sub_index in range(len(item)):
+                                    stock_tree.Insert(item[sub_index], path, sub_index)
+                            else:
+                                stock_tree.AddRange(item, path)
+                        else:
+                            stock_tree.Insert(item, path, index)
+                return stock_tree
+
+            def parameter_judgment(self, tree_par_data):
+                # 获取输入端参数所有数据
+                geo_list, geo_path = self.Branch_Route(tree_par_data)
+                if geo_list:
+                    j_list = any(ghp.run(lambda x: len(list(filter(None, x))), geo_list))  # 去空操作, 判断是否为空
+                else:
+                    j_list = False
+                return j_list, geo_list, geo_path
+
+            def _trun_object(self, ref_obj):
+                """引用物体转换为GH内置物体"""
+                if 'ReferenceID' in dir(ref_obj):
+                    if ref_obj.IsReferencedGeometry:
+                        test_pt = ref_obj.Value
+                    else:
+                        test_pt = ref_obj.Value
+                else:
+                    test_pt = ref_obj
+                return test_pt
+
+            def RunScript(self, Curve, Plane, Angle):
+                try:
+                    sc.doc = Rhino.RhinoDoc.ActiveDoc
+                    if self.RunCount == 1:
+                        self.j_bool_f1, self.origin_curve, self.curve_path = self.parameter_judgment(self.Params.Input[0].VolatileData)
+                    HorizontalLine, VerticalStraightLine, OtherStraightLines, HorizontalDeviationLine, SlantedVerticalLine = (gd[object]() for _ in range(5))
+                    re_mes = Message.RE_MES([self.j_bool_f1], ['C end'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                    else:
+                        curve_list = self.origin_curve[self.RunCount - 1]
+                        if filter(None, curve_list):
+                            gh_curve = list(map(self._trun_object, curve_list))
+                            h_list, v_list, os_list, hd_list, sv_list = ([] for _ in range(5))
+                            for i in range(len(gh_curve)):
+                                # 判断是否为直线 不是的话取首尾点连接成直线
+                                if str(type(gh_curve[i])) != "<type 'PolylineCurve'>":
+                                    gh_curve[i] == rg.PolylineCurve([gh_curve[i].PointAtStart, gh_curve[i].PointAtEnd])
+                                # 向量对比是否平行
+                                if gh_curve[i].TangentAtEnd.IsParallelTo(Plane.XAxis):
+                                    h_list.append(curve_list[i])
+                                elif gh_curve[i].TangentAtEnd.IsParallelTo(Plane.YAxis):
+                                    v_list.append(curve_list[i])
+                                else:
+                                    os_list.append(curve_list[i])
+                            for i in range(len(gh_curve)):
+                                # 向量对比是否在规定的偏向平行的度数之内
+                                if gh_curve[i].TangentAtEnd.IsParallelTo(Plane.XAxis, math.radians(Angle)):
+                                    hd_list.append(curve_list[i])
+                                elif gh_curve[i].TangentAtEnd.IsParallelTo(Plane.YAxis, math.radians(Angle)):
+                                    sv_list.append(curve_list[i])
+                            HorizontalLine, VerticalStraightLine, OtherStraightLines, HorizontalDeviationLine, SlantedVerticalLine = h_list, v_list, os_list, hd_list, sv_list
+                    sc.doc.Views.Redraw()
+                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                    sc.doc = ghdoc
+                    return HorizontalLine, VerticalStraightLine, OtherStraightLines, HorizontalDeviationLine, SlantedVerticalLine
+                finally:
+                    self.Message = 'Vertical line、Horizontal line'
+
+
+        # 根据点所在的位置对曲线进行偏移
+        class OffsetByPoint(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP_OffsetByPoint", "W111", """The curve is offset according to the position of the point""", "Scavenger", "B-Curve")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("3f3152cb-0b25-4da8-953f-0479f1c5a5c7")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.secondary
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Curve()
+                self.SetUpParam(p, "Curve_input", "C", "The curve to be offset")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Point()
+                self.SetUpParam(p, "Point", "P", "An indication of the offset direction")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Number()
+                self.SetUpParam(p, "Distances", "D", "Offset distance")
+                DIS = 10
+                p.SetPersistentData(gk.Types.GH_Number(DIS))
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Vector()
+                self.SetUpParam(p, "Normal", "N", "Offset normal")
+                NORMAL = rg.Vector3d(0, 0, 1)
+                p.SetPersistentData(gk.Types.GH_Vector(NORMAL))
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Integer()
+                self.SetUpParam(p, "Corner", "C", "Chamfer type none -0 sharp -1 round - 2 smooth-3 chamfer - 4")
+                INTER_NUM = 1
+                p.SetPersistentData(gk.Types.GH_Integer(INTER_NUM))
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Curve()
+                self.SetUpParam(p, "Curve_Output", "C", "The offset curve")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                p1 = self.marshal.GetInput(DA, 1)
+                p2 = self.marshal.GetInput(DA, 2)
+                p3 = self.marshal.GetInput(DA, 3)
+                p4 = self.marshal.GetInput(DA, 4)
+                result = self.RunScript(p0, p1, p2, p3, p4)
+
+                if result is not None:
+                    self.marshal.SetOutput(result, DA, 0, True)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAN8SURBVEhLrZVdaBRXFMe3xkatGnywaDTuJpDsJvEj2qSrbjNzZnZ3Zu6dmWQ3uiOiffDF2lootFXxqaGiqPSlUCl9EATRl+iDqPgifoAkmp3Zz2yiSf02aUQjFJGClHJ773ifSicbk/zgsjP/ezhzz86c//G1ms5Hkp5NiKjYBWoGSSgLgpoLg5FeI3Tk68C8txShkXm+6SIoGVHrGifaFrq6xojaNUrU5FOiJB6RWMcIkfUiAeS8AZR5CDhzE3D2N3qgvYAKm8AqLeJpvGn9wvlQ1BwB8IBJE1mgObskzfmaXh8E7Byj9ycB2ZdF5OToQyaixqB7ELYknP9L0ovnAOdNnm5mWBapELShatEoCBLOfi/h3NWoUSJ460si6aW8oNyJ8tDZw+omlaDf3SfrA29ZVe1K37d8a2Z0W1alGoOvRLFtL7sX1PQqWS/dxlsniKD27XSDZkJMEk5HJSCRyGfkk7bwDaYB9CyS9cEHsjH0ph1lP3YDp8vm1tCzDetbyOrVa8jatS1kQySyguntWl+cvRPQ7B/dwOlQv3OiKhQ58Ly5qYk0hoIkGAxeB4C5fNsnaun7dI11d5M5XJo69ehKVSDxuFCDh8cbmoT9oQb/N+FwfRXfdgEtfcztI5wPcqkMhHzAftZ9nl8Y6HxU8BvDf64ULzW4e/8DqE6SNS6tYguXJqcumQsHzOELAeP3WzT5i5XiWc/kDND716vJJ8wB9nFpcmr1/JG61GtSmxgjNfI1kcuegHa7NtYxzB5wnH5aN+YKmp2QjUEdzGKjoowv5HEuzRap9OvFV7XJ58SPh0b9yp0U3/IE9NJy1uHUWk74aPJqZmisQZTOh0x8K6GcLeHC0TgutlWrvY01Wu6cX+lNhSLHF/MckxLtKC6TjQH6DuxfXaEdZdbJuLRDQplD1OAuUp/5g/2H7wytcDUBp5a4gVOEHfpdBfYJLv0H+tXIarYFUO5nNTnKXPPulKyZI+u9gZh5j1XwE5e8AbV/N069IpJm7+FSWWQtHYp3PiDU4n/gkjemO/EK/9DWP8Olsogo/SkbXLSC77jkzaZU3wIR2X/T05znUllkI9OqJp/Rd5DeziVv4vHMiqg5xMr9hUtlsayeCmrZYdoC87nkjaCzmT3G3PFLLs0udCbvN7a9ppPK3sil2QVwfxsd6oebm3squfQe+Hz/AnYSc+/XD7PfAAAAAElFTkSuQmCC"
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def __init__(self):
+                self.corner_dict = {0: "None", 1: "Sharp", 2: "Round", 3: "Smooth", 4: "Chamfer"}
+                self.j_bool_f1 = False
+                self.j_bool_f2 = False
+
+            def Branch_Route(self, Tree):
+                """分解Tree操作，树形以及多进程框架代码"""
+                Tree_list = [list(_) for _ in Tree.Branches]
+                Tree_Path = [list(_) for _ in Tree.Paths]
+                return Tree_list, Tree_Path
+
+            def split_tree(self, tree_data, tree_path):
+                """操作树单枝的代码"""
+                new_tree = ght.list_to_tree(tree_data, True, tree_path)  # 此处可替换复写的Tree_To_List（源码参照Vector组-点集根据与曲线距离分组）
+                result_data, result_path = self.Branch_Route(new_tree)
+                if list(chain(*result_data)):
+                    return result_data, result_path
+                else:
+                    return [[]], result_path
+
+            def format_tree(self, result_tree):
+                """匹配树路径的代码，利用空树创造与源树路径匹配的树形结构分支"""
+                stock_tree = gd[object]()
+                for sub_tree in result_tree:
+                    fruit, branch = sub_tree
+                    for index, item in enumerate(fruit):
+                        path = gk.Data.GH_Path(System.Array[int](branch[index]))
+                        if hasattr(item, '__iter__'):
+                            if item:
+                                for sub_index in range(len(item)):
+                                    stock_tree.Insert(item[sub_index], path, sub_index)
+                            else:
+                                stock_tree.AddRange(item, path)
+                        else:
+                            stock_tree.Insert(item, path, index)
+                return stock_tree
+
+            def parameter_judgment(self, tree_par_data):
+                # 获取输入端参数所有数据
+                geo_list, geo_path = self.Branch_Route(tree_par_data)
+                if geo_list:
+                    j_list = any(ghp.run(lambda x: len(list(filter(None, x))), geo_list))  # 去空操作, 判断是否为空
+                else:
+                    j_list = False
+                return j_list, geo_list, geo_path
+
+            def RunScript(self, Curve_input, Point, Distances, Normal, Corner):
+                try:
+                    sc.doc = Rhino.RhinoDoc.ActiveDoc
+                    Curve_Output = gd[object]()
+                    # 插件默认值参数
+                    if self.RunCount == 1:
+                        self.j_bool_f1 = self.parameter_judgment(self.Params.Input[0].VolatileData)[0]
+                        self.j_bool_f2 = self.parameter_judgment(self.Params.Input[1].VolatileData)[0]
+                    else:
+                        pass
+
+                    # 插件默认值参数
+                    Style = eval("rg.CurveOffsetCornerStyle.{}".format(self.corner_dict[Corner]))
+                    # 插件默认值参数
+                    tol = sc.doc.ModelAbsoluteTolerance
+                    re_mes = Message.RE_MES([self.j_bool_f1, self.j_bool_f2], ['C end', 'P end'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                    else:
+                        if Curve_input and Point:
+                            temp_arr_cur = Curve_input.Offset(Point, Normal, Distances, tol, Style)
+                            if temp_arr_cur:
+                                Curve_Output = temp_arr_cur[0]
+                            else:
+                                Curve_Output = Curve_input
+                                Message.message2(self, "Curve offset failure！")
+                        else:
+                            Curve_Output = None
+
+                    sc.doc.Views.Redraw()
+                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                    sc.doc = ghdoc
+                    return Curve_Output
+                finally:
+                    self.Message = 'The curve shifts toward the point'
+
+
+        # 判断曲线集合B和闭合曲线A的位置关系
+        class CurvePosition(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP_CurvePosition", "W53", """Determine the position relationship between curve set B and closed curve A""", "Scavenger", "B-Curve")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("11fac9d6-fe1b-4772-a0c2-23ced196ff1d")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.primary
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Curve()
+                self.SetUpParam(p, "Curve_A", "CA", "Closed curve A")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Curve()
+                self.SetUpParam(p, "Curve_B", "CB", "Curve set B")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Plane()
+                self.SetUpParam(p, "Plane", "P", "Reference plane")
+                DEFAULT_PLANE = rg.Plane.WorldXY
+                p.SetPersistentData(gk.Types.GH_Plane(DEFAULT_PLANE))
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_String()
+                self.SetUpParam(p, "Express", "E", "Explain the relationship between the two")
+                self.Params.Output.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_String()
+                self.SetUpParam(p, "Value", "V", "0：Within the curve，1：Intersect a curve，2：Off the curve，1000：The two are not compatible")
+                self.Params.Output.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Curve()
+                self.SetUpParam(p, "Inside", "C1", "The line inside the closed curve A")
+                self.Params.Output.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Curve()
+                self.SetUpParam(p, "Intersect", "C2", "The line that intersects the closed curve A")
+                self.Params.Output.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Curve()
+                self.SetUpParam(p, "Outside", "C3", "The line outside the closed curve A")
+                self.Params.Output.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Curve()
+                self.SetUpParam(p, "Non Coplanar", "C4", "A line not collinear with the closed curve A")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                p1 = self.marshal.GetInput(DA, 1)
+                p2 = self.marshal.GetInput(DA, 2)
+                result = self.RunScript(p0, p1, p2)
+
+                if result is not None:
+                    if not hasattr(result, '__getitem__'):
+                        self.marshal.SetOutput(result, DA, 0, True)
+                    else:
+                        self.marshal.SetOutput(result[0], DA, 0, True)
+                        self.marshal.SetOutput(result[1], DA, 1, True)
+                        self.marshal.SetOutput(result[2], DA, 2, True)
+                        self.marshal.SetOutput(result[3], DA, 3, True)
+                        self.marshal.SetOutput(result[4], DA, 4, True)
+                        self.marshal.SetOutput(result[5], DA, 5, True)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAARkSURBVEhLpVZdTBxVFD5q1AYxttqgSNUHK00NxqptFSkzswO7M7MsUIhJ0ybWJkoaSYyP9sWsjS998cFgCtVq+wDM7JZdYGmxVIq0KQjMLruEtWpjhKQ0pFVL2dlfShjPvTNLYYCWxC/5Muece+d89+fcuQMmCpC5Qs1kvr16YgcrhXb+X/Kuq28y5aHtRnqAAPKQVHvrWHnVnzojBNMWpliHmmQENbVKW5oRgyvinHN8HvtPGekBepCHxdqbjZwz3M1XhAsIhdJL+QFw53wMLZtK3o++uL8wsHkCPthQ+fYvz2b7EPvDLeefzvpZslK4DgVmjPQA3cg6oWb6BCuqHiNk4lzmIwjMd0BH+gI+uyCQPmK2GIgs5IEvcdT0FsHYRypZQb1tuoaAWDvdxIrBNiOEULQz4Eueg/a7HMjJFzDRLvAnf8D4IHj1XNpH1vaBEiPvLwMjhGrvL6DE6kGO/URtK2StCZR4A7VbZ49hXze1l2BtAUHNCvRgIo7aVrQmnkfxYWqTWcqxamovwXoELmKindS2ouXOJkw8AEH9URxEP3jubDVbFrGOJdJw6lojta1QtE9w1K1wamIDyLNXcD8eM1sW8WCBUzMbcXQR8KW+AO/tp4wYJvSn6lBgApqTL+GzCPfiAm2z4MECBC2xzZiwGfyZAWhL9IIvfQV9BeR0IW1X4k4cRDu1LVifQBY+LQ/OZnaAN/4cnPy3yIwCeDQel6qP2qSMO+f34/7sJq5VgJRjPTnJqwpkQTa3M53BAiihvvdmLgpcxAPYB97EAB5GnJ32G4wtbHHsGRQNAbf7Yez6LVJy7L1+8r4Ccuwb6Jq7ikk6zQiK4IHr0d+CgJ5DfTl2GvruVle93m+jAnZ75IlSx1A3WxEpYoRhIuCjHa2QZwtx5JPQMPUMJgniAaswW5ZDjstwaYF3vXG5bHGJbFKUZ8XQEO/6/RoGv6dBKxTNhzS+Oa2x91AkRG0rlFgvjC+8LBQPC0v3AMqkSGFZ5R/TnBhaWRUe7TVMOAmBG8YyECiaCh4UWoqOv5/E5RsEXX+E55d/7CgYYeh4edVfGWw4wbI/Gx8zAjnWiSM7bHoGziTfxbgKbp3soQFl9h0s3V5i4h1Rs0IA19+LS4UMHuGcY6NCqVoNI+ltEJiLY5X04EzOo1CPQe0sdOk6xg6Yr+NAtE+R9PRby5QC7wIfESE2I47u4u3hjuID16KFn02fzmn85yD0p2xweY6FH1MC+OMu6F2w4TK9Sl8mkOPNyEPEXEMg2EZouhR2W4iRbGNfC2Xj7aJtrKGiZPTgvlf6t+sAD5ld7sGPZ8GToh++tQRwBpYbzQQpZ971q8RJ0S9tzjEFl7CLk8I+Voo0IT/fszdal3/0+vHsnlhvNAoy+qV38j0OFhTbB/LIxm8Vux/H50abMLKNEyIC5xytZ8XRrzgx4rHbgm28Q9292p1MgSX63Rp/FRaqhAlGVGdwlLdw1jfIHwS2TaOfIH2Mvwp16j8XgsLTXWysIwAAAABJRU5ErkJggg=="
+
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def __init__(self):
+                self.pln, self.ref_pln, self.tol = (None for _ in range(3))
+
+            def Branch_Route(self, Tree):
+                """分解Tree操作，树形以及多进程框架代码"""
+                Tree_list = [list(_) for _ in Tree.Branches]
+                Tree_Path = [list(_) for _ in Tree.Paths]
+                return Tree_list, Tree_Path
+
+            def split_tree(self, tree_data, tree_path):
+                """操作树单枝的代码"""
+                new_tree = ght.list_to_tree(tree_data, True, tree_path)  # 此处可替换复写的Tree_To_List（源码参照Vector组-点集根据与曲线距离分组）
+                result_data, result_path = self.Branch_Route(new_tree)
+                if list(chain(*result_data)):
+                    return result_data, result_path
+                else:
+                    return [[]], result_path
+
+            def format_tree(self, result_tree):
+                """匹配树路径的代码，利用空树创造与源树路径匹配的树形结构分支"""
+                stock_tree = gd[object]()
+                for sub_tree in result_tree:
+                    fruit, branch = sub_tree
+                    for index, item in enumerate(fruit):
+                        path = gk.Data.GH_Path(System.Array[int](branch[index]))
+                        if hasattr(item, '__iter__'):
+                            if item:
+                                for sub_index in range(len(item)):
+                                    stock_tree.Insert(item[sub_index], path, sub_index)
+                            else:
+                                stock_tree.AddRange(item, path)
+                        else:
+                            stock_tree.Insert(item, path, index)
+                return stock_tree
+
+            def parameter_judgment(self, tree_par_data):
+                # 获取输入端参数所有数据
+                geo_list, geo_path = self.Branch_Route(tree_par_data)
+                if geo_list:
+                    j_list = any(ghp.run(lambda x: len(list(filter(None, x))), geo_list))  # 去空操作, 判断是否为空
+                else:
+                    j_list = False
+                return j_list, geo_list, geo_path
+
+            def _trun_object(self, ref_obj):
+                """引用物体转换为GH内置物体"""
+                if 'ReferenceID' in dir(ref_obj):
+                    if ref_obj.IsReferencedGeometry:
+                        test_pt = ref_obj.Value
+                    else:
+                        test_pt = ref_obj.Value
+                else:
+                    test_pt = ref_obj
+                return test_pt
+
+            def xform_curve(self, cuvre_data):
+                res_curve = ghc.Orient(cuvre_data, self.pln, self.ref_pln)['geometry']
+                return res_curve
+
+            def positional_relationship(self, sub_data):
+                # 获取引用曲线
+                origin_a_curve, origin_b_curve = sub_data
+                temp_v, temp_c1, temp_c2, temp_c3, temp_c4, temp_e = ([] for _ in range(6))
+                # 转gh内置物体
+                a_curve = origin_a_curve
+                b_curve = map(self._trun_object, origin_b_curve)
+                # 获取转换过程
+                a_curve = self.xform_curve(a_curve)
+                b_curve = map(self.xform_curve, b_curve)
+                # 判断两个曲线间的关系
+                for index_curve, item_curve in enumerate(b_curve):
+                    if rg.Curve.PlanarCurveCollision(a_curve, item_curve, self.ref_pln, self.tol):
+                        temp_c2.append(origin_b_curve[index_curve])
+                        temp_v.append(1)
+                        temp_e.append('intersect')
+                    else:
+                        # 得到线的长度
+                        curve_len = int(item_curve.GetLength())
+                        # 根据长度取20个点
+                        for par in range(0, curve_len, curve_len // 20):
+                            # 判断是否在统一平面
+                            par_pt = item_curve.PointAt(par)
+                            if par_pt.Z > 0:
+                                temp_e.append("They're not on the same plane")
+                                temp_v.append(100)
+                                temp_c4.append(origin_b_curve[index_curve])
+                                break
+                            else:
+                                # 判断曲线中的点是否在封闭线内部
+                                if a_curve.Contains(par_pt, self.ref_pln, self.tol) == rg.PointContainment.Inside:
+                                    temp_c1.append(origin_b_curve[index_curve])
+                                    temp_v.append(0)
+                                    temp_e.append('in')
+                                    break
+                                else:
+                                    temp_c3.append(origin_b_curve[index_curve])
+                                    temp_v.append(2)
+                                    temp_e.append('out')
+                                    break
+                return temp_v, temp_c1, temp_c2, temp_c3, temp_c4, temp_e
+
+            def temp(self, tuple_data):
+                a_list, b_list, origin_path = tuple_data
+                a_list, b_list = filter(None, a_list), filter(None, b_list)
+                # 子数据匹配
+                if a_list and b_list:
+                    new_b_list = [b_list[:] for _ in range(len(a_list))]
+                    sub_zip_list = zip(a_list, new_b_list)
+                    v, c1, c2, c3, c4, e = zip(*map(self.positional_relationship, sub_zip_list))
+                else:
+                    v, c1, c2, c3, c4, e = ([[]] for _ in range(6))
+                ungroup_data = map(lambda x: self.split_tree(x, origin_path), [v, c1, c2, c3, c4, e])
+                Rhino.RhinoApp.Wait()
+                return ungroup_data
+
+            def RunScript(self, Curve_A, Curve_B, Plane):
+                try:
+                    sc.doc = Rhino.RhinoDoc.ActiveDoc
+                    Express, Value, Inside, Intersect, Outside, Non_Coplanar = (gd[object]() for _ in range(6))
+                    j_bool_f1 = self.parameter_judgment(self.Params.Input[0].VolatileData)[0]
+                    j_bool_f2, curve_trunk, curve_path = self.parameter_judgment(self.Params.Input[1].VolatileData)
+                    # 默认值参数
+                    self.pln = Plane
+                    self.ref_pln = rg.Plane.WorldXY
+                    self.tol = sc.doc.ModelAbsoluteTolerance
+                    # 默认值参数
+                    re_mes = Message.RE_MES([j_bool_f1, j_bool_f2], ['CA end', 'CB end'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                    else:
+                        a_trunk, a_path = self.Branch_Route(Curve_A)
+                        # 数据匹配
+                        a_len, b_len = len(a_trunk), len(curve_trunk)
+                        if a_len > b_len:
+                            new_a_trunk = a_trunk
+                            new_b_trunk = curve_trunk + [curve_trunk[-1]] * (a_len - b_len)
+                            new_path = a_path
+                        elif a_len < b_len:
+                            new_a_trunk = a_trunk + [a_trunk[-1]] * (b_len - a_len)
+                            new_b_trunk = curve_trunk
+                            new_path = curve_path
+                        else:
+                            new_a_trunk = a_trunk
+                            new_b_trunk = curve_trunk
+                            new_path = a_path
+                        # 打包多进程运行
+                        zip_list = zip(new_a_trunk, new_b_trunk, new_path)
+                        iter_ungroup_data = zip(*ghp.run(self.temp, zip_list))
+                        Value, Inside, Intersect, Outside, Non_Coplanar, Express = ghp.run(lambda single_tree: self.format_tree(single_tree), iter_ungroup_data)
+                    sc.doc.Views.Redraw()
+                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                    sc.doc = ghdoc
+                    return Express, Value, Inside, Intersect, Outside, Non_Coplanar
+                finally:
+                    self.Message = 'Curve position relation'
+
+
+        # Curve Divide
+        class Equipartition_Curve_2(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP_均分曲线", "RPP_Equipartition_Curve", """Curve Divide""", "Scavenger", "B-Curve")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("e925f200-887f-43ed-a802-767a7f1677a0")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.quarternary
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Curve()
+                self.SetUpParam(p, "Curves", "C", "曲线")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Number()
+                self.SetUpParam(p, "Espacement", "E", "点的间距")
+                p.SetPersistentData(gk.Types.GH_Number(300))
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Number()
+                self.SetUpParam(p, "Espacement_Endpoint", "EP", "距离边缘点的距离")
+                p.SetPersistentData(gk.Types.GH_Number(300))
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Point()
+                self.SetUpParam(p, "Point", "P", "均分点")
+                self.Params.Output.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Number()
+                self.SetUpParam(p, "Parameter", "t", "点在曲线上的参数")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                p1 = self.marshal.GetInput(DA, 1)
+                p2 = self.marshal.GetInput(DA, 2)
+                result = self.RunScript(p0, p1, p2)
+
+                if result is not None:
+                    if not hasattr(result, '__getitem__'):
+                        self.marshal.SetOutput(result, DA, 0, True)
+                    else:
+                        self.marshal.SetOutput(result[0], DA, 0, True)
+                        self.marshal.SetOutput(result[1], DA, 1, True)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAPqSURBVEhL3ZVdbBRVFMfXSKK8GCB+QnkwFGxpt4V2u98zd+7szJ27M7Nf/ZilSESNxiYmKgaixgQfGoNSoy8+8KAxRh9MjUaiRo1ibSxYdlu2+8HStA2wTfkoVkAE/Iocz2wnRqOkIPrCL5nknv/9z567e8656/onWOp0M42NywIrrnSk/4aw3LfW523ZK7G3IdpxDiLmOEjRsTeIDnc6lismzPZx2Sx/7IQul8CyXtnMn29t2wDuZqtPMqY2Ez7yHu84DZT3z/l87rhjXRCBfZNWE0fxcPmL84I6eLdsHjobMScvUn02WBUdJH3KaPMmvmvzdQHVy0878mWh+ufbePspkI3ylJ8N1LrCRmGppOdLaqICmEh0fH9hxYramrDy6aBhXQBJL+wW2ODfaqPELywPBrvfDwkdIGnDXwfUvbdXN0QtE+cdp0BQhnqqwmUAgBukaK5PS50AapR/ldRdOwThQVFkh6jIR3fKxsTPsv4l1NcHX0X7ovm3EL9/32IxmnU74YKILEcj5sT+UCgNvuADwDvOAEvO4M+Xz0jGtObYrp3bbnGtWu95vJ3GDltiNH/FB/yD5wZgkagX6wnPd0p8bDs1Jl8LCY986PFqn5Bo7nVqzmyNxOcUWf7iDueVhRG08l3UnNoYDqf6vYH7vlUT06C1nwQ1cQRkcxI83p4fG90qdloBlPgR3DsBavIkiPIrsx5P4weitqc9bFSWOh83DyEDNxMt+xB20h7ZOAh65w/gDW6DhsbwfuzjHSRaSFIt10DM8Vv9nZcW2w9j08sIG6nD4saoefR5r39LpnmdDrz9GNai+AvR8++QaNHkfOImF2XDzQxbFBP8ZG/g6Sy96+onl6Qu1ch66X6c/M9wpvCgZ4Dw7GFXV1f/jdQ40EwSuSWO95qx7zCql7aIPLvTkf5nBJZZKccmVIFnmcBzLBLZzAXlJU3g5WpM+RAjJMUF9V2Mi/jYviKj6lYmqC//ScuhbxP6djFqVliYH1hbTYBf5SPDOg/2lGqpCvj9FILiszhE5zCeAxbPQFurG0T1LdS+R+04FvQ4BIMmBIQnUDuL2ixoyUnweQMQkl4AM/2bXYNj1QRUy9+jxMYtITqatotc18A3rPdtx/W4RfWcJWpfWatXt3b7hDdRO4jxCOoFq75e3bSupWej7RPRR/URq66OdHt8L6aV5Iwl6VlfNcH1Cw7hEomPPoW93SvyUq8oPdbrDz+M60KvrZHo2DOMlZY59qsnhEMYwaFR8VpQEzPgD9wLLZ4UKHiF2FeFEpsE+5/Qsf87gsrQchIr1dJkZVVT05NrmpoeXWOvbY3w4RrHdt3icv0OJT+5reclx+0AAAAASUVORK5CYII="
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def __init__(self):
+                self.Espacement, self.Endpoint = (None for _ in range(2))
+
+            def Branch_Route(self, Tree):
+                """分解Tree操作，树形以及多进程框架代码"""
+                Tree_list = [list(_) for _ in Tree.Branches]
+                Tree_Path = [list(_) for _ in Tree.Paths]
+                return Tree_list, Tree_Path
+
+            def split_tree(self, tree_data, tree_path):
+                """操作树单枝的代码"""
+                new_tree = ght.list_to_tree(tree_data, True, tree_path)  # 此处可替换复写的Tree_To_List（源码参照Vector组-点集根据与曲线距离分组）
+                result_data, result_path = self.Branch_Route(new_tree)
+                if list(chain(*result_data)):
+                    return result_data, result_path
+                else:
+                    return [[]], result_path
+
+            def format_tree(self, result_tree):
+                """匹配树路径的代码，利用空树创造与源树路径匹配的树形结构分支"""
+                stock_tree = gd[object]()
+                for sub_tree in result_tree:
+                    fruit, branch = sub_tree
+                    for index, item in enumerate(fruit):
+                        path = gk.Data.GH_Path(System.Array[int](branch[index]))
+                        if hasattr(item, '__iter__'):
+                            if item:
+                                for sub_index in range(len(item)):
+                                    stock_tree.Insert(item[sub_index], path, sub_index)
+                            else:
+                                stock_tree.AddRange(item, path)
+                        else:
+                            stock_tree.Insert(item, path, index)
+                return stock_tree
+
+            def Get_Curve_Length(self, Curve):
+                """获取线的长度"""
+                Length_List = []
+                for _ in Curve:
+                    if _ is not None:
+                        Length_List.append(round(_.GetLength(), 4))
+                    else:
+                        Length_List.append(None)
+                return Length_List
+
+            def trim_curve(self, curve, curve_length):
+                if curve.IsClosed:  # 判断线是否闭合
+                    return curve  # 闭合线暂不采取操作
+                else:
+                    curve_length = math.fabs(curve_length)
+                    r = curve.Trim(rg.CurveEnd.Start, curve_length)  # 切割线
+                    #            result = r.Trim(rg.CurveEnd.End, curve_length-0.001)
+                    return r
+
+            def Get_Curve_Middle(self, Curve, Curve_Length):
+                """求线的中心点"""
+                Mid_length = Curve_Length / 2  # 将线的长度除2
+                t = Curve.DivideByLength(Mid_length, False)[0]  # 得到线中心的t值(False是不包括首尾点)
+                center_Point = Curve.PointAt(t)  # 根据t值求中心点
+
+                return center_Point
+
+            def Espace_Judge(self, tuple):
+                """线的间距判断"""
+                Curve, Length, origin_path = tuple
+                Points = []
+                if len(Curve) == 0:
+                    ungroup_data = map(lambda x: self.split_tree(x, origin_path), [[], []])  # 返回空树
+                else:
+                    for Lindex in range(len(Length)):
+                        if (Length[Lindex] - (self.Endpoint * 2)) > 0:  # 判断线是否有点
+                            temp_n = (Length[Lindex] - (self.Endpoint * 2)) / self.Espacement  # 创建一个中间变量
+                            temp_d = -((temp_n - math.floor(temp_n)) * self.Espacement / 2) - self.Endpoint
+                            if Length[Lindex] <= -(temp_d * 2):
+                                mid_pt = self.Get_Curve_Middle(Curve[Lindex], Length[Lindex])
+                                t = [Curve[Lindex].ClosestPoint(mid_pt)[1]]
+                            else:
+                                curve = self.trim_curve(Curve[Lindex], temp_d)
+                                t = curve.DivideByLength(self.Espacement, True)
+                            Points = map(lambda x: Curve[Lindex].PointAt(x), t)
+                            ungroup_data = map(lambda x: self.split_tree(x, origin_path), [Points, t])
+                        else:  # 没点的线
+                            ungroup_data = map(lambda x: self.split_tree(x, origin_path), [[], []])  # 返回空树
+                Rhino.RhinoApp.Wait()
+                return ungroup_data
+
+            def RunScript(self, Curves, Espacement, Espacement_Endpoint):
+                try:
+                    sc.doc = Rhino.RhinoDoc.ActiveDoc
+                    Res_Point, Parameter = gd[object](), gd[object]()
+                    '--------------------'
+                    # 设置两个端口的默认值
+                    self.Espacement = Espacement if Espacement else 300
+                    self.Endpoint = Espacement_Endpoint if Espacement_Endpoint else 300
+                    '--------------------'
+
+                    re_mes = Message.RE_MES([Curves], ['Curves end'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                    else:
+                        tunk, tunk_Path = self.Branch_Route(Curves)
+                        GH_Curve = map(lambda x: filter(None, x), tunk)  # 去除None值
+                        Curve_Length = map(self.Get_Curve_Length, GH_Curve)
+                        zip_list = zip(GH_Curve, Curve_Length, tunk_Path)
+                        iter_ungroup_data = zip(*map(self.Espace_Judge, zip_list))
+                        Res_Point, Parameter = ghp.run(lambda single_tree: self.format_tree(single_tree), iter_ungroup_data)
+
+                    sc.doc.Views.Redraw()
+                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                    sc.doc = ghdoc
+
+                    return Res_Point, Parameter
+                finally:
+                    self.Message = 'Curve Divide'
+
+
+        class OffsetBySurface(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP_OffsetBySurface", "W55", """The Curve is offset by the surface""", "Scavenger", "B-Curve")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("f48f06e7-1c78-4867-9da9-9e934c00ce2c")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.secondary
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Curve()
+                self.SetUpParam(p, "Curve", "C", "Curve to be offset")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Number()
+                self.SetUpParam(p, "Distance", "D", "Offset distance")
+                p.SetPersistentData(gk.Types.GH_Number(10))
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Surface()
+                self.SetUpParam(p, "Surface", "S", "Offset surface")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Res_Curve", "R", "The result after offset")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                p1 = self.marshal.GetInput(DA, 1)
+                p2 = self.marshal.GetInput(DA, 2)
+                if isinstance(p2, Rhino.Geometry.Brep) and p2.Faces.Count == 1: p2 = p2.Faces[0].DuplicateSurface()
+                result = self.RunScript(p0, p1, p2)
+
+                if result is not None:
+                    self.marshal.SetOutput(result, DA, 0, True)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAARDSURBVEhLrZULTFtVGMevryyZ0UzjnBrkWRlQKOUxUCncdgx6C2UPEJaJE5sFppARhxinM5LFYbZpdJmPsIEjPra4mjkTI05UKq/20t6OPijQ1gmMwRiPSi2sW4f9PPf2MEAq4OOXnOR89zvf/zv3O9+5l/BHGsVsk2Tpg7C5JPcGnL9/fVzjI9hcGShBL0kx+dj0y0O8hrU8gfbgphzLFVFm52CooP1B7FoektJ3pFH6HGwu4vF0plAsMw2996ETBgZvgvKcGyLi6VaCUN6BlyyEomyr5PKh1XI5szoBDZSAEcv029k5+4z1EQTcxq6NTdYeS5JY4fyPLpjP4aNOiErU1HKC8yG3dK4hKR0tlhntqCw2dqASudGzYTTQXGeXZHXZxJTuRLhQfeLg2w4o3tML6o5JLD3H1h0DEMpvfhFLY6rg9vRsUygpN0WQmYxvSPUmsYwpm7Uzcgwh4cLW+r37riIZL1S8aoPGpgmfKsJscUHJnm4o3WuHp3baIZjfJMXq/iGlOhrtPAubRHBkS3LBs9aZSecfnOCRo/1Q+ZoN2ulJqNxvA2rbBaitv8z5eqwz8OQm428BYSoeDl8MKWW0pIzZik0iKkFtbmh0cwIsY+MeKKvohcJdXfDB8Usw4fBgj4/GphuwgWQs6wSGu7HEQlCCC2KZNo+dJ5MaRbyoF46f9O1wpRw4NA3CJzpQZ/khTcq0pWXqJATx9T0Zm42jdZ+MQkl5Nw5dGkvPdXjljRFIzzb0pEr1B7DkQjZu1KwjSdWdMckd359Ssu3ohc0FBtB3/u5T+QtW+zR89sUwlFYMQUqGcTwkii4jCOYuLOcfnkBdv6tsGLwIVuSb78YgXa6H08or0NTsgDNnR6Cq+iIU7bZA/k6jdwNphXiRXhWbrAnGEv4JCjq3JjpJd1bxwmXUej0oAbdJjp9bHVD+ci+6B91cF31UOwgGk9NbVT0GiamMkiDy/d/kWR5dr84RpjD2mpNOmJ6egacVZhi5egPLL4Z9uzNfTUFkguYnFM7d9EWIsk33SbLMuYmp+m+fKf4FNFr3rbIUlXT5vbGzdJquobLohh4OVz2A5RYjouioJLEB6j6d6/NZDr/bD9VH+rA1B5ueTby9qA9CBG1cOy9JRFxrrqJ0AFxTWAHTP+DmDlbV4uAul9HsgvdrLsFzu7tAkm1Hu6cbscTyBPKbXy97aRg8nhnf9wDDdkxeoZEbO9CZvHnoV9RRE5CV13WTH6eJxOErIyS67dRb74yxZ7AgCVsSB/4csOdTuX8UwqJbKnDYyuHxGlZFJtDa0186bx30fDweL+yrGofHYtvqcMg/hxejCogXMSPt9DSW9XGxzwPF5cPAE7TX4KX/nkB+U4ok2zjTN3AdXC4v1H8+BegXORkarX4eL/nvRMW1KwqKBiG3sPtauFD3cWDMD6HY9f8Rk0RvWRum/vsfx7IQxJ//TJMpdPgJpgAAAABJRU5ErkJggg=="
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def __init__(self):
+                self.j_bool_f1 = False
+                self.j_bool_f2 = False
+
+            def Branch_Route(self, Tree):
+                """分解Tree操作，树形以及多进程框架代码"""
+                Tree_list = [list(_) for _ in Tree.Branches]
+                Tree_Path = [list(_) for _ in Tree.Paths]
+                return Tree_list, Tree_Path
+
+            def split_tree(self, tree_data, tree_path):
+                """操作树单枝的代码"""
+                new_tree = ght.list_to_tree(tree_data, True, tree_path)  # 此处可替换复写的Tree_To_List（源码参照Vector组-点集根据与曲线距离分组）
+                result_data, result_path = self.Branch_Route(new_tree)
+                if list(chain(*result_data)):
+                    return result_data, result_path
+                else:
+                    return [[]], result_path
+
+            def format_tree(self, result_tree):
+                """匹配树路径的代码，利用空树创造与源树路径匹配的树形结构分支"""
+                stock_tree = gd[object]()
+                for sub_tree in result_tree:
+                    fruit, branch = sub_tree
+                    for index, item in enumerate(fruit):
+                        path = gk.Data.GH_Path(System.Array[int](branch[index]))
+                        if hasattr(item, '__iter__'):
+                            if item:
+                                for sub_index in range(len(item)):
+                                    stock_tree.Insert(item[sub_index], path, sub_index)
+                            else:
+                                stock_tree.AddRange(item, path)
+                        else:
+                            stock_tree.Insert(item, path, index)
+                return stock_tree
+
+            def parameter_judgment(self, tree_par_data):
+                # 获取输入端参数所有数据
+                geo_list, geo_path = self.Branch_Route(tree_par_data)
+                if geo_list:
+                    j_list = any(ghp.run(lambda x: len(list(filter(None, x))), geo_list))  # 去空操作, 判断是否为空
+                else:
+                    j_list = False
+                return j_list, geo_list, geo_path
+
+            def RunScript(self, Curve, Distance, Surface):
+                try:
+                    sc.doc = Rhino.RhinoDoc.ActiveDoc
+                    Res_Curve = gd[object]()
+                    # 组件只运行一次提取输入端方法
+                    if self.RunCount == 1:
+                        self.j_bool_f1 = self.parameter_judgment(self.Params.Input[0].VolatileData)[0]
+                        self.j_bool_f2 = self.parameter_judgment(self.Params.Input[2].VolatileData)[0]
+                    else:
+                        pass
+                    # 偏移的精准度
+                    tol = sc.doc.ModelAbsoluteTolerance
+                    re_mes = Message.RE_MES([self.j_bool_f1, self.j_bool_f2], ['C end', 'S end'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                    else:
+                        # 判空
+                        if Curve and Surface:
+                            # 偏移主方法
+                            temp_curve = Curve.OffsetOnSurface(Surface, Distance, tol)
+                            if temp_curve:
+                                Res_Curve = temp_curve
+                            else:
+                                Res_Curve = [Curve]
+                        else:
+                            Res_Curve = [None]
+                    sc.doc.Views.Redraw()
+                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                    sc.doc = ghdoc
+                    return Res_Curve
+                finally:
+                    self.Message = 'Curve offset By Surface'
+
+
+        # 将线段集合围合部分生成闭合曲线
+        class MeshLines(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP_MeshLines", "RPP_MeshLines", """将线段集合围合部分生成闭合曲线""", "Scavenger", "B-Curve")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("9972dae6-659c-4bbb-a138-c8e6400a5375")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.quarternary
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Curve()
+                p.DataMapping = gk.GH_DataMapping.Flatten
+                self.SetUpParam(p, "Lines", "L", "线段集合，默认拍平")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Integer()
+                self.SetUpParam(p, "Max", "M", "围合部分最大边数")
+                p.SetPersistentData(gk.Types.GH_Integer(3))
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Curve()
+                self.SetUpParam(p, "Res_Curve", "C", "生成围合部分的曲线")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                p1 = self.marshal.GetInput(DA, 1)
+                result = self.RunScript(p0, p1)
+
+                if result is not None:
+                    self.marshal.SetOutput(result, DA, 0, True)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAASDSURBVEhLnZQLUJRVFMcXvmUXRN47I4OQOk5NM2YSBGalmWYDueKEjizrg0DK5GXaSNhUoERINcLwEHeIQClCVEhwyEcSomBMJINoRKiIgMhrP2B3eazgv+/c3YJ1khjOzH/m7P3uOb9zzz17RU8ye5lM7ujkzDs4OGAqOcqcedprDJu+OTrN4ZNV53C9eQTV9UM496sWJ8s1yD0zgNTjPBJy+hCd1g15yCkGMYZN36i6kkoNlvhmwO05BTzlh7H+o068vc8g8v323seanc3sJMaw6RsFqYr78dRiBdwW+WOBuxIBcV0IPNDNRP6mz7rgG9E0c8D+b9V4yf8IFnoosVyhQlBSL4K/6mMif2tiD9ZG3Zw5IPxQL7Yk9LCEoclq7EjlsTPdIPJpbV3U9f8BcF5yc85buCR3YdOErKzmmfz+Rx9kDzLtyhpEeGa/ALiG+ZaWWCwSmcjTQsR7cCK5yIzz4pMzK3Hr3ijq/hzGpWtDKLuqw4kKLY5d0EJVpkVKiRZJxTrEHtchJt+g6Dwt9uRosC6ihp1g9E4BhmrjMHBWgd6jS3AmyAKeYpFaOII7Lv+uw4rQu3gzso1NBl0e9ZdaQFVSIkr66YlhxBWNMJFPa/KwKgboz7eFOnc2elXW6E6zwu1PJOwkDFB6aRAr32uFz652Nn40IXSJ1GdqBVVLCeNLRnHwp4dM5NOa77sVDDBQ6AT+mA36sgRAuhX+ipFOAPJK+/G6EUAzTmO4Ob4Dythb2BzXhG0HGhH8+U1sT2hA6Bf1CIqrxaa91fALq8AyvxTMd3XSa36cBz5PAHxjjZ6MWfjjw0knSP2+zwSwYV8rViqzH7nOddFTdVNpgZtMf/rgwkeaIhcTQEPkJEBsZrdJi3zCb2Cui4u+vDAWY90VGOsswVhHHsbb0jHemoDx29EYa9wBfV0ARqpWQVf2NAYK7ExaVPf+JEBEYqfJJa8KqWXV6VsKoDlpB12JA4bPOmLkZyeMlsuYyKc1+kZ7Hr/k34ItJgCB0W14Nfgu3gi7h7V7OrBcWc0AI42ZQmW20BTZs0RDZY4sKYl8llz4RntYe7KF9mTOQleKJa4qJwFWh7bg5W0t/97DUn/DZAzVJaD/OxsDRKhSW2wP7WmjBJ/W6BvtUedMVP/gkCWubBQbAGbmXrzrC0fx7OpfsGjNRTzvcwHuvucZQHtlNwuk6qgFlGyw0A7qPFt0ZdmgI202WpKs0RwnTE20JeojpajdLmHV57/G0R9NeCGEp8LsP54KAgyeD2JV0dGpv3SJVNV0RMnZU/EkIwB/6i12ZOorAwkTwv/wDDQXt2C4IQ0Pu2pARnuNYdM3CurN9Wb9pEsjEI0fzbgqWArlMg5H3pGgIUoyc8CD1AW4nyhB55dSdH4tZTBS4FIO/h4cAr05XN4gnjmgLd4G7fst0B5vgY4ECYORDivEULxojowAMUpfMZ8ZYI7Mni/cKkHrxxzuxIjRtFuMG2Ec6kI41Cg5VG3kULneHOkrpHAW9hrDpm8ymb2cAqm6qUR7aK8x7DETif4GWQPKTm78ggMAAAAASUVORK5CYII="
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def __init__(self):
+                pass
+
+            def Branch_Route(self, Tree):
+                """分解Tree操作，树形以及多进程框架代码"""
+                Tree_list = [list(_) for _ in Tree.Branches]
+                Tree_Path = [list(_) for _ in Tree.Paths]
+                return Tree_list, Tree_Path
+
+            def split_tree(self, tree_data, tree_path):
+                """操作树单枝的代码"""
+                new_tree = ght.list_to_tree(tree_data, True, tree_path)  # 此处可替换复写的Tree_To_List（源码参照Vector组-点集根据与曲线距离分组）
+                result_data, result_path = self.Branch_Route(new_tree)
+                if list(chain(*result_data)):
+                    return result_data, result_path
+                else:
+                    return [[]], result_path
+
+            def format_tree(self, result_tree):
+                """匹配树路径的代码，利用空树创造与源树路径匹配的树形结构分支"""
+                stock_tree = gd[object]()
+                for sub_tree in result_tree:
+                    fruit, branch = sub_tree
+                    for index, item in enumerate(fruit):
+                        path = gk.Data.GH_Path(System.Array[int](branch[index]))
+                        if hasattr(item, '__iter__'):
+                            if item:
+                                for sub_index in range(len(item)):
+                                    stock_tree.Insert(item[sub_index], path, sub_index)
+                            else:
+                                stock_tree.AddRange(item, path)
+                        else:
+                            stock_tree.Insert(item, path, index)
+                return stock_tree
+
+            def parameter_judgment(self, tree_par_data):
+                # 获取输入端参数所有数据
+                geo_list, geo_path = self.Branch_Route(tree_par_data)
+                if geo_list:
+                    j_list = any(ghp.run(lambda x: len(list(x)), geo_list))  # 去空操作, 判断是否为空
+                else:
+                    j_list = False
+                return j_list, geo_list, geo_path
+
+            def _get_mesh_pt(self, single_mash_face):
+                # 判断各个Mash面为三角形还是四边形
+                corner_str = ['A', 'B', 'C', 'D']
+                # 循环获取角点的下标
+                corner_index = []
+                for _ in corner_str:
+                    corner_index.append(eval("single_mash_face.{}".format(_)))
+                return corner_index
+
+            def outline_box(self, ptf_list):
+                # 3f点转变为3d点
+                pt_list = map(lambda x: rg.Point3d(x.X, x.Y, x.Z), ptf_list)
+                # 转变为曲面
+                nurbs = rg.NurbsSurface.CreateFromCorners(pt_list[0], pt_list[1], pt_list[2], pt_list[3])
+                # 转为曲折线
+                temp_curve = rg.Curve.JoinCurves(nurbs.ToBrep().Edges)
+                if temp_curve:
+                    ply_line = temp_curve[0]
+                    ply_line.MakeClosed(sc.doc.ModelAbsoluteTolerance)
+                else:
+                    ply_line = None
+                return ply_line
+
+            def RunScript(self, Lines, Max):
+                try:
+                    sc.doc = Rhino.RhinoDoc.ActiveDoc
+                    Res_Curve = gd[object]()
+                    # -------------默认值-------------
+                    Max = Max
+                    # -------------默认值-------------
+                    # 判空
+                    if self.RunCount == 1:
+                        self.j_bool_f1 = self.parameter_judgment(self.Params.Input[0].VolatileData)[0]
+                    re_mes = Message.RE_MES([self.j_bool_f1], ['L end'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                    else:
+                        # 将曲线成数组
+                        Lines = filter(None, Lines)
+                        if Lines:
+                            # 确定线集合组合后是否都是闭合
+                            curves = rg.Curve.JoinCurves(Lines, sc.doc.ModelAbsoluteTolerance)
+                            isva = all([_.IsValid for _ in curves])
+                            isclose = all([_.IsClosed for _ in curves])
+                            if not (isva and isclose):
+                                curve_arry = Array[rg.Curve](Lines)
+                                # 生成新网格
+                                mesh = rg.Mesh.CreateFromLines(curve_arry, Max, sc.doc.ModelAbsoluteTolerance)
+                                if mesh:
+                                    # 获取Mesh的所有面和顶点
+                                    mesh_faces = [_ for _ in mesh.Faces]
+                                    mesh_pt = [_ for _ in mesh.Vertices]
+                                    # 判断各个Mesh面是生成三角形还是四边形
+                                    pt_indexes_list = ghp.run(self._get_mesh_pt, mesh_faces)
+                                    # 获取个体面的四点或三点
+                                    res_pt = []
+                                    for pt_indexes in pt_indexes_list:
+                                        sub_pt = [mesh_pt[_] for _ in pt_indexes]
+                                        res_pt.append(sub_pt)
+                                    # 得到闭合曲线
+                                    close_curve = ghp.run(self.outline_box, res_pt)
+                                    Res_Curve = close_curve
+                                else:
+                                    Message.message2(self, '生成失败，请调整Max输入端')
+                            else:
+                                Res_Curve = curves
+                        else:
+                            Res_Curve = [None]
+                    sc.doc.Views.Redraw()
+                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                    sc.doc = ghdoc
+                    return Res_Curve
+                finally:
+                    self.Message = '生成闭合曲线'
 
     else:
         pass
