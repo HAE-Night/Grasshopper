@@ -1230,8 +1230,9 @@ try:
                         HC_Curve = [HC for HC in HoleCir.Edges]
                         Surface_Hold = HoleCir.Faces[0].CreateExtrusion(rg.Line(C_Plane.Origin, Cri_Vec).ToNurbsCurve(), False)
                         HoleCirBrep = Surface_Hold.CapPlanarHoles(0.02)
-                        if HoleCirBrep.SolidOrientation == rg.BrepSolidOrientation.Inward:
-                            HoleCirBrep.Flip()
+                        if HoleCirBrep:
+                            if HoleCirBrep.SolidOrientation == rg.BrepSolidOrientation.Inward:
+                                HoleCirBrep.Flip()
                         else:
                             Message.message1(self, "failed to create oblong hole")
                             HoleCirBrep = None
