@@ -1,0 +1,120 @@
+* {
+    margin: 0;
+    padding: 0;
+    }
+    table {
+        border-spacing: 0;
+        border: 1px dashed #ccc;
+        width: 600px;
+        border-left: 0;
+        border-right: 0;
+        text-align: center;
+        /* 让表格居中 */
+        margin: 0 auto;
+    }
+    td {
+        border-spacing: 0;
+        border: 1px dashed #ccc;
+        border-top: 0;
+        border-left: 0;
+        border-right: 0;
+        width: 100px;
+        height: 100px;
+    }
+    th {
+        border-spacing: 0;
+        border: 1px dashed #ccc;
+        border-left: 0;
+        border-right: 0;
+    }
+
+    ul {
+     display: flex;
+     justify-content: center;
+    }
+
+    li {
+    display: flex;
+     float: left;
+     list-style: none;
+     justify-content: center;
+   }
+
+   .input {
+    height: 15px;
+    width: 35px;
+    text-align: center;
+    background-color: whitesmoke;
+    border: 1px solid darkred;
+    padding: 0;
+    margin: 0;
+    line-height: 15px;
+   }
+
+   .add {
+    height: 17px;
+    width: 10px;
+    text-align: center;
+    background-color: darkred;
+    text-align: center;
+    color: white;
+    line-height: 15px;
+    padding: 0;
+    margin: 0;
+    border:1px solid darkred;
+   }
+
+   .reduce {
+    height: 17px;
+    width: 10px;
+    text-align: center;
+    background-color: darkred;
+    text-align: center;
+    color: white;
+    line-height: 15px;
+    padding: 0;
+    margin: 0;
+    border:1px solid darkred;
+   }
+
+   .foot {
+    border: 1px solid #ccc;
+    border-top: 0;
+    width: 600px;
+    height:50px;
+    margin: 0 auto;
+   }
+
+   .jiesuan {
+    height:50px;
+    background-color: darkred;
+    width: 70px;
+    color:white;
+    border: 0;
+    font-size: 15px;
+   }
+
+   .bottom {
+    font-size: 15px;
+    float:right;
+   }
+
+   .jiesuan:hover {
+    background-color: plum
+   }
+
+   #totalNum {
+    color: darkred;
+   }
+
+   #total_price {
+    color: darkred;
+   }
+
+   .item:hover {
+    background-color: whitesmoke;
+   }
+
+   .item {
+    height: 100px;
+   }

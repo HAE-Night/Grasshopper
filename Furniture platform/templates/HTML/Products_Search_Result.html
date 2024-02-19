@@ -1,0 +1,249 @@
+{% extends "HTML/Base/base.html" %}
+{% load static %}
+<!-- Page title  -->
+{% block title %}Products{% endblock title %}
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}
+<!-- Datatables -->
+<link href="{% static 'vendor/datatables/dataTables.bootstrap4.min.css ' %}" rel="stylesheet">
+<link href="{% static 'css/pagination_buttons.css ' %}" rel="stylesheet">
+{% endblock stylesheets %}
+
+<!-- Page Heading -->
+{% block heading %}Search{% endblock heading %}
+
+<!-- Page content  -->
+{% block content %}
+<div class="col-md-12" style="font-size: 60px">Result: {{ field_name }}: {{ keyword }}</div>
+<div class="col-md-12">
+    {% if Photo_Path %}
+    <img alt="Product photo" class="img-fluid" style="max-width: 100%; height: auto;" src={% static Photo_Path %}>
+    {% endif %}
+</div>
+<div id="dg" style="z-index: 9999; position: fixed ! important; right: 0px; bottom: 150px;">
+    <a href="{% url 'Products:Shopper_cart' %}" class="btn btn-danger font-weight-bold">Shopping Trolley</a>
+</div>
+<!--Create new product-->
+<div class="row ml-0 mb-3">
+    <div class="col-md-12 d-flex">
+        <a href="{% url 'Products:Products_list' %}">
+            <button type="button" class="btn btn-success font-weight-bold">
+                Home
+            </button>
+        </a>
+
+        <a href="{% url 'Products:search' %}" class="ml-auto">
+            <button type="button" class="btn btn-danger font-weight-bold">
+                Search
+            </button>
+        </a>
+    </div>
+</div>
+
+
+<!-- DataTable -->
+<div class="card shadow mb-12">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">Products</h6>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover" id="dataTable" width="100%" cellspacing="0">
+                <thead>
+                <tr>
+                    <th class="text-center" style="width:5%">ID</th>
+                    <th class="text-center" style="width:15%">ITEM</th>
+                    <th class="text-center" style="width:15%">CATEGORY</th>
+                    <th class="text-center" style="width:15%">ROOM_AREA</th>
+                    <th class="text-center" style="width:20%">ITEM PHOTO</th>
+                    <th class="text-center" style="width:40%">DESCRIPTION</th>
+                    <th class="text-center" style="width:40%">SIZE_DIMENSION</th>
+                    <th class="text-center" style="width:5%">LENGTH</th>
+                    <th class="text-center" style="width:5%">WIDTH</th>
+                    <th class="text-center" style="width:5%">HEIGHT</th>
+                    <th class="text-center" style="width:5%">QTY</th>
+                    <th class="text-center" style="width:5%">UNIT</th>
+                    <th class="text-center" style="width:10%">UNIT_PRICE_AED</th>
+                    <th class="text-center" style="width:5%">INQUIRY_CODE</th>
+                    <th class="text-center" style="width:10%">Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for Product in Products_obj_list %}
+                <td class="text-center">{{ forloop.counter }}</td>
+                <td class="text-center">{{ Product.ITEM }}</td>
+                <td class="text-center">{{ Product.CATEGORY }}</td>
+                <td class="text-center">{{ Product.ROOM_AREA }}</td>
+                <td class="text-center"><img style="width: 100px; height: 100px;" src={% static Product.ITEM_PHOTO %}>
+                </td>
+
+                <td class="text-center">{{ Product.DESCRIPTION }}</td>
+                <td class="text-center" style="width:40%">{{ Product.SIZE_DIMENSION }}</td>
+                <td class="text-center">{{ Product.LENGTH_MM }}</td>
+                <td class="text-center">{{ Product.WIDTH_MM }}</td>
+                <td class="text-center">{{ Product.HEIGHT_MM }}</td>
+                <td class="text-center">{{ Product.QTY }}</td>
+                <td class="text-center">{{ Product.UNIT }}</td>
+                <td class="text-center">{{ Product.UNIT_PRICE_AED|floatformat:2 }}</td>
+                {# 取出来的价格保留2位小数 #}
+                <td class="text-center">{{ Product.INQUIRY_CODE }}</td>
+                <td class="text-center">
+                    <!--Update-->
+                    <a href="{% url 'Products:Products_update' Product.ID %}" class="text-decoration-none">
+                        <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="tooltip"
+                                title="Update product">
+                            <i class="fas fa-pen"></i>
+                        </button>
+                    </a>
+
+                    <a class="text-decoration-none">
+                        <button rel="add_cart" type="button" class="btn btn-success btn-sm" data-toggle="modal"
+                                data-id="{{ Product.ID }}" data-item="{{ Product.ITEM }}">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </a>
+                    <!--Delete modal-->
+                    <!-- Button trigger modal -->
+                    <a class="text-decoration-none">
+                        <button rel="delete" type="button" class="btn btn-danger btn-sm" data-toggle="modal"
+                                data-target="#exampleModal" data-id="{{ Product.ID }}" data-item="{{ Product.ITEM }}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </a>
+
+                    <!-- Modal -->
+                    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel"
+                         aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="exampleModalLabel">Delete product</h5>
+                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                                <div id="updateThisText" class="modal-body">
+
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                                    <a href="#" class="text-decoration-none">
+                                        <a id="updateThisURL"
+                                           href="{% url 'Products:Products_delete' Product.ID %}"
+                                           class="text-decoration-none">
+                                            <button type="button" class="btn btn-danger">Delete</button>
+                                        </a></a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+<!-- Datatables -->
+<script src="{% static 'vendor/datatables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'vendor/datatables/dataTables.bootstrap4.min.js' %}"></script>
+<!--Datatable buttons-->
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jszip/2.5.0/jszip.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.36/pdfmake.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.36/vfs_fonts.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/1.13.1/js/jquery.dataTables.min.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/buttons/2.3.3/js/dataTables.buttons.min.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/buttons/2.3.3/js/buttons.colVis.min.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/buttons/2.3.3/js/buttons.html5.min.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/buttons/2.3.3/js/buttons.print.min.js"></script>
+<!--Moment JS-->
+<script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+
+
+<!--Datatables-->
+<script>
+    // Call the dataTables jQuery plugin
+    $(document).ready(function () {
+        var tblProducts = $('#dataTable').DataTable({
+            searching: true,
+            columnDefs: [
+                {
+                    targets: [0],
+                    visible: true,
+                    searchable: true,
+                },
+                {
+                    targets: [-1], // column index (start from 0)
+                    orderable: false, // set orderable false for the last column
+                }
+            ],
+        });
+    });
+
+    $('#dataTable tbody')
+        // Event when whe try to delete a product
+        // We update the text, and href of the modal delete button
+        .on('click', 'button[rel="delete"]', function () {
+            var productId = $(this).data('id');
+            var productName = $(this).data('item');
+            new_delete_url = '/delete/' + productId;
+            document.getElementById("updateThisText").innerHTML = "Are you sure you want to delete the product:  " + productName + "?";
+            document.getElementById("updateThisURL").href = new_delete_url;
+        });
+
+    $('#dataTable tbody')
+        .on('click', 'button[rel="add_cart"]', function () {
+            var productId = $(this).data('id');
+            var productName = $(this).data('item');
+
+            $.ajax(
+                {
+                    type: "POST",
+                    url: "/cart_add/" + productId,
+                    data: {
+                        csrfmiddlewaretoken: '{{ csrf_token }}',
+                        productId: productId,
+                    },
+                    success: function (data) {
+                        console.log(data);
+                        alert(productName + "已经添加到购物车中");
+                    },
+                    error: function (data) {
+                        console.log(data);
+                        alert("Error");
+                    }
+
+                }
+            )
+
+
+        });
+</script>
+
+
+{#// Alert when trying to delete a product#}
+{#$('#dataTable tbody')#}
+{#    // Event when whe try to delete a product#}
+{#    // We update the text, and href of the modal delete button#}
+{#    .on('click', 'button[rel="delete"]', function () {#}
+{#    // Row variable#}
+{#    var tr = tblProducts.cell($(this).closest('td, li')).index();#}
+{#    row_data = ( tblProducts.row(tr.row).data());#}
+{#    product_id = row_data[0];#}
+{#    product_name = row_data[2]#}
+{#    new_delete_url  = 'delete/' + product_id;#}
+{#    document.getElementById("updateThisText").innerHTML = "Are you sure you want to delete the product:  " + product_name + "?";#}
+{#    document.getElementById("updateThisURL").href=new_delete_url;#}
+{#    });#}
+
+
+{#</script>#}
+{% endblock javascripts %}
