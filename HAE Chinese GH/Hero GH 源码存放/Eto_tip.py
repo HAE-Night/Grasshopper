@@ -64,7 +64,7 @@ def eto_decryption():
     Style_time = time.strftime("%Y-%m-%d %H:%M:%S", time_Array)
     if over_second > 0:
         over_day = int(round((over_second / 60 / 60 / 24), 0))
-        text = 'Scavenger plugin will expire in {}!!!'.format(Style_time) if over_day <= 10 else None
+        text = 'Scavenger plugin will expire in {}!!!'.format(Style_time) if over_day <= 5 else None
     else:
         text = 'Scavenger plugin has expired!!!'
     return text
