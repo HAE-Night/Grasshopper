@@ -2130,7 +2130,15 @@ try:
                     else:
                         if geoes:
                             # 单一物体Bake
-                            sc.doc.Objects.Add(geoes, attr)
+                            if isinstance(geoes, rg.InstanceReferenceGeometry):  # Bake图块
+                                block = sc.doc.InstanceDefinitions.FindId(geoes.ParentIdefId)
+                                sc.doc.Objects.AddInstanceObject(block.Index, geoes.Xform, attr)  # 将图块bake
+                            else:
+                                if isinstance(geoes, rg.Rectangle3d):  # 矩形
+                                    geoes = geoes.ToNurbsCurve()
+                                elif isinstance(geoes, rg.Box):  # Box
+                                    geoes = geoes.ToBrep()
+                                sc.doc.Objects.Add(geoes, attr)
 
             def _do_main(self, tuple_data):
                 object_list, attr_list = tuple_data
@@ -3500,10 +3508,10 @@ try:
                     self.Message = 'Get User Value'
 
 
-        class Dekete_Object(component):
+        class Delete_Object(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "Dekete_Object", "Dekete_Object", """Dekete_Object""",
+                                                                   "RPP_Delete Object", "C43", """Delete Rhino Object""",
                                                                    "Scavenger", "K-Object")
                 return instance
 
@@ -3518,12 +3526,12 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Guid()
-                self.SetUpParam(p, "Guid", "Guid", "犀牛物件或者物件的ID")
+                self.SetUpParam(p, "Guid", "ID", "Rhino object or object ID")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Boolean()
-                self.SetUpParam(p, "Boolean", "Boolean", "如果为True则删除输入的物件")
+                self.SetUpParam(p, "Boolean", "D", "If True deletes the input object")
                 p.SetPersistentData(gk.Types.GH_Boolean(False))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
@@ -3532,7 +3540,7 @@ try:
                 pass
 
             def SolveInstance(self, DA):
-                self.Message = '删除物体'
+                self.Message = 'Delete object'
                 if self.RunCount == 1:
                     p0 = self.Params.Input[0].VolatileData
                     p1 = self.marshal.GetInput(DA, 1)
@@ -3557,7 +3565,7 @@ try:
                     sc.doc = ghdoc
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAASDSURBVEhLnZQLUJRVFMcXvmUXRN47I4OQOk5NM2YSBGalmWYDueKEjizrg0DK5GXaSNhUoERINcLwEHeIQClCVEhwyEcSomBMJINoRKiIgMhrP2B3eazgv+/c3YJ1khjOzH/m7P3uOb9zzz17RU8ye5lM7ujkzDs4OGAqOcqcedprDJu+OTrN4ZNV53C9eQTV9UM496sWJ8s1yD0zgNTjPBJy+hCd1g15yCkGMYZN36i6kkoNlvhmwO05BTzlh7H+o068vc8g8v323seanc3sJMaw6RsFqYr78dRiBdwW+WOBuxIBcV0IPNDNRP6mz7rgG9E0c8D+b9V4yf8IFnoosVyhQlBSL4K/6mMif2tiD9ZG3Zw5IPxQL7Yk9LCEoclq7EjlsTPdIPJpbV3U9f8BcF5yc85buCR3YdOErKzmmfz+Rx9kDzLtyhpEeGa/ALiG+ZaWWCwSmcjTQsR7cCK5yIzz4pMzK3Hr3ijq/hzGpWtDKLuqw4kKLY5d0EJVpkVKiRZJxTrEHtchJt+g6Dwt9uRosC6ihp1g9E4BhmrjMHBWgd6jS3AmyAKeYpFaOII7Lv+uw4rQu3gzso1NBl0e9ZdaQFVSIkr66YlhxBWNMJFPa/KwKgboz7eFOnc2elXW6E6zwu1PJOwkDFB6aRAr32uFz652Nn40IXSJ1GdqBVVLCeNLRnHwp4dM5NOa77sVDDBQ6AT+mA36sgRAuhX+ipFOAPJK+/G6EUAzTmO4Ob4Dythb2BzXhG0HGhH8+U1sT2hA6Bf1CIqrxaa91fALq8AyvxTMd3XSa36cBz5PAHxjjZ6MWfjjw0knSP2+zwSwYV8rViqzH7nOddFTdVNpgZtMf/rgwkeaIhcTQEPkJEBsZrdJi3zCb2Cui4u+vDAWY90VGOsswVhHHsbb0jHemoDx29EYa9wBfV0ARqpWQVf2NAYK7ExaVPf+JEBEYqfJJa8KqWXV6VsKoDlpB12JA4bPOmLkZyeMlsuYyKc1+kZ7Hr/k34ItJgCB0W14Nfgu3gi7h7V7OrBcWc0AI42ZQmW20BTZs0RDZY4sKYl8llz4RntYe7KF9mTOQleKJa4qJwFWh7bg5W0t/97DUn/DZAzVJaD/OxsDRKhSW2wP7WmjBJ/W6BvtUedMVP/gkCWubBQbAGbmXrzrC0fx7OpfsGjNRTzvcwHuvucZQHtlNwuk6qgFlGyw0A7qPFt0ZdmgI202WpKs0RwnTE20JeojpajdLmHV57/G0R9NeCGEp8LsP54KAgyeD2JV0dGpv3SJVNV0RMnZU/EkIwB/6i12ZOorAwkTwv/wDDQXt2C4IQ0Pu2pARnuNYdM3CurN9Wb9pEsjEI0fzbgqWArlMg5H3pGgIUoyc8CD1AW4nyhB55dSdH4tZTBS4FIO/h4cAr05XN4gnjmgLd4G7fst0B5vgY4ECYORDivEULxojowAMUpfMZ8ZYI7Mni/cKkHrxxzuxIjRtFuMG2Ec6kI41Cg5VG3kULneHOkrpHAW9hrDpm8ymb2cAqm6qUR7aK8x7DETif4GWQPKTm78ggMAAAAASUVORK5CYII="
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAATwSURBVEhLzZV7TFNXHMe7zf2zbHFRt7lNx6uFWjao7e2L0hYQoVAqpVCwKA8RxfF+SMvDWl5WReXhA+gcIkSGZDpEiYvu4Xxsc4tzCYkYNeIyExiiiTMTBBnfnXu5bnPBTNw/+yQn955zz/l+zznfX1rO/5oRlWbDuELdwnYZYLfPmlQFtd9VaMzs0MyByfTCuCqwGHIV6PZ3kwl/TQ8UaoxK/H6f8AuIY4dnxgWNZt51SoZxSoFbIikgU+KBQtU6qlAfod+HFkuYscuLqavskplzSCwL/4mSjd0XyzEkkmBC6ocxiYIRHyfPPqH4ZqNAIGCnPxvtFBV8k5IN3xPLMExOQrf7lBzXhJLLlVyuBzvtv3FXrrw4QkQfGTCnoPyOsZ+fHTidL9KB0lczRIR/Iya/kpPQ75CSTOT+j1XXYzS29fs2dQw49hwYOFXfNthX0zrUu6P1dnd16+2svM7JOfScEbnyc8j9mTsfJWFf8hXfIaE+oK+ICZ58uydVdjCCj7Dbj77U0jnY1PzxncmWrhE0d43jg8PjaDz0EI2fALsPAZX77gwU1199/4a319kJsmP6BJdJoHYvL9cOmSzghlg6NkYMJ8n4j0JxNyvN4TidF2Y3tPSdL9vSg4TUCpTXfoNMSyvW5DSQ1oS09fuRY+9BZUM/qtpGkLP14q7rAq/TV4SiX7bz+Z6sDOcjiURLgh/7QSjqIt3np0YJ1XWnepo7B7EkJAZurvMRbc4Dj/sO3F3fhOvCuXBZMAfuLq+DIiEmZzahxHkLuaUnLPaXOfNYiT/Z7uNDG86a6hG2bPvUWOe8gK17LiJUtxICgRcMsZngeSyEVr8KubZurM52IsKYCb6nO7hu85GQ3oCc6kvDfkcmX2Flnky5o/v05rpzqKg9j5DweGLAR6QpAx5ubyF6hRXbWwZR1XAVmxr7kZS+izEWiWTIdXyHVNtX+azM9BQX732juKxztLTqOGxbzyBYu5wx0BvXgev+NpaZslFW34uizWdhcZyBdcvXUKrCwHNfgISMvVhtPfEZKzU9Fkuj1LqxAwW2w7BWnkRQSCy8iYHOkEp2uoBcSzpKqr9FfvlJ5NqPo6DiS4RGrIIHySMy3oaEvC769+a5KbVpyMytVuZZW5BlbUee7SgCg6Ph7c1H2LJVJOSFCI9cS0S/QFbJEWQUHUbWhh5ikAwuKQRdTCHi1u3vJwX+V7X8k7S0Ct6a9JrJtNwPkWE5CE1QFGMQokuEJ6miUH0KskqPkTLtwJr8A+R5EOpAPTxJDvq4EhiSdn3PSk2PRmOflZhSdS0lfTeplGaoAvTEYBGWhsXDk+eCpeGJSCvsREr2PqzOacPKtbXw9XkP73p7w5iwGTqzYycr9WTMSeVlyevqEJ9awwRIG9BZePFcsSQ0nhFfmbYTccmVUKpDmGz8VHoYVjigM9nErMyTSUqyvxqzomzQnLINMkUgBIt4zDXw+VwIhYshI/9aYkpCwucx1yam1DCYy6GNKmpnJf4dg7lYE5u46WFQiJkIKEm5JkEkVsDXl4KPjwi+QikoaSDUQcuJeBnCjUW9waa1s9nlT0dkdOESY7z959hEB6LMG6GPKYLOWEjECqGLtiJy+UZm5+HG9Se12qzX2GUzw2DImBsZV1Kpj7Fc0UUXQm8qQgQRDzPkj2qjCs6FReUlslOfAg7nD919latWtlcnAAAAAElFTkSuQmCC"
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
@@ -3599,7 +3607,7 @@ try:
                 try:
                     pass
                 finally:
-                    self.Message = '删除物体'
+                    self.Message = 'Delete object'
 
 
 
