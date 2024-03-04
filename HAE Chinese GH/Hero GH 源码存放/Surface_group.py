@@ -417,7 +417,9 @@ try:
                 _srf_list = ghc.DeconstructBrep(_srf)['faces']
                 if type(_srf_list) is not list:
                     _srf_list = [_srf_list]
-                normal = ghc.SurfaceFrames(_srf_list[0], 1, 1)['frames'][0].ZAxis
+
+                type_geo = [_ for _ in ghc.SurfaceFrames(_srf_list[0], 10, 10)['frames'] if isinstance(_, rg.Plane)]
+                normal = type_geo[0].ZAxis
                 return normal
 
             def RunScript(self, Brep, Vector):
