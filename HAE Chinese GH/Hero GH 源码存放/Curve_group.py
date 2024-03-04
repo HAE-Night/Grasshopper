@@ -4597,7 +4597,7 @@ try:
                             for pttt in edge.DivideByCount(100, True):
                                 pt = edge.PointAt(pttt)
                                 pt_length.append(pt)
-                                for curve in curves:
+                                for curve in Curves:
                                     t = curve.ClosestPoint(pt)[1]
                                     test_pt = curve.PointAt(t)
                                     distance = test_pt.DistanceTo(pt)
@@ -5230,7 +5230,7 @@ try:
         class Equipartition_Curve_2(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_均分曲线", "RPP_Equipartition_Curve", """Curve Divide""", "Scavenger", "B-Curve")
+                                                                   "RPP_Equipartition_Curve", "W113", """Curve Divide""", "Scavenger", "B-Curve")
                 return instance
 
             def get_ComponentGuid(self):
@@ -5248,29 +5248,29 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Curve()
-                self.SetUpParam(p, "Curves", "C", "曲线")
+                self.SetUpParam(p, "Curves", "C", "curve")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Espacement", "E", "点的间距")
+                self.SetUpParam(p, "Espacement", "E", "Spacing of points")
                 p.SetPersistentData(gk.Types.GH_Number(300))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Espacement_Endpoint", "EP", "距离边缘点的距离")
+                self.SetUpParam(p, "Espacement_Endpoint", "EP", "Distance from edge point")
                 p.SetPersistentData(gk.Types.GH_Number(300))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Point()
-                self.SetUpParam(p, "Point", "P", "均分点")
+                self.SetUpParam(p, "Point", "P", "Equalizing point")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
-                self.SetUpParam(p, "Parameter", "t", "点在曲线上的参数")
+                self.SetUpParam(p, "Parameter", "t", "Points on the curve parameters")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -5373,17 +5373,32 @@ try:
                             ungroup_data = map(lambda x: self.split_tree(x, origin_path), [Points, t])
                         else:  # 没点的线
                             ungroup_data = map(lambda x: self.split_tree(x, origin_path), [[], []])  # 返回空树
+
                 Rhino.RhinoApp.Wait()
                 return ungroup_data
+
+            def Graft_List(self, List, Path):
+                Tree = gd[object]()
+                Path = GH_Path(tuple(Path))
+                if len(List) == 0:
+                    Tree.AddRange(List, Path.AppendElement(0))
+                else:
+                    if len(List) == 1:
+                        Tree.Add(List[0], Path)
+                    else:
+                        for index, n in enumerate(List):
+                            New_Path = Path.AppendElement(index)
+                            Tree.Add(n, New_Path)
+                return Tree
 
             def RunScript(self, Curves, Espacement, Espacement_Endpoint):
                 try:
                     sc.doc = Rhino.RhinoDoc.ActiveDoc
-                    Res_Point, Parameter = gd[object](), gd[object]()
+                    Data_Tree, Res_Point, Parameter = gd[object](), gd[object](), gd[object]()
                     '--------------------'
                     # 设置两个端口的默认值
-                    self.Espacement = Espacement if Espacement else 300
-                    self.Endpoint = Espacement_Endpoint if Espacement_Endpoint else 300
+                    self.Espacement = Espacement
+                    self.Endpoint = Espacement_Endpoint
                     '--------------------'
 
                     re_mes = Message.RE_MES([Curves], ['Curves end'])
@@ -5391,7 +5406,12 @@ try:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
                     else:
-                        tunk, tunk_Path = self.Branch_Route(Curves)
+
+                        Tree, Tree_Path = self.Branch_Route(Curves)
+                        for index, G in enumerate(Tree):
+                            Data_Tree.MergeTree(self.Graft_List(G, Tree_Path[index]))
+
+                        tunk, tunk_Path = self.Branch_Route(Data_Tree)
                         GH_Curve = map(lambda x: filter(None, x), tunk)  # 去除None值
                         Curve_Length = map(self.Get_Curve_Length, GH_Curve)
                         zip_list = zip(GH_Curve, Curve_Length, tunk_Path)
@@ -5546,7 +5566,7 @@ try:
         class MeshLines(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_MeshLines", "RPP_MeshLines", """将线段集合围合部分生成闭合曲线""", "Scavenger", "B-Curve")
+                                                                   "RPP_MeshLines", "W112", """The closed curve is generated by enclosing part of the line set""", "Scavenger", "B-Curve")
                 return instance
 
             def get_ComponentGuid(self):
@@ -5565,19 +5585,19 @@ try:
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Curve()
                 p.DataMapping = gk.GH_DataMapping.Flatten
-                self.SetUpParam(p, "Lines", "L", "线段集合，默认拍平")
+                self.SetUpParam(p, "Lines", "L", "Line set, default flatten")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
-                self.SetUpParam(p, "Max", "M", "围合部分最大边数")
+                self.SetUpParam(p, "Max", "M", "Maximum number of sides for enclosed part")
                 p.SetPersistentData(gk.Types.GH_Integer(3))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Curve()
-                self.SetUpParam(p, "Res_Curve", "C", "生成围合部分的曲线")
+                self.SetUpParam(p, "Res_Curve", "C", "Generate the curve of the enclosed part")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -5589,7 +5609,7 @@ try:
                     self.marshal.SetOutput(result, DA, 0, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAASDSURBVEhLnZQLUJRVFMcXvmUXRN47I4OQOk5NM2YSBGalmWYDueKEjizrg0DK5GXaSNhUoERINcLwEHeIQClCVEhwyEcSomBMJINoRKiIgMhrP2B3eazgv+/c3YJ1khjOzH/m7P3uOb9zzz17RU8ye5lM7ujkzDs4OGAqOcqcedprDJu+OTrN4ZNV53C9eQTV9UM496sWJ8s1yD0zgNTjPBJy+hCd1g15yCkGMYZN36i6kkoNlvhmwO05BTzlh7H+o068vc8g8v323seanc3sJMaw6RsFqYr78dRiBdwW+WOBuxIBcV0IPNDNRP6mz7rgG9E0c8D+b9V4yf8IFnoosVyhQlBSL4K/6mMif2tiD9ZG3Zw5IPxQL7Yk9LCEoclq7EjlsTPdIPJpbV3U9f8BcF5yc85buCR3YdOErKzmmfz+Rx9kDzLtyhpEeGa/ALiG+ZaWWCwSmcjTQsR7cCK5yIzz4pMzK3Hr3ijq/hzGpWtDKLuqw4kKLY5d0EJVpkVKiRZJxTrEHtchJt+g6Dwt9uRosC6ihp1g9E4BhmrjMHBWgd6jS3AmyAKeYpFaOII7Lv+uw4rQu3gzso1NBl0e9ZdaQFVSIkr66YlhxBWNMJFPa/KwKgboz7eFOnc2elXW6E6zwu1PJOwkDFB6aRAr32uFz652Nn40IXSJ1GdqBVVLCeNLRnHwp4dM5NOa77sVDDBQ6AT+mA36sgRAuhX+ipFOAPJK+/G6EUAzTmO4Ob4Dythb2BzXhG0HGhH8+U1sT2hA6Bf1CIqrxaa91fALq8AyvxTMd3XSa36cBz5PAHxjjZ6MWfjjw0knSP2+zwSwYV8rViqzH7nOddFTdVNpgZtMf/rgwkeaIhcTQEPkJEBsZrdJi3zCb2Cui4u+vDAWY90VGOsswVhHHsbb0jHemoDx29EYa9wBfV0ARqpWQVf2NAYK7ExaVPf+JEBEYqfJJa8KqWXV6VsKoDlpB12JA4bPOmLkZyeMlsuYyKc1+kZ7Hr/k34ItJgCB0W14Nfgu3gi7h7V7OrBcWc0AI42ZQmW20BTZs0RDZY4sKYl8llz4RntYe7KF9mTOQleKJa4qJwFWh7bg5W0t/97DUn/DZAzVJaD/OxsDRKhSW2wP7WmjBJ/W6BvtUedMVP/gkCWubBQbAGbmXrzrC0fx7OpfsGjNRTzvcwHuvucZQHtlNwuk6qgFlGyw0A7qPFt0ZdmgI202WpKs0RwnTE20JeojpajdLmHV57/G0R9NeCGEp8LsP54KAgyeD2JV0dGpv3SJVNV0RMnZU/EkIwB/6i12ZOorAwkTwv/wDDQXt2C4IQ0Pu2pARnuNYdM3CurN9Wb9pEsjEI0fzbgqWArlMg5H3pGgIUoyc8CD1AW4nyhB55dSdH4tZTBS4FIO/h4cAr05XN4gnjmgLd4G7fst0B5vgY4ECYORDivEULxojowAMUpfMZ8ZYI7Mni/cKkHrxxzuxIjRtFuMG2Ec6kI41Cg5VG3kULneHOkrpHAW9hrDpm8ymb2cAqm6qUR7aK8x7DETif4GWQPKTm78ggMAAAAASUVORK5CYII="
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAARFSURBVEhLrZV9UBRlHMdXGgnMmEqSZtKmaYiXAFEQ6DjYvd2724PjTocZqCY0GCtGGZw0IxyGYnyZJsJmEjWYyon4AzQNCRtiKtEiiLeDO+485VReCo69A0EMjrOc+fasrCUKosZn5vljn9v9fPf3e557lrpfFFpjDJPUGipdLiSpD8k05l1KnW2MTmx7VZpcGALoxqgYtbEl+eURrFW2/yBNLwgeAUzbe1yS+e8jO53o/diOLRt7EEi3VhRQBR7SPQ9GUHxTRBjb2bQ1YxBdhQJcJU6MH3JC2C9g+yY7ghVtJ/0Tah+Wbr8/yBvmKbRdf32V48DYQQeuHHLATsTiGCXXIwcE5GUO4QWFoT4w9tdHpcfmJ4RtDg9lOxuy0gdg/FDAVKkTjmIBQ0R8c4ghlw9MB+/ZIiCUNbRGMqd9JcXcyPiOnbr1Fncl6bX4lmI7RNmt8ltDRkjI1U8dKNoqIIzrsITE/7xSUs2E4duDFIkms2LdANJeOoeuD36Hu3QYl0nIXAE3h7PYgQkScnCbgNVc56WguF8CJC1Fq84Es1qzjYrXGmgSUMQmtG6KS7QiRtuBvekWXCgcgIsEiZK7BTlJCydLHDj8joAIldEuhqi0hmBWd9at0JoOS3nTKLnmz9a+IcAnpwcqnQFlm8/BQSQTZAeJu2e2AHGI6+QiIcfzBLCazmFa0+VgtaZ8SfsfDHPaS8W1nV9ROI5F5VfwdIYVaXoD6nIukn5Pb9PZAsQKxQ1h3DMIbVI3aLX1Oiszx0ramSjpxjWcpuv60s+vgqq9Bu+iIQSmmLAjxYiOXf032nb7+riIvCHfDpXSDL+ybXi2IhcKnekax5lSJO1MeFnDjri0AXgc+RNUzRSoYxPwye9HjL4D+16zoLdo8N/1EeU/5g6CVnZieflb8O6LhudgOCJ3V4Gjzzol5Z3w8qa60LdHQJ2YBPX1BKhvp+BRPg7f7AukDQZUZnff+AOefPcPyPhW+B7dDO/+aCy5KEPwgWJwausoqzbQku5OOO4nPzVrGH7qozFQ1S5QlaQaUokYtLhkBCtftyJdZ4WS68Kymgx4OlZhiU2OsH1fQB3Xa2fl5nBJNTd8XKOOXW+D15fjoL4hlYghR0lIrRvP5DoRrT+FqA21iMqswvK6DVhVWAZe3ndJRXc8LynmRyNrKI5+UwB1nIjFUT0J/2wBDJH7nknFI93xCN77CTTqQVLNeQvDNK+QHr03IiPbF/PxLabn3h8F9Z0LQeSQo5O/x7KGZHiRni+1MojYfQwqha2FYdrnP5NmQ8O2hDB6i3tNej9kG6vweLOeyKPgY+Qh234Kmhf762PXVd/7qTobCro1K1HTgyfrX4GnfTUea0+CPKsRfExfjX/C/gf7LtyOUm49EVkwXUF8Zosor6BALZJ+/v/wvOUJVmMaUqZ2Q0XbSqXphYVRGhI43urm9L/5SVN3gaL+ARl//is3r7FsAAAAAElFTkSuQmCC"
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
@@ -5700,7 +5720,7 @@ try:
                                     close_curve = ghp.run(self.outline_box, res_pt)
                                     Res_Curve = close_curve
                                 else:
-                                    Message.message2(self, '生成失败，请调整Max输入端')
+                                    Message.message2(self, 'Failed to generate, please adjust the Max input')
                             else:
                                 Res_Curve = curves
                         else:
@@ -5710,7 +5730,7 @@ try:
                     sc.doc = ghdoc
                     return Res_Curve
                 finally:
-                    self.Message = '生成闭合曲线'
+                    self.Message = 'Generated closed curve'
 
     else:
         pass
