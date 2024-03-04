@@ -1110,19 +1110,17 @@ try:
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
                 self.SetUpParam(p, "Radius", "R", "cylinder radius")
-                p.SetPersistentData(gk.Types.GH_Number(5))  # 为参数设置缺省值
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
                 self.SetUpParam(p, "HoleCir", "H", "total length of oblong hole")
-                p.SetPersistentData(gk.Types.GH_Number(20))  # 为参数设置缺省值
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                # p.SetPersistentData(gk.Types.GH_Number(20))  # 为参数设置缺省值
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Vector()
                 self.SetUpParam(p, "CriVec", "CV", "extend direction size")
-                p.SetPersistentData(gk.Types.GH_Vector(rg.Vector3d(0, 0, 20)))  # 为参数设置缺省值
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
@@ -1156,29 +1154,47 @@ try:
             def __init__(self):
                 pass
 
-            def mes_box(self, info, button, title):
-                return rs.MessageBox(info, button, title)
-
-            def Branch_Route(self, Tree):
-                """分解Tree操作，树形以及多进程框架代码"""
-                Tree_list = [list(_) for _ in Tree.Branches]
-                Tree_Path = [list(_) for _ in Tree.Paths]
-                return Tree_list, Tree_Path
-
-            def parameter_judgment(self, tree_par_data):
-                # 获取输入端参数所有数据
-                geo_list, geo_path = self.Branch_Route(tree_par_data)
-                if geo_list:
-                    j_list = any(ghp.run(lambda x: len(filter(None, x)), geo_list))  # 去空操作, 判断是否为空
-                else:
-                    j_list = False
-                return j_list, geo_list, geo_path
-
             # 重新定义向量的长度
             def ver_lenght(self, vector, len):
                 unit_vector = vector / vector.Length  # 将原向量单位化
                 new_vector = unit_vector * len  # 创建新的向量，长度为new_length
                 return new_vector
+
+            def match_list(self, *args):
+                """匹配列表里面的数据"""
+                zip_list = list(args)
+                len_list = map(lambda x: len(x), zip_list)  # 得到最长的树
+                max_index = len_list.index(max(len_list))  # 得到最长的树的下标
+                max_list = zip_list[max_index]  # 最长的列表
+                other_list = [zip_list[_] for _ in range(len(zip_list)) if _ != max_index]  # 剩下的列表
+                matchzip = zip([max_list] * len(other_list), other_list)
+
+                def sub_match(tuple_data):  # 数据匹配
+                    target_tree, other_tree = tuple_data
+                    t_len, o_len = len(target_tree), len(other_tree)
+                    if o_len == 0:
+                        return other_tree
+                    else:
+                        new_tree = other_tree + [other_tree[-1]] * (t_len - o_len)
+                        return new_tree
+
+                iter_group = map(sub_match, matchzip)  # 数据匹配
+                iter_group.insert(max_index, max_list)  # 将最长的数据插入进去
+
+                return iter_group
+
+            # 数据自动补齐
+            def data_polishing_list(self, data_a, data_b):
+                fill_count = len(data_a) - len(data_b)
+                # 补齐列表
+                data_a_new, data_b_new = data_a, data_b
+                if fill_count > 0:
+                    data_a_new = data_a
+                    data_b_new += [data_b[-1]] * fill_count
+                else:
+                    data_a_new += [data_a[-1]] * -fill_count
+                    data_b_new = data_b
+                return data_b_new
 
             # 数据自动补齐
             def data_polishing_list(self, data_a, data_b):
@@ -1202,44 +1218,45 @@ try:
                 rectangle_brep = rg.Brep.CreatePlanarBreps(rectangle)[0]
                 return rectangle_brep
 
-            def circle(self, Data):  # 根据面生成圆柱Brep
-                # 判空
-                if Data[0]:
-                    Cri_Vec = Data[2] * 2
-                    Data[0].Translate(-Data[2])
-                    C_Plane = Data[0]
+            def Vec_line(self, Pln):
+                V_Line = rg.Line(Pln.Origin, Pln.ZAxis, 10).ToNurbsCurve()
+                Vec_01 = rg.Vector3d(V_Line.PointAtStart - V_Line.PointAtEnd)
+                return Vec_01
 
-                    circle = rg.Arc(C_Plane, Data[1], math.radians(360)).ToNurbsCurve()  # 圆弧转曲线
-                    Surface = rg.Surface.CreateExtrusion(circle, Cri_Vec).ToBrep()
-                    CirBrep = Surface.CapPlanarHoles(0.01)
-                    if CirBrep.SolidOrientation == rg.BrepSolidOrientation.Inward:
-                        CirBrep.Flip()
+            def circle(self, Data):
+                # 根据面生成圆柱Brep
+                Cri_Vec = Data[2] * 2  # 拉伸向量
+                #        Data[0].Translate(-Data[2])
+                C_Plane = Data[0]  # 拉伸平面
 
-                    if Data[3]:
-                        # 创建长圆孔的圆柱体
-                        pln = rg.Plane(C_Plane.Origin, C_Plane.YAxis, C_Plane.ZAxis)
-                        cir_split = [ci_ for ci_ in
-                                     circle.Split(self.create_rectangle_from_center(pln, Data[3]), 0.1, 0.1)]
-                        Move_Vec = pln.ZAxis
-                        # 切割曲线偏移
-                        cir_split_move_1, cir_split_move_2 = cir_split[0], cir_split[1]
-                        cir_split_move_1.Translate(self.ver_lenght(Move_Vec, (Data[3] / -2) + Data[1]))
-                        cir_split_move_2.Translate(self.ver_lenght(Move_Vec, (Data[3] / 2) - Data[1]))
-                        cir_split_move_2.Reverse()
-                        HoleCir = rg.NurbsSurface.CreateRuledSurface(cir_split_move_1, cir_split_move_2).ToBrep()
-                        HC_Curve = [HC for HC in HoleCir.Edges]
-                        Surface_Hold = HoleCir.Faces[0].CreateExtrusion(rg.Line(C_Plane.Origin, Cri_Vec).ToNurbsCurve(), False)
-                        HoleCirBrep = Surface_Hold.CapPlanarHoles(0.02)
+                circle = rg.Arc(C_Plane, Data[1], math.radians(360)).ToNurbsCurve()  # 圆弧转曲线
+                Surface = rg.Surface.CreateExtrusion(circle, Cri_Vec).ToBrep()
+                CirBrep = Surface.CapPlanarHoles(0.001)
+                if CirBrep.SolidOrientation == rg.BrepSolidOrientation.Inward:
+                    CirBrep.Flip()
+
+                if Data[3]:
+                    # 创建长圆孔的圆柱体
+                    pln = rg.Plane(C_Plane.Origin, C_Plane.YAxis, C_Plane.ZAxis)
+                    cir_split = [ci_ for ci_ in circle.Split(self.create_rectangle_from_center(pln, Data[3]), 0.1, 0.1)]
+                    Move_Vec = pln.ZAxis
+                    # 切割曲线偏移
+                    cir_split_move_1, cir_split_move_2 = cir_split[0], cir_split[1]
+                    cir_split_move_1.Translate(self.ver_lenght(Move_Vec, (Data[3] / -2) + Data[1]))
+                    cir_split_move_2.Translate(self.ver_lenght(Move_Vec, (Data[3] / 2) - Data[1]))
+                    cir_split_move_2.Reverse()
+                    HoleCir = rg.NurbsSurface.CreateRuledSurface(cir_split_move_1, cir_split_move_2).ToBrep()
+                    HC_Curve = [HC for HC in HoleCir.Edges]
+                    Surface_Hold = HoleCir.Faces[0].CreateExtrusion(rg.Line(C_Plane.Origin, Cri_Vec).ToNurbsCurve(), False)
+                    HoleCirBrep = Surface_Hold.CapPlanarHoles(0.02)
+                    if HoleCirBrep:
                         if HoleCirBrep.SolidOrientation == rg.BrepSolidOrientation.Inward:
                             HoleCirBrep.Flip()
-                        else:
-                            Message.message1(self, "failed to create oblong hole")
-                            HoleCirBrep = None
                     else:
+                        Message.message1(self, "长圆孔生成失败")
                         HoleCirBrep = None
                 else:
-                    # 若传入数据为空
-                    CirBrep, HoleCirBrep = None, None
+                    HoleCirBrep = None
 
                 return CirBrep, HoleCirBrep
 
@@ -1247,33 +1264,31 @@ try:
                 try:
                     sc.doc = Rhino.RhinoDoc.ActiveDoc
                     CirBrepList, HoleCirBrepList = (gd[object]() for _ in range(2))
-                    j_bool_1 = self.parameter_judgment(self.Params.Input[0].VolatileData)[0]
-                    j_bool_2 = self.parameter_judgment(self.Params.Input[1].VolatileData)[0]
 
-                    re_mes = Message.RE_MES([j_bool_1, j_bool_2], ['Plane', 'Radi'])
+                    re_mes = Message.RE_MES([Plane, Radi], [self.Params.Input[0].NickName, self.Params.Input[1].NickName])
                     if len(re_mes) > 0:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
                     else:
-                        if Plane and CriVec:
-                            # 将标量值转换为列表，方便与Plane进行zip
-                            Radi = [Radi] * len(Plane)
-                            CriVec = self.data_polishing_list(Plane, CriVec)
-                            HoleCir = [HoleCir] * len(Plane)
-
-                            # 使用ghpythonlib.parallel.run并行计算 这里使用run函数并行计算多个圆柱体的生成
-                            Geometry = map(self.circle, zip(Plane, Radi, CriVec, HoleCir))
-                            #                    # 解包结果
-                            CirBrepList, HoleCirBrepList = zip(*Geometry)
+                        # 将标量值转换为列表，方便与Plane进行zip
+                        Plane, Radi_list, HoleCir = self.match_list(Plane, Radi, HoleCir)
+                        if CriVec:
+                            CriVec_list = self.data_polishing_list(Plane, CriVec)
                         else:
-                            pass
+                            CriVec_list = list(map(self.Vec_line, Plane))
+                        if len(HoleCir) == 0:
+                            HoleCir = [i_ * 2 for i_ in Radi_list]
+                        # 使用ghpythonlib.parallel.run并行计算 这里使用run函数并行计算多个圆柱体的生成
+                        Geometry = ghp.run(self.circle, zip(Plane, Radi_list, CriVec_list, HoleCir))
+                        # 解包结果
+                        CirBrepList, HoleCirBrepList = zip(*Geometry)
 
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
                     sc.doc = ghdoc
                     return CirBrepList, HoleCirBrepList
                 finally:
-                    self.Message = 'HAE cutting cylinder'
+                    self.Message = 'HAE 切割圆柱'
 
 
         # 不规则几何物体最小外包围盒(3D)
@@ -2739,7 +2754,14 @@ try:
                 Line = rg.Line(Start, End)
                 Mid_Mid = ghc.CurveMiddle(Line)
                 Curvature = abs(Mid.DistanceTo(Mid_Mid))
-                return Curve if Curvature > 0.01 else None
+
+                if not Curve.IsClosed:  # 判断线是否闭合
+                    Line_length = round(rg.Line(Start, End).ToNurbsCurve().GetLength(), 2)  # 根据起始点重构一根直线
+                    Curve_length = round(Curve.ToNurbsCurve().GetLength(), 2)
+                    Tool = Line_length == Curve_length  # 比较它们的长度
+                else:
+                    Tool = True
+                return Curve if Curvature > 0.01 and Tool else None
 
             # 是否为闭合的 圆弧 多进程
             def IsHole_Multiprocess(self, Curve_list):
@@ -4017,6 +4039,300 @@ try:
                     pass
 
 
+        # 求Brep的近似最小包围盒
+        class MMB2(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP_MMB2", "RPP_MMB2", """Find the approximate minimum bounding box of Brep""", "Scavenger", "D-Brep")
+                return instance
+
+            def __init__(self):
+                pass
+
+            def get_ComponentGuid(self):
+                return System.Guid("cfb20b2e-b936-4ab6-af0e-46430790e659")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.tertiary
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Brep()
+                self.SetUpParam(p, "Brep", "B", "The Brep that needs to be solved")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Boolean()
+                self.SetUpParam(p, "Smooth", "S", "Smooth surface or not. The default value is False")
+                p.SetPersistentData(gk.Types.GH_Boolean(False))
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Box()
+                self.SetUpParam(p, "Box", "B", "Approximate minimum bounding box obtained by Brep")
+                self.Params.Output.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Plane()
+                self.SetUpParam(p, "Plane", "P", "Minimum bounding box reference plane")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                # 插件名称
+                self.Message = 'MBB-2'
+                # 初始化输出端数据内容
+                Box, Plane = (gd[object]() for _ in range(2))
+                if self.RunCount == 1:
+                    # 获取输入端
+                    p0 = self.Params.Input[0].VolatileData
+                    p1 = self.Params.Input[1].VolatileData
+                    # 确定不变全局参数
+                    self.smooth = p1[0][0]
+                    self.j_bool_f1, brep_trunk, brep_path = self.parameter_judgment(p0)
+                    re_mes = Message.RE_MES([self.j_bool_f1], ['B end'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                    else:
+                        # 将实体与树结构集合放入多进程池
+                        zip_list = zip(brep_trunk, brep_path)
+                        iter_ungroup_data = zip(*ghp.run(self.temp, zip_list))
+                        Box, Plane = ghp.run(lambda single_tree: self.format_tree(single_tree), iter_ungroup_data)
+
+                # 将结果添加进输出端
+                DA.SetDataTree(0, Box)
+                DA.SetDataTree(1, Plane)
+
+            def _trun_object(self, ref_obj):
+                """引用物体转换为GH内置物体"""
+                if 'ReferenceID' in dir(ref_obj):
+                    if ref_obj.IsReferencedGeometry:
+                        test_pt = ref_obj.Value
+                    else:
+                        test_pt = ref_obj.Value
+                else:
+                    test_pt = ref_obj
+                return test_pt
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAQsSURBVEhLrZVrTBxVFMe3WMk2xS7NyqMElAbKwszO7MyyLEtZWFoK2MVSnhVqLZQWCIqNhTYiTdMao6WkD6i8BAQqL5sCWj8A5VGJGvxA1A+2mppAamJMqtZnomFp8vfM7qWPuFmq8ksm98699/zOnTN3dlUrwLogP1U566846qq8x67Oj4agOEP9Ad2vcQ2vDOr9iYFTi+1bgHdSsdidgKP2J2Zo3N81/f9Q798aNOXoeApoTgPqtwGN1Hba0VvI36D5CNey/4b6wLYNE47O7S75eZIvXY0pQFc6WveG36J1Ftfyf4dL3kVyZccnbUBDMvXvS3KekvSmou+Y35/+WlUGi3sQ+euMIOO3z4Sx2yXUB1ICJxzdVBZFXmfDwutW/HY8npKQVNn9UpLTtGZWxuAZH7DYB5E/zYySrmf+Lt3MvZy4UCQoYyVpAeNOeRPJa21wvGzFL/lx+D4hBvMvmnHnTXqSVppTErWk448BGc8XPDrkFLrD8NmOj2NRjIDRlIM1m7UXHReYnMriqLXih90W/Boai5sJJowURWGskMc3NRYsnEvGd6dsyDdrB5jKPcavsoza8dSqwKlkzFwi+dlUl/wNK34+FIcf42Mxt8WEmSwRg3t06MnehP4cHbp26WEK0fQyjWeqzZqB0UtpiLmejZkOqi3V+3ZlHH6KicW1HTLGyzgMFkSiP1eHoXwO3Yr8Sc0FFu4R75Ltj19x9FBJaOeT7ckQrmVgui4Jf8lmfKnISzkMKfK8CGo5tOfwiAn17WTxHvEusWuvOOiooYlKQy8UNfEYbktCTkk8ZlMMuKrI85Wdu+QduTzkEN82Fu8R71K7dux++eKrVtyuicOtg9H4sEjASDGHYSYfZjs3hmpaWLxHvMue1o46+u7J7zD5fKUJn5cbML2Pd8r7mLwli4N+g6aRxXtkTdlOn1HHAJ3lJvpK3cgni/i7ZXmP5K3ZHITgdQ0s3iNeO5NXj2A23LXzk0nLyhsznfIzLH5ZVsXLXsWT9QFA21YsnkhwI9e55Lt5kkchItCnjsU+PPTD9Ox0BQ+8log5D3Kdn/owC7mLxWJ5uD8aa7Bm3xcvSJg7FI2JQuUo6pwv9H2Sn03XIdTf921OliskSayNjpb2yrJ0TpblcOrnmkxyPl3NNNdqtQrrmfKfZHPrS/t3bcLYHh5d9kgM0ddZnxGJMO3aqrUbjYIoih8JgnBEEPSfUL+a+s2UoMBgEC/T/XFJFNsMgvAS07knLNirYuhIEG60RKCnbCMig3yOKeNGgyFV1OtPmUwmPcnqJLOZI9kASV+RJMO7PM8b6AnKKekJp8gTcSavwxcbNEja7HWUDakoMIESVBuNRuoKNa5EQq0sis+R+C1J4mOMRkOpKOorWciySKxdYlVeXt4jbloVx3E+NpttNV3qey9dpfobxCpftex7dvgAAAAASUVORK5CYII="
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def Branch_Route(self, Tree):
+                """分解Tree操作，树形以及多进程框架代码"""
+                Tree_list = [list(_) for _ in Tree.Branches]
+                Tree_Path = [list(_) for _ in Tree.Paths]
+                return Tree_list, Tree_Path
+
+            def split_tree(self, tree_data, tree_path):
+                """操作树单枝的代码"""
+                new_tree = ght.list_to_tree(tree_data, True, tree_path)  # 此处可替换复写的Tree_To_List（源码参照Vector组-点集根据与曲线距离分组）
+                result_data, result_path = self.Branch_Route(new_tree)
+                if list(chain(*result_data)):
+                    return result_data, result_path
+                else:
+                    return [[]], result_path
+
+            def format_tree(self, result_tree):
+                """匹配树路径的代码，利用空树创造与源树路径匹配的树形结构分支"""
+                stock_tree = gd[object]()
+                for sub_tree in result_tree:
+                    fruit, branch = sub_tree
+                    for index, item in enumerate(fruit):
+                        path = gk.Data.GH_Path(System.Array[int](branch[index]))
+                        if hasattr(item, '__iter__'):
+                            if item:
+                                for sub_index in range(len(item)):
+                                    stock_tree.Insert(item[sub_index], path, sub_index)
+                            else:
+                                stock_tree.AddRange(item, path)
+                        else:
+                            stock_tree.Insert(item, path, index)
+                return stock_tree
+
+            def parameter_judgment(self, tree_par_data):
+                # 获取输入端参数所有数据
+                geo_list, geo_path = self.Branch_Route(tree_par_data)
+                if geo_list:
+                    j_list = any(ghp.run(lambda x: len(list(filter(None, x))), geo_list))  # 去空操作, 判断是否为空
+                else:
+                    j_list = False
+                return j_list, geo_list, geo_path
+
+            def convert_cuvre(self, curve):
+                # 将曲线替换为首位相连的直线
+                start_pt = curve.PointAtStart
+                end_pt = curve.PointAtEnd
+                line = rg.Line(start_pt, end_pt)
+                return line
+
+            def get_max_angle_line(self, line_list, ref_vec):
+                # 获取角度列表
+                angle_list = map(lambda x: rg.Vector3d.VectorAngle(x.Direction, ref_vec), line_list)
+                # 获取角度最大的线段
+                max_angle = max(angle_list)
+                max_index = angle_list.index(max_angle)
+                res_line = line_list[max_index]
+                return res_line
+
+            def group_hv_line(self, line_list, ref_pl):
+                # 剔除失效的线段
+                line_list = [_ for _ in line_list if _.IsValid is True]
+                # 分割为x、y轴
+                x_list, y_list = [], []
+                vector_list = [_.Direction for _ in line_list]
+                for v_index, vector in enumerate(vector_list):
+                    x_ispara = vector.IsParallelTo(ref_pl.XAxis, 45)
+                    y_ispara = vector.IsParallelTo(ref_pl.YAxis, 45)
+                    # 判断线是否与x轴平行
+                    if x_ispara == 1 or x_ispara == -1:
+                        # 若为反向平行，将直线反转
+                        if x_ispara == -1:
+                            line_list[v_index].Flip()
+                        x_list.append(line_list[v_index])
+                    # 判断线是否与y轴平行
+                    elif y_ispara == 1 or y_ispara == -1:
+                        # 若为反向平行，将直线反转
+                        if y_ispara == -1:
+                            line_list[v_index].Flip()
+                        y_list.append(line_list[v_index])
+                # 获得线与x、y轴夹角最大的线
+                if x_list:
+                    x_line = self.get_max_angle_line(x_list, ref_pl.XAxis)
+                else:
+                    x_line = None
+
+                if y_list:
+                    y_line = self.get_max_angle_line(y_list, ref_pl.YAxis)
+                else:
+                    y_line = None
+                return x_line, y_line
+
+            def determine_z(self, vector, z_vector):
+                # 确保向量是单位向量
+                vector.Unitize()
+                z_vector.Unitize()
+
+                # 获取 另外 向量（通过 两个向量 的叉积获得）
+                other_vector = rg.Vector3d.CrossProduct(z_vector, vector)
+                other_vector.Unitize()
+
+                return other_vector
+
+            def _generate_plane(self, origin_pt, x, y):
+                res_plns = []
+                # 消除空值，获取轴的方向
+                filter_ax_list = filter(None, [x, y])
+                ax_list = [_.Direction for _ in filter_ax_list]
+                ax_len = len(ax_list)
+                # 判断有多少个轴，即多少种情况
+                if ax_len == 1:
+                    only_plane = rg.Plane(origin_pt, ax_list[0])
+                    res_plns.extend([only_plane])
+                elif ax_len > 1:
+                    # 每根线分别做一个平面
+                    single_planes = [rg.Plane(origin_pt, _) for _ in ax_list]
+                    res_plns.extend(single_planes)
+                    x_axis, y_axis = ax_list
+                    # 确定标准平面的Z轴
+                    z_axis = self.determine_z(x_axis, y_axis)
+                    # 按轴生成xy平面
+                    xy_plane = rg.Plane(origin_pt, x_axis, y_axis)
+                    yx_plane = rg.Plane(origin_pt, y_axis, x_axis)
+                    res_plns = [xy_plane, yx_plane]
+                    # 按轴生成xz平面
+                    xz_plane = rg.Plane(origin_pt, x_axis, z_axis)
+                    zx_plane = rg.Plane(origin_pt, z_axis, x_axis)
+                    res_plns.extend([xz_plane, zx_plane])
+                    # 按轴生成yz平面
+                    yz_plane = rg.Plane(origin_pt, y_axis, z_axis)
+                    zy_plane = rg.Plane(origin_pt, z_axis, y_axis)
+                    res_plns.extend([yz_plane, zy_plane])
+                else:
+                    Message.message2(self, 'Plane axis error！')
+                # 标准平面
+                standard_xy_pl, standard_xz_pl, standard_yz_pl = rg.Plane.WorldXY, rg.Plane.WorldZX, rg.Plane.WorldYZ
+                standard_xy_pl.Origin = origin_pt
+                standard_xz_pl.Origin = origin_pt
+                standard_yz_pl.Origin = origin_pt
+                res_plns.extend([standard_xy_pl, standard_xz_pl, standard_yz_pl])
+                return res_plns
+
+            def get_bbox(self, origin_brep):
+                # 获取最大面
+                temp_face_list = ghc.DeconstructBrep(origin_brep)['faces']
+                if type(temp_face_list) is not list:
+                    faces_list = [temp_face_list]
+                else:
+                    faces_list = temp_face_list
+                area_list = [_.GetArea() for _ in faces_list]
+                max_area = max(area_list)
+                max_index = area_list.index(max_area)
+                max_face = faces_list[max_index]
+                # 除最大面的其他面
+                others_faces = [faces_list[_] for _ in range(len(faces_list)) if _ != max_index]
+                # 是否顺滑面
+                if self.smooth:
+                    max_face = max_face.Faces[0].ToBrep()
+                else:
+                    max_face = max_face
+                # 获取最大面的中心点
+                center_pt = origin_brep.GetBoundingBox(True).Center
+                # 取其他面的前15个和最大面组成新列表
+                others_faces = others_faces[0: 15]
+                temp_faces = [max_face] + others_faces
+
+                # 闭包函数获取最小包围盒
+                def get_minbox(surf):
+                    surf = ghc.Untrim(surf)
+                    # 获取最大面的平面
+                    pln = ghc.IsPlanar(surf, True)['plane']
+                    # 获取最大面所有边线
+                    edges = [_ for _ in surf.Loops[0].To3dCurve().DuplicateSegments()]
+                    #            edges = [_ for _ in surf.Edges]
+                    lines = map(self.convert_cuvre, edges)
+                    # 将线段分为偏水平和偏竖直的线集合
+                    res_x, res_y = self.group_hv_line(lines, pln)
+                    # 点、结果x、y线生成9平面
+                    pln_list = self._generate_plane(center_pt, res_x, res_y)
+                    # 获得9平面生成的包围盒，并拿取之中包围盒面积最小的，并输出平面
+                    box_list = map(lambda x: rg.Box(x, origin_brep), pln_list)
+                    min_index = 0
+                    for box_index, box in enumerate(box_list):
+                        if box.Area < box_list[min_index].Area:
+                            min_index = box_index
+                    sub_res_box = box_list[min_index]
+                    sub_res_pln = pln_list[min_index]
+
+                    return sub_res_box, sub_res_pln
+
+                # 每个面分别获取最小包围盒
+                boxes, plns = zip(*map(get_minbox, temp_faces))
+                # 每个面的最小包围盒，拿取之中包围盒面积最小的，并输出平面
+                min_index = 0
+                for box_index, box in enumerate(boxes):
+                    if box.Area < boxes[min_index].Area:
+                        min_index = box_index
+                res_box = boxes[min_index]
+                res_pln = plns[min_index]
+                return res_box, res_pln
+
+            def temp(self, tuple_data):
+                brep_list, origin_path = tuple_data
+                brep_list = map(self._trun_object, brep_list)
+                boxes, plns = zip(*map(self.get_bbox, brep_list))
+                ungroup_data = map(lambda x: self.split_tree(x, origin_path), [boxes, plns])
+                Rhino.RhinoApp.Wait()
+                return ungroup_data
+
+
+
     else:
         pass
 except:
@@ -4042,7 +4358,7 @@ class AssemblyInfo(GhPython.Assemblies.PythonAssemblyInfo):
         return """HAE plug-in"""
 
     def get_AssemblyVersion(self):
-        return "v4.6.5(plus)"
+        return "v4.6.7"
 
     def get_AuthorName(self):
         return "by HAE Development Team"
