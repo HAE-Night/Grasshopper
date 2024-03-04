@@ -28,6 +28,11 @@ import getpass
 import time
 import os
 import shutil
+from System.IO import FileStream, FileMode, FileAccess, FileShare
+from System.IO import File
+import sys
+import clr
+from copy import deepcopy as Copy
 
 reload(sys)
 sys.setdefaultencoding('utf-8')
@@ -695,7 +700,7 @@ try:
 
             @property
             def Exposure(self):
-                return Grasshopper.Kernel.GH_Exposure.tertiary
+                return Grasshopper.Kernel.GH_Exposure.quarternary
 
             def SetUpParam(self, p, name, nickname, description):
                 p.Name = name
@@ -750,6 +755,16 @@ try:
             def get_Internal_Icon_24x24(self):
                 o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAQRSURBVEhL7ZN7SFtnGIdTtlbKoKtJTHJMjbWaGLX0ojYxJubupWVTsO06jbXVeInRbhpzT3qZzo2C0A3m0MYLdM6OdWjrrMLYWmqhY3PdrdCxMkZhF+g2KGPr37+95ySYpJox2F+DvfDwnXByfs/3fhfe//Wvak/E0VU47ZxVjjsuRengUEQ6LhVMdr5nWQjNVi2FZ61Xk6n5aOBy3dJAWywmdSnG2u4pZ1+E4u3uKDNObpRPO6G82APr9ZdQvTyIqhsDSexfOQvrQuibWEzqUkTab8unu5A33o68CEFjLsv5Nigm2mF8PwDLYgjmq8EkKq+dgWUh+FksJnUVjdhXiiY6oBxp4SgYaYXyTTvkJMif6oRpIQjrUpiTJFJFnVUuhldiMTxezesn0hivdULsN98UuAzL/L6K5Yx+4zLjr/yDCVZB7LeCCVQi01+Jwt4DUJ5tQO7ocejmPNDP+1BxxRvlchTjB2EY53xxQb6nNlPkM0FwygLmdDXSg0ZsCejB9+ix+QUVRB4ThB4Dtnr1yLGpIevUQhgwI2+0Nbp01NEqETsUbzlA+xcXyHqrGQr4M61XhfoxF759cB+64WPgteVj9Ma7mP/qOra4yklgQM7RslVBLifooOBkifxCF+TrCdgZPu3S4f5vP2Hxzk3sGjwEto5EvNh4ohR8n5ETZDt0EAYtyB1riXcQiQsUF+i0jbWvFQj9RgoqgemcHQ8f/Y7vf/kBU7eugNe1GwJaIlawo1mDbGcFhGErnSoKm3JAPtkZZYIdO5A/0wPlhGOtQECCdFp3NvDOj/e42euHW7Chu5j2wAg+vZcd2QeZrQzibj0yB5+F9JVaSIdY6mLUYtvwQWwbqksW0AypAxMX7rw4hJ8fPsCHdz/Gre++wKaeUqS7K8APmJBZvxfSZ/ZA1KQCv08Hfj9By5qIwE/dunRrBU/1l2PXy4e5mftmXwPjs3DPp+ZH8ERPMSeQ1hdDWrsXGc1qCNwGCGjj2eVLRBgyQ+g2PrZEbsOjtD4Vet55FXNfXoPYZ8YG526cnH8DM58ucR9upZklCdhAH8FKEhCGSeBNEGS7D0jYe5AxUIX0kAmbPGrww3T2aSYbXWpsdmu453S6J9KDJZxARAKhi8KoC2F/Mhl0hOmixgWG04YnpT6rXxSwTGa4TeMCtylCY0TcXParhC6WuFEFsU0FScM+ZJmLaB+KuT0QN9G7dZC0aOj/6rggVW3XFHyyQ78T27UFyNEWEjSad4J5rjQqYMXrIDlGgsZ/IMiqL/5c9rwKWYdKVpEeLuW6+Tskx1mB6nYsJnUxtrK7TJcekjZtHLsWTCtLeUoyHXowNvXXsZjUld2kqxEf1ZwRNahPShJI/P34Mwv7jaxRZ43F/KeLx/sLFL3BLApzcXgAAAAASUVORK5CYII="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def IsFloatNum(self, str):
+                s = str.split('.')
+                if len(s) > 2:
+                    return False
+                else:
+                    for si in s:
+                        if not si.isdigit():
+                            return False
+                    return True
 
             def RunScript(self, Write, Path, Sheet, Cell, Data):
                 Messge = "False"
@@ -1463,6 +1478,297 @@ try:
                     sc.doc = ghdoc
                 finally:
                     self.Message = 'Remove the placeholder battery'
+
+
+        # 读取Excel文件
+        class ReadExcel(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP_ReadExcel", "RPP_ReadExcel", """Reading Excel files""", "Scavenger", "L-Others")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("1af44b49-b408-449e-bfb6-04c578a1e6ab")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.quarternary
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Boolean()
+                self.SetUpParam(p, "Read", "R", "Set to True to perform read operations")
+                p.SetPersistentData(gk.Types.GH_Boolean(False))
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_String()
+                self.SetUpParam(p, "Path", "P", "File path with extension name")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_String()
+                self.SetUpParam(p, "Sheet", "S", "Form Settings, read the first form by default")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_String()
+                self.SetUpParam(p, "Cell", "C", "Read the cell Settings")
+                p.SetPersistentData(gk.Types.GH_String('ALL'))
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Data", "D", "Data separated by commas")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                p1 = self.marshal.GetInput(DA, 1)
+                p2 = self.marshal.GetInput(DA, 2)
+                p3 = self.marshal.GetInput(DA, 3)
+                result = self.RunScript(p0, p1, p2, p3)
+
+                if result is not None:
+                    self.marshal.SetOutput(result, DA, 0, True)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAQiSURBVEhL3ZN5TJtlHMfrH05Nhgv0eNtyDBgtk6uyHlw9KeWYZDoCjlKdAi3nVspRxNKWc4lsOl2WTY7iYB6b08TETY5lc5kzcSQajTERYpbsMFlQidtCPIjh6/O+faHEvi76p/6ST54n7x/fz/N7fs/L+3+XdrRZnj7hVGYE9meuM9lA1oZM1TttmU+c61eWTg/u2Aj9bdelIVXz3FE+G8Nd2cPN6dvH636XT9RDPs7yRh1DUsCBtDebYJn1o2DWF0bRJwMonvJfZqO4S3HMYZKfbETSuAMyEkiHBqlD4qgdKZONMM94kT/dHYbl417kn/VcY6O4Sx1wqZJJiGy8DrIxAgmm97QkcaQWKRMNME+RwI88YVgu9sB8zvMtG8XjVZzp2RTfWqiQ7jdnSlssj8c069OT/burkw/bkPyyFbKDlZAfqsT2oUqkvbIXctJB6lvNsMz4YJn2hlF8qQ+WKV9IEPtikYfyWyB0G7FpnwoP7lMy8BoViHDlQtBhQFSHHiKXHil2E+L7nkT8q5VQnXZBebqF4Ayup4J79QftUJ9qCQlEbuNxQW8BHm3XomdqGOfnP8PVG9/g8IWTiPEUIqI1F/xOA/jtBiTtUUPclAOhp4C5qsThIAkMNUgYqUHiiTpse702JKA6DK/xfWYm6Pbdn3Dtx1s4NBPAyh8ruDA/h4edGkS69RDQAmsWpE4dKF8RM5ukUTJ4mjE7u7dDRs9u1M4t+P7nRYx8+j54RTwMnT8BusRdZmwh3W0UiPxEQL+qsTWIgIURDDu4Bd/9cBMXF+ZQftyJhcXrePeLWTzkVCOK7UBWlY3oFj2onuLgCyOS9WdMiwJEQJ63bPRvBF/dWsDdX5exvPIbVldXkXGgghEwMyDD3rorE9G2LFANWlCkC8pXGIa4fycob1FIINwguLF0G5NXP0Qk2d/55R5GrpDralKsC2JKMiAp2wHh81nMy4pq14XB7zLSK7eAHvKZz2fBs0Xj7NeXsXhvCZtbc5gh04LYEgWk5UoIq7ODUnc4Ak8+BG5jSCByG47w/UHBlzfnMXzlPTxQvQ31bw9gafkOUvrLsLktJyjYqYBkTfCCMSj5C4JuIujcIBC7TUdFL5VAQCRbB0sRQ+6Q781HpIf8VP2l5F4tiOw2QdBlYjqgBSIiELYaOBF1miB06UMCmfepxySewgGqw3wgwpU3uMWl65M06SfEJIi/WwF6lTythpQMOM6YCgn52ahnNKBs3IifywZVpQkJuCpNLs9I1KUiQZeCBG2I+GIitBIBR/Aa/0gQX6bWx5GTxlaoEEs6iKlQMqt0j+q+p6dhBFbNAhvFXXFV2jypQwuxIw9i+wZq8yCpuT/Seh0kVs11Noq7slvLH4m15bZRVVl9lDWr91+xN7c/7lltKRv1ny4e70/FDwLpnLEDPAAAAABJRU5ErkJggg=="
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def __init__(self):
+                pass
+
+            def col_to_num(self, col_str):
+                """将字母列转换为数字列"""
+                num = 0
+                for c in col_str:
+                    num = num * 26 + ord(c.upper()) - ord('A') + 1
+                return abs(num - 1)
+
+            def Read_Excel(self, Path, sheet_name, cell_range):
+                # 读取Excel
+
+                stream = System.IO.File.Open(Path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)
+                if ".xlsx" in Path:
+                    workbook = XsModel.XSSFWorkbook(stream)  # 创建实例工作簿
+                elif ".xls" in Path:
+                    workbook = HsModel.HSSFWorkbook(stream)
+
+                if sheet_name is not None:
+                    sheet = workbook.GetSheet(sheet_name)  # 根据表名获取工作表
+                else:
+                    sheet = workbook.GetSheetAt(0)  # 默认获取第一个工作表中的数据
+                Data = []
+                if sheet is not None:
+                    if cell_range == 'ALL':
+                        for row in range(sheet.LastRowNum + 1):
+                            row_data = []  # 创建一个空列表来存储行数据
+                            if sheet.GetRow(row) is not None:  # 判断这一行是否为空
+                                for col in range(sheet.GetRow(row).LastCellNum):
+                                    cell = sheet.GetRow(row).GetCell(col)  # 获取单元格
+                                    if cell is not None:
+                                        row_data.append(cell.ToString())  # 将单元格内容添加到行数据列表
+                                    else:
+                                        row_data.append('')  # 如果单元格为空，则添加空字符串
+                                Data.append(','.join(row_data))  # 将行数据连接起来，并添加到数据列表
+                    else:
+                        if ':' in cell_range:
+                            start, end = sorted(cell_range.split(':'))  # 对输入的范围进行排序，确保start总是在end之前
+                            start_row, start_col = (int(start[1:]) - 1 if start[1:] else 0, self.col_to_num(start[0])) if len(start) > 1 else (0, self.col_to_num(start))
+                            end_row, end_col = (int(end[1:]) - 1 if end[1:] else sheet.LastRowNum, self.col_to_num(end[0])) if len(end) > 1 else (sheet.LastRowNum, self.col_to_num(end))
+
+                            for row in range(start_row, end_row + 1):
+                                row_data = []
+                                for col in range(start_col, end_col + 1):
+                                    if sheet.GetRow(row) is not None:
+                                        cell = sheet.GetRow(row).GetCell(col)  # 获取单元格
+                                        if cell is not None:
+                                            row_data.append(cell.ToString())  # 将单元格内容添加到行数据中
+                                        else:
+                                            row_data.append('')  # 如果单元格为空，则添加空字符串
+                                Data.append(','.join(row_data))  # 将行数据以逗号连接起来，添加到数据中
+
+                        elif len(cell_range) > 1:  # 如果输入的是单元格
+                            row = int(cell_range[1:]) - 1
+                            col = self.col_to_num(cell_range[0])
+                            if sheet.GetRow(row) is not None:
+                                cell = sheet.GetRow(row).GetCell(col)  # 获取单元格
+                                if cell is not None:
+                                    Data.append(cell.ToString())  # 将单元格内容添加到数据列表
+                                else:
+                                    Data.append('')  # 如果单元格为空，则添加空字符串
+
+                        else:  # 如果输入的是列
+                            col = int(cell_range)
+                            for row in range(sheet.LastRowNum + 1):
+                                #                        print col
+                                cell = sheet.GetRow(row).GetCell(col)  # 获取单元格
+                                if cell is not None:
+                                    Data.append(cell.ToString())  # 将单元格内容添加到数据列表
+                                else:
+                                    Data.append('')  # 如果单元格为空，则添加空字符串
+                return Data
+
+            def RunScript(self, Read, Path, Sheet, Cell):
+                try:
+                    Data = gd[object]()
+                    re_mes = Message.RE_MES([Path], ['Path'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                    else:
+                        if not os.path.exists(Path):
+                            Message.message2(self, "File does not exist!")
+                        elif ".xlsx" in Path or ".xls" in Path:
+                            if Read:
+                                Data = self.Read_Excel(Path, Sheet, Cell)
+                        else:
+                            Message.message2(self, "Path input error!")
+                    return Data
+                finally:
+                    self.Message = 'Read Excel'
+
+
+        # 按钮功能
+        class Attributes_Custom(Grasshopper.Kernel.Attributes.GH_ComponentAttributes):
+            def __init__(self, owner):
+                super(Attributes_Custom, self).__init__(owner)
+                self.button_visible = False  # 按钮点击的真假值
+                self.button_color = System.Drawing.Color.FromArgb(66, 66, 66)  # 按钮颜色
+
+            # 按钮类方法
+            def Layout(self):
+                super(Attributes_Custom, self).Layout()
+
+                rec0 = Grasshopper.Kernel.GH_Convert.ToRectangle(self.Bounds)  # 初始化电池矩形框
+                rec0.Height += 20  # 电池矩形框的高度
+
+                rec1 = Copy(rec0)  # 按钮矩形框
+                rec1.Y = rec1.Bottom - 20
+                rec1.Height = 20
+                rec1.Inflate(-2, -2)
+                self.Bounds = rec0
+                self.ButtonBounds = rec1
+
+            def Render(self, canvas, graphics, channel):
+                """绘制组件的按钮"""
+                super(Attributes_Custom, self).Render(canvas, graphics, channel)
+                if channel == Grasshopper.GUI.Canvas.GH_CanvasChannel.Objects:
+                    button = Grasshopper.GUI.Canvas.GH_Capsule.CreateTextCapsule(self.ButtonBounds, self.ButtonBounds, Grasshopper.GUI.Canvas.GH_Palette.White, "Refresh", 2, 0)
+                    button.Render(graphics, self.button_color)
+                    button.Dispose()
+
+            def RespondToMouseDown(self, sender, e):
+                """鼠标左键单击事件"""
+                if e.Button == System.Windows.Forms.MouseButtons.Left:
+                    rec = self.ButtonBounds
+
+                    if rec.Contains(e.CanvasLocation.X, e.CanvasLocation.Y):
+                        self.button_visible = True
+                        self.button_color = System.Drawing.Color.FromArgb(164, 164, 164)
+                        self.Owner.ExpireSolution(True)
+                        return Grasshopper.GUI.Canvas.GH_ObjectResponse.Handled
+
+                return super(Attributes_Custom, self).RespondToMouseDown(sender, e)
+
+            def RespondToMouseUp(self, sender, e):
+                if self.button_visible:
+                    self.button_visible = False
+                    # 修改按钮的颜色
+                    self.button_color = System.Drawing.Color.FromArgb(66, 66, 66)
+                    self.Owner.ExpireSolution(True)
+                    return Grasshopper.GUI.Canvas.GH_ObjectResponse.Release
+
+                return super(Attributes_Custom, self).RespondToMouseUp(sender, e)
+
+
+        # 获取工作表名称
+        class GetSheetName(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP_GetSheetName", "RPP_GetSheetName", """Gets the worksheet name""", "Scavenger", "L-Others")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("f1fb5c00-5aae-4906-b3cd-c1e0d007c881")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.quarternary
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_String()
+                self.SetUpParam(p, "Path", "P", "File path with extension name")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "SheetNames", "S", "All sheet names")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                result = self.RunScript(p0)
+
+                if result is not None:
+                    self.marshal.SetOutput(result, DA, 0, True)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAALxSURBVEhLtVZZSFRhGL02LuPULE5uUL32VlBB0UvQQ0/RW1qJmRjkkqXj5JI5jo5XRivQcl/GZcBSs5SycohBjUKtKA2MNo0sTSsDK5VcOn3/nZnyYcKZax04cO/LOf//fef77uUUKZF7lPo4XqmL4QPqcl2n2cj75Wt4uTaCl6dGOaUyO47nFKlRBaqzSVAZExHUUuAyg1svQl2cDkVmNEjIKVXnteAEJ30slLpoBNTyy9K/Ngf+NTkINBtBN4D81BHQIZ2Smbhk4E+UVuogKUuHrDITa6r08KnWg8s6Bq+EQ1CmHRVnEEj0MxngXZGBvTfrUDnYh+7RYfSMj+DG2+fIsLZhszEZsmTnt1jWQE2lYKetfvYQf0NLfx+4E6HiDCTlZ2B4ZLVL2fBg4h06R4fw5usX4T222QQuXoQBK826eiPGZ74JQjPzcwi1XIInmUordAimJu9rLMV6XSyVKNJ9g9VUmh1XSwVxhv5PY+BK04Sysaar63MhMcTANylcXJPl1VnY1HQB84uLgsHUj1nsvFYGrjhFuF3QSmPK8u5Lkeyi1DjwceY74u9eF9Ilodgq8hKhWMkcyKoyse1KESZnp+0WNgxNTSKp9zak/HF4JYatZA5yhRnYSibdY39u4oDlxVOoSVyqjRBn4DBhpWLzEGJpgPX9a7u8DU1PeuCRcBCkI86AkdV8LaWHRZStC829diz8tDWfYcu50/DUhIs3WEoWU64kFZaRl3Z5IMxcBO7kAfcNWN7ZqVkfVKZs4RZ+NQZwRcloHR60ywMhtYXuGzAxVv/CgfsIu9OIDeY8KGk2lGQUYW3GNE02w9zCAjbyGnhrD7tnwNbyrrYKQYRhglbGwOcPQkSXorDrlrhl50Nl2d/R8HuSnaGirxNSWhWi17WKVsL2lhKk91pw+dUAOqixbVT7/Mdd2N1ugkd2NHwpPUon4i4ZMLKlt4qiyZrtQ1vUqzxDeJdRL/7ZJ9NBlirHs8vfZHr4j38VWvwCxZQhhyOq6J4AAAAASUVORK5CYII="
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def __init__(self):
+                pass
+
+            def CreateAttributes(self):  # 创建属性方法，调用自定义按钮类
+                super(GetSheetName, self).__init__()
+                self.m_attributes = Attributes_Custom(self)
+
+            def _Get_Sheet_Name(self, Path):
+                # 获取工作表名称
+                stream = System.IO.File.Open(Path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)
+                if ".xlsx" in Path:
+                    workbook = XsModel.XSSFWorkbook(stream)  # 创建实例工作簿
+                elif ".xls" in Path:
+                    workbook = HsModel.HSSFWorkbook(stream)
+
+                sheet_names = [workbook.GetSheetName(i) for i in range(workbook.NumberOfSheets)]
+
+                return sheet_names
+
+            def RunScript(self, Path):
+                try:
+                    sheet_names = gd[object]()
+                    re_mes = Message.RE_MES([Path], ['Path'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                    else:
+                        if not os.path.exists(Path):  # 判断文件是否存在
+                            Message.message2(self, "File does not exist!")
+                        elif ".xlsx" in Path or ".xls" in Path:
+                            self.m_attributes.button_visible  # 按钮点击的真假值
+                            sheet_names = self._Get_Sheet_Name(Path)
+                        else:
+                            Message.message2(self, "Path input error!")
+                    return sheet_names
+
+                finally:
+                    self.Message = 'Sheet name'
 
 
     else:
