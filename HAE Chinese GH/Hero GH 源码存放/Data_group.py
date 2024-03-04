@@ -791,11 +791,13 @@ try:
                             stock_tree.Insert(item, path, index)
                 return stock_tree
 
-            def handle_list_data(self, data):
+            def handle_list_data(self, tuple):
+                path, data = tuple
                 for single in data:
                     if isinstance(single, (list)) is True:
-                        return list(chain(*data))
-                return data
+                        return self.split_tree(list(chain(*data)), [path])
+
+                return self.split_tree(data, [path])
 
             def RunScript(self, Data_Tree):
                 try:
@@ -818,7 +820,10 @@ try:
                                 if _[0] == father_index:
                                     sub_list.append(origin_data[index])
                             depest_list.append(sub_list)
-                        result = ght.list_to_tree(ghp.run(self.handle_list_data, depest_list))
+
+                        zip_list = zip(minpath, depest_list)
+                        ungroup_data = map(self.handle_list_data, zip_list)
+                        result = self.format_tree(ungroup_data)
                         result.SimplifyPaths()
                         return result
                 finally:
@@ -1199,13 +1204,17 @@ try:
 
 
         # 数据对比
-        class DataComparison(component):
+        class DataComparison(component, gk.IGH_VariableParameterComponent):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
                                                                    "RPP_Data Comparison", "D32", """Group based on conditions.""",
                                                                    "Scavenger",
                                                                    "G-Data")
                 return instance
+
+            def __init__(self):
+                self.name = None
+                self.input_count = 0
 
             def get_ComponentGuid(self):
                 return System.Guid("7b77656d-aeeb-4066-a831-c3a7711ab743")
@@ -1241,16 +1250,39 @@ try:
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
-                p0 = self.marshal.GetInput(DA, 0)
-                p1 = self.marshal.GetInput(DA, 1)
-                result = self.RunScript(p0, p1)
+                self.Message = 'Data comparison'
 
-                if result is not None:
-                    if not hasattr(result, '__getitem__'):
-                        self.marshal.SetOutput(result, DA, 0, True)
-                    else:
-                        self.marshal.SetOutput(result[0], DA, 0, True)
-                        self.marshal.SetOutput(result[1], DA, 1, True)
+                ByTree, DaTree = (gd[object]() for _ in range(2))
+
+                p0 = self.Params.Input[0].VolatileData
+                j_list, str_list, str_path = self.parameter_judgment(p0)
+
+                re_mes = Message.RE_MES([j_list], ['G end'])
+                if len(re_mes) > 0:
+                    for mes_i in re_mes:
+                        Message.message2(self, mes_i)
+
+                    for output_index in range(self.Params.Output.Count):
+                        self.marshal.SetOutput(ByTree, DA, output_index, True)
+                else:
+                    for output_index in range(self.Params.Output.Count):
+                        if output_index != 0:
+                            structure_tree = self.Params.Input[output_index].VolatileData
+                            if 'empty structure' != str(structure_tree):  # 判断输入是否为空树
+                                data_list = self.Branch_Route(structure_tree)[0]
+                                real_str_list = ghp.run(lambda x: [_.Value for _ in x], str_list)
+                                if not data_list:
+                                    str_zip_list = zip(real_str_list, str_path)
+                                    iter_ungroup_data = ghp.run(self.just_output_str, str_zip_list)
+                                    ByTree = self.format_tree(iter_ungroup_data)
+                                else:
+                                    zip_list = zip(real_str_list, data_list, str_path)
+                                    iter_ungroup_data = zip(*ghp.run(self.grouping, zip_list))
+                                    ByTree, DaTree = ghp.run(lambda single_tree: self.format_tree(single_tree), iter_ungroup_data)
+                            else:
+                                DaTree = gd[object]()
+                            self.marshal.SetOutput(DaTree, DA, output_index, True)
+                    self.marshal.SetOutput(ByTree, DA, 0, True)
 
             def get_Internal_Icon_24x24(self):
                 o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAVCSURBVEhLlVUJTBRnFH67szvM7s7MLizgAoqsqEWsrhKsAosXl6gRARUiHm2QKIpWMa1HFMVbLBVI8aqaSioVUaEm1qvWprbWWlsbxaP2CJWoscZ4AYoor+/fGVNg1zT9kpf53/u/9/5j3jcDHuAgE5Xh/wJvNuoj1LFn8Im2dFP1kGfCij7HyPVToq+FRn0yiIcq8k/+/G3Rs0mpUZlqTIEuTBpiWNW3kn83dImhzPGld1MqisdjURtsmqJP7ToD/PQDVGpncMvfS11Xc2DpjkULUha13P0UEU/jni251XnZ8WnJiQMmE8cLOKd/vFyXiObfRqF0biTKVxJR+n7kc/GYs5X5XD/zBKWeG7Rf1S47j3gGn96uwNZ7e9vaHu7DhrryxudPD2Hlx3MvEUcHXqndEsQjMbfNN0YhW0j+JcH1NDeMQdNR5wPOYR6h1HODUFORX9X8YN9LfFyNbfcr8eW9vYhNBxBbP8eKrbM/IY7eRTSsDK8y/zXatXv5WtK/C9RE12sCDeuIM4QROyMrI2Z4w9Wtzdhai/hgH7KF8FEVYvNBLNswvYQoRoBA/g1jqeOCdJau53IimvYMQum7EShfiEPDtog6LtrKTpBNNpIVbQdtwftpK+qvbW1pvFOBj2/uxp++Xo/4vBavXSx9UrJ2WjFxTAoVQOJ6i+P57JCd+oyuh/mckAJdki2f4rQDF7RkeWRxLq8d7AGW2Nk5yQvXF2SeyZ+ZXLSxcPIaCg9SZj2DFdEpww5gbTmHLJ45twICXi3+CjYBdLHq2DP4MYHjTDVRj4WVfY+S66tE3TCPzh3fZu+brvoMBqGo3xFD1eBG/TBfDzpYHf6ZML/XUkOJ4xTTgXSCdBBinKpPD8oBX/1AldoeEz4y+pSHTbaX8aUDdvBpQYvl83FoeZSCwuKwan6sLV07yJJFPFUH1D3m30kHP7TTwXHnC+ZzEeZUpaYL3mTsc5CxEaST3UsGXpKaxqNExeWL8W2s+8Sjzkb5ehIKheGXiUc6SAuOF484b7np4Ca16cmhf3M9xYlETCGbySyI4yYesAZu/kMIiIUP++2SLye8cLX2JcqjXFbH/Gcyei3r8xodXG2ng9roem1P6R3iMB2w3QPu38+19ejTi425odYR9FlpNtdTLtscW4jl/5qEXnNDS4mi6qDE8aN0lnqfdtFBB1sirugSugxmxTxAy2cFF9BVPmNXKX0zHI27Iumqk9F0OPqJV17PDjoQuVAxhZ9h3wbTuh2EXPsSXaL/fIp3bkV3CDqnbqxtgXam/RRMsK3Vz7IXUjRSmXSH/JbGWNz7P4TiAdpgat0ojVik+h0gk7Ge14wGeVEZdMU88LtHfiibJDAVewKLs3+GRBYwD/zullJuHEgb2KQKDnqAzkkF788Bv/P54F+3BYKxEAJaxoK8fSp4nwgCfrRK7gxNGlgOLQXbnelgPb4OgrCcckk4p6eDT+UwkHYSR6DLMiZvopXZZDE91xORWQl0wzIyBwhTlHpu0FOxC7uhu4u7Uc3bQMZi2eB7nTheMBSkXrnge4wVZ5OMyIwlLQD/+t7Ahyn13KBLB+9Zy8HW9EG73CLVxoF5FeOwPuryNljPbacTbCYiI7EEdlWLwfYiEoQMpZ47YkGcsQYCXaffpBZmG2P+RLB8QRRvsNGLmgTea3PB7wbd58Ms8GEv+elC8G9IAUvRm2DqopRzgyaGrjcHrGfopDfJcBJYnlCNlmlgPREFxiTicApVgSUE9FMjtcYCevEx5L+2lzvBQN/2wf3BsLo/CJk+oGOqVwUG8A+AlgcmZniPAwAAAABJRU5ErkJggg=="
@@ -1304,6 +1336,45 @@ try:
             #                     gpdalist[index] = 'aaa'
             #                     datatree.Add(datab, GH_Path(i, j))
             #         return gbdatatree, datatree
+
+            def CanInsertParameter(self, side, index):
+                # 是否可添加
+                if side != gk.GH_ParameterSide.Output and (index != 0 and index != 1):
+                    return True
+                return False
+
+            def CanRemoveParameter(self, side, index):
+                # 是否可移除
+                if side != gk.GH_ParameterSide.Output and (index != 0 and index != 1):
+                    return True
+                return False
+
+            def CreateParameter(self, side, index):
+                # 重定义输入端下标
+                index = self.Params.Input.Count
+                # 可添加输入端名字集合
+                self.name = gk.GH_ComponentParamServer.InventUniqueNickname("ABCEFGHIJKLMNOPQRSTUVWXYZ", self.Params.Input)
+                # 添加输入端
+                p_input = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p_input, self.name, self.name, "Grouping list list or tree")
+                p_input.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+                self.Params.RegisterInputParam(p_input, index)
+
+                # 添加输出端
+                p_out = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p_out, self.name, self.name, "results from the list tree")
+                p_out.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+                self.Params.RegisterOutputParam(p_out, index)
+                self.Params.OnParametersChanged()
+                return p_input
+
+            def DestroyParameter(self, side, index):
+                # 销毁已注册的输出端
+                self.Params.UnregisterOutputParameter(self.Params.Output[index])
+                return True
+
+            def VariableParameterMaintenance(self):
+                pass
 
             def Branch_Route(self, Tree):
                 """分解Tree操作，树形以及多进程框架代码"""
@@ -1383,29 +1454,29 @@ try:
                 ungroup_data = self.split_tree(res_str, origin_path)
                 return ungroup_data
 
-            def RunScript(self, GroupByData, GroupData):
-                try:
-                    ByTree, DaTree = (gd[object]() for _ in range(2))
-
-                    j_list_1, str_list, str_path = self.parameter_judgment(self.Params.Input[0].VolatileData)
-                    re_mes = Message.RE_MES([j_list_1], ['G end'])
-                    if len(re_mes) > 0:
-                        for mes_i in re_mes:
-                            Message.message2(self, mes_i)
-                    else:
-                        data_list = self.parameter_judgment(self.Params.Input[1].VolatileData)[1]
-                        real_str_list = ghp.run(lambda x: [_.Value for _ in x], str_list)
-                        if not data_list:
-                            str_zip_list = zip(real_str_list, str_path)
-                            iter_ungroup_data = ghp.run(self.just_output_str, str_zip_list)
-                            ByTree = self.format_tree(iter_ungroup_data)
-                        else:
-                            zip_list = zip(real_str_list, data_list, str_path)
-                            iter_ungroup_data = zip(*ghp.run(self.grouping, zip_list))
-                            ByTree, DaTree = ghp.run(lambda single_tree: self.format_tree(single_tree), iter_ungroup_data)
-                    return ByTree, DaTree
-                finally:
-                    self.Message = 'Data comparison'
+            # def RunScript(self, GroupByData, GroupData):
+            #     try:
+            #         ByTree, DaTree = (gd[object]() for _ in range(2))
+            #
+            #         j_list_1, str_list, str_path = self.parameter_judgment(self.Params.Input[0].VolatileData)
+            #         re_mes = Message.RE_MES([j_list_1], ['G end'])
+            #         if len(re_mes) > 0:
+            #             for mes_i in re_mes:
+            #                 Message.message2(self, mes_i)
+            #         else:
+            #             data_list = self.parameter_judgment(self.Params.Input[1].VolatileData)[1]
+            #             real_str_list = ghp.run(lambda x: [_.Value for _ in x], str_list)
+            #             if not data_list:
+            #                 str_zip_list = zip(real_str_list, str_path)
+            #                 iter_ungroup_data = ghp.run(self.just_output_str, str_zip_list)
+            #                 ByTree = self.format_tree(iter_ungroup_data)
+            #             else:
+            #                 zip_list = zip(real_str_list, data_list, str_path)
+            #                 iter_ungroup_data = zip(*ghp.run(self.grouping, zip_list))
+            #                 ByTree, DaTree = ghp.run(lambda single_tree: self.format_tree(single_tree), iter_ungroup_data)
+            #         return ByTree, DaTree
+            #     finally:
+            #         self.Message = 'Data comparison'
 
 
         # 数据比较
@@ -2549,7 +2620,7 @@ try:
                     sc.doc = Rhino.RhinoDoc.ActiveDoc
                     self.Offset = Offset
                     # 空值判断
-                    re_mes = Message.RE_MES([Data_Tree], ['D end'])
+                    re_mes = Message.RE_MES([Data_Tree], ['T end'])
                     if len(re_mes) > 0:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
