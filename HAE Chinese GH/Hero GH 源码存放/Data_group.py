@@ -2530,6 +2530,10 @@ try:
             def get_ComponentGuid(self):
                 return System.Guid("8727f2d7-2a4d-4287-8233-9be4718ca5e7")
 
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.secondary
+
             def SetUpParam(self, p, name, nickname, description):
                 p.Name = name
                 p.NickName = nickname
