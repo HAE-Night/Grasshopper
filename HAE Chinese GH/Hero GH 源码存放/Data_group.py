@@ -802,6 +802,7 @@ try:
             def RunScript(self, Data_Tree):
                 try:
                     re_mes = Message.RE_MES([Data_Tree], ['Data_Tree'])
+                    result = gd[object]()
                     if len(re_mes) > 0:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
@@ -825,7 +826,7 @@ try:
                         ungroup_data = map(self.handle_list_data, zip_list)
                         result = self.format_tree(ungroup_data)
                         result.SimplifyPaths()
-                        return result
+                    return result
                 finally:
                     self.Message = 'Simplify'
 
