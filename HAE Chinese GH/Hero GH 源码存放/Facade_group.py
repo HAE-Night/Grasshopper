@@ -4816,6 +4816,7 @@ try:
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
                 self.SetUpParam(p, "Coefficient", "f", "Coefficient")
+                p.SetPersistentData(gk.Types.GH_Number(1))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
