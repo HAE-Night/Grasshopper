@@ -1484,7 +1484,7 @@ try:
         class ReadExcel(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_ReadExcel", "RPP_ReadExcel", """Reading Excel files""", "Scavenger", "L-Others")
+                                                                   "RPP_ReadExcel", "V32", """Reading Excel files""", "Scavenger", "L-Others")
                 return instance
 
             def get_ComponentGuid(self):
@@ -1693,7 +1693,7 @@ try:
         class GetSheetName(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_GetSheetName", "RPP_GetSheetName", """Gets the worksheet name""", "Scavenger", "L-Others")
+                                                                   "RPP_GetSheetName", "V31", """Gets the worksheet name""", "Scavenger", "L-Others")
                 return instance
 
             def get_ComponentGuid(self):
