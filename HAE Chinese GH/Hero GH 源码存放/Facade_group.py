@@ -1645,7 +1645,9 @@ try:
                 p1 = self.marshal.GetInput(DA, 1)
                 p2 = self.marshal.GetInput(DA, 2)
                 p3 = self.marshal.GetInput(DA, 3)
-                result = self.RunScript(p0, p1, p2, p3)
+                p4 = self.marshal.GetInput(DA, 4)
+                p5 = self.marshal.GetInput(DA, 5)
+                result = self.RunScript(p0, p1, p2, p3, p4, p5)
 
                 if result is not None:
                     self.marshal.SetOutput(result, DA, 0, True)
