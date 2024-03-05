@@ -1622,6 +1622,19 @@ try:
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
+                p = Grasshopper.Kernel.Parameters.Param_Number()
+                self.SetUpParam(p, "Roundoff", "R", "Round length units.")
+                p.SetPersistentData(gk.Types.GH_Number(0.5))
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Integer()
+                self.SetUpParam(p, "ZeroSuppression", "ZS",
+                                "Zero elimination for length units and angle units(0: None；1: SuppressLeading；2: 	SuppressTrailing；3: SuppressLeadingAndTrailing)")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                p.SetPersistentData(gk.Types.GH_Number(2))
+                self.Params.Input.Add(p)
+
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
                 self.SetUpParam(p, "Name", "N", "Name")
@@ -1676,18 +1689,23 @@ try:
                             stock_tree.Insert(item, path, index)
                 return stock_tree
 
-            def create_style(self, name, Proportion, TextHeight, font):
+            def create_style(self, name, Proportion, TextHeight, font, Roundoff, Suppression):
                 """创建或修改标注样式"""
                 if sc.doc.DimStyles.FindName(name) is None:
                     # 判断标注样式是否存在
                     Rhino.RhinoDoc.ActiveDoc.DimStyles.Add(name)
                 dim = sc.doc.DimStyles.FindName(name)
-                dim.DimensionScale = Proportion
-                dim.TextHeight = TextHeight
-                dim.Font = Rhino.DocObjects.Font(font)
-                sc.doc.DimStyles.Modify(dim, dim.Id, True)
+                dim.DimensionScale = Proportion  # 标注比例
+                dim.TextHeight = TextHeight  # 字高
+                dim.Font = Rhino.DocObjects.Font(font)  # 字体
+                ZeroSuppress = Rhino.DocObjects.DimensionStyle.ZeroSuppression(Suppression)
+                dim.ZeroSuppress = ZeroSuppress  # 长度单位消零
+                dim.AngleZeroSuppress = ZeroSuppress  # 角度单位消零
+                dim.Roundoff = Roundoff  # 长度单位取整
 
-            def RunScript(self, Name, Proportion, Character_height, Typeface):
+                sc.doc.DimStyles.Modify(dim, dim.Id, True)  # 将设置的样式进行修改
+
+            def RunScript(self, Name, Proportion, Character_height, Typeface, Roundoff, ZeroSuppression):
                 try:
                     sc.doc = Rhino.RhinoDoc.ActiveDoc
                     re_mes = Message.RE_MES([Name], ['Name end'])
@@ -1696,7 +1714,7 @@ try:
                             Message.message2(self, mes_i)
                         return gd[object]()
                     else:
-                        self.create_style(Name, Proportion, Character_height, Typeface)
+                        self.create_style(Name, Proportion, Character_height, Typeface, Roundoff, ZeroSuppression)
 
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
@@ -4445,7 +4463,7 @@ try:
         class ContinueDimension(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_ContinueDimension", "RPP_ContinueDimension",
+                                                                   "RPP_ContinueDimension", "F33",
                                                                    """ContinueDimension""", "Scavenger", "H-Facade")
                 return instance
 
@@ -4756,6 +4774,259 @@ try:
                     return Dimension, True_Value
                 finally:
                     self.Message = 'Continuous dimension'
+
+            def DrawViewportWires(self, args):
+                try:
+                    for sub_dim in self.dim:
+                        args.Display.DrawAnnotation(sub_dim, System.Drawing.Color.FromArgb(0, 150, 0))
+                except:
+                    pass
+
+            def get_ClippingBox(self):
+                return self.bbox
+
+
+        # 弧长标注
+        class ArcAnnotation(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP_ArcAnnotation", "F32", """Arc length dimension""", "Scavenger", "H-Facade")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("9701e95d-c56b-44b3-abd5-c2469dbca47d")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.secondary
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Arc()
+                self.SetUpParam(p, "Arc", "A", "Arc")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Number()
+                self.SetUpParam(p, "Coefficient", "f", "Coefficient")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_String()
+                self.SetUpParam(p, "Style", "S", "Dimension Style")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_String()
+                self.SetUpParam(p, "OverWrite", "W", "OverWrite")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Dimension", "D", "Dimension")
+                self.Params.Output.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "True_Value", "V", "True Value")
+                self.Params.Output.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Display_Value", "SV", "Display Value")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                p1 = self.marshal.GetInput(DA, 1)
+                p2 = self.marshal.GetInput(DA, 2)
+                p3 = self.marshal.GetInput(DA, 3)
+                result = self.RunScript(p0, p1, p2, p3)
+
+                if result is not None:
+                    if not hasattr(result, '__getitem__'):
+                        self.marshal.SetOutput(result, DA, 0, True)
+                    else:
+                        self.marshal.SetOutput(result[0], DA, 0, True)
+                        self.marshal.SetOutput(result[1], DA, 1, True)
+                        self.marshal.SetOutput(result[2], DA, 2, True)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAALqSURBVEhLzdV/TIxxHAfwU13nRBcSsVo/SES2EJU2FWvsqK7S2FrRJub6Zf2QfmjNzao127UoU8qOSiOUEkWls8ZKbJa0Fv1T6Y+M5jaWj/fnjoRG7PnDe3tt3x/3PPd8v8/3+31E/0NOg7+hKGzWwy44Dk3gDIJlGWyHJ6CBQ2APgiQSagxFUTAoDEV9rMEbuC0EfMEOZhQjMAYZJEARcGZDBFyCaiiELMiAfOD2KkgES5g2LsAX8MWLwQH2Ao/gDuSCI3yLBOaDVF8TiaxACXchjht+zn5IgT3AU8Q5Bg1gw5WFMjOfBKVcU16s7G+uzdB1NKnoXl2mTlMS25cYH1BiLpW642c8eh75ZRDDD0mDs8BTchIuAscpM1nR0v/8DBHdh3p6N3iBBrrVNNJbTKS7hrYmet1bRFkpwfxASyEGymABTIbfgQmEQh03zJFI/CtL48aJWmn8jYYK86N6QgI9VNbWskB0exkbG2/z9nA+kpYYdKtLm4c/aqMr5UfHzMzEa9FftsTKYpTvMzVzQQs8v65VpTEfiB5SU23mZ88NK5LQ9suwp2RrQd6BAaJ2ulmRPIa6Kv7wzreGru/hm/DGEqXG737ET9TWkE0yqSm/7JnEVp0TMUikpRJ1dCvqvFAmMwtugIW9/aLQ4b5zND5aSe5uDif0vTPPpvbGbOpsOUUmJka8UCbDS7OSC6kJAfX89IW5kQOo/m5apo2zo7XSZZVt+NfqZPhAywNJbUXSMH2qox1+63hDCRZePalg9/RB7sTIiyLCKvHT9wgUOfB8rx7oLqCejnxCmU9UwcJrl3ehfRde0Nir82RpMY//VLCYwlWwqSyJGyJqpDCFh1rfI2D4dAxKUsrVfCyUF0QPoW6u7xEoy4H3wppn2hzdx/c15Onu9Lf74I/hlVTl5mr3mCZuU/P1dBKL9WeLYPHdF+JFCvnG6riD/s2q9LBOiUQi2OeSYxQV7qPYsnnlS5RjgT8u/xiR6AsyOQOkKw3ikwAAAABJRU5ErkJggg=="
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def __init__(self):
+                self.dimstyle, self.bbox = None, None
+                self.dim = []
+
+            def Branch_Route(self, Tree):
+                """分解Tree操作，树形以及多进程框架代码"""
+                Tree_list = [list(_) for _ in Tree.Branches]
+                Tree_Path = [list(_) for _ in Tree.Paths]
+                return Tree_list, Tree_Path
+
+            def split_tree(self, tree_data, tree_path):
+                """操作树单枝的代码"""
+                new_tree = ght.list_to_tree(tree_data, True, tree_path)  # 此处可替换复写的Tree_To_List（源码参照Vector组-点集根据与曲线距离分组）
+                result_data, result_path = self.Branch_Route(new_tree)
+                if list(chain(*result_data)):
+                    return result_data, result_path
+                else:
+                    return [[]], result_path
+
+            def format_tree(self, result_tree):
+                """匹配树路径的代码，利用空树创造与源树路径匹配的树形结构分支"""
+                stock_tree = gd[object]()
+                for sub_tree in result_tree:
+                    fruit, branch = sub_tree
+                    for index, item in enumerate(fruit):
+                        path = gk.Data.GH_Path(System.Array[int](branch[index]))
+                        if hasattr(item, '__iter__'):
+                            if item:
+                                for sub_index in range(len(item)):
+                                    stock_tree.Insert(item[sub_index], path, sub_index)
+                            else:
+                                stock_tree.AddRange(item, path)
+                        else:
+                            stock_tree.Insert(item, path, index)
+                return stock_tree
+
+            def Find_DimStyle(self, dimstyle):
+                """获取标注样式"""
+                Style = sc.doc.DimStyles.FindName(str(dimstyle))
+                if dimstyle is None:
+                    # 输入为空时，给默认值
+                    Style = sc.doc.DimStyles.FindIndex(0)
+
+                if Style is None:
+                    # 若标注样式不存在，根据索引0返回第一个标注样式
+                    Message.message2(self, "DimStyle: {} non-existent".format(dimstyle))
+                    Style = sc.doc.DimStyles.FindIndex(0)
+                return Style
+
+            def match_list(self, *args):
+                """匹配子树"""
+                """匹配列表里面的数据"""
+                zip_list = list(args)
+                len_list = map(lambda x: len(x), zip_list)  # 得到最长的树
+                max_index = len_list.index(max(len_list))  # 得到最长的树的下标
+                max_list = zip_list[max_index]  # 最长的列表
+                other_list = [zip_list[_] for _ in range(len(zip_list)) if _ != max_index]  # 剩下的列表
+                matchzip = zip([max_list] * len(other_list), other_list)
+
+                def sub_match(tuple_data):  # 数据匹配
+                    target_tree, other_tree = tuple_data
+                    t_len, o_len = len(target_tree), len(other_tree)
+                    if o_len == 0:
+                        return other_tree
+                    else:
+                        new_tree = other_tree + [other_tree[-1]] * (t_len - o_len)
+                        return new_tree
+
+                iter_group = map(sub_match, matchzip)  # 数据匹配
+                iter_group.insert(max_index, max_list)  # 将最长的数据插入进去
+
+                return iter_group
+
+            def Create_Dim(self, tuple):
+                """创建标注"""
+                Arc, Coefficient, OverWrite = tuple
+                if Arc is not None:
+                    Length = Arc.Length
+                    ArcDim = rg.AngularDimension(Arc, Coefficient)
+                    ArcDim.DimensionStyleId = self.dimstyle.Id
+                    if OverWrite is None:
+                        ArcDim.RichText = str(round(Length, 2))
+                    else:
+                        ArcDim.RichText = OverWrite
+                    True_Value = Length
+                    DisPlay_Value = ArcDim.PlainUserText
+                else:
+                    ArcDim, True_Value, DisPlay_Value = None, None, None
+                return ArcDim, True_Value, DisPlay_Value
+
+            def _do_main(self, tuple_data):
+                a_part_trunk, b_part_trunk, origin_path = tuple_data
+                new_list_data = list(b_part_trunk)
+                new_list_data.insert(self.max_index, a_part_trunk)  # 将最长的数据插入到原列表中
+                match_Arc, match_Coefficient, match_OverWrite = new_list_data
+
+                Arc, Coefficient, OverWrite = self.match_list(match_Arc, match_Coefficient, match_OverWrite)  # 将数据二次匹配列表里面的数据
+
+                zip_list = zip(Arc, Coefficient, OverWrite)
+                zip_ungroup_data = ghp.run(self.Create_Dim, zip_list)  # 传入获取主方法中
+
+                dim, True_Value, DisPlay_Value = zip(*zip_ungroup_data)
+
+                ungroup_data = map(lambda x: self.split_tree(x, origin_path), [dim, True_Value, DisPlay_Value])
+
+                Rhino.RhinoApp.Wait()
+                return ungroup_data
+
+            def temp_by_match_tree(self, *args):
+                # 参数化匹配数据
+                value_list, trunk_paths = zip(*map(self.Branch_Route, args))
+                len_list = map(lambda x: len(x), value_list)  # 得到最长的树
+                max_index = len_list.index(max(len_list))  # 得到最长的树的下标
+                self.max_index = max_index
+                max_trunk = [_ if len(_) != 0 else [None] for _ in value_list[max_index]]
+                ref_trunk_path = trunk_paths[max_index]
+                other_list = [
+                    map(lambda x: x if len(x) != 0 else [None], value_list[_]) if len(value_list[_]) != 0 else [
+                        [None]]
+                    for _ in range(len(value_list)) if _ != max_index]  # 剩下的树, 没有的值加了个None进去方便匹配数据
+                matchzip = zip([max_trunk] * len(other_list), other_list)
+
+                def sub_match(tuple_data):
+                    # 子树匹配
+                    target_tree, other_tree = tuple_data
+                    t_len, o_len = len(target_tree), len(other_tree)
+                    if o_len == 0:
+                        new_tree = [other_tree] * len(target_tree)
+                    else:
+                        new_tree = other_tree + [other_tree[-1]] * (t_len - o_len)
+                    return new_tree
+
+                # 打包数据结构
+                other_zip_trunk = zip(*map(sub_match, matchzip))
+
+                zip_list = zip(max_trunk, other_zip_trunk, ref_trunk_path)
+                # 多进程函数运行
+                iter_ungroup_data = zip(*ghp.run(self._do_main, zip_list))
+                Dim, True_Value, DisPlay_Value = ghp.run(lambda single_tree: self.format_tree(single_tree), iter_ungroup_data)
+                return Dim, True_Value, DisPlay_Value
+
+            def RunScript(self, Arc, Coefficient, Style, OverWrite):
+                try:
+                    Dim, True_Value, DisPlay_Value = (gd[object]() for i in range(3))
+                    sc.doc = Rhino.RhinoDoc.ActiveDoc
+                    self.dimstyle = self.Find_DimStyle(str(Style))
+
+                    re_mes = Message.RE_MES([Arc], ['Arc'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                    else:
+                        Dim, True_Value, DisPlay_Value = self.temp_by_match_tree(Arc, Coefficient, OverWrite)
+                        no_rendering_line = self.Branch_Route(Dim)[0]
+                        self.dim = filter(None, list(chain(*no_rendering_line)))
+                        self.bbox = rg.BoundingBox.Empty  # 覆写zoom方法
+                        for _ in self.dim:
+                            if _:
+                                self.bbox.Union(_.GetBoundingBox(True))
+
+                    sc.doc.Views.Redraw()
+                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                    sc.doc = ghdoc
+
+                    return Dim, True_Value, DisPlay_Value
+
+                finally:
+                    self.Message = 'Arc length dimension'
 
             def DrawViewportWires(self, args):
                 try:
