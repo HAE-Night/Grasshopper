@@ -1288,7 +1288,7 @@ try:
                     sc.doc = ghdoc
                     return CirBrepList, HoleCirBrepList
                 finally:
-                    self.Message = 'HAE 切割圆柱'
+                    self.Message = 'HAE cutting cylinder'
 
 
         # 不规则几何物体最小外包围盒(3D)
@@ -4043,7 +4043,7 @@ try:
         class MMB2(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_MMB2", "RPP_MMB2", """Find the approximate minimum bounding box of Brep""", "Scavenger", "D-Brep")
+                                                                   "RPP_MMB2", "R44", """Find the approximate minimum bounding box of Brep""", "Scavenger", "D-Brep")
                 return instance
 
             def __init__(self):
