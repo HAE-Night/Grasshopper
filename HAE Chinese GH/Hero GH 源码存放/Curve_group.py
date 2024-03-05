@@ -4287,16 +4287,19 @@ try:
                 origin_object_list, origin_pl_list, origin_path = tuple_data
                 # 若平面有多个，重新赋值
                 o_pl_len = len(origin_pl_list)
-                if o_pl_len == 1:
-                    origin_object_list = [origin_object_list]
-                else:
-                    origin_object_list = [origin_object_list[:] for _ in range(o_pl_len)]
-                # 每个单元切片进行主方法排序
-                sub_zip_list = zip(origin_object_list, origin_pl_list)
-                res_object_list = map(self._do_main, sub_zip_list)
+                if len(origin_object_list) != 0:
+                    if o_pl_len == 1:
+                        origin_object_list = [origin_object_list]
+                    else:
+                        origin_object_list = [origin_object_list[:] for _ in range(o_pl_len)]
+                    # 每个单元切片进行主方法排序
+                    sub_zip_list = zip(origin_object_list, origin_pl_list)
+                    res_object_list = map(self._do_main, sub_zip_list)
 
-                New_BoundingBox, X_Dir, Y_Dir = zip(*res_object_list)
-                ungroup_data = map(lambda x: self.split_tree(x, origin_path), [[New_BoundingBox], [X_Dir], [Y_Dir]])
+                    New_BoundingBox, X_Dir, Y_Dir = zip(*res_object_list)
+                else:
+                    New_BoundingBox, X_Dir, Y_Dir = [], [], []
+                ungroup_data = map(lambda x: self.split_tree(x, origin_path), [New_BoundingBox, X_Dir, Y_Dir])
                 Rhino.RhinoApp.Wait()
                 return ungroup_data
 
