@@ -552,7 +552,8 @@ try:
                         # 多进程方法
                         def temp(tuple_data):
                             # 解包元组元素
-                            origin_pt_list, origin_pl_list, origin_path = tuple_data
+                            pt_list, pl_list, origin_path = tuple_data
+                            origin_pt_list, origin_pl_list = filter(None, pt_list), filter(None, pl_list)
                             # 若平面有多个，重新赋值
                             o_pl_len = len(origin_pl_list)
                             if o_pl_len == 1:
@@ -845,7 +846,10 @@ try:
                                         None_indexList.append(index)
                                 gh_origin_pts = filter(None, gh_origin_pts)
                                 cut_origin_pts = filter(None, origin_pts)
-                                ptsort(gh_origin_pts, first)
+                                if len(gh_origin_pts) == 1:
+                                    Index = [0]
+                                else:
+                                    ptsort(gh_origin_pts, first)
 
                                 new_index = []
                                 if len(cut_origin_pts) == len(Index):
@@ -859,7 +863,10 @@ try:
                                     Origin_RPt.append(None)
                                 Index = new_index
                             else:
-                                ptsort(gh_origin_pts, first)
+                                if len(gh_origin_pts) == 1:
+                                    Index = [0]
+                                else:
+                                    ptsort(gh_origin_pts, first)
                                 Origin_RPt = [origin_pts[_] for _ in Index]
                         "----------------------------"
 
@@ -1477,6 +1484,9 @@ try:
                                                                    "RPP_SortPointByRightHand", "Q4", """Sort points counterclockwise by the plane Z vector,multiple points and origin are collinear,rank according to distance from the origin""", "Scavenger", "A-Point")
                 return instance
 
+            def __init__(self):
+                pass
+
             def get_ComponentGuid(self):
                 return System.Guid("c37bf920-19b2-4d86-9ee4-18cfcddc05db")
 
@@ -1493,19 +1503,19 @@ try:
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Point()
                 self.SetUpParam(p, "Points", "Pi", "Point List ")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Integer()
                 self.SetUpParam(p, "FirstIndex", "F", "Specifies the starting element subscript")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Plane()
                 self.SetUpParam(p, "Plane", "P", "Sorting plane")
                 NORMAL_PLANE = rg.Plane.WorldXY
                 p.SetPersistentData(gk.Types.GH_Plane(NORMAL_PLANE))
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
@@ -1518,36 +1528,31 @@ try:
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
-                p0 = self.marshal.GetInput(DA, 0)
-                p1 = self.marshal.GetInput(DA, 1)
-                p2 = self.marshal.GetInput(DA, 2)
-                result = self.RunScript(p0, p1, p2)
-
-                if result is not None:
-                    if not hasattr(result, '__getitem__'):
-                        self.marshal.SetOutput(result, DA, 0, True)
+                # 插件名称
+                self.Message = 'Points are sorted by the right hand rule'
+                # 初始化输出端数据内容
+                Points_Result, index = (gd[object]() for _ in range(2))
+                if self.RunCount == 1:
+                    # 获取输入端
+                    p0 = self.Params.Input[0].VolatileData
+                    p1 = self.Params.Input[1].VolatileData
+                    p2 = self.Params.Input[2].VolatileData
+                    # 确定不变全局参数
+                    self.j_bool_f1, pts_trunk, pts_path = self.parameter_judgment(p0)
+                    re_mes = Message.RE_MES([self.j_bool_f1], ['Pi end'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
                     else:
-                        self.marshal.SetOutput(result[0], DA, 0, True)
-                        self.marshal.SetOutput(result[1], DA, 1, True)
+                        Points_Result, index = self.temp_by_match_tree(p0, p1, p2)
+
+                # 将结果添加进输出端
+                DA.SetDataTree(0, Points_Result)
+                DA.SetDataTree(1, index)
 
             def get_Internal_Icon_24x24(self):
                 o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAO7SURBVEhL3ZVdTFtlGMdJFqZ3Nq2MFkrbwMZHWzinn6fnq6ftwsfYEpxaN5PBmCOZMGDD2CVopBuVAi1QWZBAIMs0cZnsQpQbvZjG7GIzSp0mM8bMCyVR78wuvZh/n9O+ZEuoXhgujL/kl5P37Tn/97zPec5p2X+O2iNf2eydmx1suPs4OvNdto78B2y4+9g7vx6vab/7oCy+todN7S62Q/lbjq5f4GjLc2xqd7G137lQ0/ndTbv2mZlN7S6Ow39y1tZ7OTb81+wxOAw95oC538yTXvOAboXXNGBRh962xq7fqfQZhozuymELbzln5Mwj5uC+EUuocqhapLHdGGI5f0szN8BBm1GhTEhQ0iQdw1Ne+F89jaaTi/CNc5i/JWHzdwGtcxLElAx1UkY0p6HhSMMyyymNYb+hXw/0jSvwJosXKmSQFuATp+HsXUQo7UFi3Y+F2260zYrwjNHvtEhsRkPjIecqiyqN7aDtfTkbxuynMmY/l9AyLsH/poRTcwG0XuhDbc8ihAyH5qSE+tdFBC9JOHNVwYsrMsSkChvvGGNRJSmvP97wkzan4aP7PN77wY3EhIIfV1qBtRg2xgfQ07eMeysCvl06iKXLUUQzEr7/w4f1LR/4QRFPGY1HWVZJOO8wj3BWRTQdhDoRRFtSxBztYmPaj66zffAdW8X5iy6MJkPAux0YnAnj+RUPjq0G0NLteUgZB4pRJTA5TWcVKoded/3BCeTgWxoSlyMYzcl4ZfpZjCT7Mbwg4+pSDD/PR3GYFucuypAzGpzPuLYo5oliWgkc7fYb0Vy40DUS88MpBfmMitvpML6clrGZCeJuJowNupGjYwL8dI7eaZGshgOx+k9YVEn2Np1o3IpQqwXowcn6TujiwKUQmkZD6H0nhM3fBMRXBbhfC4FLiQiwFpYn6dyUihrOnmVZOykvL+e95z3QqP7xBQXhNG1bv5j0Ubu+fE3Ax/cb0H0lAD+VpBDMVGhnYkLE01WVL7C4nVRwFYNe6udzNyQ8gB8j6wI8bxSD9BJIKSpDKlg4br982wuEZxR4XvI+3EtFYHE72d9Vu67mIogvi8jedCG+FIRILapO0cvGlCYfjZVt6e4j8xrczzX/SjFPFtNKYA1bv+HPtKDxhBN1x11o7HbB3euE+ySpHwvqc8xTj+T7eTiUui9YVGkMtYa1atkKi2ApWBV6TLGqYLX0mLJuNaykLVIDU53pnz8RxD5Sr6GLdJMtpP7H4iF9ZIAUSP1rKZEqqZERMkZWkf8rysr+AkBB1/doXf1qAAAAAElFTkSuQmCC"
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
-
-            def __init__(self):
-                pass
-
-            def message1(self, msg1):  # 报错红
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):  # 警告黄
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):  # 提示白
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
-
-            def mes_box(self, info, button, title):
-                return rs.MessageBox(info, button, title)
 
             def Branch_Route(self, Tree):
                 """分解Tree操作，树形以及多进程框架代码"""
@@ -1590,6 +1595,35 @@ try:
                     j_list = False
                 return j_list, geo_list, geo_path
 
+            def temp_by_match_tree(self, *args):
+                # 参数化匹配数据
+                value_list, trunk_paths = zip(*map(self.Branch_Route, args))
+                len_list = map(lambda x: len(x), value_list)  # 得到最长的树
+                max_index = len_list.index(max(len_list))  # 得到最长的树的下标
+                self.max_index = max_index
+                max_trunk = value_list[max_index]
+                ref_trunk_path = trunk_paths[max_index]
+                other_list = [value_list[_] for _ in range(len(value_list)) if _ != max_index]  # 剩下的树
+                matchzip = zip([max_trunk] * len(other_list), other_list)
+
+                def sub_match(tuple_data):
+                    # 子树匹配
+                    target_tree, other_tree = tuple_data
+                    t_len, o_len = len(target_tree), len(other_tree)
+                    if o_len == 0:
+                        new_tree = [other_tree] * len(target_tree)
+                    else:
+                        new_tree = other_tree + [other_tree[-1]] * (t_len - o_len)
+                    return new_tree
+
+                # 打包数据结构
+                other_zip_trunk = zip(*map(sub_match, matchzip))
+                zip_list = zip(max_trunk, other_zip_trunk, ref_trunk_path)
+                # map参数化函数运行
+                iter_ungroup_data = zip(*ghp.run(self._do_main, zip_list))
+                temp_data_1, temp_data_2 = ghp.run(lambda single_tree: self.format_tree(single_tree), iter_ungroup_data)
+                return temp_data_1, temp_data_2
+
             def is_nan(self, angle):
                 # 判断是否为失效值
                 nan_bool = (not float('-inf')) < angle < float('inf')
@@ -1627,19 +1661,28 @@ try:
                 sort_zip_list = sorted(zip(distance_list, zip_coll))
                 return sort_zip_list
 
-            def temp(self, tuple_data):
+            def _do_main(self, tuple_data):
                 # 解包数据
-                pt_list, origin_pt_list, _index, ref_pln, origin_path = tuple_data
-                if pt_list:
+                origin_pt_list, set_data, origin_path = tuple_data
+                _index, ref_pln = set_data
+                if _index:
+                    _index = map(lambda x: int(x.Value), _index)
+                else:
+                    _index = [None]
+
+                pt_list = map(self._trun_object, origin_pt_list)
+                pln_list = map(self._trun_object, ref_pln)
+
+                if pt_list and pln_list:
                     _index = _index[0]
-                    ref_pln = ref_pln[0]
+                    pln = pln_list[0]
                     # 得到平面基础数据
-                    base_pt, ref_vector = ref_pln.Origin, ref_pln.XAxis
+                    base_pt, ref_vector = pln.Origin, pln.XAxis
                     # 平面投影
-                    xform = rg.Transform.PlaneToPlane(ref_pln, rg.Plane.WorldXY)
-                    projected_point_set = [rg.Point3d(_) for _ in pt_list]
+                    xform = rg.Transform.PlaneToPlane(pln, rg.Plane.WorldXY)
+                    projected_point_set = [rg.Point3d(_) if _ is not None else None for _ in pt_list]
                     # 投影点重排序并输出下标
-                    temp_index = self.right_hand_rule(projected_point_set, base_pt, ref_vector, ref_pln)
+                    temp_index = self.right_hand_rule(projected_point_set, base_pt, ref_vector, pln)
                     # 判断F端是否为失效值
                     if _index is not None:
                         # 判断F端是否为负数
@@ -1666,49 +1709,16 @@ try:
                 Rhino.RhinoApp.Wait()
                 return ungroup_data
 
-            def RunScript(self, Points, FirstIndex, Plane):
-                try:
-                    sc.doc = Rhino.RhinoDoc.ActiveDoc
-                    Points_Result, index = (gd[object]() for _ in range(2))
-                    # 获取输入端数据
-                    j_bool_f1, origin_pts, _path = self.parameter_judgment(self.Params.Input[0].VolatileData)
-                    re_mes = Message.RE_MES([j_bool_f1], ['P end'])
-                    if len(re_mes) > 0:
-                        for mes_i in re_mes:
-                            Message.message2(self, mes_i)
+            def _trun_object(self, ref_obj):
+                """引用物体转换为GH内置物体"""
+                if 'ReferenceID' in dir(ref_obj):
+                    if ref_obj.IsReferencedGeometry:
+                        test_pt = ref_obj.Value
                     else:
-                        # 数据匹配
-                        pt_trunk, pt_path = self.Branch_Route(Points)
-                        index_trunk, index_path = self.Branch_Route(FirstIndex)
-                        pl_trunk, pl_path = self.Branch_Route(Plane)
-                        pt_len, index_len, pl_len = len(pt_trunk), len(index_trunk), len(pl_trunk)
-                        if pt_len > pl_len:
-                            new_pt_trunk = pt_trunk
-                            new_pl_trunk = pl_trunk + [pl_trunk[-1]] * (pt_len - pl_len)
-                        else:
-                            new_pt_trunk = pt_trunk
-                            new_pl_trunk = pl_trunk
-
-                        # 输入失效值时的F端数据结构
-                        if not index_trunk:
-                            index_trunk = [[None]]
-
-                        if len(new_pt_trunk) > index_len:
-                            new_index_trunk = index_trunk + [index_trunk[-1]] * (len(new_pt_trunk) - index_len)
-                        else:
-                            new_index_trunk = index_trunk
-                        zip_list = zip(new_pt_trunk, origin_pts, new_index_trunk, new_pl_trunk, pt_path)
-                        # 多进程处理数据
-                        iter_ungroup_data = zip(*ghp.run(self.temp, zip_list))
-                        # 匹配树形并分配输出端
-                        Points_Result, index = ghp.run(lambda single_tree: self.format_tree(single_tree), iter_ungroup_data)
-                    sc.doc.Views.Redraw()
-                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
-                    sc.doc = ghdoc
-
-                    return Points_Result, index
-                finally:
-                    self.Message = 'Points are sorted by the right hand rule'
+                        test_pt = ref_obj.Value
+                else:
+                    test_pt = ref_obj
+                return test_pt
 
 
         # 在指定平面内找出共面点
