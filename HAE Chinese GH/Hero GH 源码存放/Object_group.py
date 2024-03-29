@@ -703,7 +703,7 @@ try:
                     for obj in range(len(Object)):
                         obj_attr = sc.doc.Objects.FindId(Object[obj]).Attributes
                         value = obj_attr.GetUserString(key)  # 根据输入的key值得到Value
-                        if value == str(v):  # 判断得到的value是否与输入的value相等
+                        if value is not None and fnmatch.fnmatch(value, str(v)):  # 使用通配符匹配数据, 判断得到的value是否与输入的value相等
                             Keys.append(key)
                             Obj.append(obj)
                             Value.append(value)
@@ -2187,6 +2187,9 @@ try:
                                                                    "RPP_DeconstructAttributes", "C31", """Decomposed HAE attribute""", "Scavenger", "K-Object")
                 return instance
 
+            def __init__(self):
+                pass
+
             @property
             def Exposure(self):
                 return Grasshopper.Kernel.GH_Exposure.quarternary
@@ -2232,38 +2235,38 @@ try:
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
-                p0 = self.marshal.GetInput(DA, 0)
-                result = self.RunScript(p0)
-
-                if result is not None:
-                    if not hasattr(result, '__getitem__'):
-                        self.marshal.SetOutput(result, DA, 0, True)
+                sc.doc = Rhino.RhinoDoc.ActiveDoc
+                # 插件名称
+                self.Message = 'Deconstruct Attributes'
+                # 初始化输出端数据内容
+                Keys, Values, Name, Layer_Name, Color, Material = (gd[object]() for _ in range(6))
+                if self.RunCount == 1:
+                    # 获取输入端
+                    p0 = self.Params.Input[0].VolatileData
+                    self.j_bool_f1, attr_trunk, attr_path = self.parameter_judgment(p0)
+                    re_mes = Message.RE_MES([self.j_bool_f1], ['A end'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
                     else:
-                        self.marshal.SetOutput(result[0], DA, 0, True)
-                        self.marshal.SetOutput(result[1], DA, 1, True)
-                        self.marshal.SetOutput(result[2], DA, 2, True)
-                        self.marshal.SetOutput(result[3], DA, 3, True)
-                        self.marshal.SetOutput(result[4], DA, 4, True)
-                        self.marshal.SetOutput(result[5], DA, 5, True)
+                        # 将属性与树结构集合放入多进程池
+                        zip_list = zip(attr_trunk, attr_path)
+                        iter_ungroup_data = zip(*ghp.run(self.temp, zip_list))
+                        Keys, Values, Name, Layer_Name, Color, Material = ghp.run(lambda single_tree: self.format_tree(single_tree), iter_ungroup_data)
+
+                ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                sc.doc = ghdoc
+                # 将结果添加进输出端
+                DA.SetDataTree(0, Keys)
+                DA.SetDataTree(1, Values)
+                DA.SetDataTree(2, Name)
+                DA.SetDataTree(3, Layer_Name)
+                DA.SetDataTree(4, Color)
+                DA.SetDataTree(5, Material)
 
             def get_Internal_Icon_24x24(self):
                 o = "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"
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
-
-            def __init__(self):
-                pass
-
-            def message1(self, msg1):  # 报错红
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):  # 警告黄
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):  # 提示白
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
-
-            def mes_box(self, info, button, title):
-                return rs.MessageBox(info, button, title)
 
             def Branch_Route(self, Tree):
                 """分解Tree操作，树形以及多进程框架代码"""
@@ -2296,6 +2299,74 @@ try:
                         else:
                             stock_tree.Insert(item, path, index)
                 return stock_tree
+
+            def parameter_judgment(self, tree_par_data):
+                # 获取输入端参数所有数据
+                geo_list, geo_path = self.Branch_Route(tree_par_data)
+                if geo_list:
+                    j_list = any(ghp.run(lambda x: len(list(filter(None, x))), geo_list))  # 去空操作, 判断是否为空
+                else:
+                    j_list = False
+                return j_list, geo_list, geo_path
+
+            def temp(self, tuple_data):
+
+                attr_list, origin_path = tuple_data
+                k_list, v_list, n_list, ln_list, c_list, m_list = zip(*map(self.break_attr, attr_list))
+                ungroup_data = map(lambda x: self.split_tree(x, origin_path), [k_list, v_list, n_list, ln_list, c_list, m_list])
+
+                Rhino.RhinoApp.Wait()
+                return ungroup_data
+
+            def break_attr(self, single_attr):
+                # 判断属性是否为HAE属性或者是引用的物体
+                if 'HAE' in str(single_attr):
+                    true_attr = single_attr.Value
+                else:
+                    true_attr = single_attr
+                # 获取HAE内置属性
+                if '_HAEAttributes__hae_param' in dir(true_attr):
+                    attr = true_attr._HAEAttributes__hae_param
+                    layer_name = true_attr.Layer_name
+                elif 'NewGuid' not in dir(true_attr):
+                    ref_rh_id = true_attr.ReferenceID
+                    attr = sc.doc.Objects.Find(ref_rh_id).Attributes
+                    layer_name = str(sc.doc.Layers.FindIndex(attr.LayerIndex))
+                else:
+                    self.message2("Only the attribute value and the object being referenced can be modified!")
+                    attr, layer_name = None, None
+
+                # 获取属性中的键值对
+                rh_obj_dict = attr.GetUserStrings()
+                key_list, value_list = ([] for _ in range(2))
+                for k in rh_obj_dict.AllKeys:
+                    key_list.append(k)
+                    value_list.append(rh_obj_dict[k])
+                k, v = key_list, value_list
+
+                # 获取属性中的材质
+                material_index = attr.MaterialIndex
+                temp_material = sc.doc.Materials.FindIndex(material_index)
+                if temp_material:
+                    mater = [temp_material]
+                else:
+                    init_material = Rhino.DocObjects.Material.DefaultMaterial
+                    init_material.Index = -1
+                    mater = [init_material]
+
+                # 获取属性中的颜色
+                color = [attr.ObjectColor]
+
+                # 获取属性中的名字
+                name = [attr.Name]
+
+                # 匹配图层名的数据结构
+                if type(layer_name) is not list:
+                    layer_name = [layer_name]
+                else:
+                    layer_name = layer_name
+
+                return k, v, name, layer_name, color, mater
 
             def RunScript(self, AOR):
                 try:
@@ -2541,13 +2612,17 @@ try:
                 return copy_obj_attr
 
             def _get_attr(self, _hea_attr):
-                _hea_attr = _hea_attr.Value
+                # 判断属性是否为HAE属性或者是引用的物体
+                if 'HAE' in str(_hea_attr):
+                    true_attr = _hea_attr.Value
+                else:
+                    true_attr = _hea_attr
                 # 获取HAE内置属性
-                if '_HAEAttributes__hae_param' in dir(_hea_attr):
-                    attr = _hea_attr._HAEAttributes__hae_param
-                    temp_layer_name = _hea_attr.Layer_name
-                elif 'NewGuid' not in dir(_hea_attr):
-                    ref_rh_id = _hea_attr.ReferenceID
+                if '_HAEAttributes__hae_param' in dir(true_attr):
+                    attr = true_attr._HAEAttributes__hae_param
+                    temp_layer_name = true_attr.Layer_name
+                elif 'NewGuid' not in dir(true_attr):
+                    ref_rh_id = true_attr.ReferenceID
                     attr = sc.doc.Objects.Find(ref_rh_id).Attributes
                     temp_layer_name = str(sc.doc.Layers.FindIndex(attr.LayerIndex))
                 else:
