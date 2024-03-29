@@ -15,6 +15,7 @@ import initialization
 import math
 import scriptcontext as sc
 import Grasshopper.DataTree as gd
+from Grasshopper.Kernel.Data import GH_Path
 import Grasshopper.Kernel as gk
 import ghpythonlib.treehelpers as ght
 import System.Collections.Generic.IEnumerable as IEnumerable
@@ -22,6 +23,7 @@ import System.Collections.Generic.IEnumerable as IEnumerable
 from itertools import chain
 
 import Geometry_group as HaeGeo
+import Curve_group
 
 Result = initialization.Result
 Message = initialization.message()
@@ -1097,7 +1099,8 @@ try:
                         # 多进程方法
                         def temp(tuple_data):
                             # 解包元组元素
-                            origin_geo_list, origin_pl_list, origin_path = tuple_data
+                            geo_list, pl_list, origin_path = tuple_data
+                            origin_geo_list, origin_pl_list = filter(None, geo_list), filter(None, pl_list)
                             # 若平面有多个，重新赋值
                             o_pl_len = len(origin_pl_list)
                             if o_pl_len == 1:
@@ -1605,6 +1608,363 @@ try:
                     return res_surfaces
                 finally:
                     self.Message = 'Curve division surface'
+
+        # class Surface_Offset_By_Edges(component):
+        #     def __new__(cls):
+        #         instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+        #                                                            "RPP_SurfaceOffsetByEdges", "RPP_SurfaceOffsetByEdges", """面根据边偏移""", "Scavenger", "C-Surface")
+        #         return instance
+        #
+        #     def get_ComponentGuid(self):
+        #         return System.Guid("9e6b072d-5230-4a46-a8f7-55b063de00c8")
+        #
+        #     @property
+        #     def Exposure(self):
+        #         return Grasshopper.Kernel.GH_Exposure.primary
+        #
+        #     def SetUpParam(self, p, name, nickname, description):
+        #         p.Name = name
+        #         p.NickName = nickname
+        #         p.Description = description
+        #         p.Optional = True
+        #
+        #     def RegisterInputParams(self, pManager):
+        #         p = Grasshopper.Kernel.Parameters.Param_Brep()
+        #         self.SetUpParam(p, "Surface", "S", "面")
+        #         p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+        #         self.Params.Input.Add(p)
+        #
+        #         p = Grasshopper.Kernel.Parameters.Param_Curve()
+        #         self.SetUpParam(p, "Edges", "E", "偏移的边")
+        #         p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+        #         self.Params.Input.Add(p)
+        #
+        #         p = Grasshopper.Kernel.Parameters.Param_Number()
+        #         self.SetUpParam(p, "Distance", "D", "偏移的距离")
+        #         p.SetPersistentData(gk.Types.GH_Number(10))
+        #         p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+        #         self.Params.Input.Add(p)
+        #
+        #     def RegisterOutputParams(self, pManager):
+        #         p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+        #         self.SetUpParam(p, "Surface", "S", "偏移后的面")
+        #         self.Params.Output.Add(p)
+        #
+        #     def SolveInstance(self, DA):
+        #         # 插件名称
+        #         self.Message = 'Surface Offset By Edges'
+        #         # # 初始化输出端数据内容
+        #         Result_Surface, Data_Tree = gd[object](), gd[object]()
+        #         if self.RunCount == 1:
+        #             # 获取输入端
+        #             p0 = self.Params.Input[0].VolatileData
+        #             p1 = self.Params.Input[1].VolatileData
+        #             p2 = self.Params.Input[2].VolatileData
+        #
+        #             self.j_bool_f1, surf_trunk, surf_path = self.parameter_judgment(p0)
+        #             self.j_bool_f2, edge_trunk, edge_path = self.parameter_judgment(p1)
+        #             re_mes = Message.RE_MES([self.j_bool_f1, self.j_bool_f2], ['S end', 'E end'])
+        #             if len(re_mes) > 0:
+        #                 for mes_i in re_mes:
+        #                     Message.message2(self, mes_i)
+        #             else:
+        #                 for index, G in enumerate(surf_trunk):
+        #                     Data_Tree.MergeTree(self.Graft_List(G, surf_path[index]))
+        #
+        #                 Result_Surface = self.temp_by_match_tree(Data_Tree, p1, p2)
+        #
+        #         # 将结果添加进输出端
+        #         DA.SetDataTree(0, Result_Surface)
+        #
+        #     def get_Internal_Icon_24x24(self):
+        #         o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAASDSURBVEhLnZQLUJRVFMcXvmUXRN47I4OQOk5NM2YSBGalmWYDueKEjizrg0DK5GXaSNhUoERINcLwEHeIQClCVEhwyEcSomBMJINoRKiIgMhrP2B3eazgv+/c3YJ1khjOzH/m7P3uOb9zzz17RU8ye5lM7ujkzDs4OGAqOcqcedprDJu+OTrN4ZNV53C9eQTV9UM496sWJ8s1yD0zgNTjPBJy+hCd1g15yCkGMYZN36i6kkoNlvhmwO05BTzlh7H+o068vc8g8v323seanc3sJMaw6RsFqYr78dRiBdwW+WOBuxIBcV0IPNDNRP6mz7rgG9E0c8D+b9V4yf8IFnoosVyhQlBSL4K/6mMif2tiD9ZG3Zw5IPxQL7Yk9LCEoclq7EjlsTPdIPJpbV3U9f8BcF5yc85buCR3YdOErKzmmfz+Rx9kDzLtyhpEeGa/ALiG+ZaWWCwSmcjTQsR7cCK5yIzz4pMzK3Hr3ijq/hzGpWtDKLuqw4kKLY5d0EJVpkVKiRZJxTrEHtchJt+g6Dwt9uRosC6ihp1g9E4BhmrjMHBWgd6jS3AmyAKeYpFaOII7Lv+uw4rQu3gzso1NBl0e9ZdaQFVSIkr66YlhxBWNMJFPa/KwKgboz7eFOnc2elXW6E6zwu1PJOwkDFB6aRAr32uFz652Nn40IXSJ1GdqBVVLCeNLRnHwp4dM5NOa77sVDDBQ6AT+mA36sgRAuhX+ipFOAPJK+/G6EUAzTmO4Ob4Dythb2BzXhG0HGhH8+U1sT2hA6Bf1CIqrxaa91fALq8AyvxTMd3XSa36cBz5PAHxjjZ6MWfjjw0knSP2+zwSwYV8rViqzH7nOddFTdVNpgZtMf/rgwkeaIhcTQEPkJEBsZrdJi3zCb2Cui4u+vDAWY90VGOsswVhHHsbb0jHemoDx29EYa9wBfV0ARqpWQVf2NAYK7ExaVPf+JEBEYqfJJa8KqWXV6VsKoDlpB12JA4bPOmLkZyeMlsuYyKc1+kZ7Hr/k34ItJgCB0W14Nfgu3gi7h7V7OrBcWc0AI42ZQmW20BTZs0RDZY4sKYl8llz4RntYe7KF9mTOQleKJa4qJwFWh7bg5W0t/97DUn/DZAzVJaD/OxsDRKhSW2wP7WmjBJ/W6BvtUedMVP/gkCWubBQbAGbmXrzrC0fx7OpfsGjNRTzvcwHuvucZQHtlNwuk6qgFlGyw0A7qPFt0ZdmgI202WpKs0RwnTE20JeojpajdLmHV57/G0R9NeCGEp8LsP54KAgyeD2JV0dGpv3SJVNV0RMnZU/EkIwB/6i12ZOorAwkTwv/wDDQXt2C4IQ0Pu2pARnuNYdM3CurN9Wb9pEsjEI0fzbgqWArlMg5H3pGgIUoyc8CD1AW4nyhB55dSdH4tZTBS4FIO/h4cAr05XN4gnjmgLd4G7fst0B5vgY4ECYORDivEULxojowAMUpfMZ8ZYI7Mni/cKkHrxxzuxIjRtFuMG2Ec6kI41Cg5VG3kULneHOkrpHAW9hrDpm8ymb2cAqm6qUR7aK8x7DETif4GWQPKTm78ggMAAAAASUVORK5CYII="
+        #         return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+        #
+        #     def __init__(self):
+        #         self.tol = sc.doc.ModelAbsoluteTolerance
+        #         self.type_dict = {0: 'Line', 1: 'Arc', 2: 'Smooth'}
+        #
+        #     def Branch_Route(self, Tree):
+        #         """分解Tree操作，树形以及多进程框架代码"""
+        #         Tree_list = [list(_) for _ in Tree.Branches]
+        #         Tree_Path = [list(_) for _ in Tree.Paths]
+        #         return Tree_list, Tree_Path
+        #
+        #     def split_tree(self, tree_data, tree_path):
+        #         """操作树单枝的代码"""
+        #         new_tree = ght.list_to_tree(tree_data, True, tree_path)  # 此处可替换复写的Tree_To_List（源码参照Vector组-点集根据与曲线距离分组）
+        #         result_data, result_path = self.Branch_Route(new_tree)
+        #         if list(chain(*result_data)):
+        #             return result_data, result_path
+        #         else:
+        #             return [[]], result_path
+        #
+        #     def format_tree(self, result_tree):
+        #         """匹配树路径的代码，利用空树创造与源树路径匹配的树形结构分支"""
+        #         stock_tree = gd[object]()
+        #         for sub_tree in result_tree:
+        #             fruit, branch = sub_tree
+        #             for index, item in enumerate(fruit):
+        #                 path = gk.Data.GH_Path(System.Array[int](branch[index]))
+        #                 if hasattr(item, '__iter__'):
+        #                     if item:
+        #                         for sub_index in range(len(item)):
+        #                             stock_tree.Insert(item[sub_index], path, sub_index)
+        #                     else:
+        #                         stock_tree.AddRange(item, path)
+        #                 else:
+        #                     stock_tree.Insert(item, path, index)
+        #         return stock_tree
+        #
+        #     def parameter_judgment(self, tree_par_data):
+        #         # 获取输入端参数所有数据
+        #         geo_list, geo_path = self.Branch_Route(tree_par_data)
+        #         if geo_list:
+        #             j_list = any(ghp.run(lambda x: len(list(filter(None, x))), geo_list))  # 去空操作, 判断是否为空
+        #         else:
+        #             j_list = False
+        #         return j_list, geo_list, geo_path
+        #
+        #     def _trun_object(self, ref_obj):
+        #         """引用物体转换为GH内置物体"""
+        #         if 'ReferenceID' in dir(ref_obj):
+        #             if ref_obj.IsReferencedGeometry:
+        #                 test_pt = ref_obj.Value
+        #             else:
+        #                 test_pt = ref_obj.Value
+        #         else:
+        #             test_pt = ref_obj
+        #         return test_pt
+        #
+        #     def match_list(self, *args):
+        #         """匹配列表里面的数据"""
+        #         zip_list = list(args)
+        #         len_list = map(lambda x: len(x), zip_list)  # 得到最长的树
+        #         max_index = len_list.index(max(len_list))  # 得到最长的树的下标
+        #         max_list = zip_list[max_index]  # 最长的列表
+        #         other_list = [zip_list[_] for _ in range(len(zip_list)) if _ != max_index]  # 剩下的列表
+        #         matchzip = zip([max_list] * len(other_list), other_list)
+        #
+        #         def sub_match(tuple_data):  # 数据匹配
+        #             target_tree, other_tree = tuple_data
+        #             t_len, o_len = len(target_tree), len(other_tree)
+        #             if o_len == 0:
+        #                 return other_tree
+        #             else:
+        #                 new_tree = other_tree + [other_tree[-1]] * (t_len - o_len)
+        #                 return new_tree
+        #
+        #         iter_group = map(sub_match, matchzip)  # 数据匹配
+        #         iter_group.insert(max_index, max_list)  # 将最长的数据插入进去
+        #
+        #         return iter_group
+        #
+        #     def Graft_List(self, List, Path):
+        #         """列表升树"""
+        #         Tree = gd[object]()
+        #         Path = GH_Path(tuple(Path))
+        #         if len(List) == 0:
+        #             Tree.AddRange(List, Path)
+        #         else:
+        #             if len(List) == 1:
+        #                 Tree.Add(List[0], Path)
+        #             else:
+        #                 for index, n in enumerate(List):
+        #                     New_Path = Path.AppendElement(index)
+        #                     Tree.Add(n, New_Path)
+        #         return Tree
+        #
+        #     def Get_Point_Pt(self, Curves, Points):
+        #         """得到点在线上的t值"""
+        #         t = []
+        #         for curve in Curves:
+        #             t0 = []
+        #             for pt in Points:
+        #                 t0.append(curve.ClosestPoint(pt)[1])
+        #             t.append(t0)
+        #         return t
+        #
+        #     def Get_Surface(self, tuple_data):
+        #         """得到线，两两join返回闭合的curve"""
+        #         curve_one, curve_two = tuple_data
+        #         Result_Curve = rg.Curve.JoinCurves([curve_one, curve_two])[0]
+        #         if ghc.Closed(Result_Curve)['closed']:
+        #             return Result_Curve
+        #
+        #     def ExtendTargetCurve(self, Curve, Target_Curve, Type):
+        #         """调用W21主方法"""
+        #         start_curve = Curve.Extend(rg.CurveEnd.Start, 100000, eval('rg.CurveExtensionStyle.{}'.format(self.type_dict[Type])))
+        #         end_curve = Curve.Extend(rg.CurveEnd.End, 100000, eval('rg.CurveExtensionStyle.{}'.format(self.type_dict[Type])))
+        #
+        #         start_par = Curve_group.ExtendTargetCurve().intersection_curve(start_curve, Target_Curve)
+        #         end_par = Curve_group.ExtendTargetCurve().intersection_curve(end_curve, Target_Curve)
+        #         if start_par and end_par:
+        #             origin_domain = start_curve.Domain
+        #             start_need_domain = rg.Interval(start_par, origin_domain[1])
+        #             start_trim_curve = start_curve.Trim(start_need_domain)
+        #
+        #             start_origin_domain = start_trim_curve.Domain
+        #             orinig_par = start_trim_curve.ClosestPoint(Curve.PointAtStart)[1]
+        #             trim_start_curve = start_trim_curve.Trim(start_origin_domain[0], orinig_par)
+        #
+        #             end_need_domain = rg.Interval(origin_domain[0], end_par)
+        #             end_trim_curve = end_curve.Trim(end_need_domain)
+        #
+        #             temp_curve_list = [trim_start_curve, end_trim_curve]
+        #             Res_Curve = rg.Curve.JoinCurves(temp_curve_list, self.tol)[0]
+        #             Res_Bool = True
+        #             Extend_Type = 'BothExtend'
+        #         elif start_par and (not end_par):
+        #             origin_domain = start_curve.Domain
+        #             start_need_domain = rg.Interval(start_par, origin_domain[1])
+        #             start_trim_curve = start_curve.Trim(start_need_domain)
+        #             Res_Curve = start_trim_curve
+        #             Res_Bool = True
+        #             Extend_Type = 'StartExtend'
+        #         elif (not start_par) and end_par:
+        #             origin_domain = end_curve.Domain
+        #             end_need_domain = rg.Interval(origin_domain[0], end_par)
+        #             end_trim_curve = end_curve.Trim(end_need_domain)
+        #             Res_Curve = end_trim_curve
+        #             Res_Bool = True
+        #             Extend_Type = 'EndExtend'
+        #         else:
+        #             Res_Curve = Curve
+        #             Res_Bool = False
+        #             Extend_Type = 'NoneExtend'
+        #
+        #         return Res_Curve, Res_Bool, Extend_Type
+        #
+        #     def _extend_surface(self, surf, index, dis):
+        #         # 曲面延伸的主函数
+        #         curve_list = [_.ToNurbsCurve() for _ in surf.Edges]
+        #         Plane = surf.Faces[0].DuplicateSurface().TryGetPlane()[1]
+        #         One_Curve = curve_list[index]  # 根据下标取出边
+        #         Other_Curves = [item for i, item in enumerate(curve_list) if i != index]  # 剩下的边
+        #
+        #         extend_length = abs(dis) * 2
+        #
+        #         Curve = ghc.OffsetCurve(One_Curve, dis, Plane, 1)  # 线偏移
+        #         temp_curve1 = Curve.Extend(rg.CurveEnd.Start, extend_length, rg.CurveExtensionStyle.Smooth)  # 线段头部t0延申
+        #
+        #         temp_Curve2 = temp_curve1.Extend(rg.CurveEnd.End, extend_length, rg.CurveExtensionStyle.Smooth)  # 线段尾部t1延申
+        #         temp_Curve3 = rg.Curve.JoinCurves(Other_Curves)
+        #         Option = rg.CurveSimplifyOptions.All
+        #
+        #         Extend_Curve = temp_Curve2.Simplify(Option, 0.01, 0.01)
+        #         Extend_Curve = Extend_Curve if Extend_Curve is not None else temp_Curve2
+        #         Join_Curve = temp_Curve3[0].Simplify(Option, 0.01, 0.01)
+        #
+        #         if dis == 0:
+        #             return surf
+        #         elif dis > 0:  # 面延申的情况
+        #             TargetCurve = self.ExtendTargetCurve(Join_Curve, Extend_Curve, 2)[0]  # 引用外部方法
+        #             Points = ghc.MultipleCurves([Extend_Curve, TargetCurve])['points']  # 求交点
+        #             t_list = self.Get_Point_Pt([Extend_Curve], Points)[0]  # 获得t值列表
+        #
+        #             split_curve, TargetCurve_a = ghc.LongestList(ghc.Shatter(Extend_Curve, t_list), TargetCurve)  # 根据t值打断线
+        #             Result_Curve = filter(None, map(self.Get_Surface, zip(split_curve, TargetCurve_a)))
+        #
+        #         else:  # 面缩减的情况
+        #             Points = ghc.MultipleCurves([Extend_Curve, Join_Curve])['points']  # 求交点
+        #             if Points is not None:
+        #                 t_list = self.Get_Point_Pt([Extend_Curve, Join_Curve], Points)  # 获得t值列表
+        #             else:
+        #                 return surf
+        #             split_curve = [ghc.Shatter(Extend_Curve, t_list[0]), ghc.Shatter(Join_Curve, t_list[1])]
+        #
+        #             Result_Curve = []
+        #
+        #             for split_curve_1 in split_curve[0]:
+        #                 split_curve1, split_curve2 = ghc.LongestList(split_curve_1, split_curve[1])
+        #                 for curve in filter(None, map(self.Get_Surface, zip(split_curve1, split_curve2))):
+        #                     Result_Curve.append(curve)
+        #
+        #         Surface = ghc.BoundarySurfaces(Result_Curve[0].Simplify(Option, 0.01, 0.01))  # 线构成面
+        #         return Surface
+        #
+        #     def select_edges_index(self, Surface, Edge):
+        #         """根据线查找线对应的下标"""
+        #         min_cur_index = 0
+        #         if Edge:
+        #             curve_list = [_.ToNurbsCurve() for _ in Surface.Edges]
+        #             Edge.Domain = rg.Interval(0, 1)  # 线区间重构0，1
+        #             origin_mid_center = Edge.PointAt(0.5)  # 求线的中心点
+        #             for cur_index, single_cur in enumerate(curve_list):
+        #                 curve_list[min_cur_index].Domain = rg.Interval(0, 1)
+        #                 single_cur.Domain = rg.Interval(0, 1)
+        #                 mid_center = single_cur.PointAt(0.5)
+        #                 start_mid_center = curve_list[min_cur_index].PointAt(0.5)
+        #                 if mid_center.DistanceTo(origin_mid_center) < start_mid_center.DistanceTo(origin_mid_center):
+        #                     min_cur_index = cur_index
+        #         return min_cur_index
+        #
+        #     def Move_Surface(self, temp_brep, edge_list, dis_list):
+        #         """递归调用移动面方法"""
+        #         need_index = self.select_edges_index(temp_brep, edge_list[0])
+        #         need_dis = dis_list[0]
+        #         res_surface = self._extend_surface(temp_brep, need_index, need_dis)
+        #         edge_list.pop(0)  # 将列表数据删除下标为0的
+        #         dis_list.pop(0)
+        #         if len(dis_list) != 0:
+        #             return self.Move_Surface(res_surface, edge_list, dis_list)
+        #         else:
+        #             return res_surface
+        #
+        #     def _do_main(self, tuple_data):
+        #         Surface = []
+        #         a_part_trunk, b_part_trunk, origin_path = tuple_data
+        #         new_list_data = list(b_part_trunk)
+        #         new_list_data.insert(self.max_index, a_part_trunk)  # 将最长的数据插入到原列表中
+        #         Match_Surface, Edges, Distance = new_list_data
+        #         Edges, Distance = self.match_list(Edges, Distance)  # 下标和距离单列表匹配数据
+        #
+        #         # 将引用数据
+        #         Match_Surface = map(self._trun_object, Match_Surface)
+        #         Edges = map(self._trun_object, Edges)
+        #         Distance = map(lambda x: float(str(x)), Distance)
+        #
+        #         if len(filter(None, Match_Surface)) != 0:  # 判断是否为空树
+        #             Surface = [self.Move_Surface(Match_Surface[0], Edges, Distance)]
+        #
+        #         ungroup_data = self.split_tree(Surface, origin_path)
+        #         Rhino.RhinoApp.Wait()
+        #         return ungroup_data
+        #
+        #     def temp_by_match_tree(self, *args):
+        #         # 参数化匹配数据
+        #         value_list, trunk_paths = zip(*map(self.Branch_Route, args))
+        #         len_list = map(lambda x: len(x), value_list)  # 得到最长的树
+        #         max_index = len_list.index(max(len_list))  # 得到最长的树的下标
+        #         self.max_index = max_index
+        #         max_trunk = [_ if len(_) != 0 else [None] for _ in value_list[max_index]]
+        #         ref_trunk_path = trunk_paths[max_index]
+        #         other_list = [
+        #             map(lambda x: x if len(x) != 0 else [None], value_list[_]) if len(value_list[_]) != 0 else [[None]]
+        #             for _ in range(len(value_list)) if _ != max_index]  # 剩下的树, 没有的值加了个None进去方便匹配数据
+        #         matchzip = zip([max_trunk] * len(other_list), other_list)
+        #
+        #         def sub_match(tuple_data):
+        #             # 子树匹配
+        #             target_tree, other_tree = tuple_data
+        #             t_len, o_len = len(target_tree), len(other_tree)
+        #             if o_len == 0:
+        #                 new_tree = [other_tree] * len(target_tree)
+        #             else:
+        #                 new_tree = other_tree + [other_tree[-1]] * (t_len - o_len)
+        #             return new_tree
+        #
+        #         # 打包数据结构
+        #         other_zip_trunk = zip(*map(sub_match, matchzip))
+        #
+        #         zip_list = zip(max_trunk, other_zip_trunk, ref_trunk_path)
+        #
+        #         # 多进程函数运行
+        #         iter_ungroup_data = ghp.run(self._do_main, zip_list)
+        #         temp_data = self.format_tree(iter_ungroup_data)
+        #         return temp_data
+
+
 
     else:
         pass
