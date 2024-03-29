@@ -11,8 +11,10 @@ import Grasshopper, GhPython, System
 import Rhino
 import rhinoscriptsyntax as rs
 import ghpythonlib.parallel as ghp
+import System.Threading.Tasks as tasks
 import ghpythonlib.treehelpers as ght
 from Grasshopper import DataTree as gd
+import Rhino.Geometry as rg
 import Grasshopper.Kernel as gk
 import scriptcontext as sc
 import urllib
@@ -28,6 +30,7 @@ import getpass
 import time
 import os
 import shutil
+import operator
 from System.IO import FileStream, FileMode, FileAccess, FileShare
 from System.IO import File
 import sys
@@ -680,7 +683,7 @@ try:
         import sys
         import clr
 
-        sys.path.append(r"C:\Users\Administrator\AppData\Roaming\Grasshopper\Libraries")
+        sys.path.append(os.environ['userprofile'] + r"\AppData\Roaming\Grasshopper\Libraries\HAEDLL")
         # 加载Microsoft Excel的互操作组件
         clr.AddReference("NPOI")
         clr.AddReference("NPOI.OOXML")
@@ -1565,6 +1568,8 @@ try:
                     sheet = workbook.GetSheet(sheet_name)  # 根据表名获取工作表
                 else:
                     sheet = workbook.GetSheetAt(0)  # 默认获取第一个工作表中的数据
+
+                evaluator = workbook.GetCreationHelper().CreateFormulaEvaluator()  # 计算公式
                 Data = []
                 if sheet is not None:
                     if cell_range == 'ALL':
@@ -1574,6 +1579,7 @@ try:
                                 for col in range(sheet.GetRow(row).LastCellNum):
                                     cell = sheet.GetRow(row).GetCell(col)  # 获取单元格
                                     if cell is not None:
+                                        evaluator.EvaluateInCell(cell)  # 将公式转换为值
                                         row_data.append(cell.ToString())  # 将单元格内容添加到行数据列表
                                     else:
                                         row_data.append('')  # 如果单元格为空，则添加空字符串
@@ -1590,6 +1596,7 @@ try:
                                     if sheet.GetRow(row) is not None:
                                         cell = sheet.GetRow(row).GetCell(col)  # 获取单元格
                                         if cell is not None:
+                                            evaluator.EvaluateInCell(cell)
                                             row_data.append(cell.ToString())  # 将单元格内容添加到行数据中
                                         else:
                                             row_data.append('')  # 如果单元格为空，则添加空字符串
@@ -1601,6 +1608,7 @@ try:
                             if sheet.GetRow(row) is not None:
                                 cell = sheet.GetRow(row).GetCell(col)  # 获取单元格
                                 if cell is not None:
+                                    evaluator.EvaluateInCell(cell)
                                     Data.append(cell.ToString())  # 将单元格内容添加到数据列表
                                 else:
                                     Data.append('')  # 如果单元格为空，则添加空字符串
@@ -1611,6 +1619,7 @@ try:
                                 #                        print col
                                 cell = sheet.GetRow(row).GetCell(col)  # 获取单元格
                                 if cell is not None:
+                                    evaluator.EvaluateInCell(cell)
                                     Data.append(cell.ToString())  # 将单元格内容添加到数据列表
                                 else:
                                     Data.append('')  # 如果单元格为空，则添加空字符串
@@ -1769,6 +1778,369 @@ try:
 
                 finally:
                     self.Message = 'Sheet name'
+
+
+        # 中英文幕墙专业名词互译
+        import sqlite3
+
+        import clr
+
+        clr.AddReference("System.Data")
+        clr.AddReference("System.Data.OracleClient")
+        import System.Data
+        import System.Data.OracleClient
+
+
+        class Terminology(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP_Terminology", "V33", """Translation of curtain wall terminology in Chinese and English""", "Scavenger", "L-Others")
+                return instance
+
+            def __init__(self):
+                pass
+
+            def get_ComponentGuid(self):
+                return System.Guid("ae764f2e-bdc6-4751-9480-27e8f3f85766")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.secondary
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_String()
+                self.SetUpParam(p, "String", "S", "Text to be translated")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_String()
+                self.SetUpParam(p, "Translation", "T", "Text in English")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                # 插件名称
+                self.Message = 'HAE-Mutual translation of professional terms'
+                # 初始化输出端数据内容
+                Translation = gd[object]()
+                # 实例化数据库
+                file_path = os.environ['userprofile'] + r'\AppData\Roaming\Grasshopper\Libraries\HAEDLL\example.db'
+                connect = sqlite3.connect(file_path)
+                cur = connect.cursor()
+                # 将数据库拆为中文、英文列表
+                ch_list, en_list = zip(*list(cur.execute("SELECT Chinese, English FROM Translate")))
+                cur.close()
+
+                if self.RunCount == 1:
+                    # 获取输入端
+                    p0 = self.Params.Input[0].VolatileData
+                    self.j_bool_f1, str_trunk, str_path = self.parameter_judgment(p0)
+                    re_mes = Message.RE_MES([self.j_bool_f1], ['S end'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                    else:
+
+                        def temp(tuple_data):
+                            str_list, origin_path = tuple_data
+                            result_str_list = []
+
+                            for single_str in str_list:
+                                tr_text = None
+                                single_str = str(single_str)
+                                # 获取中文对应的下标
+                                indices_of_en = [i for i, x in enumerate(ch_list) if x == single_str]
+                                # 获取英译文
+                                en_str = [en_list[_] for _ in indices_of_en]
+                                # 获取英文对应的下标
+                                indices_of_ch = [i for i, x in enumerate(en_list) if x == single_str]
+                                # 获取中译文
+                                ch_str = [ch_list[_] for _ in indices_of_ch]
+                                # 获取最终译文
+                                if en_str:
+                                    tr_text = en_str
+                                elif ch_str:
+                                    tr_text = ch_str
+
+                                if tr_text is None:
+                                    Message.message2(self, "No term exists in the database！")
+                                    tr_text = [tr_text]
+                                result_str_list.append(tr_text)
+
+                            ungroup_data = self.split_tree(result_str_list, origin_path)
+                            Rhino.RhinoApp.Wait()
+                            return ungroup_data
+
+                        # 将数据集合放入多线程池
+                        zip_list = zip(str_trunk, str_path)
+                        iter_ungroup_data = ghp.run(temp, zip_list)
+
+                        Translation = self.format_tree(iter_ungroup_data)
+
+                # 将结果添加进输出端
+                DA.SetDataTree(0, Translation)
+
+            def get_Internal_Icon_24x24(self):
+                o = "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"
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def Branch_Route(self, Tree):
+                """分解Tree操作，树形以及多进程框架代码"""
+                Tree_list = [list(_) for _ in Tree.Branches]
+                Tree_Path = [list(_) for _ in Tree.Paths]
+                return Tree_list, Tree_Path
+
+            def split_tree(self, tree_data, tree_path):
+                """操作树单枝的代码"""
+                new_tree = ght.list_to_tree(tree_data, True, tree_path)  # 此处可替换复写的Tree_To_List（源码参照Vector组-点集根据与曲线距离分组）
+                result_data, result_path = self.Branch_Route(new_tree)
+                if list(chain(*result_data)):
+                    return result_data, result_path
+                else:
+                    return [[]], result_path
+
+            def format_tree(self, result_tree):
+                """匹配树路径的代码，利用空树创造与源树路径匹配的树形结构分支"""
+                stock_tree = gd[object]()
+                for sub_tree in result_tree:
+                    fruit, branch = sub_tree
+                    for index, item in enumerate(fruit):
+                        path = gk.Data.GH_Path(System.Array[int](branch[index]))
+                        if hasattr(item, '__iter__'):
+                            if item:
+                                for sub_index in range(len(item)):
+                                    stock_tree.Insert(item[sub_index], path, sub_index)
+                            else:
+                                stock_tree.AddRange(item, path)
+                        else:
+                            stock_tree.Insert(item, path, index)
+                return stock_tree
+
+            def parameter_judgment(self, tree_par_data):
+                # 获取输入端参数所有数据
+                geo_list, geo_path = self.Branch_Route(tree_par_data)
+                if geo_list:
+                    j_list = any(ghp.run(lambda x: len(list(filter(None, x))), geo_list))  # 去空操作, 判断是否为空
+                else:
+                    j_list = False
+                return j_list, geo_list, geo_path
+
+
+        # 将犀牛物体转为图片格式并输出
+        class RhObjectPhoto(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP_RhObjectPhoto", "V34", """Convert the Rhino object to picture format and export it""", "Scavenger", "L-Others")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("60a99532-d990-48b8-bde6-483d29c8193c")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.primary
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Geometry", "G", "Objects in Rhino space")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_String()
+                self.SetUpParam(p, "FileName", "F", "Image save path (suffix)")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Boolean()
+                self.SetUpParam(p, "Save", "S", "If True, the object generates an image and saves it")
+                p.SetPersistentData(gk.Types.GH_Boolean(False))
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Bit", "B", "Bitmap source data")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                # 插件名称
+                self.Message = 'Rhino object printed as picture'
+                # 初始化输出端数据内容
+                Bit = gd[object]()
+                if self.RunCount == 1:
+                    # 获取输入端
+                    p0 = self.Params.Input[0].VolatileData
+                    p1 = self.Params.Input[1].VolatileData
+                    p2 = self.Params.Input[2].VolatileData
+                    # 确定不变全局参数
+                    self.save = p2[0][0].Value
+
+                    self.j_bool_f1, geo_trunk, geo_path = self.parameter_judgment(p0)
+                    self.j_bool_f2 = self.parameter_judgment(p1)[0]
+                    re_mes = Message.RE_MES([self.j_bool_f1, self.j_bool_f2], ['G end', 'F end'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                    else:
+                        # 数据匹配并输出最后结果
+                        Bit = self.temp_by_match_tree(p0, p1)
+
+                # 将结果添加进输出端
+                DA.SetDataTree(0, Bit)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAUiSURBVEhLnZNrbFNlGMchYiSS+EFMIKBRUWBb75e1ZR3rYO22rtfRdqfb2m49l561XW/r2nNOW+hgFyCYLZOAEDAmIl+WqBiMYEhWZCgS6MRAQMJN1IT4hWBQiJHs8fSsso1tCv6SJ+/7Pu//Of/znuc9C/6N8/v3P799c9RAxTpFxdT/58Nd8SX93WRyV6Zz7zubw6nehC8TJ5AbpGsTEB7kh65gOx4jPSuL8mdjZyK4IhPy5HcyfhigSNjahcIOJgAxHIFNDRvA5TBBW3PjaEFrralZyhU9LblcdlEXhpxJ+JxAuhoBbbZAGHVAIugBt8MITZZabgwRrjthFNln1mo6iqVPR7tdvxFzmqDJUA22hmpoMmmBaDaCz2UFY20VGHVVYKnfAPUb1oFRWwlKqVRWLH06NAqBylCjBgNbrFGKQbteASatGmyGjaDTqEAmLAWZePUt/tplJ5YvXXS0WPZMLKyQ8a8ppYJ9NWp5vkohBqWEB1UqKWxcr7xaISt5UFtLZ73k76Ne/6NjaHAi4nZPPFsfNuk1n9tM9UKPzbDH7TAdEPPf1lSvk54166qGzLWqQw3mM0qz/VTWbD93qMl9+14Ldv+BE30YKpb/Ny1W3VCrtT7dYtH1uW0News5a23F8VaLbMTRwBvgRFO82GDO0Rbn9UdI+71xK3IlXczPD6lSrQwpBK/61qx5BZWUvl7IRY2DUr/34hES/+WALwyVnHAajTVn65s9f4DOePJ6MTU/wgzJCHtDn/IY34myFPEln0HHykM9l+s7vwBL5zi0Er9BGzkxbvbnvZx+S3OvPJW6oPV8BtXGj0EYJ7/h0+gYP4mN8Wm8EF+Je4LH5ElCzxmIGPxr4ZYArPU7b5YEmrlYE3BcXdVpyK/q0OdLPa4rOuwTsLX+Cojz3oHKyL77aylkYjVpyfNcxHclHa03SgJTtSXBljvynXGQMb7JPolYV0ECu80t5kA5ZHmDv8U5oUaH8g7HXahzj4Eg4T1d3J6FOoPz5P1RkNC+yZ+SM0jOb1CRJt4S9xCgTvbsMejPX9JZRkESCc5roGT8wtkGFP4jt2DJ5XKLilMOXq//tfK+KAjTLr9wmWtJOb7tmihGXixuP2Z4ePilwsjLYKUFA9mUAXFKkMR/ysZiL/tJ31Gapm9SFHWcHU8luhJHLLFAg7gnwL4R3jX5AM+5Ego9uzUeNWXSTD6RSH7b3d19jo27RDu6fX2KVMj7IwX9pIGQNSij8cskhvW3ezw/4ygKAb8fcBwHAsXA4nXvFmR8ExKGiBX0ApoYL035ThIez2GC1Xi97UAQBCAI8mcL4rzQGMAHRD3BKQNB4WpR+A2NRrOYXb5gMhmSBr3+3crKSi/SaBu1Yu4dgs0dMN2gLEWebLHZd9vt9vfUalWb2WTaU1dXp2W3F8opVCIfmNaDgsH0Jsfj8SXF6YIQSZZpY7hKti00w4CXxL8PosEVgUD38kIum80uHhkZea4wV2RI0SwD9gSPm/wkwjT+prwvDBJqykCQwC9zm3NQnsLFMwzYHpzmJ/Fb3GIO5LR31WwD7BK3OQdyBuXPPAFFnGZv0e223AeL5wrVtqCAM5j2iYRJ/Mpc2kIotwaUkwb/3CIKOyMbpEGyPfZQMhDlQjwz/lIOp9gT4BSnp/ELskGK0z+hm4z+6CPFMANSGgtzBlKGjEj7IgeFqY6PRCnysCg9M8Rp8hD7RgfLGV8Np0+T3dLe8Pvigv4JrShNFPWRg+WUr+pvznJ/JBlfUSsAAAAASUVORK5CYII="
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def _trun_object(self, ref_obj):
+                """引用物体转换为GH内置物体"""
+                if 'ReferenceID' in dir(ref_obj):
+                    if ref_obj.IsReferencedGeometry:
+                        test_pt = ref_obj.Value
+                    else:
+                        test_pt = ref_obj.Value
+                else:
+                    test_pt = ref_obj
+                return test_pt
+
+            def Branch_Route(self, Tree):
+                """分解Tree操作，树形以及多进程框架代码"""
+                Tree_list = [list(_) for _ in Tree.Branches]
+                Tree_Path = [list(_) for _ in Tree.Paths]
+                return Tree_list, Tree_Path
+
+            def parameter_judgment(self, tree_par_data):
+                # 获取输入端参数所有数据
+                geo_list, geo_path = self.Branch_Route(tree_par_data)
+                if geo_list:
+                    j_list = any(ghp.run(lambda x: len(list(filter(None, x))), geo_list))  # 去空操作, 判断是否为空
+                else:
+                    j_list = False
+                return j_list, geo_list, geo_path
+
+            def split_tree(self, tree_data, tree_path):
+                """操作树单枝的代码"""
+                new_tree = ght.list_to_tree(tree_data, True, tree_path)  # 此处可替换复写的Tree_To_List（源码参照Vector组-点集根据与曲线距离分组）
+                result_data, result_path = self.Branch_Route(new_tree)
+                if list(chain(*result_data)):
+                    return result_data, result_path
+                else:
+                    return [[]], result_path
+
+            def format_tree(self, result_tree):
+                """匹配树路径的代码，利用空树创造与源树路径匹配的树形结构分支"""
+                stock_tree = gd[object]()
+                for sub_tree in result_tree:
+                    fruit, branch = sub_tree
+                    for index, item in enumerate(fruit):
+                        path = gk.Data.GH_Path(System.Array[int](branch[index]))
+                        if hasattr(item, '__iter__'):
+                            if item:
+                                for sub_index in range(len(item)):
+                                    stock_tree.Insert(item[sub_index], path, sub_index)
+                            else:
+                                stock_tree.AddRange(item, path)
+                        else:
+                            stock_tree.Insert(item, path, index)
+                return stock_tree
+
+            def temp_by_match_tree(self, *args):
+                # 参数化匹配数据
+                value_list, trunk_paths = zip(*map(self.Branch_Route, args))
+                len_list = map(lambda x: len(x), value_list)  # 得到最长的树
+                max_index = len_list.index(max(len_list))  # 得到最长的树的下标
+                self.max_index = max_index
+                max_trunk = value_list[max_index]
+                ref_trunk_path = trunk_paths[max_index]
+                other_list = [value_list[_] for _ in range(len(value_list)) if _ != max_index]  # 剩下的树
+                matchzip = zip([max_trunk] * len(other_list), other_list)
+
+                def sub_match(tuple_data):
+                    # 子树匹配
+                    target_tree, other_tree = tuple_data
+                    t_len, o_len = len(target_tree), len(other_tree)
+                    if o_len == 0:
+                        new_tree = [other_tree] * len(target_tree)
+                    else:
+                        new_tree = other_tree + [other_tree[-1]] * (t_len - o_len)
+                    return new_tree
+
+                # 打包数据结构
+                other_zip_trunk = zip(*map(sub_match, matchzip))
+                zip_list = zip(max_trunk, other_zip_trunk, ref_trunk_path)
+                # map参数化函数运行
+                iter_ungroup_data = map(self._do_main, zip_list)
+                temp_data = self.format_tree(iter_ungroup_data)
+                return temp_data
+
+            def _do_main(self, tuple_data):
+                a_part_trunk, b_part_trunk, origin_path = tuple_data
+                new_list_data = list(b_part_trunk)
+                new_list_data.insert(self.max_index, a_part_trunk)  # 将最长的数据插入到原列表中
+                geo_list, file_list = new_list_data
+
+                geo_list = map(self._trun_object, geo_list)
+                file_list = map(lambda x: (str(x)), file_list)
+
+                # 获取物体集合的包围盒
+                bbox = rg.BoundingBox.Empty
+                for obj in geo_list:
+                    if "ToNurbsCurve" in dir(obj):
+                        obj = obj.ToNurbsCurve()
+                    elif "ToBrep" in dir(obj):
+                        obj = obj.ToBrep()
+                    single_bbox = obj.GetBoundingBox(True)
+                    bbox.Union(single_bbox)
+
+                # 将获取的边界框转为包围盒
+                box = rg.Box(bbox)
+                # 获取包围盒X轴和Y轴方向长度
+                px, py = set(box.X), set(box.Y)
+                dx = abs(reduce(operator.sub, px))
+                dy = abs(reduce(operator.sub, py))
+                # 构造将设置打印区域的点
+                offx = (dx / dy) * (3 / 1)
+                offy = (dy / dx) * (3 / 1)
+                p1 = rg.Point3d(min(px) + offx, min(py) + offy, 0)
+                p2 = rg.Point3d(max(px) - offx, max(py) - offy, 0)
+
+                # 获取Bit位图
+                bit_source = self.capture(dx, dy, p1, p2)
+
+                # 是否保存位图
+                if self.save is True:
+                    bit_source.Save(file_list[0])
+
+                ungroup_data = self.split_tree([bit_source], origin_path)
+                Rhino.RhinoApp.Wait()
+                return ungroup_data
+
+            def capture(self, width, height, world_pt1, world_pt2):
+                view = sc.doc.Views.ActiveView
+                size = System.Drawing.Size(width, height)
+                settings = Rhino.Display.ViewCaptureSettings(view, size, 50)
+
+                settings.SetWindowRect(world_pt1, world_pt2)
+                settings.RasterMode = True
+                settings.DrawGrid = False
+                settings.DrawAxis = False
+                settings.DrawWallpaper = False
+
+                bitmap = Rhino.Display.ViewCapture.CaptureToBitmap(settings)
+                return bitmap
+
 
 
     else:
