@@ -4650,12 +4650,15 @@ try:
 
             def Offset_Line_Pt(self, Line, coefficient, Ref_Plane):
                 """将线根据系数进行偏移，得到偏移之后线的中心点"""
-                Offset_Line = ghc.OffsetCurve(Line, coefficient, Ref_Plane, 1)
-                # 获取线的中点
-                Mid_length = Offset_Line.GetLength() / 2  # 将线的长度除2
-                t = Offset_Line.DivideByLength(Mid_length, False)[0]  # 得到线中心的t值(False是不包括首尾点)
-                Mid_Point = Offset_Line.PointAt(t)  # 根据t值求中心点
-
+                if Line is None:
+                    Message.message2(self, "Baseline is empty")
+                    Mid_Point = rg.Point3d(0, 0, 0)
+                else:
+                    Offset_Line = ghc.OffsetCurve(Line, coefficient, Ref_Plane, 1)
+                    # 获取线的中点
+                    Mid_length = Offset_Line.GetLength() / 2  # 将线的长度除2
+                    t = Offset_Line.DivideByLength(Mid_length, False)[0]  # 得到线中心的t值(False是不包括首尾点)
+                    Mid_Point = Offset_Line.PointAt(t)  # 根据t值求中心点
                 return Mid_Point
 
             def Create_Dim(self, Plane, Start_Point, End_Point, Dim_Point):
@@ -4702,10 +4705,10 @@ try:
                     if self.Head_tail:  # 是否包含首尾标注
                         Start_Point = Sort_Points[0]  # 起始点
                         End_Point = Sort_Points[-1]  # 结束点
-                        Two_coefficient = coefficient[0] * 2 if coefficient[0] else 2
+                        DimensionScale = self.dimstyle.DimensionScale * 3  # 查找标注样式的比例
+                        Two_coefficient = coefficient[0] * 2 + DimensionScale if coefficient[0] else 2 + DimensionScale  # 设置二次偏移的系数点
                         Head_tail_Dim_Point = self.Offset_Line_Pt(Baseline[0], Two_coefficient, BasePlane[0])  # 线偏移
-                        Other_Dimension, Other_True_Value = self.Create_Dim(BasePlane[0], Start_Point, End_Point,
-                                                                            Head_tail_Dim_Point)
+                        Other_Dimension, Other_True_Value = self.Create_Dim(BasePlane[0], Start_Point, End_Point, Head_tail_Dim_Point)
                         Dimension, True_Value = list(Dimension), list(True_Value)
                         Dimension.append(Other_Dimension)
                         True_Value.append(Other_True_Value)
@@ -4754,6 +4757,7 @@ try:
                     Dimension, True_Value = (gd[object]() for _ in range(2))
 
                     self.dimstyle = self.Find_DimStyle(Style)
+                    self.Head_tail = Head_tail
 
                     re_mes = Message.RE_MES([Point_list, Baseline], ['Points', 'Baseline'])
                     if len(re_mes) > 0:
