@@ -1,0 +1,114 @@
+{% extends "HTML/Base/base.html" %}
+{% load static %}
+
+<!-- Page title  -->
+{% block title %}Update product{% endblock title %}
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+<!-- Page Heading -->
+{% block heading %}Update product{% endblock heading %}
+
+<!-- Page content  -->
+{% block content %}
+<!--Go back-->
+<div class="row ml-0 mb-3">
+    <a href="{% url 'Products:Products_list' %}">
+        <button type="button" class="btn btn-info font-weight-bold">
+            <i class="fas fa-long-arrow-alt-left mr-2"></i>
+            Go back
+        </button>
+    </a>
+</div>
+
+<div class="row">
+    <div class="card col-md-8">
+        <div class="card-body">
+            <form action="{% url 'Products:Products_update' product.ID %}" method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="form-row">
+                    <div class="form-group col-md-4">
+                        <label for="inputDescription">ITEM</label>
+                        <input type="text" class="form-control" name="ITEM" value="{{product.ITEM}}" required>
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label for="state">CATEGORY</label>
+                        <input type="text" class="form-control" name="CATEGORY" value="{{product.CATEGORY}}" required>
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label for="state">ROOM AREA</label>
+                        <input type="text" class="form-control" name="ROOM_AREA" value="{{product.ROOM_AREA}}"
+                               required>
+                    </div>
+                </div>
+                <br/>
+
+                <div class="form-row">
+                    <div class="form-group col-md-4">
+                        <label for="inputDescription">LENGTH</label>
+                        <input type="text" name="LENGTH_MM" class="form-control" value="{{ product.LENGTH_MM }}" required>
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label for="category">WIDTH</label>
+                        <input type="text" name="WIDTH_MM" class="form-control" value="{{ product.WIDTH_MM }}" required>
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label for="category">HEIGHT</label>
+                        <input type="text" name="HEIGHT_MM" class="form-control" value="{{ product.HEIGHT_MM }}" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-md-4">
+                        <label for="inputDescription">SIZE DIMENSION</label>
+                        <input type="text" name="SIZE_DIMENSION" class="form-control"
+                               value="{{ product.SIZE_DIMENSION }}" required>
+                    </div>
+                    <div class="form-group col-md-8">
+                        <label for="category">DESCRIPTION</label>
+                        <input type="text" name="DESCRIPTION" class="form-control" value="{{ product.DESCRIPTION }}"
+                               required>
+                    </div>
+                </div>
+                <br/>
+                <div class="form-row">
+                    <div class="form-group col-md-4">
+                        <label for="inputDescription">QTY</label>
+                        <input type="text" name="QTY" class="form-control" value="{{ product.QTY }}" required>
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label for="category">UNIT</label>
+                        <input type="text" name="UNIT" class="form-control" value="{{ product.UNIT }}" required>
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label for="category">UNIT PRICE AED</label>
+                        <input type="text" name="UNIT_PRICE_AED" class="form-control" value="{{ product.UNIT_PRICE_AED }}"
+                               required>
+                    </div>
+                </div>
+                <br/>
+                <div class="form-row">
+                    <div class="form-group col-md-4">
+                        <label for="state">INQUIRY_CODE</label>
+                        <input type="text" class="form-control" name="INQUIRY_CODE" value="{{ product.INQUIRY_CODE }}"
+                               required>
+                    </div>
+                </div>
+                <br/>
+                <div class="form-row">
+                    <div class="form-group col-md-12">
+                        <label for="new_item_photo">New Item Photo</label>
+                        <input type="file" id="new_item_photo" name="new_item_photo">
+                        <img style="width: 200px; height: 200px;" src={% static product.ITEM_PHOTO %}>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-success font-weight-bold">Update product</button>
+
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}{% endblock javascripts %}

@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <script src="{% static 'js/jquery-3.6.0.min.js' %}"></script>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>shopping trolley</title>
+    <link rel="stylesheet" href="{%static 'css/shoppingcar.css ' %}" rel="stylesheet">
+</head>
+<body>
+
+<div id="dg" style="z-index: 9999; position: fixed ! important; left: 0px; top: 100px;">
+    <a href="{% url 'Products:Products_list' %}" class="jiesuan">Go back <=</a>
+</div>
+<table>
+    <tr>
+        <th><input type="checkbox" class="all">Check All</th>
+        <th>ITEM</th>
+        <th>Product Picture</th>
+        <th>Unit Price</th>
+        <th>Product Num</th>
+        <th>Discount</th>
+        <th>Subtotal</th>
+        <th>Operation</th>
+    </tr>
+    <tbody id="carBody">
+
+    {% for Product in Products_obj_list %}
+
+    <tr class="item">
+
+        <td><input type="checkbox" class="liu"></td>
+        <td>{{ Product.ITEM }}</td>
+        <td><img src={% static Product.ITEM_PHOTO %} width="50%"></td>
+        <td class="price">{{ Product.UNIT_PRICE_AED|floatformat:2 }}</td>
+        <td>
+            <ul class="num">
+                <li>
+                    <button class="add">+</button>
+                </li>
+                <li class="count">
+                    <input type="number" class="input" value="1">
+                </li>
+                <li>
+                    <button class="reduce" disabled>-</button>
+                </li>
+            </ul>
+
+        </td>
+
+        <td class="discount">
+            <ul class="num">
+                <li>
+                    <button class="add_discount">+</button>
+                </li>
+                <li class="count">
+                    <input type="number" class="discount_input" value="1">
+                </li>
+
+                <li>
+                    <button class="reduce_discount">-</button>
+                </li>
+            </ul>
+        </td>
+        <td class="total">1</td>
+        <td class="del">
+            <button data-id="{{ Product.ID }}" data-item="{{ Product.ITEM }}">删除</button>
+        </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+<div class="foot">
+    <div class="bottom">
+        Already selected&nbsp;<i id="totalNum">0</i>&nbsp;products&nbsp;&nbsp;&nbsp;Total price of goods:<i id="total_price">0¥</i>
+        <button id="generate" class="jiesuan">Go to Result</button>
+    </div>
+</div>
+
+</body>
+<script>
+    let buttons = document.querySelectorAll('button[data-id][data-item]');
+    let adds = document.querySelectorAll('.add')
+    let reduces = document.querySelectorAll('.reduce')
+    let adds_discount = document.querySelectorAll('.add_discount')
+    let reduces_discount = document.querySelectorAll('.reduce_discount')
+    let prices = document.querySelectorAll('.price')
+    let total_price = document.querySelector('#total_price')
+    let totalNum = document.querySelector('#totalNum')
+    let dels = document.querySelectorAll('.del')
+    let totals = document.querySelectorAll('.total')
+    let inputs = document.querySelectorAll('.input')
+    let discount_input = document.querySelectorAll(".discount_input");
+    // 获取父元素
+    let carBody = document.querySelector('#carBody')
+    let liu = document.querySelectorAll('.liu')
+    let all = document.querySelector('.all')
+    let generate = document.querySelector("#generate")
+    all.addEventListener('click', function () {
+        for (let i = 0; i < liu.length; i++) {
+            liu[i].checked = all.checked
+        }
+    })
+
+
+    for (let i = 0; i < adds.length; i++) {
+        totals[i].innerHTML = prices[i].innerHTML
+        // 增加
+        adds[i].addEventListener('click', function () {
+            inputs[i].value++
+            reduces[i].disabled = false
+            totals[i].innerHTML = Math.round(parseInt(prices[i].innerHTML) * inputs[i].value * discount_input[i].value * 10) / 10
+            // 计算现在总额
+            sumMoney()
+        })
+
+        adds_discount[i].addEventListener('click', function () {
+            discount_input[i].value = Math.round(discount_input[i].value * 10 + 1) / 10
+            reduces[i].disabled = false
+            totals[i].innerHTML = Math.round(parseInt(prices[i].innerHTML) * inputs[i].value * discount_input[i].value * 10) / 10
+            // 计算现在总额
+            sumMoney()
+        })
+
+        // 减少
+        reduces[i].addEventListener('click', function () {
+            inputs[i].value--
+            totals[i].innerHTML = Math.round(parseInt(prices[i].innerHTML) * inputs[i].value * discount_input[i].value * 10) / 10
+            if (inputs[i].value <= 1) {
+                reduces[i].disabled = true
+            }
+            // 计算现在总额
+            sumMoney()
+        })
+
+        reduces_discount[i].addEventListener('click', function () {
+            discount_input[i].value = Math.round(discount_input[i].value * 10 - 1) / 10
+            totals[i].innerHTML = Math.round(parseInt(prices[i].innerHTML) * inputs[i].value * discount_input[i].value * 10) / 10
+            if (inputs[i].value <= 1) {
+                reduces[i].disabled = true
+            }
+            // 计算现在总额
+            sumMoney()
+        })
+
+        inputs[i].addEventListener('input', function () {
+            totals[i].innerHTML = Math.round(parseInt(prices[i].innerHTML) * inputs[i].value * discount_input[i].value * 10) / 10
+            sumMoney()
+        })
+        discount_input[i].addEventListener('input', function () {
+            totals[i].innerHTML = Math.round(parseInt(prices[i].innerHTML) * inputs[i].value * discount_input[i].value * 10) / 10
+            sumMoney()
+        })
+
+        // 删除
+        dels[i].addEventListener('click', function () {
+            var productId = buttons[i].getAttribute('data-id');
+            var productName = buttons[i].getAttribute('data-item');
+
+            $.ajax(
+                {
+                    type: "POST",
+                    url: "/cart_delete/" + productId,
+                    data: {
+                        csrfmiddlewaretoken: '{{ csrf_token }}',
+                        productId: productId,
+                    },
+                    success: function (data) {
+                        alert(productName + " has been removed from the shopping cart.");
+                    },
+                    error: function (data) {
+                        alert("Error");
+                    }
+
+                }
+            )
+            // 父元素.removeChild（子元素）
+            carBody.removeChild(this.parentNode)
+            sumMoney()
+        })
+    }
+
+
+    generate.addEventListener('click', function () {
+
+
+        //创建一个数组
+
+        let productList = [];
+        for (let i = 0; i < totals.length; i++) {
+            let productId = buttons[i].getAttribute('data-id');
+            productList.push([productId, inputs[i].value, discount_input[i].value])
+        }
+        // 封装成JSON格式以便发送（这里假设后端接受JSON格式数据）
+        let dataToSend = JSON.stringify({product_list: productList});
+        console.log(dataToSend)
+        $.ajax(
+            {
+                type: "POST",
+                url: "{% url 'Products:Shopper_cart'%}",
+                data: {
+                    csrfmiddlewaretoken: '{{ csrf_token }}',
+                    product_data: dataToSend,
+
+                },
+                success: function (data) {
+                    console.log(data);
+                    alert("订单已生成");
+                },
+                error: function (data) {
+                    console.log(data);
+                    alert("Error");
+                }
+            }
+        )
+    })
+
+
+    // 总价 result函数
+    function sumMoney() {
+        let totals = document.querySelectorAll('.total')
+        let inputs = document.querySelectorAll('.input')
+        let num = 0
+        let sum = 0
+        for (let i = 0; i < totals.length; i++) {
+            //判断totals[i].innerHTML是不是NaN
+
+            if (isNaN(totals[i].innerHTML)) {
+                continue
+            }
+            sum = sum + parseInt(totals[i].innerHTML)
+            num = num + Number(inputs[i].value)
+        }
+        total_price.innerHTML = sum + '&nbsp;&nbsp;&nbsp;AED'
+        totalNum.innerHTML = num
+    }
+
+    sumMoney()
+</script>
+</html>

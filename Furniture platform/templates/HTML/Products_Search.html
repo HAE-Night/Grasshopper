@@ -1,0 +1,59 @@
+{% extends "HTML/Base/base.html" %}
+
+<!-- Page title  -->
+{% block title %}Update product{% endblock title %}
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+<!-- Page Heading -->
+{% block heading %}Search product{% endblock heading %}
+
+<!-- Page content  -->
+{% block content %}
+<!--Go back-->
+<div class="row ml-0 mb-3">
+    <a href="{% url 'Products:Products_list' %}">
+        <button type="button" class="btn btn-info font-weight-bold">
+            <i class="fas fa-long-arrow-alt-left mr-2"></i>
+            Go back
+        </button>
+    </a>
+</div>
+
+<div class="row">
+    <div class="card col-md-8">
+        <div class="card-body">
+            <form action="{% url 'Products:search' %}" method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="form-row">
+                    <div class="form-group col-md-8">
+                        <label for="keyword">Search</label>
+                        <input type="text" class="form-control" name="keyword" placeholder="Please enter search keywords..." required>
+                    </div>
+                    <br/>
+                    <div class="form-group col-md-4">
+                        <label for="field">Select Field:</label>
+                        <select name="field" class="form-control" name="field" required>
+                            <option value="all">All</option>
+                            {% for field in fields %}
+                                <option value="{{ field.name }}">{{ field.verbose_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <br/>
+                    <div class="form-group col-md-4">
+                        <input type="file" id="Pic" name="Pic" value="请选择图片">
+                    </div>
+                </div>
+                <br/>
+                <button type="submit" class="btn btn-success font-weight-bold">Search</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}{% endblock javascripts %}

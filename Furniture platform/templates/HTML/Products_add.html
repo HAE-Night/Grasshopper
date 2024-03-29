@@ -1,0 +1,107 @@
+{% extends "HTML/Base/base.html" %}
+
+<!-- Page title  -->
+{% block title %}Add product{% endblock title %}
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+<!-- Page Heading -->
+{% block heading %}Add product{% endblock heading %}
+
+<!-- Page content  -->
+{% block content %}
+<!--Go back-->
+<div class="row ml-0 mb-3">
+    <a href="{% url "Products:Products_list" %}">
+        <button type="button" class="btn btn-info font-weight-bold">
+            <i class="fas fa-long-arrow-alt-left mr-2"></i>
+            Go back
+        </button>
+    </a>
+</div>
+
+<div class="row">
+    <div class="card col-md-8">
+        <div class="card-body">
+            <form action="{% url 'Products:Products_add' %}"  method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="form-row">
+                    <div class="form-group col-md-4">
+                        <label for="inputDescription">ITEM</label>
+                        <input type="text" class="form-control" name="ITEM" placeholder="ITEM_NAME" required>
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label for="state">CATEGORY</label>
+                        <input type="text" class="form-control" name="CATEGORY" placeholder="CATEGORY" required>
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label for="state">ROOM AREA</label>
+                        <input type="text" class="form-control" name="ROOM_AREA" placeholder="ROOM AREA" required>
+                    </div>
+                </div>
+                <br/>
+                <div class="form-row">
+                    <div class="form-group col-md-4">
+                        <label for="inputDescription">LENGTH MM</label>
+                        <input type="text" class="form-control" name="LENGTH_MM" placeholder="LENGTH MM" required>
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label for="state">WIDTH MM</label>
+                        <input type="text" class="form-control" name="WIDTH_MM" placeholder="WIDTH MM" required>
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label for="state">HEIGHT MM</label>
+                        <input type="text" class="form-control" name="HEIGHT_MM" placeholder="HEIGHT MM" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-md-4">
+                        <label for="inputDescription">SIZE DIMENSION</label>
+                        <input type="text" name="SIZE_DIMENSION" class="form-control" placeholder="SIZE DIMENSION" required>
+                    </div>
+                    <div class="form-group col-md-8">
+                        <label for="category">DESCRIPTION</label>
+                        <input type="text" name="DESCRIPTION" class="form-control" placeholder="DESCRIPTION" required>
+                    </div>
+                </div>
+
+                <br/>
+                <div class="form-row">
+                    <div class="form-group col-md-4">
+                        <label for="inputDescription">QTY</label>
+                        <input type="text" name="QTY" class="form-control" placeholder="QTY" required>
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label for="category">UNIT</label>
+                        <input type="text" name="UNIT" class="form-control" placeholder="UNIT" required>
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label for="category">UNIT PRICE AED</label>
+                        <input type="text" name="UNIT_PRICE_AED" class="form-control" placeholder="UNIT PRICE AED" required>
+                    </div>
+                </div>
+                <br/>
+                <div class="form-row">
+                    <div class="form-group col-md-4">
+                        <label for="state">INQUIRY_CODE</label>
+                        <input type="text" class="form-control" name="INQUIRY_CODE" placeholder="INQUIRY_CODE" required>
+                    </div>
+                </div>
+                <br/>
+                <div class="form-row">
+                    <div class="form-group col-md-8">
+                        {{ form.as_p }}
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-success font-weight-bold">Create product</button>
+
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}{% endblock javascripts %}
