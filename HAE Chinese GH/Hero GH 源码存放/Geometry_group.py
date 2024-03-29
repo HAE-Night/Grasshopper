@@ -1480,7 +1480,8 @@ try:
                 elif 'ToBrep' in dir(origin_object):
                     origin_object = origin_object.ToBrep()
                 origin_vector = vector_list[0]
-                copy_object = origin_object.Duplicate()
+                # copy_object = origin_object.Duplicate()
+                copy_object = copy.copy(origin_object)
                 copy_object.Translate(origin_vector)
                 new_object_list.append(copy_object)
                 vector_list.pop(0)
