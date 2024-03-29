@@ -1777,7 +1777,8 @@ try:
                         # 多进程方法
                         def temp(tuple_data):
                             # 解包元组元素
-                            origin_cur_list, origin_pl_list, origin_path = tuple_data
+                            cur_list, pl_list, origin_path = tuple_data
+                            origin_cur_list, origin_pl_list = filter(None, cur_list), filter(None, pl_list)
                             # 若平面有多个，重新赋值
                             o_pl_len = len(origin_pl_list)
                             if o_pl_len == 1:
@@ -3811,6 +3812,136 @@ try:
                 else:
                     return False
 
+            def cull_pts(self, pt_list):
+                if pt_list:
+                    new_points = []
+                    index_groups = []  # 点分组后的下标
+                    for i, p in enumerate(pt_list):
+                        flag = False
+                        for j, np in enumerate(new_points):
+                            if np:
+                                if p.DistanceTo(np) <= self.tol:  # 根据公差判断点是否重复
+                                    index_groups[j].append(i)
+                                    flag = True
+                                    break
+                        if not flag:
+                            new_points.append(p)  # 添加唯一点
+                            index_groups.append([i])
+                    return new_points
+
+            def check_curve(self, first_cur, second_cur):
+                curve_event = rg.Intersect.Intersection.CurveCurve(first_cur, second_cur, 0.01, 0.01)
+                no_need_extend = False
+                if curve_event.Count != 0:
+                    pt_list = list(chain(*map(lambda x: [x.PointA, x.PointA2, x.PointB, x.PointB2], curve_event)))
+                    pt_list = self.cull_pts(pt_list)
+                    pt_len = len(pt_list)
+
+                    if first_cur.IsLinear():
+                        if pt_len == 1:
+                            no_need_extend = True
+                    else:
+                        if pt_len >= 2:
+                            no_need_extend = True
+                return no_need_extend
+
+            def temp(self, cur_1, cur_2):
+                domin = cur_1.Domain
+
+                t_list = ghc.CurveXCurve(cur_1, cur_2)['params_a']
+
+                t_list = t_list if type(t_list) is list else [t_list]
+                t_ = [_ for _ in t_list if _ not in domin]
+                if t_:
+                    return cur_1.Trim(rg.Interval(t_[0], domin[0])), cur_1.Trim(rg.Interval(domin[0], t_[0]))
+                else:
+                    return None, None
+
+            def to_extend(self, c_1, c_2, type):
+                start_c_1 = c_1.Extend(rg.CurveEnd.Start, 100000, eval('rg.CurveExtensionStyle.{}'.format(self.type_dict[type])))
+                end_c_1 = c_1.Extend(rg.CurveEnd.End, 100000, eval('rg.CurveExtensionStyle.{}'.format(self.type_dict[type])))
+
+                res_start = self.temp(start_c_1, c_2)[0]
+                res_end = self.temp(end_c_1, c_2)[1]
+
+                res_start = res_start if res_start else c_1
+                res_end = res_end if res_end else c_1
+
+                return res_start, res_end
+
+            def extend_tar_curve(self, single_cur, tar_cur, type):
+                origin_t = self.intersection_curve(single_cur, tar_cur)
+                start_pt, end_pt = single_cur.PointAtStart, single_cur.PointAtEnd
+                start_t = single_cur.ClosestPoint(start_pt)[1]
+                end_t = single_cur.ClosestPoint(end_pt)[1]
+
+                start_curve = single_cur.Extend(rg.CurveEnd.Start, 100000, eval('rg.CurveExtensionStyle.{}'.format(self.type_dict[type])))
+                end_curve = single_cur.Extend(rg.CurveEnd.End, 100000, eval('rg.CurveExtensionStyle.{}'.format(self.type_dict[type])))
+                start_par = self.intersection_curve(start_curve, tar_cur)
+                end_par = self.intersection_curve(end_curve, tar_cur)
+
+                if origin_t is not False:
+                    # 获取交点左右两边的线
+                    start_need_domain = rg.Interval(start_t, origin_t)
+                    end_need_domain = rg.Interval(origin_t, end_t)
+                    start_trim_curve = single_cur.Trim(start_need_domain)
+                    end_trim_curve = single_cur.Trim(end_need_domain)
+
+                    # 两边曲线分别延长至目标曲线
+                    if start_trim_curve:
+                        # 两边曲线分别延长至目标曲线
+                        extend_c_1 = self.to_extend(start_trim_curve, tar_cur, type)[0]
+                    else:
+                        extend_c_1 = None
+
+                    if end_trim_curve:
+                        extend_c_2 = self.to_extend(end_trim_curve, tar_cur, type)[1]
+                    else:
+                        extend_c_2 = None
+                    result_cur = rg.Curve.JoinCurves([extend_c_1, extend_c_2])[0]
+                    result_bool = True
+                    extend_type = 'BothExtend'
+                else:
+                    origin_par = self.intersection_curve(single_cur, tar_cur)
+                    start_par = self.intersection_curve(start_curve, tar_cur)
+                    end_par = self.intersection_curve(end_curve, tar_cur)
+
+                    if start_par and end_par:
+                        origin_domain = start_curve.Domain
+                        start_need_domain = rg.Interval(start_par, origin_domain[1])
+                        start_trim_curve = start_curve.Trim(start_need_domain)
+
+                        start_origin_domain = start_trim_curve.Domain
+                        orinig_par = start_trim_curve.ClosestPoint(single_cur.PointAtStart)[1]
+                        trim_start_curve = start_trim_curve.Trim(start_origin_domain[0], orinig_par)
+
+                        end_need_domain = rg.Interval(origin_domain[0], end_par)
+                        end_trim_curve = end_curve.Trim(end_need_domain)
+
+                        temp_curve_list = [trim_start_curve, end_trim_curve]
+                        result_cur = rg.Curve.JoinCurves(temp_curve_list, self.tol)[0]
+                        result_bool = True
+                        extend_type = 'BothExtend'
+                    elif start_par and (not end_par):
+                        origin_domain = start_curve.Domain
+                        start_need_domain = rg.Interval(start_par, origin_domain[1])
+                        start_trim_curve = start_curve.Trim(start_need_domain)
+                        result_cur = start_trim_curve
+                        result_bool = True
+                        extend_type = 'StartExtend'
+                    elif (not start_par) and end_par:
+                        origin_domain = end_curve.Domain
+                        end_need_domain = rg.Interval(origin_domain[0], end_par)
+                        end_trim_curve = end_curve.Trim(end_need_domain)
+                        result_cur = end_trim_curve
+                        result_bool = True
+                        extend_type = 'EndExtend'
+                    else:
+                        result_cur = single_cur
+                        result_bool = False
+                        extend_type = 'NoneExtend'
+                return result_cur, result_bool, extend_type
+
             def RunScript(self, Curve, Target_Curve, Type):
                 try:
                     sc.doc = Rhino.RhinoDoc.ActiveDoc
@@ -3823,56 +3954,51 @@ try:
                         return Res_Curve, Res_Bool, Extend_Type
 
                     re_mes = Message.RE_MES([Curve, Target_Curve], ['Curve', 'Target_Curve'])
+
                     if len(re_mes) > 0:
-                        # "-------------------------"
                         return None, None, None
-                        # "-------------------------"
                     else:
-                        start_curve = Curve.Extend(rg.CurveEnd.Start, 100000, eval('rg.CurveExtensionStyle.{}'.format(self.type_dict[Type])))
-                        end_curve = Curve.Extend(rg.CurveEnd.End, 100000, eval('rg.CurveExtensionStyle.{}'.format(self.type_dict[Type])))
+                        no_extend_factor = self.check_curve(Curve, Target_Curve)
 
-                        start_par = self.intersection_curve(start_curve, Target_Curve)
-                        end_par = self.intersection_curve(end_curve, Target_Curve)
-                        if start_par and end_par:
-                            origin_domain = start_curve.Domain
-                            start_need_domain = rg.Interval(start_par, origin_domain[1])
-                            start_trim_curve = start_curve.Trim(start_need_domain)
+                        if not no_extend_factor:
+                            Res_Curve, Res_Bool, Extend_Type = self.extend_tar_curve(Curve, Target_Curve, Type)
 
-                            start_origin_domain = start_trim_curve.Domain
-                            orinig_par = start_trim_curve.ClosestPoint(Curve.PointAtStart)[1]
-                            trim_start_curve = start_trim_curve.Trim(start_origin_domain[0], orinig_par)
+                        else:
+                            curve_start_pt = Curve.PointAtStart
+                            curve_end_pt = Curve.PointAtEnd
 
-                            end_need_domain = rg.Interval(origin_domain[0], end_par)
-                            end_trim_curve = end_curve.Trim(end_need_domain)
+                            cur_list = Curve.DuplicateSegments()
+                            rest_curs = list(cur_list[1: -1])
+                            for cur in cur_list:
+                                if cur.ClosestPoint(curve_start_pt)[1] == 0:
+                                    start_cur = cur
+                                else:
+                                    start_cur = cur_list[0]
 
-                            temp_curve_list = [trim_start_curve, end_trim_curve]
-                            Res_Curve = rg.Curve.JoinCurves(temp_curve_list, self.tol)[0]
+                                if cur.ClosestPoint(curve_end_pt)[1] == 0:
+                                    end_cur = cur
+                                else:
+                                    end_cur = cur_list[-1]
+                            start_factor = self.check_curve(start_cur, Target_Curve)
+                            end_factor = self.check_curve(end_cur, Target_Curve)
+                            # 若曲线为直线
+                            if start_cur == end_cur:
+                                start_cur = self.extend_tar_curve(start_cur, Target_Curve, Type)[0]
+                                Res_Curve = start_cur
+                            else:
+                                if not start_factor:
+                                    start_cur = self.extend_tar_curve(start_cur, Target_Curve, Type)[0]
+                                if not end_factor:
+                                    end_cur = self.extend_tar_curve(end_cur, Target_Curve, Type)[0]
+                                Res_Curve = rg.Curve.JoinCurves(rest_curs + [start_cur] + [end_cur])[0]
                             Res_Bool = True
                             Extend_Type = 'BothExtend'
-                        elif start_par and (not end_par):
-                            origin_domain = start_curve.Domain
-                            start_need_domain = rg.Interval(start_par, origin_domain[1])
-                            start_trim_curve = start_curve.Trim(start_need_domain)
-                            Res_Curve = start_trim_curve
-                            Res_Bool = True
-                            Extend_Type = 'StartExtend'
-                        elif (not start_par) and end_par:
-                            origin_domain = end_curve.Domain
-                            end_need_domain = rg.Interval(origin_domain[0], end_par)
-                            end_trim_curve = end_curve.Trim(end_need_domain)
-                            Res_Curve = end_trim_curve
-                            Res_Bool = True
-                            Extend_Type = 'EndExtend'
-                        else:
-                            Res_Curve = Curve
-                            Res_Bool = False
-                            Extend_Type = 'NoneExtend'
 
-                    sc.doc.Views.Redraw()
-                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
-                    sc.doc = ghdoc
+                        sc.doc.Views.Redraw()
+                        ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                        sc.doc = ghdoc
 
-                    return Res_Curve, Res_Bool, Extend_Type
+                        return Res_Curve, Res_Bool, Extend_Type
                 finally:
                     self.Message = 'The curve extends to the target curve'
 
