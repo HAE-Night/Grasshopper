@@ -1003,7 +1003,7 @@ try:
                     else:
                         sort_breps = [item]
                 else:
-                    sort_breps = item
+                    sort_breps = [item]
                 return sort_breps
 
             def _handle_brep(self, breps):
@@ -1012,13 +1012,46 @@ try:
                         brep.Flip()
                 return breps
 
+            def _recursive_cutting_sur(self, sur, cut_list, new_brep_list):
+                cut = cut_list[0]
+                sur = sur if type(sur) is list else [sur]
+                for s in sur:
+                    # 面切割取第一个数据
+                    temp_brep = list(s.Split.Overloads[IEnumerable[Rhino.Geometry.Curve], System.Double](cut, self.tol))
+
+                    if len(temp_brep):
+                        # 获取剩余的surf
+                        rest_list = temp_brep[1:]
+                        # 如果平面线切割组只剩最后一组
+                        if len(cut_list) == 1:
+                            rest_brep = self.cap_brep(rest_list)
+                        else:
+                            rest_brep = rg.Brep.JoinBreps(rest_list, 0.1)[0]
+                            rest_brep = self.cap_brep([rest_brep])
+
+                        cap_brep = self.cap_brep([temp_brep[0]])
+                        new_brep_list.append(cap_brep)
+                        new_brep_list.append(rest_brep)
+                    else:
+                        new_brep_list.append([s])
+                temp_list_brep = list(chain(*new_brep_list))
+
+                cut_list.pop(0)
+                if cut_list:
+                    return self._recursive_cutting_sur(temp_list_brep, cut_list, [])
+                else:
+                    res_list_brep = self._handle_brep(temp_list_brep)
+                    return res_list_brep
+
             def _get_surface(self, surf, pln_list):
-                cutts = []
+                cutts_curve = []
                 for pl in pln_list:
                     single_event = rg.Intersect.Intersection.BrepPlane(surf, pl, self.tol)
                     if single_event[0]:
-                        cutts.append(single_event[1][0])
-                cut_breps = surf.Split.Overloads[IEnumerable[Rhino.Geometry.Curve], System.Double](cutts, self.tol)
+                        single_cutts = map(lambda x: x if "ToNurbsCurve" in dir(x) else None, list(single_event[1]))
+                    cutts_curve += [single_cutts]
+
+                cut_breps = self._recursive_cutting_sur(surf, cutts_curve, [])
                 res_breps = self._handle_brep(cut_breps)
                 sort_breps = self.sort_by_xyz(res_breps, pln_list[0])
                 return sort_breps
@@ -4093,7 +4126,7 @@ try:
                     p0 = self.Params.Input[0].VolatileData
                     p1 = self.Params.Input[1].VolatileData
                     # 确定不变全局参数
-                    self.smooth = p1[0][0]
+                    self.smooth = p1[0][0].Value
                     self.j_bool_f1, brep_trunk, brep_path = self.parameter_judgment(p0)
                     re_mes = Message.RE_MES([self.j_bool_f1], ['B end'])
                     if len(re_mes) > 0:
@@ -4265,6 +4298,8 @@ try:
                 return res_plns
 
             def get_bbox(self, origin_brep):
+                if origin_brep is None:
+                    return None, None
                 # 获取最大面
                 temp_face_list = ghc.DeconstructBrep(origin_brep)['faces']
                 if type(temp_face_list) is not list:
@@ -4325,12 +4360,179 @@ try:
 
             def temp(self, tuple_data):
                 brep_list, origin_path = tuple_data
-                brep_list = map(self._trun_object, brep_list)
-                boxes, plns = zip(*map(self.get_bbox, brep_list))
+                if len(brep_list) != 0:
+                    brep_list = map(self._trun_object, brep_list)
+                    boxes, plns = zip(*map(self.get_bbox, brep_list))
+                else:
+                    boxes, plns = [], []
                 ungroup_data = map(lambda x: self.split_tree(x, origin_path), [boxes, plns])
                 Rhino.RhinoApp.Wait()
                 return ungroup_data
 
+
+        # Mesh转Brep
+        class MeshToBrep(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP_MeshToBrep", "R45", """Rhino grid convert to Brep""", "Scavenger", "D-Brep")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("17b4df2c-82ef-4bf7-9ba3-98ede6e291e3")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.tertiary
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Mesh()
+                self.SetUpParam(p, "Mesh", "M", "The grid to be converted")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Boolean()
+                self.SetUpParam(p, "Join", "J", "Whether to merge Mesh")
+                p.SetPersistentData(gk.Types.GH_Boolean(False))
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Brep()
+                self.SetUpParam(p, "Breps", "B", "The generated Brep collection")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                # 插件名称
+                self.Message = 'Mesh to Brep'
+                # 初始化输出端数据内容
+                Breps = gd[object]()
+                if self.RunCount == 1:
+                    # 获取输入端
+                    p0 = self.Params.Input[0].VolatileData
+                    p1 = self.Params.Input[1].VolatileData
+                    # 确定不变全局参数
+                    self.join = p1[0][0].Value
+                    self.j_bool_f1, mesh_trunk, mesh_path = self.parameter_judgment(p0)
+                    re_mes = Message.RE_MES([self.j_bool_f1], ['M end'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                    else:
+                        # 将网格与树结构集合放入多进程池
+                        zip_list = zip(mesh_trunk, mesh_path)
+                        iter_ungroup_data = ghp.run(self.temp, zip_list)
+                        Breps = self.format_tree(iter_ungroup_data)
+
+                # 将结果添加进输出端
+                DA.SetDataTree(0, Breps)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAARTSURBVEhLrVZ/TFtVFO6jpY++/oCW0rUFB7T8fH2vr8AQgk4YrJrMAd0YbrKRTKYiUzZmNLjNicp+BN3QRbclGONEliks7A+jqDESHFni3IyDLMMNjC6GOExeMBpnlujnuaUk4uxYAif50nfb8+537jnfObcaMi0hg5B9G7gI0WwpQYkCmaCxEtSNsgXlqUaIXh3qQwbUryJUGlB1Hw/6vZs5RrET631mNBZbsdIjQHLwaCyyovFuK+6y6P5kDlaO0/z6dpUTwxtT0d5sBKZSgO/cwLVk/DyQxAh6mGMU67n+TAZwzI+BTSl47h4b8KYMvC4hlGP6gzlY7/cKar3fgtpMCw4/awau0ObnnMCoC2N99vlO0D32VDpw0IfeWje2U/ToEIH9uXgw0/g7c7CuyzWp49s9bCOc3JcwE/1iElR4BBWHZWzKiUfbVkrRRDLw1SISUHFUvCZhb1kSdLwGU587gBHXIhN0SmhbkYjqlXpsqTLM1GFRCQ5JeKIgAd98YMOGYBz6O6gWpKLLvbcSlJSUmBkiyzskeNWHzQELRk8l4oePklAoxuLmRRcmTodl+i5znLX8/HyvosgHI8s7JOjwoU4x42Iv6finZLzQYELbFhOmv3Awgp5gMGicjTwvLy9DlqUbYnEpmwBvXGkmgkM+9D3kRgsjeIUIDuRi9RyC/SJqFRPGP7SHC3zzghMVhXqc3GuB0yEMy37lsixJU5LPd12SpF8UxQ9JUfo4jntr7Ml5ThCkRkN7LmoCRkx+lgRcIAWNuXGmy4YUB4ckm/C17Pf/FaBNFf8M6ARQFOU3nueHy9MFVEtmLHPHwWONRTWNjmrRDIdRO0PAOhltOVhbYIQ6RBKl6MONNu5GU42BUhQ7RBEPST5xxCeKI3SKS4xE8ge66P0jZx5Zism2bHRVLsGj+fGYfD4LkzszUZEuzBA8QAR/7yaCQgE3zv6L4JILV/vDKppT5CKpaAmlaVosLHXS8sjENg9YH/WvT8YOGnosXSxNlVmRFFExVOzKxcPLBRoTLD0RXHNj6tNwkefINBAIZMqyvDuyfG9eFbnMOnUd5cyVqEVjSMDm1QY00KjeVmcM9wT5zCEoLi42iKKojyznl2nZMr365XErTHwMfJY4nG1Ix7dNXhwLOmlzDryOW1gnh8p49cdP7NhalICXS+3Yea8NV2nGl6cJ6F7jgpXXLpCglFfPv2/D4wXxwFEFa3JM4Gh0j7d4oLZm3JKi/9j8BGtX8OoQpWjP8kSMtngRpKuPJIaeGhemWzMXTrAhSCc4kYhgmhGrvEZM7PCGXwhlm/BSmR12w+1T9D1dVuyKZDJ9+n9kaivN0+Noq4VFiuMhF0aaPTjflIaP6Y5NiNNCF6M5zRyj2Klzj6VCbc/BO9VONNJEVl/MhronC3SRsT01BsI+QqeW03TSH4BO9jwL9h191hGi2S6bIWbQYdINWvQxgwYdF35m0MdwA/8AwZMWid5L/YgAAAAASUVORK5CYII="
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def __init__(self):
+                pass
+
+            def _trun_object(self, ref_obj):
+                """引用物体转换为GH内置物体"""
+                if 'ReferenceID' in dir(ref_obj):
+                    if ref_obj.IsReferencedGeometry:
+                        test_pt = ref_obj.Value
+                    else:
+                        test_pt = ref_obj.Value
+                else:
+                    test_pt = ref_obj
+                return test_pt
+
+            def Branch_Route(self, Tree):
+                """分解Tree操作，树形以及多进程框架代码"""
+                Tree_list = [list(_) for _ in Tree.Branches]
+                Tree_Path = [list(_) for _ in Tree.Paths]
+                return Tree_list, Tree_Path
+
+            def split_tree(self, tree_data, tree_path):
+                """操作树单枝的代码"""
+                new_tree = ght.list_to_tree(tree_data, True, tree_path)  # 此处可替换复写的Tree_To_List（源码参照Vector组-点集根据与曲线距离分组）
+                result_data, result_path = self.Branch_Route(new_tree)
+                if list(chain(*result_data)):
+                    return result_data, result_path
+                else:
+                    return [[]], result_path
+
+            def format_tree(self, result_tree):
+                """匹配树路径的代码，利用空树创造与源树路径匹配的树形结构分支"""
+                stock_tree = gd[object]()
+                for sub_tree in result_tree:
+                    fruit, branch = sub_tree
+                    for index, item in enumerate(fruit):
+                        path = gk.Data.GH_Path(System.Array[int](branch[index]))
+                        if hasattr(item, '__iter__'):
+                            if item:
+                                for sub_index in range(len(item)):
+                                    stock_tree.Insert(item[sub_index], path, sub_index)
+                            else:
+                                stock_tree.AddRange(item, path)
+                        else:
+                            stock_tree.Insert(item, path, index)
+                return stock_tree
+
+            def parameter_judgment(self, tree_par_data):
+                # 获取输入端参数所有数据
+                geo_list, geo_path = self.Branch_Route(tree_par_data)
+                if geo_list:
+                    j_list = any(ghp.run(lambda x: len(list(filter(None, x))), geo_list))  # 去空操作, 判断是否为空
+                else:
+                    j_list = False
+                return j_list, geo_list, geo_path
+
+            def _get_mesh_pt(self, single_mash_face):
+                # 判断各个Mash面为三角形还是四边形
+                corner_str = ['A', 'B', 'C', 'D']
+                # 循环获取角点的下标
+                corner_index = []
+                for _ in corner_str:
+                    corner_index.append(eval("single_mash_face.{}".format(_)))
+                return corner_index
+
+            def turn_brep(self, sub_mesh):
+                if not sub_mesh:
+                    return [None]
+                # 获取网格的面和点
+                faces = [_ for _ in sub_mesh.Faces]
+                pts = [_ for _ in sub_mesh.Vertices]
+                # 获取每个网格子面对应的点下标
+                pt_indexes_list = ghp.run(self._get_mesh_pt, faces)
+                # 获取四点成面
+                surf_list = []
+                for pt_indexes in pt_indexes_list:
+                    sub_pt = [pts[_] for _ in pt_indexes]
+                    surf = rg.NurbsSurface.CreateFromCorners(sub_pt[0], sub_pt[1], sub_pt[2], sub_pt[3])
+                    surf_list.append(surf)
+                # 曲面列表合并为Brep
+                sub_brep = rg.Brep.JoinBreps([_.ToBrep() for _ in surf_list], 0.01)
+                return sub_brep
+
+            def temp(self, tuple_data):
+                mesh_list, origin_path = tuple_data
+                if len(mesh_list) != 0:
+                    mesh_list = map(self._trun_object, mesh_list)
+                    if self.join is True:
+                        new_mesh_list = [ghc.MeshJoin(mesh_list)]
+                    else:
+                        new_mesh_list = mesh_list
+
+                    single_brep = map(self.turn_brep, new_mesh_list)
+                else:
+                    single_brep = [[]]
+                ungroup_data = self.split_tree(single_brep, origin_path)
+                Rhino.RhinoApp.Wait()
+                return ungroup_data
 
 
     else:
@@ -4358,7 +4560,7 @@ class AssemblyInfo(GhPython.Assemblies.PythonAssemblyInfo):
         return """HAE plug-in"""
 
     def get_AssemblyVersion(self):
-        return "v4.6.7"
+        return "v4.6.8"
 
     def get_AuthorName(self):
         return "by HAE Development Team"
