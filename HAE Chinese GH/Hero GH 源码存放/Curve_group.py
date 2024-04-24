@@ -5573,9 +5573,9 @@ try:
                         # 均分点
                         divide_pt = [trim_curve.PointAt(_) for _ in res_t_list]
                     else:
-                        Message.message2(self, '缩减后线的长度小于均分值！！')
+                        Message.message2(self, 'The length of the reduced line is less than the average!!')
                 else:
-                    Message.message2(self, '首尾缩减的值大于等于曲线本身的长度！！')
+                    Message.message2(self, 'The value of head and end reduction value is greater than or equal to the length of the curve itself!!')
                 return divide_pt, res_t_list
 
 
