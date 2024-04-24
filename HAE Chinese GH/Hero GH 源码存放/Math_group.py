@@ -742,7 +742,6 @@ try:
                         Result, Floor, Ceil = zip(*zip_ungroup_data)
 
                         ungroup_data = map(lambda x: self.split_tree(x, origin_path), [Result, Floor, Ceil])
-                        Rhino.RhinoApp.Wait()
                         return ungroup_data
 
                     def temp_by_match_tree(*args):

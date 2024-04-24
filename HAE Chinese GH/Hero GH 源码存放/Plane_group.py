@@ -890,6 +890,12 @@ try:
                         remes.append(para_name[i_parameter])
                 return remes
 
+            def Branch_Route_2(self, Tree):
+                """分解Tree操作，树形以及多进程框架代码"""
+                Tree_list = [list(_) for _ in Tree.Branches]
+                Tree_Path = [_ for _ in Tree.Paths]
+                return Tree_list, Tree_Path
+
             # 树形数据删除空值
             def Delete_None_Tree(self, Data_Tree):
                 Data_List = [data_ for data_ in Data_Tree.Branches]
@@ -907,7 +913,7 @@ try:
                 Text_Plane_List = []
                 for pi_ in Plane:
                     if pi_:
-                        Text_Plane_List.append("O{}&X{}&Y{}".format("{%s}" % pi_[0], "{%s}" % pi_[1], "{%s}" % pi_[2]))
+                        Text_Plane_List.append("O{}&X{}&Y{}".format("{%s}" % pi_.Origin, "{%s}" % pi_.XAxis, "{%s}" % pi_.YAxis))
                     else:
                         Text_Plane_List.append(None)
                 return Text_Plane_List
@@ -931,14 +937,15 @@ try:
                         Plane_Text_List.append(None)
                 return Plane_Text_List
 
-            # 孔列表提示 并添加空数
+            # 空列表提示 并添加空数
             def PT_RUN(self, Data, Name, nupa):
                 Tree_Have = gd[object]()
-                if not Data or 'empty tree' != str(Data):
-                    if len(nupa) > 0:  # 树形包含空数列提醒
-                        for mes_i in nupa:
-                            Tree_Have.AddRange(Data.Branch(mes_i), mes_i)
-                        Message.message3(self, "%s contains empty tree, please check (does not affect other output)" % Name)
+                if len(nupa) > 0:  # 树形包含空数列提醒
+                    for mes_i in nupa:
+                        Tree_Have.AddRange("", mes_i)  # 修改“”，避免输入空值导致报错
+                    Message.message3(self, "%s contains empty tree, please check (does not affect other output)" % Name)
+                    return True, Tree_Have
+                elif Data.BranchCount > 0:  # 增加判断，避免列表和个体数据报错
                     return True, Tree_Have
                 else:
                     return False, Tree_Have
@@ -946,7 +953,10 @@ try:
             def RunScript(self, Plane_P, Text_P):
                 try:
                     PText, TPlane = gd[object](), gd[object]()
-                    re_mes = self.RE_MES([Plane_P, Text_P], ['Plane_P', 'Text_P'])
+                    Geo1_list_1, Geo1_path = self.Branch_Route_2(Plane_P)
+                    Geo2_list_1, Geo2_path = self.Branch_Route_2(Text_P)
+                    Geo_NickName = [self.Params.Input[0].NickName, self.Params.Input[1].NickName]
+                    re_mes = self.RE_MES([Plane_P, Text_P], Geo_NickName)
 
                     PlaneHave, Pnupa = self.Delete_None_Tree(Plane_P)
                     TextHave, Tnupa = self.Delete_None_Tree(Text_P)
@@ -958,8 +968,8 @@ try:
                         with Rhino.RhinoDoc.ActiveDoc:
                             # 禁用视图重绘
                             rs.EnableRedraw(False)
-                            PBotton = self.PT_RUN(Plane_P, 'Plane_P', Pnupa)
-                            TBotton = self.PT_RUN(Text_P, 'Text_P', Tnupa)
+                            PBotton = self.PT_RUN(PlaneHave, self.Params.Input[0].NickName, Pnupa)
+                            TBotton = self.PT_RUN(Text_P, self.Params.Input[1].NickName, Tnupa)
 
                             # Plane信息转换
                             if PBotton[0]:
@@ -970,6 +980,7 @@ try:
                                 for pt_i in range(len(TextList)):
                                     PText.AddRange(TextList[pt_i], Plane_List_Paths_pt[pt_i])
                             # Text信息转换
+
                             if TBotton[0]:
                                 Text_List_pt = [list(data_) for data_ in TextHave.Branches]
                                 Text_List_Paths_pt = [data_ for data_ in TextHave.Paths]

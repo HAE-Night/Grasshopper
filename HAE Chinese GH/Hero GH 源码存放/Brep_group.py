@@ -655,7 +655,6 @@ try:
                         Merge_Result.append(Re_)
 
                 ungroup_data = self.split_tree(Merge_Result, origin_path)
-                Rhino.RhinoApp.Wait()
                 return ungroup_data
 
             def RunScript(self, Breps, PRE):
@@ -991,7 +990,7 @@ try:
                             # 闭合曲线生成Brep
                             surface_cut = rg.Brep.CreatePlanarBreps(curves, 0.1)
                             if surface_cut:
-                                cutts.append(surface_cut[0])
+                                cutts += surface_cut
 
                     # 若平面全部都没切割到实体，则输出实体
                     if cutts:
@@ -1049,6 +1048,8 @@ try:
                     single_event = rg.Intersect.Intersection.BrepPlane(surf, pl, self.tol)
                     if single_event[0]:
                         single_cutts = map(lambda x: x if "ToNurbsCurve" in dir(x) else None, list(single_event[1]))
+                    else:
+                        single_cutts = [None]
                     cutts_curve += [single_cutts]
 
                 cut_breps = self._recursive_cutting_sur(surf, cutts_curve, [])
@@ -1061,22 +1062,22 @@ try:
                 # 匹配平面数据
                 list_pln = [planes[:] for _ in range(len(breps))]
                 res_list = []
-                for brep_index, brep_item in enumerate(breps):
-                    if brep_item:
-                        brep_list = [_ for _ in brep_item.Faces]
-                        if len(brep_list) == 1:
-                            res_list.append(self._get_surface(brep_item, list_pln[brep_index]))
+                if breps:
+                    for brep_index, brep_item in enumerate(breps):
+                        if brep_item:
+                            if not brep_item.IsSolid:
+                                res_list.append(self._get_surface(brep_item, list_pln[brep_index]))
+                            else:
+                                res_list.append(self._get_intersect(brep_item, list_pln[brep_index]))
                         else:
-                            res_list.append(self._get_intersect(brep_item, list_pln[brep_index]))
-                    else:
-                        res_list.append([])
+                            res_list.append([])
+                else:
+                    res_list.append([])
                 ungroup_data = self.split_tree(res_list, origin_path)
-                Rhino.RhinoApp.Wait()
                 return ungroup_data
 
             def RunScript(self, Brep, Plane, Tolerance, Cap):
                 try:
-                    sc.doc = Rhino.RhinoDoc.ActiveDoc
                     self.tol = Tolerance
                     self.cap_factor = Cap
                     Result_Brep = gd[object]()
@@ -1102,10 +1103,6 @@ try:
                         trunk_list_res_brep = ghp.run(self.temp, zip_list)
                         Result_Brep = self.format_tree(trunk_list_res_brep)
 
-                    sc.doc.Views.Redraw()
-                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
-                    Rhino.RhinoApp.Wait()
-                    sc.doc = ghdoc
                     return Result_Brep
                 finally:
                     self.Message = 'flat cut Brep（surface）'
@@ -1259,7 +1256,6 @@ try:
             def circle(self, Data):
                 # 根据面生成圆柱Brep
                 Cri_Vec = Data[2] * 2  # 拉伸向量
-                #        Data[0].Translate(-Data[2])
                 C_Plane = Data[0]  # 拉伸平面
 
                 circle = rg.Arc(C_Plane, Data[1], math.radians(360)).ToNurbsCurve()  # 圆弧转曲线
@@ -1837,14 +1833,6 @@ try:
                 return res_brep_list
 
             def offset(self, brep, dis):
-                # # 将trim线剔除
-                # untrim_brep_list = self.untrim_curve(brep)
-                # temp_brep = rg.Brep.JoinBreps(untrim_brep_list, self.tol)
-                # if temp_brep:
-                #     untrim_brep = temp_brep[0]
-                # else:
-                #     untrim_brep = untrim_brep_list[0]
-
                 untrim_brep = brep
                 # 判断两边是否都需要偏移
                 if self.b_side:
@@ -2029,11 +2017,9 @@ try:
                         temp_brep = res_loft_brep
                     else:
                         temp_brep = []
-                    # 是否将Brep封盖
-                    "---------------------------------"
                     # 删除空值
                     temp_brep = filter(None, temp_brep)
-                    "---------------------------------"
+                    # 是否将Brep封盖
                     if self.cap:
                         if temp_brep:
                             res_brep = map(self.cap_brep, temp_brep)
@@ -2042,7 +2028,6 @@ try:
                     ungroup_data = self.split_tree(res_brep, origin_path)
                 else:
                     ungroup_data = self.split_tree([], origin_path)
-                Rhino.RhinoApp.Wait()
                 return ungroup_data
 
             def cap_brep(self, brep_data):
@@ -2493,10 +2478,8 @@ try:
                             str_guid_model = [str(_) for _ in A_Model]
 
                             True_Model = map(lambda x: objref(x).Geometry(), A_Model)
-                            "------------------------------------"
                             # 切换为实体模式
                             True_Model = map(lambda y: y.ToBrep() if 'ToBrep' in dir(y) else y, True_Model)
-                            "------------------------------------"
                             temp_result, area_value, length_value = zip(*ghp.run(self._origin_data, True_Model))
 
                             if B_Set:
@@ -3222,12 +3205,6 @@ try:
                     contour_line = base
                 elif "ToBrep" in dir(base) or type(base) is rg.Brep:
                     contour_line = base
-                    # face_list = [f for f in base.Faces]
-                    # if len(face_list) == 1:
-                    #     contour_line = base
-                    # else:
-                    #     contour_line = None
-                    #     Message.message2(self, "This stretch only supports surface or line stretching!")
                 else:
                     contour_line = None
                     Message.message2(self, "This geometry type does not support stretching!")
@@ -4560,7 +4537,7 @@ class AssemblyInfo(GhPython.Assemblies.PythonAssemblyInfo):
         return """HAE plug-in"""
 
     def get_AssemblyVersion(self):
-        return "v4.6.8"
+        return "v4.6.9"
 
     def get_AuthorName(self):
         return "by HAE Development Team"
