@@ -1896,7 +1896,7 @@ try:
                                 zip_list = zip(Keys[KV_index], Values[KV_index])
                                 self.SetString(default_attr[KV_index], zip_list)
                             else:
-                                self.message2("K值和V值必须是一一对应的关系！")
+                                self.message2("The K value and the V value must be one-to-one correspondence!")
 
                     # 颜色
                     Colour = iter_group[4]  # 匹配后的Colour值
