@@ -1555,6 +1555,16 @@ try:
                     num = num * 26 + ord(c.upper()) - ord('A') + 1
                 return abs(num - 1)
 
+            def Get_Max_Width(self, sheet):
+                """获取最宽的数据行"""
+                max_col_count = 0
+                for row in range(sheet.LastRowNum + 1):
+                    if sheet.GetRow(row) is not None:  # 判断这一行是否为空
+                        col_count = sheet.GetRow(row).LastCellNum
+                        if col_count > max_col_count:
+                            max_col_count = col_count
+                return max_col_count
+
             def Read_Excel(self, Path, sheet_name, cell_range):
                 # 读取Excel
 
@@ -1572,18 +1582,22 @@ try:
                 evaluator = workbook.GetCreationHelper().CreateFormulaEvaluator()  # 计算公式
                 Data = []
                 if sheet is not None:
+                    max_col_count = self.Get_Max_Width(sheet)  # 获取最大的列数
                     if cell_range == 'ALL':
                         for row in range(sheet.LastRowNum + 1):
                             row_data = []  # 创建一个空列表来存储行数据
                             if sheet.GetRow(row) is not None:  # 判断这一行是否为空
-                                for col in range(sheet.GetRow(row).LastCellNum):
+                                for col in range(max_col_count):
                                     cell = sheet.GetRow(row).GetCell(col)  # 获取单元格
                                     if cell is not None:
                                         evaluator.EvaluateInCell(cell)  # 将公式转换为值
                                         row_data.append(cell.ToString())  # 将单元格内容添加到行数据列表
                                     else:
                                         row_data.append('')  # 如果单元格为空，则添加空字符串
-                                Data.append(','.join(row_data))  # 将行数据连接起来，并添加到数据列表
+                            else:
+                                row_data = ['' for i in range(max_col_count)]  # 添加空行数据
+
+                            Data.append(','.join(row_data))  # 将行数据连接起来，并添加到数据列表
                     else:
                         if ':' in cell_range:
                             start, end = sorted(cell_range.split(':'))  # 对输入的范围进行排序，确保start总是在end之前
