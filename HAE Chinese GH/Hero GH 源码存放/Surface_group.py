@@ -169,7 +169,7 @@ try:
                         elif self.type_of_shrink == 4:
                             map(lambda s: s.ShrinkFace(rg.BrepFace.ShrinkDisableSide.ShrinkAllSides), list_of_surf)
                         else:
-                            self.message2("输入的收边类型有误！")
+                            self.message2("Incorrect Shrink Trimmed Srf To Edge type entered!")
                         result_surf = list_of_surf
                     else:
                         result_surf = [surf]
