@@ -69,20 +69,37 @@ try:
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
-                p0 = self.marshal.GetInput(DA, 0)
-                p1 = self.marshal.GetInput(DA, 1)
-                result = self.RunScript(p0, p1)
+                # 插件名称
+                self.Message = "ShrinkSurface"
+                # 初始化输出端数据内容
+                Result = gd[object]()
+                if self.RunCount == 1:
+                    # 获取输入端
+                    p0 = self.Params.Input[0].VolatileData
+                    p1 = self.Params.Input[1].VolatileData
+                    # 确定不变全局参数
+                    self.type_of_shrink = p1[0][0].Value
 
-                if result is not None:
-                    self.marshal.SetOutput(result, DA, 0, True)
+                    self.j_bool_f1, surf_trunk, surf_path = self.parameter_judgment(p0)
+                    re_mes = Message.RE_MES([self.j_bool_f1], ['S end'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                    else:
+                        # 打包数据结构
+                        zip_list = zip(surf_trunk, surf_path)
+                        # map参数化函数运行
+                        iter_ungroup_data = map(self._do_main, zip_list)
+                        Result = self.format_tree(iter_ungroup_data)
+
+                # 将结果添加进输出端
+                DA.SetDataTree(0, Result)
 
             def get_Internal_Icon_24x24(self):
                 o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAMZSURBVEhLrZV7SFNhGMa3VRCtuULLss7aatCmZSUpFkR2nVOnoARF/xREYheii1ZEUKsgqOxiF0SEzEtZJiG5iuqP1NaIll10F2fltDm3nJRbBtX2dM72rZksdbIfPJzzft/3vs/5LuccVqhQmfoYkeJdNAnDDyVvvkSlapUkDD9UavNFSqY9TsLwMyfDdFqoaD9IwjETT+tmEFVFLlQap8zPf8/cD+nzS0RrRDI4HA7EYjGkUikkEgl9lUAwdwH4C8+BJ1VCNC/O2+brk0IkEoHOY5TkrTACMh6PB7vdjsH09bshztJhySYjXD88pNWHwWAAm81mDBJ8JYbHa+BwOEh6gKNXOnG2zEKiACaTKXSDoTNgcLl/YwBuEgUY0wyCGeAzXbzj3+VhCN1g8iR8sdtIOk3vTzhPWPBloxXmHBva9tnwvesX6QSMBj3Yvk0elcHyyTw+BlxffdkeD3pOtqIt/S1MGz5An23C81Vv0Li7Fe5fvtl0dX5iijMSeysMRpD6Olak6NglkLfsZDQ9sfjy1PgLyM634L7aiR/d3/Aipx4Nmc/QlK5GQ1oTHsmfonJVHax6B+41OqHY2wV+rBLRyypOCdL126k0fa4wy5zrNRCufblSkNFeNlv2ipb2+owVtY8jk2swL8uA87d64LT0oXpdCW6vrsbdNbW4s6YGN1IqUJhcBLOuB8rSblByPaKSqhCz8kE9JXtVzkiYpqvwGgQhmcufhc9WskTw4M6eShwTHkFh4jmcTTyDAmEBrm65Bo/bd6KaWzrB4vCYJZrrKzE89CZPRJ8jsMn9vf0oyyvFkcUFOBS/H5e3FsFhCbwn7SZdSJv832NqM9th/TjodBHC9h6UP/yGkjr/0gUI2SAiIgIul4ukB1i6uQ1xGwz4TWI/ZrM5NAMulwu1Wg2j0eh9Okaaly1Yv02DlK0aNGne/21nxqhUqpAMFLSYwd4kv8aPY2PGgt2YuegAJowPtDPyj6c1qs81RWsHrbyhikwoUkUtLX4SrI9oGq2xI1J8Okz/Mk+SMPzMkWnPCGTaqyQcARbrD5mO385QXqhOAAAAAElFTkSuQmCC"
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
-                self.dict_data = {0: "DoNotShrinkEastSide", 1: "DoNotShrinkNorthSide",
-                                  2: "DoNotShrinkSouthSide", 3: "DoNotShrinkWestSide", 4: "ShrinkAllSides"}
                 self.type_of_shrink = None
 
             def Branch_Route(self, Tree):
@@ -91,37 +108,85 @@ try:
                 Tree_Path = [list(_) for _ in Tree.Paths]
                 return Tree_list, Tree_Path
 
+            def split_tree(self, tree_data, tree_path):
+                """操作树单枝的代码"""
+                new_tree = ght.list_to_tree(tree_data, True, tree_path)  # 此处可替换复写的Tree_To_List（源码参照Vector组-点集根据与曲线距离分组）
+                result_data, result_path = self.Branch_Route(new_tree)
+                if list(chain(*result_data)):
+                    return result_data, result_path
+                else:
+                    return [[]], result_path
+
+            def format_tree(self, result_tree):
+                """匹配树路径的代码，利用空树创造与源树路径匹配的树形结构分支"""
+                stock_tree = gd[object]()
+                for sub_tree in result_tree:
+                    fruit, branch = sub_tree
+                    for index, item in enumerate(fruit):
+                        path = gk.Data.GH_Path(System.Array[int](branch[index]))
+                        if hasattr(item, '__iter__'):
+                            if item:
+                                for sub_index in range(len(item)):
+                                    stock_tree.Insert(item[sub_index], path, sub_index)
+                            else:
+                                stock_tree.AddRange(item, path)
+                        else:
+                            stock_tree.Insert(item, path, index)
+                return stock_tree
+
             def parameter_judgment(self, tree_par_data):
                 # 获取输入端参数所有数据
-                geo_list = self.Branch_Route(tree_par_data)[0]
-                j_list = filter(None, list(chain(*geo_list)))  # 获取所有数据
-                return j_list, geo_list
+                geo_list, geo_path = self.Branch_Route(tree_par_data)
+                if geo_list:
+                    j_list = any(ghp.run(lambda x: len(list(filter(None, x))), geo_list))  # 去空操作, 判断是否为空
+                else:
+                    j_list = False
+                return j_list, geo_list, geo_path
 
-            def RunScript(self, Surface, Type):
-                try:
-                    self.type_of_shrink = Type
-                    Result = gd[object]()
-                    j_list_1, temp_geo_list = self.parameter_judgment(self.Params.Input[0].VolatileData)
-
-                    re_mes = Message.RE_MES([j_list_1], ['Surface'])
-                    if len(re_mes) > 0:
-                        for mes_i in re_mes:
-                            Message.message2(self, mes_i)
+            def _trun_object(self, ref_obj):
+                """引用物体转换为GH内置物体"""
+                if 'ReferenceID' in dir(ref_obj):
+                    if ref_obj.IsReferencedGeometry:
+                        test_pt = ref_obj.Value
                     else:
-                        if Surface:
-                            list_of_surf = [_ for _ in Surface.Faces]
-                            if len(list_of_surf) == 1:
-                                map(lambda surf: surf.ShrinkFace(eval(
-                                    "rg.BrepFace.ShrinkDisableSide.{}".format(self.dict_data[self.type_of_shrink]))),
-                                    list_of_surf)
-                                Result = list_of_surf
-                            else:
-                                Result = Surface
+                        test_pt = ref_obj.Value
+                else:
+                    test_pt = ref_obj
+                return test_pt
+
+            def shrink_surface(self, surf):
+                if surf:
+                    list_of_surf = [_ for _ in surf.Faces]
+                    if len(list_of_surf) == 1:
+                        if self.type_of_shrink == 0:
+                            map(lambda s: s.ShrinkFace(rg.BrepFace.ShrinkDisableSide.DoNotShrinkEastSide), list_of_surf)
+                        elif self.type_of_shrink == 1:
+                            map(lambda s: s.ShrinkFace(rg.BrepFace.ShrinkDisableSide.DoNotShrinkNorthSide), list_of_surf)
+                        elif self.type_of_shrink == 2:
+                            map(lambda s: s.ShrinkFace(rg.BrepFace.ShrinkDisableSide.DoNotShrinkSouthSide), list_of_surf)
+                        elif self.type_of_shrink == 3:
+                            map(lambda s: s.ShrinkFace(rg.BrepFace.ShrinkDisableSide.DoNotShrinkWestSide), list_of_surf)
+                        elif self.type_of_shrink == 4:
+                            map(lambda s: s.ShrinkFace(rg.BrepFace.ShrinkDisableSide.ShrinkAllSides), list_of_surf)
                         else:
-                            Result = Surface
-                    return Result
-                finally:
-                    self.Message = "Trim surfaces and close edges "
+                            self.message2("输入的收边类型有误！")
+                        result_surf = list_of_surf
+                    else:
+                        result_surf = [surf]
+                else:
+                    result_surf = [surf]
+                return result_surf
+
+            def _do_main(self, tuple_data):
+                # 分解数据流
+                surf_list, origin_path = tuple_data
+                # 转换犀牛数据类型
+                surf_list = map(self._trun_object, surf_list)
+                result_list = ghp.run(self.shrink_surface, surf_list)
+
+                ungroup_data = self.split_tree(result_list, origin_path)
+                Rhino.RhinoApp.Wait()
+                return ungroup_data
 
 
         # Surface面积排序
@@ -420,8 +485,14 @@ try:
                 if type(_srf_list) is not list:
                     _srf_list = [_srf_list]
 
-                type_geo = [_ for _ in ghc.SurfaceFrames(_srf_list[0], 10, 10)['frames'] if isinstance(_, rg.Plane)]
-                normal = type_geo[0].ZAxis
+                # 获取面的所有平面
+                pl_list = ghc.SurfaceFrames(_srf_list[0], 10, 10)['frames']
+                # 若平面列表部位空
+                if pl_list:
+                    type_geo = [_ for _ in pl_list if isinstance(_, rg.Plane)]
+                    normal = type_geo[0].ZAxis
+                else:
+                    normal = None
                 return normal
 
             def RunScript(self, Brep, Vector):
@@ -438,7 +509,7 @@ try:
                     else:
                         if Brep:
                             normal_vector = self._get_normal_vector(Brep)
-                            if Vector:
+                            if Vector and normal_vector:
                                 # 检测面朝向与向量之间的夹角关系
                                 if rg.Vector3d.VectorAngle(normal_vector, Vector) > math.radians(90):
                                     Brep.Flip()
