@@ -1904,9 +1904,6 @@ try:
                         if len(Colour) != 0:  # 是否输入Colour
                             default_attr[c_index].ObjectColor = Colour[c_index][0]  # 输入多个颜色只取第一个颜色
                             default_attr[c_index].ColorSource = Rhino.DocObjects.ObjectColorSource.ColorFromObject
-                        else:
-                            default_attr[c_index].ObjectColor = System.Drawing.Color.FromArgb(0, 0, 0)
-                            default_attr[c_index].ColorSource = Rhino.DocObjects.ObjectColorSource.ColorFromObject
 
                     # 材质和名字
                     Name = iter_group[2]  # 匹配后的Name值
@@ -1960,12 +1957,12 @@ try:
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
                 self.SetUpParam(p, "Geometry", "G", "An object to be baked")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
                 self.SetUpParam(p, "Attributes", "A", "Follow the properties of the baking object")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Boolean()
@@ -1978,10 +1975,34 @@ try:
                 pass
 
             def SolveInstance(self, DA):
-                p0 = self.marshal.GetInput(DA, 0)
-                p1 = self.marshal.GetInput(DA, 1)
-                p2 = self.marshal.GetInput(DA, 2)
-                result = self.RunScript(p0, p1, p2)
+                # 插件名称
+                self.Message = 'Bake'
+                sc.doc = Rhino.RhinoDoc.ActiveDoc
+                self._doc = sc.doc
+                if self.RunCount == 1:
+                    # 获取输入端
+                    p0 = self.Params.Input[0].VolatileData
+                    p1 = self.Params.Input[1].VolatileData
+                    p2 = self.Params.Input[2].VolatileData
+                    # 确定不变全局参数
+                    self.factor = p2[0][0].Value
+
+                    j_bool_f1, geo_trunk, geo_path = self.parameter_judgment(p0)
+                    attr_trunk, attr_path = self.parameter_judgment(p1)[1:]
+                    re_mes = Message.RE_MES([j_bool_f1], ['G end'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                    else:
+                        iter_group, max_i = self.match_tree(geo_trunk, attr_trunk)
+                        # 添加原始树路径
+                        new_geo_trunk, new_attr_trunk = iter_group
+                        zip_list = zip(new_geo_trunk, new_attr_trunk)
+                        # 多进程函数运行
+                        map(self._do_main, zip_list)
+
+                ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                sc.doc = ghdoc
 
             def get_Internal_Icon_24x24(self):
                 o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAASKSURBVEhL3ZR/TNRlHMchy5XpktbWarZ0Nf/JlLsDD0LuDoRNQEQZv+SXwB0gvxGQH1LD5STBIYFMa/HrQDjguAPl/BH+YEJphYqSkq6tVuRkAbUyJIT7vvs8z+Ph0Vyb//baXrv353s/nuf5PM9zDv87NpMfishZRPaQb/JKkEzKRHx6XMh75DJeCc6Te0Tk1JEGETnPkxnks7wSvPXo9YlcIVUiclJJs4gcN/IG6cgrB4fnyFFyE6/E829J9rknco30FJFTTNrP+G3yFsnaZ6OKPCwi5xh5SMSFKMifyBd5JWCziRCRk0QOiDhPPtkiIieOtIi4ENYK+5n4kWxA+/4Ok1oR5zlFFojIySFNIj7mNXKMXMErwecka5ENNcn6vZhXglXkBPk6rwSXSLZ3C9CRZ0XkLCHvkOwHbNSTlSLOU0MaReSsI8fJl3hlx37yiIgcNiPW/6W8EvSTgSJyWOvYJDx4JaglG0VcyG7S/rSwFYyQK3kluEgGiMhh77ETxe4C4xnyJml/CufxItkG2s43g/UyVkROB2m/mexCse/Y9uRlkg3wCq/+BVsuuwPLeSXIJj8QkcOOKFuFDbbK26Tt5rK+swFe5ZU9ktS9bF+O1/bR5pBsqzHOYLXEf/HnZyE93xwMiZg5l7l2xhS9pkir9HVwXFT+6Cs22MGwnRi2enbL7ffEwWHOkrXd2hr1q2SOmMZwOtAbCxijgc4QoCEYuKAFuiIgnYqcliwxX88ZtJHoS9ZIxuj3vBUrS+kn7NvIThQ7MAK0FDrNfhz8BxoCIVV4AD3hsFpi8KA6CKjfAutRH8x1hgHmCEBPA7bR8yZyIAXoDoXUF/+XtSm6+WZfydLfK4OWr3Jawo774zswuS84fGq/LyYqfPCgyg9T9CqZw/B9mT/u5LlhpkYDqc4POB6Fh1XBkI7QoAfdIZkigZMxwDFaoSkEfxtj70qnE8alhoBRqX5LtSRVvMAHuF7sH/Pd+2pczlViqEiFa9memPxIjV9q/HEmxQ2DWa4Y26vE7Ke+GK8OxGhpIMbp/fEyFWZ7UzFRvhmzNTSBpkCgP4NaGwq0bMXk4a3nO0LpD9FSGOB0IsPj7rlMV3TvdEaXToaTO+QY3uuJviI1zDFr0Zv4Lm5kOePnMm9cKdyE60W+uJTsjHu123CLVn97tzd+K1Vjri0ckj4QU2Vq3K8MwOAeTSZfhTFjo8yU6j7YolNMG5IU6NAqcFzrjNPpcrTHrUFD2Gq0Rb2DC2ku+LKABqZVnk1TYSjPEz8e8MJXeRpczVVh7IAP7leoMJJP3SjwwkDxxqt8ABuGlKA3mtO9PVtTN+xqjF/f0hgrH9LvcJ7qpFWZdOvQmSSDOUUOc7KMT6ItTokzaUpcpL3qz1KSnricQ4Onq9Gf6wFzlprdq//GlL9tRXuKJrw10aO8SbfepE9w+UGfIJdatTIY2CDxcnQlK3Ai1RlmmoCRnht1tPpd7qhN2sD+tp+OjpKSxeYcv9WGNLWmLVUTpU/0yK2LV9Y16VxH9FqZ1L5TAb1W/vCTBOUhAI7/AF8uE7240dflAAAAAElFTkSuQmCC"
@@ -2021,6 +2042,50 @@ try:
                         else:
                             stock_tree.Insert(item, path, index)
                 return stock_tree
+
+            def parameter_judgment(self, tree_par_data):
+                # 获取输入端参数所有数据
+                geo_list, geo_path = self.Branch_Route(tree_par_data)
+                if geo_list:
+                    j_list = any(ghp.run(lambda x: len(list(filter(None, x))), geo_list))  # 去空操作, 判断是否为空
+                else:
+                    j_list = False
+                return j_list, geo_list, geo_path
+
+            def _trun_object(self, ref_obj):
+                """引用物体转换为GH内置物体"""
+                meber_list = dir(ref_obj)
+                ref_obj.BakeGeometry()
+                if 'Value' in meber_list:
+                    gh_obj = ref_obj.Value
+                elif 'Objects' in meber_list:
+                    temp_obj = ref_obj.Objects
+                    gh_obj = [_.Value for _ in temp_obj]
+                return gh_obj
+
+            def sub_match(self, tuple_data):
+                # 子树匹配
+                target_tree, other_tree = tuple_data
+                t_len, o_len = len(target_tree), len(other_tree)
+                if o_len == 0:
+                    new_tree = [other_tree] * len(target_tree)
+                else:
+                    new_tree = other_tree + [other_tree[-1]] * (t_len - o_len)
+                return new_tree
+
+            def match_tree(self, *args):
+                # 参数化匹配数据
+                len_list = map(lambda x: len(x), args)  # 得到最长的树
+                max_index = len_list.index(max(len_list))  # 得到最长的树的下标
+                self.max_index = max_index
+                max_trunk = args[max_index]
+                other_list = [args[_] for _ in range(len(args)) if _ != max_index]  # 剩下的树
+                matchzip = zip([max_trunk] * len(other_list), other_list)
+
+                # 插入最大列表，获得最新列表
+                reslut_list = map(self.sub_match, matchzip)
+                reslut_list.insert(max_index, max_trunk)
+                return reslut_list, max_index
 
             def create_layer(self, str_name):
                 # 创建图层（包含子图层）
@@ -2071,113 +2136,72 @@ try:
                 else:
                     pass
 
-            def get_values(self, data_list, new_data_list):
-                # 递归获取物体
-                for _ in data_list:
-                    if 'List[object]' not in str(type(_)):
-                        new_data_list.append(_)
-                    else:
-                        self.get_values(_, new_data_list)
-                return new_data_list
-
-            def temp_fun(self, data_tuple):
-                geoes, _hae_attr = data_tuple
-                # 引用物体
-                if isinstance(geoes, (rg.Curve, rg.Line, rg.Circle, rg.Arc)):
-                    geoes = geoes.ToNurbsCurve()
-                elif type(geoes) is rg.Point3d:
-                    geoes = rg.Point(geoes)
-
-                # 检索图层
-                if _hae_attr:
-                    attr = _hae_attr._HAEAttributes__hae_param
-                    Layer_name = _hae_attr.Layer_name
-                #
-                #            structure_tree = self.Params.Input[0].VolatileData
-                #            structure_list = list(chain(*self.Branch_Route(structure_tree)[0]))
-                #            ref_rh_obj = structure_list[self.RunCount - 1]
-                #            ref_rh_id = System.Guid(ref_rh_obj.ToString()) if type(ref_rh_obj) is gk.Types.GH_Guid else ref_rh_obj.ReferenceID
-                #            rh_obj = sc.doc.Objects.Find(ref_rh_id)
-                #            if rh_obj:
-                #                rh_attr_dict = rh_obj._hae_attr.GetUserStrings()
-                #                attr_dict = attr.GetUserStrings()
-                #                for k in rh_attr_dict.AllKeys:
-                #                    attr_dict.Set(k, attr_dict[k])
+            def _new_bake(self, data):
+                # 分解数据流
+                obj, attr = data
+                if 'HAE' in str(attr):
+                    new_attr = attr._HAEAttributes__hae_param
+                    Layer_name = attr.Layer_name
                 else:
-                    attr = sc.doc.CreateDefaultAttributes()
+                    new_attr = attr
                     layer_index = attr.LayerIndex
                     Layer_name = str(sc.doc.Layers.FindIndex(layer_index))
 
-                # Bake因子
-                if self.factor:
-                    self.create_layer(Layer_name)  # 创建图层
-                    layer_index = sc.doc.Layers.FindByFullPath(Layer_name, True)
-                    attr.LayerIndex = layer_index
-                    # 提取GH内置几何
-                    if 'List[object]' in str(type(geoes)):
-                        # 群组Bake
-                        geo_list = self.get_values(geoes, [])
-                        ids = []
-                        for g in geo_list:
-                            # 循环判断群组内部是否可Bake
-                            if isinstance(g, (rg.Curve, rg.Line, rg.Circle, rg.Arc)):
-                                g = g.ToNurbsCurve()
-                            elif type(g) is rg.Point3d:
-                                g = rg.Point(g)
-                            ids.append(sc.doc.Objects.Add(g, attr))
-                        groupName = rs.AddGroup()
-                        rs.AddObjectsToGroup(ids, groupName)
-                    else:
-                        if geoes:
-                            # 单一物体Bake
-                            if isinstance(geoes, rg.InstanceReferenceGeometry):  # Bake图块
-                                block = sc.doc.InstanceDefinitions.FindId(geoes.ParentIdefId)
-                                sc.doc.Objects.AddInstanceObject(block.Index, geoes.Xform, attr)  # 将图块bake
-                            else:
-                                if isinstance(geoes, rg.Rectangle3d):  # 矩形
-                                    geoes = geoes.ToNurbsCurve()
-                                elif isinstance(geoes, rg.Box):  # Box
-                                    geoes = geoes.ToBrep()
-                                sc.doc.Objects.Add(geoes, attr)
+                # Bake至的图层；若不存在创建
+                self.create_layer(Layer_name)  # 创建图层
+                layer_index = sc.doc.Layers.FindByFullPath(Layer_name, True)
+                new_attr.LayerIndex = layer_index
+
+                def sub_bake(o, a):
+                    # 第一次引用Bake主方法，获取Bake结果
+                    if 'BakeGeometry' not in dir(o):
+                        return
+                    first_bool, new_guid = o.BakeGeometry(self._doc, a, System.Guid.NewGuid())
+                    # 若失败
+                    if not first_bool:
+                        o = o.Value
+                        obj_member_list = dir(o)
+                        if isinstance(o, rg.InstanceReferenceGeometry):  # Bake图块
+                            block = sc.doc.InstanceDefinitions.FindId(o.ParentIdefId)
+                            new_guid = sc.doc.Objects.AddInstanceObject(block.Index, o.Xform, a)  # 将图块bake
+
+                        else:
+                            if 'ToNurbsCurve' in obj_member_list:  # 矩形
+                                o = o.ToNurbsCurve()
+                            elif 'ToBrep' in obj_member_list:  # Box
+                                o = o.ToBrep()
+
+                            new_guid = sc.doc.Objects.Add(o, a)
+                    return new_guid
+
+                # 判断是否为HAE内置属性物体
+                if 'HAE' in str(obj):
+                    new_obj_list = [_ for _ in obj.Value.list_data]
+                    # 包内所有空间类型为包的Attr
+                    guid_list = []
+                    for _ in new_obj_list:
+                        gid = sub_bake(_, new_attr)
+                        guid_list.append(gid)
+                    # 将Bake出来的物体加入到群组
+                    guid_list = filter(None, guid_list)
+                    if guid_list:
+                        self._doc.Groups.AddToGroup(self._doc.Groups.Add(), guid_list)
+                else:
+                    sub_bake(obj, new_attr)
 
             def _do_main(self, tuple_data):
-                object_list, attr_list = tuple_data
-                # 列表比对数据
-                if len(object_list) > len(attr_list):
-                    new_attr_list = attr_list + [attr_list[-1]] * (len(object_list) - len(attr_list))
-                else:
-                    new_attr_list = attr_list
-
-                sub_zip_list = zip(object_list, new_attr_list)
-                map(self.temp_fun, sub_zip_list)
-
-            def RunScript(self, Geometry, Attributes, Bake):
-                try:
-                    sc.doc = Rhino.RhinoDoc.ActiveDoc
-                    re_mes = Message.RE_MES([Geometry], ['G end'])
-                    if len(re_mes) > 0:
-                        for mes_i in re_mes:
-                            Message.message2(self, mes_i)
-                    else:
-                        geo_trunk = self.Branch_Route(Geometry)[0]
-                        attr_trunk = self.Branch_Route(Attributes)[0]
-                        g_len, a_len = len(geo_trunk), len(attr_trunk)
-                        self.factor = Bake
-                        # 树形比对数据
-                        if a_len:
-                            if g_len > a_len:
-                                new_attr_trunk = attr_trunk + [attr_trunk[-1]] * (g_len - a_len)
-                            else:
-                                new_attr_trunk = attr_trunk
-                        else:
-                            new_attr_trunk = [[None]] * (g_len - a_len)
-                        zip_list = zip(geo_trunk, new_attr_trunk)
-                        map(self._do_main, zip_list)
-
-                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
-                    sc.doc = ghdoc
-                finally:
-                    self.Message = 'Bake'
+                # 分解集合数据
+                geo_list, attr_list = tuple_data
+                # 转换数据类型
+                attr_list = map(lambda x: x.Value, attr_list)
+                if not attr_list:
+                    attr_list = [sc.doc.CreateDefaultAttributes()]
+                # 获得最新列表
+                map_list = self.match_tree(geo_list, attr_list)[0]
+                sub_zip_list = zip(*map_list)
+                if self.factor:
+                    map(self._new_bake, sub_zip_list)
+                Rhino.RhinoApp.Wait()
 
 
         # 分解HAE属性
