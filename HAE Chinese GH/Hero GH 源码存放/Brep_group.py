@@ -28,6 +28,7 @@ import copy
 import webbrowser as wb
 from System.Collections.Generic import List
 from Grasshopper.Kernel.Data import GH_Path
+import Curve_group
 
 Result = initialization.Result
 Message = initialization.message()
@@ -823,12 +824,12 @@ try:
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Brep()
                 self.SetUpParam(p, "Brep", "B", "Brep to be cut（surface）")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Plane()
                 self.SetUpParam(p, "Plane", "P", "cutting object（flat plane（Plane）or smooth surface（Surface））")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
@@ -848,18 +849,56 @@ try:
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Brep()
                 self.SetUpParam(p, "Result_Brep", "B", "Brep by cutting（surface）")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
-                p0 = self.marshal.GetInput(DA, 0)
-                p1 = self.marshal.GetInput(DA, 1)
-                p2 = self.marshal.GetInput(DA, 2)
-                p3 = self.marshal.GetInput(DA, 3)
-                result = self.RunScript(p0, p1, p2, p3)
+                # 插件名称
+                self.Message = 'Flat cut Brep（surface）'
+                # 初始化输出端数据内容
+                Result_Brep = gd[object]()
+                if self.RunCount == 1:
+                    p0 = self.Params.Input[0].VolatileData
+                    p1 = self.Params.Input[1].VolatileData
+                    p2 = self.Params.Input[2].VolatileData
+                    p3 = self.Params.Input[3].VolatileData
+                    # 确定不变全局参数
+                    self.tol = float(p2[0][0].Value)
+                    self.cap_factor = p3[0][0].Value
 
-                if result is not None:
-                    self.marshal.SetOutput(result, DA, 0, True)
+                    j_bool_f1, brep_trunk, brep_path = self.parameter_judgment(p0)
+                    j_bool_f2, pln_trunk, pln_path = self.parameter_judgment(p1)
+
+                    re_mes = Message.RE_MES([j_bool_f1, j_bool_f2], ['B end', 'P end'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                    else:
+                        brep_trunk = list(ghp.run(lambda x: map(self._trun_object, x), brep_trunk))
+                        pln_trunk = list(ghp.run(lambda y: map(self._trun_object, y), pln_trunk))
+
+                        len_b, len_p = len(brep_trunk), len(pln_trunk)
+                        if len_b != len_p:
+                            new_brep_list = brep_trunk
+                            new_plane_list = pln_trunk + [pln_trunk[-1]] * abs(len_b - len_p)
+                            new_plane_list = ghp.run(lambda li: [copy.copy(_) for _ in li[:]], new_plane_list)
+                        else:
+                            new_brep_list = brep_trunk
+                            new_plane_list = pln_trunk
+
+                        zip_list = zip(new_brep_list, new_plane_list, brep_path)
+                        trunk_list_res_brep = list(ghp.run(self.temp, zip_list))
+                        Result_Brep = self.format_tree(trunk_list_res_brep)
+                DA.SetDataTree(0, Result_Brep)
+
+                # p0 = self.marshal.GetInput(DA, 0)
+                # p1 = self.marshal.GetInput(DA, 1)
+                # p2 = self.marshal.GetInput(DA, 2)
+                # p3 = self.marshal.GetInput(DA, 3)
+                # result = self.RunScript(p0, p1, p2, p3)
+                #
+                # if result is not None:
+                #     self.marshal.SetOutput(result, DA, 0, True)
 
             def get_Internal_Icon_24x24(self):
                 o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAALbSURBVEhLtVRbSJNhGJ5jbUpuQs6YJ7owa7MkzVKkdM3JLMxR0IFiTjNtc5uZWHohUfrPdvCURd7UjRdhaGloWlJdeO3oQGBQQt1EFOVNWoEXT+/3b8Hcr2nDPfDA++/9/ufZ9x5+0f+isMR3Qmd4sSvwuP7QHno5qi+dqQg8hoVoomol5uqmhtNyBuuWywUYR1wRJZtixB+zk6Lns1UyIRM3zOfneRb3Zhz9zWJBnt5LUUi+kg77A0JIxVG+6ZotgEsDtKqFbE+G03QDTx3VFKcI804N5prTkaqQ/CQ54U0UUvGbueatdJAOX90upDOJN5i011BMBqH5VnZGg5xE2S+SS/KrBkEuFb/63JgGcGRwhQ6HkmMGvXhsIwOODELzvIkarFwkx/qxFGs1mLBZImfQbrqO8cga9GAskgbXmEGtNTwD2jDfQnMC4E7mxQR0x6KrwoNnjjMUy4V5mjI2vlnxoh8kJ+NFtQbfYb3xfV9hyXRfZhb3jTvlQlelF51mLzrMHfASPeWdxC64zW6cPjIO27EBuCjPbsN64uTZC45GuM10E/l53sV9xVMjxWWz90Tag779euPspULDdGP6NsunO5X1GKy9gCFLPR5YzmPYWocRqwMPrXaM2qtgOz7Ai43RLR5RqVjDJ2zn+NF9Yq/GJC1hLm16bsGwo6jsnYm/xV+wEs03baZNpvpyrEwhdMnRbfbQop2lOI5+Y+eCyJavPRVZSr5EMX7VIKylyaxU7Da8YWh+PaaI9YOVLGIGXjJgfYmYAZss1vywDOhr+vrLxdUMvLj/L4M2NXarZAskl+hXDUKMJGrmexN9rnt2At4MIXuScauqAxN1DUB3qjDfuYOmKwMapXSR5BL8qktx2ZC2ES06JVoK4oXUxuJkcSsqi2oolgvzB5QwZSogjhINkZbYLymEnli+EtP39D9XqT13l8sFaCRKiOFBV/r2tt74oSHwuApEoj89Q3ZdEGG9MgAAAABJRU5ErkJggg=="
@@ -868,18 +907,6 @@ try:
             def __init__(self):
                 self.tol = None
                 self.cap_factor = None
-
-            def message1(self, msg1):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Error, msg1)
-
-            def message2(self, msg2):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning, msg2)
-
-            def message3(self, msg3):
-                return self.AddRuntimeMessage(Grasshopper.Kernel.GH_RuntimeMessageLevel.Remark, msg3)
-
-            def mes_box(self, info, button, title):
-                return rs.MessageBox(info, button, title)
 
             def Branch_Route(self, Tree):
                 """分解Tree操作，树形以及多进程框架代码"""
@@ -919,6 +946,17 @@ try:
                 j_list = filter(None, list(chain(*geo_list)))  # 获取所有数据
                 return j_list, geo_list, geo_path
 
+            def _trun_object(self, ref_obj):
+                """引用物体转换为GH内置物体"""
+                if 'ReferenceID' in dir(ref_obj):
+                    if ref_obj.IsReferencedGeometry:
+                        test_pt = ref_obj.Value
+                    else:
+                        test_pt = ref_obj.Value
+                else:
+                    test_pt = ref_obj
+                return test_pt
+
             def cap_brep(self, cap_brep):
                 brep_list = []
                 for _ in cap_brep:
@@ -956,10 +994,10 @@ try:
                 cut = cut_list[0]
                 ent = ent if type(ent) is list else [ent]
                 for en in ent:
-                    temp_brep = list(
-                        en.Split.Overloads[IEnumerable[Rhino.Geometry.Brep], System.Double]([cut], self.tol))
+                    temp_brep = list(en.Split.Overloads[IEnumerable[Rhino.Geometry.Brep], System.Double]([cut], self.tol))
+
                     if len(temp_brep):
-                        cap_brep = self.cap_brep(temp_brep)
+                        cap_brep = self.cap_brep(temp_brep) if self.cap_factor else temp_brep
                         new_brep_list.append(cap_brep)
                     else:
                         new_brep_list.append([en])
@@ -970,7 +1008,64 @@ try:
                     return self._recursive_cutting(temp_list_brep, cut_list, [])
                 else:
                     res_list_brep = self._handle_brep(temp_list_brep)
+                    # res_list_brep = [_ for _ in res_list_brep if _.IsSolid]
                     return res_list_brep
+
+            def get_box_surface(self, geo_list, pln):
+                # 获取最小边界框
+                pt_list = []
+                for geo in geo_list:
+                    pt_list += [_.Location for _ in geo.Vertices]
+                total_box = rg.Box(pln, pt_list)  # 最小包围盒
+                total_bbox = total_box.BoundingBox  # 最小边界框
+
+                # 获取最大面
+                def get_max_face(face_list):
+                    face_list = face_list if type(face_list) is list else [face_list]
+                    area_list = [_.GetArea() for _ in face_list]
+                    max_index = area_list.index(max(area_list))
+                    bounding_face = [face_list[max_index]]
+                    return bounding_face
+
+                # 如果最小边界框体积为0
+                if int(total_bbox.Volume) == 0:
+                    bbox_sur_list = ghc.DeconstructBrep(total_bbox)['faces']
+                    # if bbox_sur_list:
+                    #     get_max_face(bbox_sur_list)
+                    #     # bbox_sur_list = bbox_sur_list if type(bbox_sur_list) is list else [bbox_sur_list]
+                    #     # area_list = [_.GetArea() for _ in bbox_sur_list]
+                    #     # max_index = area_list.index(max(area_list))
+                    #     # bounding_face = [bbox_sur_list[max_index]]
+                    # else:
+                    #     bounding_face = [_ for _ in geo_list]
+                else:
+                    bbox_sur_list = ghc.DeconstructBrep(total_box.ToBrep())['faces']
+
+                # 炸开之后获得获得最大面
+                if bbox_sur_list:
+                    bounding_face = get_max_face(bbox_sur_list)
+                else:
+                    bounding_face = [_ for _ in geo_list]
+
+                    # if bbox_sur_list:
+                    #     get_max_face(bbox_sur_list)
+                    # bbox_sur_list = bbox_sur_list if type(bbox_sur_list) is list else [bbox_sur_list]
+                    # area_list = [_.GetArea() for _ in bbox_sur_list]
+                    # max_index = area_list.index(max(area_list))
+                    # bounding_face = [bbox_sur_list[max_index]]
+                    # else:
+                    #     bounding_face = [_ for _ in geo_list]
+
+                # 将面列表所有边都延申100
+                res_cut_brep = []
+                for surf in bounding_face:
+                    surf = surf.Faces[0].ToNurbsSurface()
+                    surf = surf.Extend(rg.IsoStatus.East, 100, True)
+                    surf = surf.Extend(rg.IsoStatus.North, 100, True)
+                    surf = surf.Extend(rg.IsoStatus.South, 100, True)
+                    surf = surf.Extend(rg.IsoStatus.West, 100, True)
+                    res_cut_brep.append(surf)
+                return res_cut_brep
 
             def _get_intersect(self, item, pln):
                 pln = filter(None, pln)
@@ -981,15 +1076,19 @@ try:
                     for pl in new_pln:
                         single_event = rg.Intersect.Intersection.BrepPlane(item, pl, self.tol)
                         # 是否切到实体，未切到则不加入切割列表
-                        if single_event[1]:
-                            # 确定曲线是否闭合
-                            if len(single_event[1]) > 1:
-                                curves = rg.Curve.JoinCurves(single_event[1], 0.1)
+                        if single_event[0]:
+                            curves = list(rg.Curve.JoinCurves(single_event[1], 0.1))
+                            array_c = list(chain(*[list(_.DuplicateSegments()) for _ in curves]))
+                            array_c_len = len(array_c)
+
+                            if not array_c_len == 4:
+                                if curves:
+                                    temp_surface_cut = list(rg.Brep.CreatePlanarBreps(curves, 0.1))
+                                    # c_len, temp_s_len = len(curves), len(temp_surface_cut)
+                                    surface_cut = self.get_box_surface(temp_surface_cut, pl)
+                                    cutts += surface_cut
                             else:
-                                curves = single_event[1]
-                            # 闭合曲线生成Brep
-                            surface_cut = rg.Brep.CreatePlanarBreps(curves, 0.1)
-                            if surface_cut:
+                                surface_cut = [ghc.BoundarySurfaces(array_c)]
                                 cutts += surface_cut
 
                     # 若平面全部都没切割到实体，则输出实体
@@ -1003,6 +1102,7 @@ try:
                         sort_breps = [item]
                 else:
                     sort_breps = [item]
+
                 return sort_breps
 
             def _handle_brep(self, breps):
@@ -1016,19 +1116,20 @@ try:
                 sur = sur if type(sur) is list else [sur]
                 for s in sur:
                     # 面切割取第一个数据
-                    temp_brep = list(s.Split.Overloads[IEnumerable[Rhino.Geometry.Curve], System.Double](cut, self.tol))
+                    temp_brep = list(s.Split.Overloads[IEnumerable[Rhino.Geometry.Brep], System.Double](cut, self.tol))
+                    # temp_brep = list(s.Split.Overloads[IEnumerable[Rhino.Geometry.Curve], System.Double](cut, self.tol))
 
                     if len(temp_brep):
                         # 获取剩余的surf
                         rest_list = temp_brep[1:]
                         # 如果平面线切割组只剩最后一组
                         if len(cut_list) == 1:
-                            rest_brep = self.cap_brep(rest_list)
+                            rest_brep = self.cap_brep(rest_list) if self.cap_factor else rest_list
                         else:
                             rest_brep = rg.Brep.JoinBreps(rest_list, 0.1)[0]
-                            rest_brep = self.cap_brep([rest_brep])
+                            rest_brep = self.cap_brep([rest_brep]) if self.cap_factor else [rest_brep]
 
-                        cap_brep = self.cap_brep([temp_brep[0]])
+                        cap_brep = self.cap_brep([temp_brep[0]]) if self.cap_factor else [temp_brep[0]]
                         new_brep_list.append(cap_brep)
                         new_brep_list.append(rest_brep)
                     else:
@@ -1042,15 +1143,29 @@ try:
                     res_list_brep = self._handle_brep(temp_list_brep)
                     return res_list_brep
 
+            def get_single_surf(self, crv):
+                # 获取相交线两边偏移后的面
+                rc, pln = crv.TryGetPlane()
+                if rc:
+                    crv_1 = crv.Offset(pln, 0.1, 0.01, rg.CurveOffsetCornerStyle.Sharp)[0]
+                    crv_2 = crv.Offset(pln, -0.1, 0.01, rg.CurveOffsetCornerStyle.Sharp)[0]
+                else:
+                    crv_1 = crv
+                    crv_2 = crv
+                surface = ghc.Loft([crv_1, crv_2], ghc.LoftOptions(False, False, 0, 0, rg.LoftType.Normal))
+                return surface
+
             def _get_surface(self, surf, pln_list):
                 cutts_curve = []
                 for pl in pln_list:
                     single_event = rg.Intersect.Intersection.BrepPlane(surf, pl, self.tol)
                     if single_event[0]:
-                        single_cutts = map(lambda x: x if "ToNurbsCurve" in dir(x) else None, list(single_event[1]))
+                        temp_cutts = map(lambda x: x if "ToNurbsCurve" in dir(x) else None, list(single_event[1]))
+                        single_cutts = map(lambda c: self.get_single_surf(c), temp_cutts)
                     else:
                         single_cutts = [None]
                     cutts_curve += [single_cutts]
+                cutts_curve = [filter(None, list(chain(*cutts_curve)))]
 
                 cut_breps = self._recursive_cutting_sur(surf, cutts_curve, [])
                 res_breps = self._handle_brep(cut_breps)
@@ -1065,47 +1180,55 @@ try:
                 if breps:
                     for brep_index, brep_item in enumerate(breps):
                         if brep_item:
-                            if not brep_item.IsSolid:
+                            brep_list = [_ for _ in brep_item.Faces]
+                            if len(brep_list) == 1:
+                            # if not brep_item.IsSolid:
                                 res_list.append(self._get_surface(brep_item, list_pln[brep_index]))
                             else:
-                                res_list.append(self._get_intersect(brep_item, list_pln[brep_index]))
+                                if not brep_item.IsSolid:
+                                    temp_brep_item = brep_item.CapPlanarHoles(0.01)
+                                    if (not temp_brep_item) or (not temp_brep_item.IsSolid):
+                                        res_list.append(self._get_surface(brep_item, list_pln[brep_index]))
+                                    else:
+                                        res_list.append(self._get_intersect(brep_item, list_pln[brep_index]))
+                                else:
+                                    res_list.append(self._get_intersect(brep_item, list_pln[brep_index]))
                         else:
                             res_list.append([])
                 else:
                     res_list.append([])
                 ungroup_data = self.split_tree(res_list, origin_path)
                 return ungroup_data
-
-            def RunScript(self, Brep, Plane, Tolerance, Cap):
-                try:
-                    self.tol = Tolerance
-                    self.cap_factor = Cap
-                    Result_Brep = gd[object]()
-
-                    j_list_1, temp_brep_list, brep_path = self.parameter_judgment(Brep)
-                    j_list_2, temp_pl_list, pl_path = self.parameter_judgment(Plane)
-
-                    re_mes = Message.RE_MES([j_list_1, j_list_2], ['B end', 'P end'])
-                    if len(re_mes) > 0:
-                        for mes_i in re_mes:
-                            Message.message2(self, mes_i)
-                    else:
-                        len_b, len_p = len(temp_brep_list), len(temp_pl_list)
-                        if len_b != len_p:
-                            new_brep_list = temp_brep_list
-                            new_plane_list = temp_pl_list + [temp_pl_list[-1]] * abs(len_b - len_p)
-                            new_plane_list = ghp.run(lambda li: [copy.copy(_) for _ in li[:]], new_plane_list)
-                        else:
-                            new_brep_list = temp_brep_list
-                            new_plane_list = temp_pl_list
-
-                        zip_list = zip(new_brep_list, new_plane_list, brep_path)
-                        trunk_list_res_brep = ghp.run(self.temp, zip_list)
-                        Result_Brep = self.format_tree(trunk_list_res_brep)
-
-                    return Result_Brep
-                finally:
-                    self.Message = 'flat cut Brep（surface）'
+            # def RunScript(self, Brep, Plane, Tolerance, Cap):
+            #     try:
+            #         self.tol = Tolerance
+            #         self.cap_factor = Cap
+            #         Result_Brep = gd[object]()
+            #
+            #         j_list_1, temp_brep_list, brep_path = self.parameter_judgment(Brep)
+            #         j_list_2, temp_pl_list, pl_path = self.parameter_judgment(Plane)
+            #
+            #         re_mes = Message.RE_MES([j_list_1, j_list_2], ['B end', 'P end'])
+            #         if len(re_mes) > 0:
+            #             for mes_i in re_mes:
+            #                 Message.message2(self, mes_i)
+            #         else:
+            #             len_b, len_p = len(temp_brep_list), len(temp_pl_list)
+            #             if len_b != len_p:
+            #                 new_brep_list = temp_brep_list
+            #                 new_plane_list = temp_pl_list + [temp_pl_list[-1]] * abs(len_b - len_p)
+            #                 new_plane_list = ghp.run(lambda li: [copy.copy(_) for _ in li[:]], new_plane_list)
+            #             else:
+            #                 new_brep_list = temp_brep_list
+            #                 new_plane_list = temp_pl_list
+            #
+            #             zip_list = zip(new_brep_list, new_plane_list, brep_path)
+            #             trunk_list_res_brep = ghp.run(self.temp, zip_list)
+            #             Result_Brep = self.format_tree(trunk_list_res_brep)
+            #
+            #         return Result_Brep
+            #     finally:
+            #         self.Message = 'flat cut Brep（surface）'
 
 
         # 圆柱切割体
@@ -1256,6 +1379,7 @@ try:
             def circle(self, Data):
                 # 根据面生成圆柱Brep
                 Cri_Vec = Data[2] * 2  # 拉伸向量
+                Data[0].Translate(-Data[2])
                 C_Plane = Data[0]  # 拉伸平面
 
                 circle = rg.Arc(C_Plane, Data[1], math.radians(360)).ToNurbsCurve()  # 圆弧转曲线
@@ -3472,17 +3596,62 @@ try:
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
+                p = Grasshopper.Kernel.Parameters.Param_Boolean()
+                self.SetUpParam(p, "Skillful", "S", "去掉圆管中心线两头多余的部分")
+                p.SetPersistentData(gk.Types.GH_Boolean(False))
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Boolean()
+                self.SetUpParam(p, "Just Max Srf", "M", "只提取圆管最大面的中心线")
+                p.SetPersistentData(gk.Types.GH_Boolean(False))
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
             def RegisterOutputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_Curve()
-                self.SetUpParam(p, "Center Curve", "C", "Extract the center line")
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Total Center Curve", "C1", "提取所有面的中心线")
+                self.Params.Output.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Max Center Curve", "C2", "最长中心线")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
-                p0 = self.marshal.GetInput(DA, 0)
-                result = self.RunScript(p0)
+                # 插件名称
+                self.Message = 'Pipe Round pipe'
+                # 初始化输出端数据内容
+                Total_Center_Curve, Max_Center_Curve = [gd[object]() for _ in range(2)]
+                if self.RunCount == 1:
+                    self.tol = sc.doc.ModelAbsoluteTolerance
+                    p0 = self.Params.Input[0].VolatileData
+                    p1 = self.Params.Input[1].VolatileData
+                    p2 = self.Params.Input[2].VolatileData
 
-                if result is not None:
-                    self.marshal.SetOutput(result, DA, 0, True)
+                    self.skill = p1[0][0].Value
+                    self.j_max_surf = p2[0][0].Value
+
+                    j_bool_f1, pipe_trunk, pipe_path = self.parameter_judgment(p0)
+                    re_mes = Message.RE_MES([j_bool_f1], ['P end'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                    else:
+                        # 获取Gh内置数据
+                        new_pipe_trunk = ghp.run(lambda x: map(self._trun_object, x), pipe_trunk)
+                        # zip打包数据
+                        zip_list = zip(new_pipe_trunk, pipe_path)
+                        # 多进程函数运行
+                        iter_ungroup_data = zip(*ghp.run(self._do_main, zip_list))
+                        Total_Center_Curve, Max_Center_Curve = ghp.run(lambda single_tree: self.format_tree(single_tree), iter_ungroup_data)
+
+                DA.SetDataTree(0, Total_Center_Curve)
+                DA.SetDataTree(1, Max_Center_Curve)
+                # p0 = self.marshal.GetInput(DA, 0)
+                # result = self.RunScript(p0)
+                #
+                # if result is not None:
+                #     self.marshal.SetOutput(result, DA, 0, True)
 
             def get_Internal_Icon_24x24(self):
                 o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAOSSURBVEhL7ZRrTFNnHIdJNEY/Or+5BKczXiic+wF6Vm2rFgUvG7GnslqoiEKl4rxMFm+pWQQvkWRzmnkBAcFiO7UXURD1izrnlM37B90W3RYNc5vxNhOGp7+9x74qRAk65weTPR/b8z7vk//55yT8z2vnYcgxqyOcvVP7asqmDn+mjf786sSiDlkL279Gswrs+wCIvA/sngRt+/h6BNU+9LGXB9XuvlpYLdf2ZmuIEnFdJlA7AdieAVTagF0ToX0+NkQffzk6Ijk2LWS/iCY70DAR2EHENeOBKiLeMg7YNBb4bAywOQPt5eZ8eqxnYoGCt0j1ZkSnAiEyijoiriVivXobkX9J5BuIuMKK2BoztLUW3FyuXAqqai+q6J6He3McWmjqzzhA5P6seHU1kevjeFJtBdZZ0FE2Grd9JrQtU3Dl4zR865WHUc2zIJqbqIXUIPaTceyZEhd3qSbiTtUPPh2lV+NqaTouzJdxslhCaAanUF1XYi1OT6zR/ieaSHU9fYk9VF9fasTlRWk45ZVwqIBH0MnEalUxkSrjHPdIw68tV1rurrfiVoUF7ZWkVr9Ar97audrytHoFqf4kXn20SEA0jyUXSNgxjauj2jit88TEc3OFPy5/JKM5l8GRvBSc9/K4VzE6Xr7x+dX6rE/PlXBwJocIkYfzBDQ45aqA3d6PquOc8fJlvyySsT5bQKYi4hsPhxPFqTiUz+N+uenR+j2u/p1UX6PVx2h14wwegelCm3/6ew6q7MpZLx8+5xVgt8gYnMSizJ4GmykVFonFyUIe7atG4e7Kp9WtpLqlgEM4l0XULWCXS95TOXPcQKp7lp9K2JrGQiNGciKSDAzeTeIwaDiDAUMYfKHyuL5Yxq9LjLi4QMZxj4B9erWbQ9Al3NnpMhZSTfdcXSh+WJSlEDGL5BQWIwwsjCIRLDDh/gYrzhTz+K5E3xC9miEjERBwSYdrc03d73pnrFarQ5RSYUhmHl3w9tAU+EvI7CNZ5AOWge/J+Pa7GTJvDgEn/7fflV5Kj/aMqqp9ZFn6geNFsCyPISNZ9H8nGdNsEvk0TMaDLRk4XcShKZ9siEs8VeM0ifToi0Eu6GUwGBSGYcYszeI2Bt0SgsUKIkvM+KsqEzfI1pyYLaDembra5/P1psf+PW0LhVk3SuUff1uWjivzJZydw59vnq1Y6d//DdXmQX1bPUL6hTmS4vOZX736DSUh4R8bWGLj8NIjKAAAAABJRU5ErkJggg=="
@@ -3532,53 +3701,240 @@ try:
                     j_list = False
                 return j_list, geo_list, geo_path
 
-            def get_max_curve(self, curves):
-                leng_list = [_.GetLength() for _ in curves]
-                zip_list_curve = zip(leng_list, curves)
-                max_curve = sorted(zip_list_curve)[-1][1]
-                return max_curve
-
-            def RunScript(self, Pipe_Brep):
-                try:
-                    sc.doc = Rhino.RhinoDoc.ActiveDoc
-                    j_bool_f1 = self.parameter_judgment(self.Params.Input[0].VolatileData)[0]
-                    Center_Curve = gd[object]()
-                    tol = sc.doc.ModelAbsoluteTolerance
-                    re_mes = Message.RE_MES([j_bool_f1], ['P end'])
-                    if len(re_mes) > 0:
-                        for mes_i in re_mes:
-                            Message.message2(self, mes_i)
+            def _trun_object(self, ref_obj):
+                """引用物体转换为GH内置物体"""
+                if 'ReferenceID' in dir(ref_obj):
+                    if ref_obj.IsReferencedGeometry:
+                        test_pt = ref_obj.Value
                     else:
-                        if Pipe_Brep:
-                            curve_list = rg.Curve.JoinCurves(Pipe_Brep.DuplicateEdgeCurves(False))
-                            # 区分圆线、其他线
-                            circle_list = [_ for _ in curve_list if _.IsCircle() is True]
-                            other_list = [_ for _ in curve_list if _ not in circle_list]
-                            # 获取其他线中，最长的边线
-                            if other_list:
-                                pipe_edge = self.get_max_curve(other_list)
-                            else:
-                                pipe_edge = self.get_max_curve(circle_list)
-                            # 基础线和最长边线相交的点
-                            max_pt = circle_list[0].ClosestPoints(pipe_edge)[1]
-                            # 基础圆线，平面，基础偏移法向
-                            base_circle = circle_list[0].TryGetCircle()[1]
-                            base_plane = base_circle.Plane
-                            base_pt = base_circle.Center
-                            normal = base_plane.YAxis
-                            # 两线点之间的距离
-                            distance = max_pt.DistanceTo(base_pt)
-                            # 边线偏移
-                            Center_Curve = pipe_edge.Offset(base_pt, normal, distance, tol, rg.CurveOffsetCornerStyle.Sharp)[0]
-                        else:
-                            Center_Curve = None
+                        test_pt = ref_obj.Value
+                else:
+                    test_pt = ref_obj
+                return test_pt
 
-                    sc.doc.Views.Redraw()
-                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
-                    sc.doc = ghdoc
-                    return Center_Curve
-                finally:
-                    self.Message = 'Pipe Round pipe'
+            def uv_srf(self, set_srf_brep):
+                srf, origin_brep = set_srf_brep
+
+                faceDomU = srf.Domain(0)
+                faceDomV = srf.Domain(1)
+                limitPt1 = srf.PointAt(faceDomU.Min, faceDomV.Min)
+                limitPt2 = srf.PointAt(faceDomU.Max, faceDomV.Max)
+
+                parU = srf.Domain(0).Mid
+                parV = srf.Domain(1).Mid
+
+                UIso = srf.IsoCurve(0, parV)
+                VIso = srf.IsoCurve(1, parU)
+
+                pt = rg.Surface.PointAt(srf, parU, parV)
+                vecNorm = rg.Surface.NormalAt(srf, parU, parV)
+
+                UCrv = VIso.CurvatureAt(parU)
+                VCrv = UIso.CurvatureAt(parV)
+
+                if UCrv.Length > VCrv.Length:
+                    section = VIso
+                    source = UIso
+                    UDir = True
+                else:
+                    section = UIso
+                    source = VIso
+                    UDir = False
+
+                copy_srf = srf.Duplicate()
+
+                # 判断是否为圆锥体
+                type_cone, x_cone = rg.NurbsSurface.TryGetCone(copy_srf, self.tol)
+                # 判断是否为圆柱体
+                type_cylinder, x_cylinder = rg.NurbsSurface.TryGetCylinder(copy_srf, self.tol)
+                # 判断是否为圆环体
+                type_torus, x_torus = rg.NurbsSurface.TryGetTorus(copy_srf, self.tol)
+                # 判断是否为球体
+                type_sphere, x_sphere = rg.NurbsSurface.TryGetSphere(copy_srf, self.tol)
+                #
+                type_arc, x_arc = rg.Curve.TryGetArc(section, self.tol)
+
+                if type_cone:
+                    resut_curve = rg.Line(x_cone.BasePoint, x_cone.ApexPoint)
+                elif type_cylinder:
+                    curve_list = rg.Curve.JoinCurves(origin_brep.DuplicateEdgeCurves(False))
+
+                    # 区分圆线、其他线
+                    circle_list = [_ for _ in curve_list if _.IsCircle() is True]
+                    if circle_list:
+                        other_list = [_ for _ in curve_list if _ not in circle_list]
+                        # 获取其他线中，最长的边线
+                        if other_list:
+                            pipe_edge = self.get_max_curve(other_list)
+                        else:
+                            pipe_edge = self.get_max_curve(circle_list)
+                        # 基础线和最长边线相交的点
+                        max_pt = circle_list[0].ClosestPoints(pipe_edge)[1]
+                        # 基础圆线，平面，基础偏移法向
+                        base_circle = circle_list[0].TryGetCircle()[1]
+                        base_plane = base_circle.Plane
+                        base_pt = base_circle.Center
+                        normal = base_plane.YAxis
+                        # 两线点之间的距离
+                        distance = max_pt.DistanceTo(base_pt)
+                        # 边线偏移
+                        resut_curve = pipe_edge.Offset(base_pt, normal, distance, self.tol, rg.CurveOffsetCornerStyle.Sharp)[0]
+                    else:
+                        domU = copy_srf.Domain(0)
+                        domV = copy_srf.Domain(1)
+                        plane = rg.Plane.WorldXY
+
+                        line = rg.Line(x_cylinder.Center, x_cylinder.Center + (x_cylinder.Axis))
+                        bb = copy_srf.GetBoundingBox(plane)
+                        line.ExtendThroughBox(bb)
+                        p1 = line.ClosestPoint(limitPt1, self.tol)
+                        p2 = line.ClosestPoint(limitPt2, self.tol)
+                        resut_curve = rg.Line(p1, p2)
+                elif type_torus:
+                    circle = rg.Circle(x_torus.Plane, x_torus.MajorRadius)
+                    plane = circle.Plane
+                    domU = copy_srf.Domain(0)
+                    domV = copy_srf.Domain(1)
+
+                    p1 = plane.ClosestPoint(copy_srf.PointAt(domU[0], domV[0]))
+                    p2 = plane.ClosestPoint(copy_srf.PointAt(domU[1], domV[1]))
+                    p3 = circle.Center
+                    vec1 = p3 - p1
+                    vec2 = p3 - p2
+                    arc = None
+                    ang = rg.Vector3d.VectorAngle(vec1, vec2)
+
+                    if ang > 0.001:
+                        arc = rg.Arc(circle, ang)
+
+                    if arc:
+                        resut_curve = arc
+                    else:
+                        resut_curve = circle
+                elif type_sphere:
+                    resut_curve = x_sphere.Center
+                elif type_arc:
+                    nCirc = x_arc.ToNurbsCurve()
+                    vecTest = rg.Vector3d(x_arc.Center - pt)
+                    p2 = nCirc.PointAt(nCirc.Domain.Min)
+
+                    parIso = copy_srf.ClosestPoint(p2)
+                    if UDir:
+                        iso2 = copy_srf.IsoCurve(0, parIso[2])
+                    else:
+                        iso2 = copy_srf.IsoCurve(1, parIso[1])
+
+                    lType = rg.LoftType.Straight
+                    uPt = rg.Point3d.Unset
+
+                    def trim_curve(cur):
+                        rc, rc_curve, rc_pts = rg.Intersect.Intersection.CurveBrep(cur, origin_brep, 0.1)
+                        if rc:
+                            new_cur = rc_curve[0]
+                        else:
+                            new_cur = cur
+                        return new_cur
+
+                    if self.skill:
+                        loft = rg.Brep.CreateFromLoft(map(trim_curve, [source, iso2]), uPt, uPt, lType, False)
+                    else:
+                        loft = rg.Brep.CreateFromLoft([source, iso2], uPt, uPt, lType, False)
+                    lSrf = loft[0].Faces[0].UnderlyingSurface()
+                    resut_curve = lSrf.IsoCurve(1, lSrf.Domain(0).Mid)
+                else:
+                    resut_curve = None
+                return resut_curve
+
+            def get_max_curve(self, geos):
+                curves = [_ for _ in geos if "ToNurbsCurve" in dir(_)]
+                pts = [_ for _ in geos if _ not in curves]
+                if curves:
+                    curves = [c.ToNurbsCurve() for c in curves]
+                    leng_list = [_.GetLength() for _ in curves]
+                    zip_list_curve = zip(leng_list, curves)
+                    res_max = sorted(zip_list_curve)[-1][1]
+                else:
+                    res_max = pts[0]
+                return res_max
+
+            def get_center_curve(self, brep):
+                # 炸开Brep实体
+                face_list = ghc.DeconstructBrep(brep)['faces']
+                face_list = face_list if type(face_list) is list else [face_list]
+                copy_face_list = [_.Faces[0].DuplicateFace(False) for _ in face_list]
+                if self.j_max_surf:
+                    # 获取面
+                    brep_max = sorted([(_.GetArea(), _) for _ in copy_face_list])[-1][1]
+                    faces = brep_max.Faces
+                    faces.ShrinkFaces()
+                    srf_list = [faces[0].ToNurbsSurface()]
+                    # 原始Brep实体
+                    origin_brep_list = [brep]
+                else:
+                    # 获取面列表
+                    faces = [_.Faces for _ in copy_face_list]
+                    [_.ShrinkFaces() for _ in faces]
+
+                    srf_list = [_[0].ToNurbsSurface() for _ in faces]
+                    # 原始Brep实体
+                    origin_brep_list = [brep] * len(srf_list)
+
+                sub_zip_sur_brep = zip(srf_list, origin_brep_list)
+                temp_curves = filter(None, list(ghp.run(self.uv_srf, sub_zip_sur_brep)))
+                reason_curve = Curve_group.RemoveOverlapCurve().remove_duplicate_lines(temp_curves, 1)
+                max_reason_curve = self.get_max_curve(reason_curve)
+
+                return reason_curve, max_reason_curve
+
+            def _do_main(self, tuple_data):
+                brep_list, origin_path = tuple_data
+                reslut_list = map(self.get_center_curve, brep_list)
+
+                # map函数批量处理
+                ungroup_data = map(lambda x: self.split_tree(x, origin_path), zip(*reslut_list))
+                Rhino.RhinoApp.Wait()
+                return ungroup_data
+            # def RunScript(self, Pipe_Brep):
+            #     try:
+            #         sc.doc = Rhino.RhinoDoc.ActiveDoc
+            #         j_bool_f1 = self.parameter_judgment(self.Params.Input[0].VolatileData)[0]
+            #         Center_Curve = gd[object]()
+            #         tol = sc.doc.ModelAbsoluteTolerance
+            #         re_mes = Message.RE_MES([j_bool_f1], ['P end'])
+            #         if len(re_mes) > 0:
+            #             for mes_i in re_mes:
+            #                 Message.message2(self, mes_i)
+            #         else:
+            #             if Pipe_Brep:
+            #                 curve_list = rg.Curve.JoinCurves(Pipe_Brep.DuplicateEdgeCurves(False))
+            #                 # 区分圆线、其他线
+            #                 circle_list = [_ for _ in curve_list if _.IsCircle() is True]
+            #                 other_list = [_ for _ in curve_list if _ not in circle_list]
+            #                 # 获取其他线中，最长的边线
+            #                 if other_list:
+            #                     pipe_edge = self.get_max_curve(other_list)
+            #                 else:
+            #                     pipe_edge = self.get_max_curve(circle_list)
+            #                 # 基础线和最长边线相交的点
+            #                 max_pt = circle_list[0].ClosestPoints(pipe_edge)[1]
+            #                 # 基础圆线，平面，基础偏移法向
+            #                 base_circle = circle_list[0].TryGetCircle()[1]
+            #                 base_plane = base_circle.Plane
+            #                 base_pt = base_circle.Center
+            #                 normal = base_plane.YAxis
+            #                 # 两线点之间的距离
+            #                 distance = max_pt.DistanceTo(base_pt)
+            #                 # 边线偏移
+            #                 Center_Curve = pipe_edge.Offset(base_pt, normal, distance, tol, rg.CurveOffsetCornerStyle.Sharp)[0]
+            #             else:
+            #                 Center_Curve = None
+            #
+            #         sc.doc.Views.Redraw()
+            #         ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+            #         sc.doc = ghdoc
+            #         return Center_Curve
+            #     finally:
+            #         self.Message = 'Pipe Round pipe'
 
 
         # 布尔分割,不同于Brep剪;对于圆孔切割速率更快
@@ -3995,6 +4351,10 @@ try:
                         res_brep = [brep_1, brep_2]
                     else:
                         res_brep = self.recopy_geo(origin_face.ToBrep(), x_vector)
+
+                if res_brep.SolidOrientation == rg.BrepSolidOrientation.Inward:
+                    res_brep.Flip()
+
                 return res_brep
 
             def RunScript(self, Brep, Index, Vector, Both, Solid):
@@ -4555,6 +4915,9 @@ class Listener(gk.GH_AssemblyPriority):
 
     def PriorityLoad(self):
         Grasshopper.Instances.CanvasCreated += LockGh().Instances_CanvasCreated
+        Grasshopper.Instances.CanvasCreated += Cancel_connection()._Display_connection
+        Grasshopper.Instances.CanvasCreated += Cancel_connection()._Show_connection
+        Grasshopper.Instances.CanvasCreated += Cancel_connection()._Cancel_connection
         Grasshopper.Instances.CanvasCreated += CreateMenu()._CreateMenu
         return gk.GH_LoadingInstruction.Proceed
 
@@ -4582,6 +4945,287 @@ class LockGh(object):
     def Lock_Unlock_Icon_24x24(self):
         o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAATaSURBVEhLrZR7TFt1FMevixinQ8kmMUZBoYwRZDJJSHAbWNgYBLJO2kIfUPrgVdh4FlqeozwKd6OUjlEeDkgcjI0JWMZrY7wfAoPNbWbqPyYu/jFjDEk1kS1LPJ77QDYLionf5JPfOed3cr/tub/fJZ6RS0h4uPAtF5dANv//5Orufog01z9p7+4BU0sriOSKz7H8ArO7fTk4OOzH5R0m29COtBzN98WV1Q89PPZJuUdCc/RkDQSHR+Sy+9vRe5qCoq/OXWgD/dlaCP+EX87WCcLPz+/YqVwdYOjDVAjihEDYcipX+xuGu5jKP0udmXWrymT+40hYWLFYFt9abqyDgKCg4/SmQCKtlyoTv6MTVhwOh6stLQNnZ+cDbGlLuXI4fvml5bDb2VnAlgi+SDQolqtmmUQiaRIrVEt0wsrLy+ujTG0+Grzty5a2VERUVLZSnfY7hjuYCkEEBAQcF0pjf8HwRXQTW9Bghdli5O3tfThLV7Atg2hpnCU+MfkbNqXl7u7uIxBLf8XwTQIDi0SVcJvZYvRfDCRy+RWZKmmGTWl5ebl5ovEajtiD4AmEjQJJ3By7R4syYEbk/K8GsXKlVSJX3GBTWjhiT5FM/tTV1cOb+OCAX7OP74fUuf9LlEF6nm67Br1ShXKETWl5erq6UQYuLi4c4mBQUFVg8NE77B6t9z09/dOyNbBrzx4vtrSZqIvo9DGXOxoYxJ3E+NVn8OWGHH2KazBCvIy8RgWsHHbufImvTEqm7sYxhLqZz+KGvIHsVqWkPKyoMUFhWeVjPWl8RFF2xviopIr8uajcAHkl+sfY97xCQriF1Sbzk4u9VqixND8529C0RlFDYWlea/ys82mMTDGMrY6kyfR4YvkuDE3Pw/DsAozMLdJcn1uCmwsrcHX4JvUjn1fUicjanuHr0NbdBx1fDECndZChfxAu9Q/Btck5SDiZMY2tjtywSFtskhqi45V2iJUJwBPH2Rvs5bxLRsfJICo2HqKkuP4NkTIJ9vsfGsdWx7iERFspfnt0OA5dGUKtSD5SZCAhs/C0vQGPF0l29lmhtbsXWq/04D9ZpxfakavXx0Cekk4bmBsttvn73+I4luHm4gqMrbN0G2bufA3WsSl7g8jIMLL9cjc0XuyiaVqnowuaOy7jqIZAlpBKG/CiRbb0/CJIydIguZCSvUFarhbkqembjciNjJHheOKQ2E1GpNoYUSRfaFNrtKA6mWFHUkY2SBPV9gZ8Po+kXnKHdWjjBSPUC6YYmJqDpPQc2sDU0GCbvfsAbswvwY0vb8EoBTUuZGrlHvSNTtobhIYGk/WtbWBsvgDGpk8Rar0AtZhTtFzqhhiZijZQpqhthnMWOE0aGc4YoZSmFipqzaDVG+wN9u11IyUKJQjxqAllCjukeCx9A4Jog8DQMJtIlQh8PHHPI8NeOURES+wNogX8utH5BejH894/MYunZgK6R8bpeGBqHmbuPYDUrLwFbHU01NSsjS7eBuv4NPRTTMzQXEOoC9c1MGJvcPhgQHp+qf6+puj0/VOavB/NDXXQ0tYIWVrdTzkFxcuFFdUroRG8RmzdlZya+oPR0rJaWWterTSdWzVQ1NWvViFnz1tWSwxnVpmnbqFXdhAFOtUB0Kv9wdvVwcqW10V97F5HnLaGcPoT8S29cENG0iAAAAAASUVORK5CYII="
         return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+
+class Cancel_connection(object):
+    # 取消电池连线
+    def __init__(self):
+        pass
+
+    def Cancel_connection_Icon_24x24(self):
+        o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAH3SURBVEhL7ZTfS1NhGMdf2CilHzDI6Y5z5po0xWhBiHmlUV50GyNvuu0iRCzYdSQi+icEXRbloBAc50KZ5+yMc4ptxdCaNsbU+avWttN0nu0ct/P0Ol6w6O49N13sA9+7z/t9Lt7nfVGD/w+v12tKJpNnWZalit/vP0Oq/iUUCj2IxWJJQRDSPM9TBZ9Ph8PhGVL5N0GOWyyVSmAk8kEReEkqSHNzzaT2lKXl5XdlTQMjqAUZxIXAFgIwpc61WlHO5rqbZZwvTgZsevo/qol1olISX4HM4PDGJ5+POWScX5FssU3p9m7IDI0syabzoL56Q0w6aiurkLfYKvtuTwocVwGtTk4/B88AHLdehl1XH+QSa0Slo7y7p+27r+tgc0LW7hIR+ys/mh19eHBkvghfHj2G7WNjd3BYrSqbd+5pSpMFvj/xbSAFIUfR3i3XWhyQuXYTsuk0UelQ17/Vflo74ehSB1Ru3AKUY67MQqcbtodGUkXzBai8fktUOvTPcfjR1aOvjU3koa0LD2h33ceZlySpecfZE1exYIQq3sLE+NOdl7rOFKwds/X9h97e+vMOBgLvK6pKVDqUchn4D9LWM44z18v/JCgI7MkADT822iiKAiFByHMc10RqTxFF8XYkEuHwnyRhgSrRaFTEf9k4qWzQwDAI/QaomQGgdek8+gAAAABJRU5ErkJggg=="
+        return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+    def Display_connection_Icon_24x24(self):
+        o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAJSSURBVEhL7ZVPiFJRFMaFIlwIM5XMiDY4/nm+0Xzv3nfuc3JIMKJdEWW1aNFsIoZpUwQxyzYtEtoJYZt2rd2YRahhMUoQMZvBpTiEi5BhlBoXTd7OqbeKkXyNm6APfsi53O9898/zPcfvMk0zAQC3TIC786Z5w2ua6tATuCdn/WesKX8nbHwRG68bhvEWOH8ZAdiIc/6+ForKphKXdzTtmjXVvrDxAzCghb+XU7oeCQB8PM1Yr+uPbOHqn3EhrquGsYXhVyzL+BKcX2WM7aTT6cNUuwEeXwIhP82F5fOoLl1C3KTxRV0PcG58wZ0aVI8tXdfxJHgLV7lMdVaNZfvBmHy0EJeBRELiUZ2lcSHEGmPGJu7CS7UtqZqmeQSsP1W111+9oe2H0XjVlzA3GcCTpaXEBbz3FwbAG8bS05bFvj77lOzOnLJ7OxZ/5THhHd7HBx0vORgMtdwzM1mcEkL8iGoTh6PrCyd3T4Q3BrP+earTjE0nk0mf0+lK5fP5XqPR2C6VSnvFYlGOS6VSkblcTv4MkI5fF7yPTtbrdTkcDmW/37cFechr9RkpVi6XZa/Xk51OxxbkIa/VZ6T+3QC6k0NIaFIBbiSJcIReainkGLKKT8P3gwbQShcRH6IjFEJj55D71Wr120EDjiACOYosIDGEdB5ZmUQAKYKcQuiYaOV0RB5kDQP2JhFAOo64kCmEduNEgjRpUgH76f8f7c8BtVpNDgYD2e12bUEe8lp9RgoKhYJst9uy2WzagjzktfqM1JSiKBn8TGbw02oL8iiKkvkBJyMUgOaZwIUAAAAASUVORK5CYII="
+        return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+    def Show_connection_Icon_24x24(self):
+        o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAIISURBVEhL7ZXPaxNBFMcLLZJDodWWYu1BTNhatOz82J0aoRCR3lqEpj0LIqKe1EPp0bPngOQv6DVQ0ngwG4lggiCCh5JjyCWHEsSEQg5t8/w+mJO6mCG5CH7hw86b3e/37cxmsxO/KgxDo7V+Al4qpR6hXrWnRhOCHiD0E0I/SinfYfwNx0PUdYzfg8Be6i6YX2ulmzhuG2OWEfoV9NAgwtwixs/ACdixluEVSLkrhPiRyWSmuEZoDk0Ic2TMGkmpX/C87/s3pFSnWKniemjBuIrQZhAED7nG+DEeAymlKQhDwgru8zzO7wuhjrGKa1w7CSYfHGObD7U22xgfIJzD3pq7ZgsNj5TWH4TIzFqLu3iLlFCvEBpJftBaf/Gl/JxMpprzCwtvcEkKXAc3Hfld2P/ZdDq9lEhMr+fz+W69Xv9eKpXOi8UiDUsURZTL5chGxup2rVajwWBAvV7PCfaw1+bESpTLZep2u9Rut51gD3ttTqz+3Qb80k2C1LgazIM0kOAeWAdXwHP8Gi5GbcB3ugaWgA+4Cc9tgL1KpXI2aoNLgP8pL4MVcAuwNsHTcTRgLYM7gLeJ75y36CrYR4PzcTRgzYFpMAN4NQmQ5IvG1eBP+v+i/b1BtVqlfr9PnU7HCfaw1+bEShcKBWq1WtRoNJxgD3ttTqxmPM/L4iOUxafVCfZ4npf9CUMaAg3rSJxbAAAAAElFTkSuQmCC"
+        return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+    def _Cancel_connection(self, canvas):
+        Grasshopper.Instances.CanvasCreated -= self._Cancel_connection
+        _toolbar = Grasshopper.Instances.DocumentEditor.Controls[0].Controls[1]
+        button = System.Windows.Forms.ToolStripButton(
+            "Cancel connection\nClick the left mouse button to cancel the front end connection of the selected battery\nClick the middle mouse button to cancel all connections of the selected battery\nRight click to cancel the backend connection of the selected battery\nPowered by HAE Development Team")
+        _toolbar.Items.Insert(7, button)
+        button.Image = self.Cancel_connection_Icon_24x24()
+        button.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image
+        button.MouseDown += System.Windows.Forms.MouseEventHandler(self.Mouse_Click_Event)
+
+    def _Display_connection(self, canvas):
+        Grasshopper.Instances.CanvasCreated -= self._Display_connection
+        _toolbar = Grasshopper.Instances.DocumentEditor.Controls[0].Controls[1]
+        button = System.Windows.Forms.ToolStripButton("Display Wire\n点击鼠标左键隐藏所选电池前端连线\n点击鼠标右键隐藏所选电池后端连线\n点击鼠标中键隐藏所选电池所有连线")
+        _toolbar.Items.Insert(7, button)
+        button.Image = self.Display_connection_Icon_24x24()
+        button.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image
+        button.MouseDown += System.Windows.Forms.MouseEventHandler(self.Mouse_Click_Event_1)
+
+    def _Show_connection(self, canvas):
+        Grasshopper.Instances.CanvasCreated -= self._Show_connection
+        _toolbar = Grasshopper.Instances.DocumentEditor.Controls[0].Controls[1]
+        button = System.Windows.Forms.ToolStripButton("Show Wire\n点击鼠标左键显示所选电池前端连线\n点击鼠标右键显示所选电池后端连线\n点击鼠标中键显示所选电池所有连线")
+        _toolbar.Items.Insert(7, button)
+        button.Image = self.Show_connection_Icon_24x24()
+        button.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image
+        button.MouseDown += System.Windows.Forms.MouseEventHandler(self.Mouse_Click_Event_2)
+
+    def Mouse_Click_Event(self, sender, e):
+        if e.Button == System.Windows.Forms.MouseButtons.Left:
+            self.Cancel_front_end_connection(sender, e)
+        elif e.Button == System.Windows.Forms.MouseButtons.Middle:
+            self.Both_Cancel_connection(sender, e)
+        elif e.Button == System.Windows.Forms.MouseButtons.Right:
+            self.Cancel_backend_connection(sender, e)
+
+    def Mouse_Click_Event_1(self, sender, e):
+        if e.Button == System.Windows.Forms.MouseButtons.Left:
+            self.Display_front_end_connection(sender, e)
+        elif e.Button == System.Windows.Forms.MouseButtons.Middle:
+            self.Both_Display_connection(sender, e)
+        elif e.Button == System.Windows.Forms.MouseButtons.Right:
+            self.Display_backend_connection(sender, e)
+
+    def Mouse_Click_Event_2(self, sender, e):
+        if e.Button == System.Windows.Forms.MouseButtons.Left:
+            self.Show_front_end_connection(sender, e)
+        elif e.Button == System.Windows.Forms.MouseButtons.Middle:
+            self.Both_Show_connection(sender, e)
+        elif e.Button == System.Windows.Forms.MouseButtons.Right:
+            self.Show_backend_connection(sender, e)
+
+    def Cancel_front_end_connection(self, sender, e):
+        """取消电池前端连线"""
+        doc = Grasshopper.Instances.ActiveCanvas.Document
+        selected_objects = [obj for obj in doc.SelectedObjects() if isinstance(obj, Grasshopper.Kernel.IGH_ActiveObject)]  # 获取选中的电池
+
+        params = []
+        for compent in selected_objects:
+            if 'RemoveAllSources' in dir(compent):
+                params.append(compent)
+            elif 'Params' in dir(compent):
+                params += [_ for _ in compent.Params.Input]
+
+        true_params = [_ for _ in params if _.Sources]
+        sources = [param.Sources[0] for param in true_params]
+
+        doc.UndoUtil.RecordWireEvent("Remove wire", true_params)
+        zip_list = zip(true_params, sources)
+        map(lambda x: x[0].RemoveSource(x[1]), zip_list)
+
+        Rhino.RhinoApp.Wait()
+        doc.NewSolution(False)  # 刷新GH画布
+        Grasshopper.Instances.ActiveCanvas.Refresh()
+
+    def Cancel_backend_connection(self, sender, e):
+        """取消电池后端连线"""
+        doc = Grasshopper.Instances.ActiveCanvas.Document
+        selected_objects = [obj for obj in doc.SelectedObjects() if isinstance(obj, Grasshopper.Kernel.IGH_ActiveObject)]  # 获取选中的电池
+
+        params = []
+        for compent in selected_objects:
+            if 'RemoveAllSources' in dir(compent):
+                params.append(compent)
+            elif 'Params' in dir(compent):
+                params += [_ for _ in compent.Params.Output]
+
+        true_params = list(chain(*[list(_.Recipients) for _ in params]))
+        sources = [param.Sources[0] for param in true_params]
+
+        doc.UndoUtil.RecordWireEvent("Remove wire", true_params)
+        zip_list = zip(true_params, sources)
+        map(lambda x: x[0].RemoveSource(x[1]), zip_list)
+
+        Rhino.RhinoApp.Wait()
+        doc.NewSolution(False)  # 刷新GH画布
+        Grasshopper.Instances.ActiveCanvas.Refresh()
+
+    def Both_Cancel_connection(self, sender, e):
+        """同时取消电池前后端连线"""
+        doc = Grasshopper.Instances.ActiveCanvas.Document
+        selected_objects = [obj for obj in doc.SelectedObjects() if isinstance(obj, Grasshopper.Kernel.IGH_ActiveObject)]  # 获取选中的电池
+
+        input_params = []
+        output_params = []
+        for compent in selected_objects:
+            if 'RemoveAllSources' in dir(compent):
+                input_params.append(compent)
+                output_params.append(compent)
+            elif 'Params' in dir(compent):
+                input_params += [_ for _ in compent.Params.Input]
+                output_params += [_ for _ in compent.Params.Output]
+
+        true_in_params = [_ for _ in input_params if _.Sources]
+        true_out_params = list(chain(*[list(_.Recipients) for _ in output_params]))
+        true_params = true_in_params + true_out_params
+
+        sources = [param.Sources[0] for param in true_params]
+
+        doc.UndoUtil.RecordWireEvent("Remove wire", true_params)
+        zip_list = zip(true_params, sources)
+        map(lambda x: x[0].RemoveSource(x[1]), zip_list)
+
+        Rhino.RhinoApp.Wait()
+        doc.NewSolution(False)  # 刷新GH画布
+        Grasshopper.Instances.ActiveCanvas.Refresh()
+
+    def Display_front_end_connection(self, sender, e):
+        """隐藏电池前端连线"""
+        doc = Grasshopper.Instances.ActiveCanvas.Document
+        selected_objects = [obj for obj in doc.SelectedObjects() if isinstance(obj, Grasshopper.Kernel.IGH_ActiveObject)]  # 获取选中的电池
+
+        input_params = []
+        for obj in selected_objects:
+            if 'RemoveAllSources' in dir(obj):
+                input_params.append(obj)
+            elif 'Params' in dir(obj):
+                for _input in obj.Params.Input:
+                    input_params.append(_input)
+
+        for _index, item in enumerate(input_params):
+            item.RecordUndoEvent('Display Wire')
+            item.WireDisplay = Grasshopper.Kernel.GH_ParamWireDisplay.hidden
+
+        doc.NewSolution(False)
+        Grasshopper.Instances.ActiveCanvas.Refresh()
+
+    def Display_backend_connection(self, sender, e):
+        """隐藏电池后端连线"""
+        doc = Grasshopper.Instances.ActiveCanvas.Document
+        selected_objects = [obj for obj in doc.SelectedObjects() if isinstance(obj, Grasshopper.Kernel.IGH_ActiveObject)]  # 获取选中的电池
+
+        output_params = []
+        for obj in selected_objects:
+            if 'RemoveAllSources' in dir(obj):
+                output_params.append(obj)
+            elif 'Params' in dir(obj):
+                output_params += [_ for _ in obj.Params.Output]
+
+        output_params = list(chain(*[list(_.Recipients) for _ in output_params]))
+
+        for _index, item in enumerate(output_params):
+            item.RecordUndoEvent('Display Wire')
+            item.WireDisplay = Grasshopper.Kernel.GH_ParamWireDisplay.hidden
+
+        Rhino.RhinoApp.Wait()
+        doc.NewSolution(False)  # 刷新GH画布
+        Grasshopper.Instances.ActiveCanvas.Refresh()
+
+    def Both_Display_connection(self, sender, e):
+        """同时隐藏电池前后端连线"""
+        doc = Grasshopper.Instances.ActiveCanvas.Document
+        selected_objects = [obj for obj in doc.SelectedObjects() if isinstance(obj, Grasshopper.Kernel.IGH_ActiveObject)]  # 获取选中的电池
+
+        input_params = []
+        output_params = []
+        for obj in selected_objects:
+            if 'RemoveAllSources' in dir(obj):
+                input_params.append(obj)
+                output_params.append(obj)
+            elif 'Params' in dir(obj):
+                input_params += [_ for _ in obj.Params.Input]
+                output_params += [_ for _ in obj.Params.Output]
+
+        output_params = list(chain(*[list(_.Recipients) for _ in output_params]))
+        total_params = input_params + output_params
+
+        for _index, item in enumerate(total_params):
+            item.RecordUndoEvent('Display Wire')
+            item.WireDisplay = Grasshopper.Kernel.GH_ParamWireDisplay.hidden
+
+        Rhino.RhinoApp.Wait()
+        doc.NewSolution(False)  # 刷新GH画布
+        Grasshopper.Instances.ActiveCanvas.Refresh()
+
+    def Show_front_end_connection(self, sender, e):
+        """显示电池前端连线"""
+        doc = Grasshopper.Instances.ActiveCanvas.Document
+        selected_objects = [obj for obj in doc.SelectedObjects() if isinstance(obj, Grasshopper.Kernel.IGH_ActiveObject)]  # 获取选中的电池
+
+        input_params = []
+        for obj in selected_objects:
+            if 'RemoveAllSources' in dir(obj):
+                input_params.append(obj)
+            elif 'Params' in dir(obj):
+                for _input in obj.Params.Input:
+                    input_params.append(_input)
+
+        for _index, item in enumerate(input_params):
+            item.RecordUndoEvent('Display Wire')
+            item.WireDisplay = Grasshopper.Kernel.GH_ParamWireDisplay.default
+
+        doc.NewSolution(False)
+        Grasshopper.Instances.ActiveCanvas.Refresh()
+
+    def Show_backend_connection(self, sender, e):
+        """显示电池后端连线"""
+        doc = Grasshopper.Instances.ActiveCanvas.Document
+        selected_objects = [obj for obj in doc.SelectedObjects() if isinstance(obj, Grasshopper.Kernel.IGH_ActiveObject)]  # 获取选中的电池
+
+        output_params = []
+        for obj in selected_objects:
+            if 'RemoveAllSources' in dir(obj):
+                output_params.append(obj)
+            elif 'Params' in dir(obj):
+                output_params += [_ for _ in obj.Params.Output]
+
+        output_params = list(chain(*[list(_.Recipients) for _ in output_params]))
+
+        for _index, item in enumerate(output_params):
+            item.RecordUndoEvent('Display Wire')
+            item.WireDisplay = Grasshopper.Kernel.GH_ParamWireDisplay.default
+
+        Rhino.RhinoApp.Wait()
+        doc.NewSolution(False)  # 刷新GH画布
+        Grasshopper.Instances.ActiveCanvas.Refresh()
+
+    def Both_Show_connection(self, sender, e):
+        """同时显示电池前后端连线"""
+        doc = Grasshopper.Instances.ActiveCanvas.Document
+        selected_objects = [obj for obj in doc.SelectedObjects() if isinstance(obj, Grasshopper.Kernel.IGH_ActiveObject)]  # 获取选中的电池
+
+        input_params = []
+        output_params = []
+        for obj in selected_objects:
+            if 'RemoveAllSources' in dir(obj):
+                input_params.append(obj)
+                output_params.append(obj)
+            elif 'Params' in dir(obj):
+                input_params += [_ for _ in obj.Params.Input]
+                output_params += [_ for _ in obj.Params.Output]
+
+        output_params = list(chain(*[list(_.Recipients) for _ in output_params]))
+        total_params = input_params + output_params
+
+        for _index, item in enumerate(total_params):
+            item.RecordUndoEvent('Display Wire')
+            item.WireDisplay = Grasshopper.Kernel.GH_ParamWireDisplay.default
+
+        Rhino.RhinoApp.Wait()
+        doc.NewSolution(False)  # 刷新GH画布
+        Grasshopper.Instances.ActiveCanvas.Refresh()
 
 
 class CreateMenu(object):
