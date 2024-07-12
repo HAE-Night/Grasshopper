@@ -289,152 +289,152 @@ try:
                 return iter_group
 
 
-        # 重构XY轴平面
-        class Refactoring_Plane(component):
-            def __new__(cls):
-                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_Refactoring_Plane", "S4",
-                                                                   """Reconstruct the XY axis plane by entering an axis vector to reconstruct the XY axis """, "Scavenger", "F-Plane")
-                return instance
-
-            def get_ComponentGuid(self):
-                return System.Guid("25b06c92-fe12-466e-9ea9-615ee01fc527")
-
-            @property
-            def Exposure(self):
-                return Grasshopper.Kernel.GH_Exposure.primary
-
-            def SetUpParam(self, p, name, nickname, description):
-                p.Name = name
-                p.NickName = nickname
-                p.Description = description
-                p.Optional = True
-
-            def RegisterInputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_Plane()
-                self.SetUpParam(p, "Plane", "P", "Original plane")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
-                self.Params.Input.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "New_Axis", "A", "You need to reconstruct the vector axis of the XY axis,input the name of the original plane axis vector")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
-                self.Params.Input.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Switch", "S", "Whether to flip the reconstructed vector axis ,t is flipping all the vectors,t1 and t2 are flipped X-axis vectors and Y-axis vectors ")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
-                self.Params.Input.Add(p)
-
-            def RegisterOutputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_Plane()
-                self.SetUpParam(p, "Symmetry_Plane", "P", "The reconstructed plane")
-                self.Params.Output.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_Point()
-                self.SetUpParam(p, "Origin_Point", "O", "The center point of the plane")
-                self.Params.Output.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_Vector()
-                self.SetUpParam(p, "Origin_XAxis", "OX", "Original plane X vector")
-                self.Params.Output.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_Vector()
-                self.SetUpParam(p, "Origin_YAxis", "OY", "Original plane Y vector")
-                self.Params.Output.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_Vector()
-                self.SetUpParam(p, "Origin_ZAxis", "OZ", "Original plane Y vector")
-                self.Params.Output.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_Vector()
-                self.SetUpParam(p, "a", "NX", "New plane X vector")
-                self.Params.Output.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_Vector()
-                self.SetUpParam(p, "b", "NY", "New plane Y vector")
-                self.Params.Output.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_Vector()
-                self.SetUpParam(p, "c", "NZ", "New plane Z vector")
-                self.Params.Output.Add(p)
-
-            def SolveInstance(self, DA):
-                p0 = self.marshal.GetInput(DA, 0)
-                p1 = self.marshal.GetInput(DA, 1)
-                p2 = self.marshal.GetInput(DA, 2)
-                result = self.RunScript(p0, p1, p2)
-
-                if result is not None:
-                    if not hasattr(result, '__getitem__'):
-                        self.marshal.SetOutput(result, DA, 0, True)
-                    else:
-                        self.marshal.SetOutput(result[0], DA, 0, True)
-                        self.marshal.SetOutput(result[1], DA, 1, True)
-                        self.marshal.SetOutput(result[2], DA, 2, True)
-                        self.marshal.SetOutput(result[3], DA, 3, True)
-                        self.marshal.SetOutput(result[4], DA, 4, True)
-                        self.marshal.SetOutput(result[5], DA, 5, True)
-                        self.marshal.SetOutput(result[6], DA, 6, True)
-                        self.marshal.SetOutput(result[7], DA, 7, True)
-
-            def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAASjSURBVEhLrZJrTFNnHMb5sK2JizKggEApoND7OW1poZQeLoVCW8qlXGRDuYhzLopDxjaWTIbicNNsSDRz3r7IpjJNBurwQoFNLkq5TZ3T7MOEFaLlotsHo+jM9uyFnph5gWjGL3nyP+f/nvM85z3v3+2/8DYq8nzz6VfZ2/nFnfFZIu0wI6BKtYxtzS9B21TV6jsrsPRgbDPbmlc4YUfjHYqbuRD9YHrgTvuGsP35wXd5aCp1OR2yKxlQDOeAV6Xcyi7ND0v3RjcqRpdBdjEd8uFshDbE/U7aL7lWnw//hf5e7OXjeEZ68sTtxgf0b1kzAdRVK+irmfApEljZR+akRFoSfzi+4cRHisoOtvU4gRVUGfVTOqR9FlBXrJDYzRB1MvDZ4D992NMj+ywtrAqvWrGPOTBgM7XhovUyCsMK3yf9p/FIXcL3Tg1kAj6kncqxbAgOpSFs4yYI3q7+h7Lsc4ozap0C0xanzLrfKS6odKZHvencp9kz3mHpwoW0XvQQ7dLuvkWsFrkcZ8GvjBpW3EyHpKkISdeB5MYpGEpGYCi7AUPxKHSrHCgrbEe/pRvdlgtoMbbirNGG86k9eI/6oJK1mRWOfzlNxjQD4qYC6AfGoT80hNiVA4jN60dcdh9iswahLLKhNvUwOpLbZ8w7UrpwNOHYJN+d78H6zIorwJkBiW0dIqv3QCZTgpIzoCgGtDwGwZQC2do1OGm2odPUhXPmLtgtdqwJXf0j6zEnbAA55Nb1UL2zGcLXOBCHLSbyQ6DAB5lKC1qNLehLuoBt0Z9is24Tmi1t8BWGP3t6nuBRgPj7YuiOdCJq3VfQmvdDYqpFunot2oxnifl51GUehlCrgYDni6wNO+H31voXCxA1Lof+2kMY6u9DnvYdck3foiWpFf2mHnyRUA/NiT7IMq0Qei6CquoThJTOMv9P4AoYy4SkMR+az75BaIIZVtoEm+EkmZxB1DG1EIZHQZJohFQogMiXi9gjpxFUUvECAZPLIK3PQBBNwypORJuZjGWKHTuit0Ag9ENoiBdE3h4Q+y+Gel05TJN/IzB/zTnWY044/u/SDiXZAa85DzkVx9CacAZ9yV3YoTsIpa4SCnUFIlOqoPn4czANZ2AYnoJpAvB7o/j5dyC6Y4XpwGqc0ZyaOdDt+gNQV3aDqRhDfOEI9HW3YRgFDJNA4tA9MOOAMSf/bicvqLWGH7Ka+Hi67J6GE0B2ILlmwdbK3eiP+Rk1+i8h/7oF0b/+AebsEJjTQ4jpHQUzMELkgM5+HYqLN5CVmg2IKdxVaTEoVY6fEEh3lvrxVazvIzhyLe1Qx2mxSpsDR9Ra2CMZ9BjN6IszoDeBKDEJvfok2Bk97NFx6NEwOB+hxSW5CreVkTO6r9YCETo4FBEYlCm7j4sk5ay/G4fmh/y5VCxFMSUB1HJAFQGQl5+SYlpql4jpQ1UUJkidJLpFNEV2AvJx90hYU5hkkvV3ezl4wYJDXlwvWwyXayv08ra9Ppu405U7U3NJreEF/fLXzJdHk98UhUsy5cRxgXhvgY+Pgfi+4rL/H+xaErbSGR6JUwLJQDU/uJS0uK6Vadzc/gXoYYETw49/PAAAAABJRU5ErkJggg=="
-                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
-
-            def __init__(self):
-                self.factor = None  # 是否反转平面的因素
-
-            def get_new_plane(self, plane, str_data_list):
-                """
-                得到新的平面
-                """
-                X, Y, Z = plane.XAxis, plane.YAxis, plane.ZAxis
-                if self.factor is False:
-                    direction = [eval(axis) for axis in str_data_list]
-                else:
-                    letter = ''.join(re.findall(r'[A-Za-z]', self.factor)).upper()
-                    if letter != 'T':
-                        direction = [eval(axis) for axis in str_data_list]
-                    else:
-                        origin_direction = [eval(axis) for axis in str_data_list]
-                        if len(self.factor) == 2:
-                            num = re.findall("\d+", self.factor.upper())[0]
-                            index = int(num) - 1
-                            direction = copy.copy(origin_direction)
-                            direction[index] = -1 * direction[index]
-                        else:
-                            direction = [-1 * sub for sub in origin_direction]
-                return direction, X, Y, Z
-
-            def str_handing(self, str_of_word):
-                """
-                字符串New_Axis的处理
-                """
-                str_of_word = str_of_word if str_of_word is not None else "XY"
-                string_list = [map(str, re.split(r"[.。!！?？；;，,\s+]", w))[0].upper() for w in str_of_word.split()]
-                if len(string_list) == 1:
-                    string_list = [s for s in string_list[0]]
-                    return string_list
-                elif len(string_list) > 1:
-                    return string_list
-
-            def RunScript(self, Plane, New_Axis, Switch):
-                if Plane:
-                    Axis_list = self.str_handing(New_Axis)
-                    if Switch is None:
-                        self.factor = False
-                    else:
-                        self.factor = Switch
-                    Origin_Point = Plane.Origin
-                    self.get_new_plane(Plane, Axis_list)
-                    origin_redirect, Origin_XAxis, Origin_YAxis, Origin_ZAxis = self.get_new_plane(Plane, Axis_list)
-                    Symmetry_Plane = rg.Plane(Origin_Point, origin_redirect[0], origin_redirect[1])
-                    # 重构后的xyz轴向量
-                    New_XAxis, New_YAxis, New_ZAxis = Symmetry_Plane.XAxis, Symmetry_Plane.YAxis, Symmetry_Plane.ZAxis
-                    return Symmetry_Plane, Origin_Point, Origin_XAxis, Origin_YAxis, Origin_ZAxis, New_XAxis, New_YAxis, New_ZAxis
-                else:
-                    pass
+        # # 重构XY轴平面
+        # class Refactoring_Plane(component):
+        #     def __new__(cls):
+        #         instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+        #                                                            "RPP_Refactoring_Plane", "S4",
+        #                                                            """Reconstruct the XY axis plane by entering an axis vector to reconstruct the XY axis """, "Scavenger", "F-Plane")
+        #         return instance
+        #
+        #     def get_ComponentGuid(self):
+        #         return System.Guid("25b06c92-fe12-466e-9ea9-615ee01fc527")
+        #
+        #     @property
+        #     def Exposure(self):
+        #         return Grasshopper.Kernel.GH_Exposure.primary
+        #
+        #     def SetUpParam(self, p, name, nickname, description):
+        #         p.Name = name
+        #         p.NickName = nickname
+        #         p.Description = description
+        #         p.Optional = True
+        #
+        #     def RegisterInputParams(self, pManager):
+        #         p = Grasshopper.Kernel.Parameters.Param_Plane()
+        #         self.SetUpParam(p, "Plane", "P", "Original plane")
+        #         p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+        #         self.Params.Input.Add(p)
+        #
+        #         p = Grasshopper.Kernel.Parameters.Param_String()
+        #         self.SetUpParam(p, "New_Axis", "A", "You need to reconstruct the vector axis of the XY axis,input the name of the original plane axis vector")
+        #         p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+        #         self.Params.Input.Add(p)
+        #
+        #         p = Grasshopper.Kernel.Parameters.Param_String()
+        #         self.SetUpParam(p, "Switch", "S", "Whether to flip the reconstructed vector axis ,t is flipping all the vectors,t1 and t2 are flipped X-axis vectors and Y-axis vectors ")
+        #         p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+        #         self.Params.Input.Add(p)
+        #
+        #     def RegisterOutputParams(self, pManager):
+        #         p = Grasshopper.Kernel.Parameters.Param_Plane()
+        #         self.SetUpParam(p, "Symmetry_Plane", "P", "The reconstructed plane")
+        #         self.Params.Output.Add(p)
+        #
+        #         p = Grasshopper.Kernel.Parameters.Param_Point()
+        #         self.SetUpParam(p, "Origin_Point", "O", "The center point of the plane")
+        #         self.Params.Output.Add(p)
+        #
+        #         p = Grasshopper.Kernel.Parameters.Param_Vector()
+        #         self.SetUpParam(p, "Origin_XAxis", "OX", "Original plane X vector")
+        #         self.Params.Output.Add(p)
+        #
+        #         p = Grasshopper.Kernel.Parameters.Param_Vector()
+        #         self.SetUpParam(p, "Origin_YAxis", "OY", "Original plane Y vector")
+        #         self.Params.Output.Add(p)
+        #
+        #         p = Grasshopper.Kernel.Parameters.Param_Vector()
+        #         self.SetUpParam(p, "Origin_ZAxis", "OZ", "Original plane Y vector")
+        #         self.Params.Output.Add(p)
+        #
+        #         p = Grasshopper.Kernel.Parameters.Param_Vector()
+        #         self.SetUpParam(p, "a", "NX", "New plane X vector")
+        #         self.Params.Output.Add(p)
+        #
+        #         p = Grasshopper.Kernel.Parameters.Param_Vector()
+        #         self.SetUpParam(p, "b", "NY", "New plane Y vector")
+        #         self.Params.Output.Add(p)
+        #
+        #         p = Grasshopper.Kernel.Parameters.Param_Vector()
+        #         self.SetUpParam(p, "c", "NZ", "New plane Z vector")
+        #         self.Params.Output.Add(p)
+        #
+        #     def SolveInstance(self, DA):
+        #         p0 = self.marshal.GetInput(DA, 0)
+        #         p1 = self.marshal.GetInput(DA, 1)
+        #         p2 = self.marshal.GetInput(DA, 2)
+        #         result = self.RunScript(p0, p1, p2)
+        #
+        #         if result is not None:
+        #             if not hasattr(result, '__getitem__'):
+        #                 self.marshal.SetOutput(result, DA, 0, True)
+        #             else:
+        #                 self.marshal.SetOutput(result[0], DA, 0, True)
+        #                 self.marshal.SetOutput(result[1], DA, 1, True)
+        #                 self.marshal.SetOutput(result[2], DA, 2, True)
+        #                 self.marshal.SetOutput(result[3], DA, 3, True)
+        #                 self.marshal.SetOutput(result[4], DA, 4, True)
+        #                 self.marshal.SetOutput(result[5], DA, 5, True)
+        #                 self.marshal.SetOutput(result[6], DA, 6, True)
+        #                 self.marshal.SetOutput(result[7], DA, 7, True)
+        #
+        #     def get_Internal_Icon_24x24(self):
+        #         o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAASjSURBVEhLrZJrTFNnHMb5sK2JizKggEApoND7OW1poZQeLoVCW8qlXGRDuYhzLopDxjaWTIbicNNsSDRz3r7IpjJNBurwQoFNLkq5TZ3T7MOEFaLlotsHo+jM9uyFnph5gWjGL3nyP+f/nvM85z3v3+2/8DYq8nzz6VfZ2/nFnfFZIu0wI6BKtYxtzS9B21TV6jsrsPRgbDPbmlc4YUfjHYqbuRD9YHrgTvuGsP35wXd5aCp1OR2yKxlQDOeAV6Xcyi7ND0v3RjcqRpdBdjEd8uFshDbE/U7aL7lWnw//hf5e7OXjeEZ68sTtxgf0b1kzAdRVK+irmfApEljZR+akRFoSfzi+4cRHisoOtvU4gRVUGfVTOqR9FlBXrJDYzRB1MvDZ4D992NMj+ywtrAqvWrGPOTBgM7XhovUyCsMK3yf9p/FIXcL3Tg1kAj6kncqxbAgOpSFs4yYI3q7+h7Lsc4ozap0C0xanzLrfKS6odKZHvencp9kz3mHpwoW0XvQQ7dLuvkWsFrkcZ8GvjBpW3EyHpKkISdeB5MYpGEpGYCi7AUPxKHSrHCgrbEe/pRvdlgtoMbbirNGG86k9eI/6oJK1mRWOfzlNxjQD4qYC6AfGoT80hNiVA4jN60dcdh9iswahLLKhNvUwOpLbZ8w7UrpwNOHYJN+d78H6zIorwJkBiW0dIqv3QCZTgpIzoCgGtDwGwZQC2do1OGm2odPUhXPmLtgtdqwJXf0j6zEnbAA55Nb1UL2zGcLXOBCHLSbyQ6DAB5lKC1qNLehLuoBt0Z9is24Tmi1t8BWGP3t6nuBRgPj7YuiOdCJq3VfQmvdDYqpFunot2oxnifl51GUehlCrgYDni6wNO+H31voXCxA1Lof+2kMY6u9DnvYdck3foiWpFf2mHnyRUA/NiT7IMq0Qei6CquoThJTOMv9P4AoYy4SkMR+az75BaIIZVtoEm+EkmZxB1DG1EIZHQZJohFQogMiXi9gjpxFUUvECAZPLIK3PQBBNwypORJuZjGWKHTuit0Ag9ENoiBdE3h4Q+y+Gel05TJN/IzB/zTnWY044/u/SDiXZAa85DzkVx9CacAZ9yV3YoTsIpa4SCnUFIlOqoPn4czANZ2AYnoJpAvB7o/j5dyC6Y4XpwGqc0ZyaOdDt+gNQV3aDqRhDfOEI9HW3YRgFDJNA4tA9MOOAMSf/bicvqLWGH7Ka+Hi67J6GE0B2ILlmwdbK3eiP+Rk1+i8h/7oF0b/+AebsEJjTQ4jpHQUzMELkgM5+HYqLN5CVmg2IKdxVaTEoVY6fEEh3lvrxVazvIzhyLe1Qx2mxSpsDR9Ra2CMZ9BjN6IszoDeBKDEJvfok2Bk97NFx6NEwOB+hxSW5CreVkTO6r9YCETo4FBEYlCm7j4sk5ay/G4fmh/y5VCxFMSUB1HJAFQGQl5+SYlpql4jpQ1UUJkidJLpFNEV2AvJx90hYU5hkkvV3ezl4wYJDXlwvWwyXayv08ra9Ppu405U7U3NJreEF/fLXzJdHk98UhUsy5cRxgXhvgY+Pgfi+4rL/H+xaErbSGR6JUwLJQDU/uJS0uK6Vadzc/gXoYYETw49/PAAAAABJRU5ErkJggg=="
+        #         return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+        #
+        #     def __init__(self):
+        #         self.factor = None  # 是否反转平面的因素
+        #
+        #     def get_new_plane(self, plane, str_data_list):
+        #         """
+        #         得到新的平面
+        #         """
+        #         X, Y, Z = plane.XAxis, plane.YAxis, plane.ZAxis
+        #         if self.factor is False:
+        #             direction = [eval(axis) for axis in str_data_list]
+        #         else:
+        #             letter = ''.join(re.findall(r'[A-Za-z]', self.factor)).upper()
+        #             if letter != 'T':
+        #                 direction = [eval(axis) for axis in str_data_list]
+        #             else:
+        #                 origin_direction = [eval(axis) for axis in str_data_list]
+        #                 if len(self.factor) == 2:
+        #                     num = re.findall("\d+", self.factor.upper())[0]
+        #                     index = int(num) - 1
+        #                     direction = copy.copy(origin_direction)
+        #                     direction[index] = -1 * direction[index]
+        #                 else:
+        #                     direction = [-1 * sub for sub in origin_direction]
+        #         return direction, X, Y, Z
+        #
+        #     def str_handing(self, str_of_word):
+        #         """
+        #         字符串New_Axis的处理
+        #         """
+        #         str_of_word = str_of_word if str_of_word is not None else "XY"
+        #         string_list = [map(str, re.split(r"[.。!！?？；;，,\s+]", w))[0].upper() for w in str_of_word.split()]
+        #         if len(string_list) == 1:
+        #             string_list = [s for s in string_list[0]]
+        #             return string_list
+        #         elif len(string_list) > 1:
+        #             return string_list
+        #
+        #     def RunScript(self, Plane, New_Axis, Switch):
+        #         if Plane:
+        #             Axis_list = self.str_handing(New_Axis)
+        #             if Switch is None:
+        #                 self.factor = False
+        #             else:
+        #                 self.factor = Switch
+        #             Origin_Point = Plane.Origin
+        #             self.get_new_plane(Plane, Axis_list)
+        #             origin_redirect, Origin_XAxis, Origin_YAxis, Origin_ZAxis = self.get_new_plane(Plane, Axis_list)
+        #             Symmetry_Plane = rg.Plane(Origin_Point, origin_redirect[0], origin_redirect[1])
+        #             # 重构后的xyz轴向量
+        #             New_XAxis, New_YAxis, New_ZAxis = Symmetry_Plane.XAxis, Symmetry_Plane.YAxis, Symmetry_Plane.ZAxis
+        #             return Symmetry_Plane, Origin_Point, Origin_XAxis, Origin_YAxis, Origin_ZAxis, New_XAxis, New_YAxis, New_ZAxis
+        #         else:
+        #             pass
 
 
         # 偏移平面
