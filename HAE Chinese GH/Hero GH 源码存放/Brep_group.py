@@ -3592,29 +3592,29 @@ try:
 
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_Brep()
-                self.SetUpParam(p, "Pipe Brep", "P", "The center line of the round tube to be extracted")
+                self.SetUpParam(p, "Pipe Brep", "P", "The center line of the pipe to be extracted")
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Boolean()
-                self.SetUpParam(p, "Skillful", "S", "去掉圆管中心线两头多余的部分")
+                self.SetUpParam(p, "Skillful", "S", "Remove the needless part at both ends of the pipe center line")
                 p.SetPersistentData(gk.Types.GH_Boolean(False))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Boolean()
-                self.SetUpParam(p, "Just Max Srf", "M", "只提取圆管最大面的中心线")
+                self.SetUpParam(p, "Just Max Srf", "M", "Only extract the center line of the largest surface of the pipe")
                 p.SetPersistentData(gk.Types.GH_Boolean(False))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Total Center Curve", "C1", "提取所有面的中心线")
+                self.SetUpParam(p, "Total Center Curve", "C1", "Extract the center lines of all surfaces")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Max Center Curve", "C2", "最长中心线")
+                self.SetUpParam(p, "Max Center Curve", "C2", "Longest center line")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
@@ -4967,8 +4967,7 @@ class Cancel_connection(object):
     def _Cancel_connection(self, canvas):
         Grasshopper.Instances.CanvasCreated -= self._Cancel_connection
         _toolbar = Grasshopper.Instances.DocumentEditor.Controls[0].Controls[1]
-        button = System.Windows.Forms.ToolStripButton(
-            "Cancel connection\nClick the left mouse button to cancel the front end connection of the selected battery\nClick the middle mouse button to cancel all connections of the selected battery\nRight click to cancel the backend connection of the selected battery\nPowered by HAE Development Team")
+        button = System.Windows.Forms.ToolStripButton("Cancel connection Wire\nClick the left mouse button to disconnect the front wire of the selected battery\nClick the right mouse button to disconnect the behind wire of the selected battery\nClick the middle mouse button to disconnect all the wire of the selected battery\nPowered by HAE Development Team")
         _toolbar.Items.Insert(7, button)
         button.Image = self.Cancel_connection_Icon_24x24()
         button.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image
@@ -4977,7 +4976,7 @@ class Cancel_connection(object):
     def _Display_connection(self, canvas):
         Grasshopper.Instances.CanvasCreated -= self._Display_connection
         _toolbar = Grasshopper.Instances.DocumentEditor.Controls[0].Controls[1]
-        button = System.Windows.Forms.ToolStripButton("Display Wire\n点击鼠标左键隐藏所选电池前端连线\n点击鼠标右键隐藏所选电池后端连线\n点击鼠标中键隐藏所选电池所有连线")
+        button = System.Windows.Forms.ToolStripButton("Display Wire\nClick the left mouse button to hide the front wire of selected battery\nClick the right mouse button to hide the behind wire of selected battery\nClick the middle mouse button to hide all wire of selected battery")
         _toolbar.Items.Insert(7, button)
         button.Image = self.Display_connection_Icon_24x24()
         button.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image
@@ -4986,7 +4985,7 @@ class Cancel_connection(object):
     def _Show_connection(self, canvas):
         Grasshopper.Instances.CanvasCreated -= self._Show_connection
         _toolbar = Grasshopper.Instances.DocumentEditor.Controls[0].Controls[1]
-        button = System.Windows.Forms.ToolStripButton("Show Wire\n点击鼠标左键显示所选电池前端连线\n点击鼠标右键显示所选电池后端连线\n点击鼠标中键显示所选电池所有连线")
+        button = System.Windows.Forms.ToolStripButton("Show Wire\nClick the left mouse button to show the front wire of selected battery\nClick the right mouse button to show the behind wire of selected battery\nClick the middle mouse button to show all wire of selected battery")
         _toolbar.Items.Insert(7, button)
         button.Image = self.Show_connection_Icon_24x24()
         button.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image
