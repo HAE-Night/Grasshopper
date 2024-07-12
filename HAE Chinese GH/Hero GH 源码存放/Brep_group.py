@@ -4976,7 +4976,7 @@ class Cancel_connection(object):
     def _Display_connection(self, canvas):
         Grasshopper.Instances.CanvasCreated -= self._Display_connection
         _toolbar = Grasshopper.Instances.DocumentEditor.Controls[0].Controls[1]
-        button = System.Windows.Forms.ToolStripButton("Display Wire\nClick the left mouse button to hide the front wire of selected battery\nClick the right mouse button to hide the behind wire of selected battery\nClick the middle mouse button to hide all wire of selected battery")
+        button = System.Windows.Forms.ToolStripButton("Display Wire\nClick the left mouse button to hide the front wire of selected battery\nClick the right mouse button to hide the behind wire of selected battery\nClick the middle mouse button to hide all wire of selected battery\nPowered by HAE Development Team")
         _toolbar.Items.Insert(7, button)
         button.Image = self.Display_connection_Icon_24x24()
         button.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image
@@ -4985,7 +4985,7 @@ class Cancel_connection(object):
     def _Show_connection(self, canvas):
         Grasshopper.Instances.CanvasCreated -= self._Show_connection
         _toolbar = Grasshopper.Instances.DocumentEditor.Controls[0].Controls[1]
-        button = System.Windows.Forms.ToolStripButton("Show Wire\nClick the left mouse button to show the front wire of selected battery\nClick the right mouse button to show the behind wire of selected battery\nClick the middle mouse button to show all wire of selected battery")
+        button = System.Windows.Forms.ToolStripButton("Show Wire\nClick the left mouse button to show the front wire of selected battery\nClick the right mouse button to show the behind wire of selected battery\nClick the middle mouse button to show all wire of selected battery\nPowered by HAE Development Team")
         _toolbar.Items.Insert(7, button)
         button.Image = self.Show_connection_Icon_24x24()
         button.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image
