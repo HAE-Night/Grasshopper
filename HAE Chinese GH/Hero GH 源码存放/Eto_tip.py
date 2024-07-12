@@ -13,6 +13,7 @@ import Rhino.UI
 import Eto.Drawing as drawing
 import Eto.Forms as forms
 import os
+import rhinoscriptsyntax as rs
 
 import time
 import getpass
@@ -64,38 +65,43 @@ def eto_decryption():
     Style_time = time.strftime("%Y-%m-%d %H:%M:%S", time_Array)
     if over_second > 0:
         over_day = int(round((over_second / 60 / 60 / 24), 0))
-        text = 'Scavenger plugin will expire in {}!!!'.format(Style_time) if over_day <= 5 else None
-    else:
-        text = 'Scavenger plugin has expired!!!'
-    return text
+        if over_day <= 5:
+            rs.MessageBox('Scavenger plugin will expire in {}!!!'.format(Style_time), 0 | 48, 'Tip By HAE')
+        else:
+            pass
+        # text = 'Scavenger plugin will expire in {}!!!'.format(Style_time) if over_day <= 5 else None
+    # else:
+    #     text = 'Scavenger plugin has expired!!!'
+    # return text
 
 if Result:
-    result_text = eto_decryption()
-
-    if result_text is not None:
-        class Tip(forms.Dialog[bool]):
-            def __init__(self):
-                self.Title = 'Important Notice！'
-                self.Padding = drawing.Padding(10)
-                self.Resizable = False
-
-                self.m_label = forms.Label(Text=result_text)
-
-                self.DefaultButton = forms.Button(Text="Got it")
-                self.DefaultButton.Click += self.OnOKButtonClick
-
-                layout = forms.DynamicLayout()
-                layout.Spacing = drawing.Size(2, 10)
-                layout.AddRow(self.m_label)
-                layout.AddRow(self.DefaultButton)
-
-                self.Content = layout
-
-            def OnOKButtonClick(self, sender, e):
-                self.Close(False)
-
-        def Run_Eto():
-            dialog = Tip()
-            dialog.ShowModal(Rhino.UI.RhinoEtoApp.MainWindow)
-
-        Run_Eto()
+    eto_decryption()
+    # result_text = eto_decryption()
+    #
+    # if result_text is not None:
+    #     class Tip(forms.Dialog[bool]):
+    #         def __init__(self):
+    #             self.Title = 'Important Notice！'
+    #             self.Padding = drawing.Padding(10)
+    #             self.Resizable = False
+    #
+    #             self.m_label = forms.Label(Text=result_text)
+    #
+    #             self.DefaultButton = forms.Button(Text="Got it")
+    #             self.DefaultButton.Click += self.OnOKButtonClick
+    #
+    #             layout = forms.DynamicLayout()
+    #             layout.Spacing = drawing.Size(2, 10)
+    #             layout.AddRow(self.m_label)
+    #             layout.AddRow(self.DefaultButton)
+    #
+    #             self.Content = layout
+    #
+    #         def OnOKButtonClick(self, sender, e):
+    #             self.Close(False)
+    #
+    #     def Run_Eto():
+    #         dialog = Tip()
+    #         dialog.ShowModal(Rhino.UI.RhinoEtoApp.MainWindow)
+    #
+    #     Run_Eto()
