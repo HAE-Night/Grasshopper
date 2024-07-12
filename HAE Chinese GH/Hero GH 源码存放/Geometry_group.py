@@ -208,14 +208,17 @@ try:
                 # 转换数据类型
                 result_list = []
                 for geo in geo_list:
-                    if type(geo) is not gk.Types.GH_Vector:
-                        if 'HAE' in str(geo):
-                            iter_list = self.change_hae_list(geo, [])
-                            c_cent_pt = self.hae_center_pt(iter_list)
+                    if geo:
+                        if type(geo) is not gk.Types.GH_Vector:
+                            if 'HAE' in str(geo):
+                                iter_list = self.change_hae_list(geo, [])
+                                c_cent_pt = self.hae_center_pt(iter_list)
+                            else:
+                                c_cent_pt = geo.Boundingbox.Center
                         else:
-                            c_cent_pt = geo.Boundingbox.Center
+                            c_cent_pt = rg.Point3d(geo.Value)
                     else:
-                        c_cent_pt = rg.Point3d(geo.Value)
+                        c_cent_pt = None
                     result_list.append(c_cent_pt)
                 # geo_list = map(self._trun_object, geo_list)
                 # if geo_list:
