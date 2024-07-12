@@ -51,7 +51,7 @@ try:
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
                 self.SetUpParam(p, "Geometry", "G", "Geometric object")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
@@ -60,11 +60,24 @@ try:
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
-                p0 = self.marshal.GetInput(DA, 0)
-                result = self.RunScript(p0)
+                # 插件名称
+                self.Message = 'HAE center point'
+                # 初始化输出端数据内容
+                Center = gd[object]()
+                if self.RunCount == 1:
+                    p0 = self.Params.Input[0].VolatileData
 
-                if result is not None:
-                    self.marshal.SetOutput(result, DA, 0, True)
+                    j_bool_f1, geo_trunk, geo_path = self.parameter_judgment(p0)
+                    re_mes = Message.RE_MES([j_bool_f1], ['G end'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                    else:
+                        zip_list = zip(geo_trunk, geo_path)
+                        # 多进程函数运行
+                        iter_ungroup_data = ghp.run(self.geo_center, zip_list)
+                        Center = self.format_tree(iter_ungroup_data)
+                DA.SetDataTree(0, Center)
 
             def get_Internal_Icon_24x24(self):
                 o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAASNSURBVEhL5VV5TNN3FP9tHIqsA8YNa6k4sBwVKEfpRU96cJS2UNohp8BgiBzOwpAhBascCkpADpXB5iJzc9lm0Gii2RWybHOXIVnmH4gzbuiOzGQzbOq+e69tlnVec1n2zz7JSz7v+H6/v+977/t+1P8GDzECfDil4viKjcqk9tpMjkWfGqUHO9Ph/ufwMAtYTQMl0kvTdVnkwFNqMlQuJ8MVCvJ8rcau7zBnvMVhBMuc8Q+EmJ4i8fzRzTqy05zxXokw1gi2IIeLcqd5ekbVqziWPWXypaPNOtKkSRkH+8MO933gu8ojYWRD5s/jVcprwqgwhdPsX6dKKtmq5/W16Xm2Kgk7D2we6KiWr+t4Y4uBPGfgnQD1vof47i6WXt63QXkFeAjIylZt+sujlUoCdmItEFztLhR+v7dMTlAa1Mk7cZEkjm5602Ig9UrOGOp3RbU8cf9Mg5YEe3vHgRrQVyT5Gjb6tVgUWw+6nz3IAXqNPKlnEmrRmc9/Gw2Qxm2vQUpT14Tx7BF3QPj+ajXZqEreh0qHgTc/WCL7Fuhq1AGPZNOoLOUKKhO4PRUR/j4SLHaTJnkKdYyHW76D/DZgx0w9nUWABhi40abJGg0J9KPx0Sel07R7KxRXZqZ6yOGDNtJjzlhg0ah09MnjmQ0Ha9RkTZgfvULKbsYDvby8wtDngnYDf7a3SPKNnet5H7Xp0j9B7k9RYYNliuuvLJ0nuwghu0GOXZ4nVgPvK3CvAnHbbhJdb8pOsQFnYNoMadE6XOuC7YWiL7sLRaeRdxYIlmsUif3IC0I8So4c6ie99s1vgtwig8APjbQTNkWJMMaSmzbXVSDE1KwcKleQelVSC9pdAF9x0WoUHkMOebxZJUvoRp4T4pZ/ZKKT9MGmeIN+kCGQ6f5mEk1RqRizJTftNKz5AKgH1IE0qlO2od0FsPlZuMXnyDvy+Rc2Z6diXyMe7dalLR4/d4aMkN/IKNzg5NnjxJIZ/z743DEA4pfa8tIngfqMVSlJpSyhBu0u2KTmjENL3kBeKWVb4ZViwQNRD/GkYq1Zie+OtZbeGG0pXrbIYmbBbC9kRLCjkzQJkQJRLEM2XZdNOMxgLvpcwGGGqg435BJZfAQOMq9dxZLlFi33lMP7B7BlGQ5qhw+8lUud+YJzqLRquScHS2XXgK5A/a9whyJfhAUXUBGxwrOxba1GARZ+Ldr+jHX0QGH/eskCDMCf/KEtfb292fhIy6XsLmfI7UhhBmlff0ZPysXxI6hznwjNHIDHg6MCivghFPOAJZf7AtTqC0xL75MZn0FYBIhn33rx4p5S2VXgNFx7V5j5McMnnjWSMjF7wGmiKmXsqi6j8JTNlLFgM4nOw2GvmnisHKc7ADrw05fqcwjr8QCx03ZvlIriJnB4wbz/OHl1EI6GO8HdyFvbAJP3F7wNJzIUa/f3IWSFV8PP5kfMa1+R+LuWPO7sJnXKcGNW8kSHgT8H6SAzjVpM3RyEJzpWPTh8NEmRtVt16Wfgx/MDFBUPuwU3W4R38iKL/pjSGfevwA3EF+TeRfzvQFG/A5r0qwIsC8+HAAAAAElFTkSuQmCC"
@@ -73,16 +86,54 @@ try:
             def __init__(self):
                 pass
 
-            def mes_box(self, info, button, title):
-                return rs.MessageBox(info, button, title)
+            def Branch_Route(self, Tree):
+                """分解Tree操作，树形以及多进程框架代码"""
+                Tree_list = [list(_) for _ in Tree.Branches]
+                Tree_Path = [list(_) for _ in Tree.Paths]
+                return Tree_list, Tree_Path
 
-            # 数据转换成树和原树路径
-            def Restore_Tree(self, Before_Tree, Tree):
-                Tree_Path = [_ for _ in Tree.Paths]
-                After_Tree = gd[object]()
-                for i in range(Tree.BranchCount):
-                    After_Tree.AddRange(Before_Tree[i], Tree_Path[i])
-                return After_Tree
+            def split_tree(self, tree_data, tree_path):
+                """操作树单枝的代码"""
+                new_tree = ght.list_to_tree(tree_data, True, tree_path)  # 此处可替换复写的Tree_To_List（源码参照Vector组-点集根据与曲线距离分组）
+                result_data, result_path = self.Branch_Route(new_tree)
+                if list(chain(*result_data)):
+                    return result_data, result_path
+                else:
+                    return [[]], result_path
+
+            def format_tree(self, result_tree):
+                """匹配树路径的代码，利用空树创造与源树路径匹配的树形结构分支"""
+                stock_tree = gd[object]()
+                for sub_tree in result_tree:
+                    fruit, branch = sub_tree
+                    for index, item in enumerate(fruit):
+                        path = gk.Data.GH_Path(System.Array[int](branch[index]))
+                        if hasattr(item, '__iter__'):
+                            if item:
+                                for sub_index in range(len(item)):
+                                    stock_tree.Insert(item[sub_index], path, sub_index)
+                            else:
+                                stock_tree.AddRange(item, path)
+                        else:
+                            stock_tree.Insert(item, path, index)
+                return stock_tree
+
+            def parameter_judgment(self, tree_par_data):
+                # 获取输入端参数所有数据
+                geo_list, geo_path = self.Branch_Route(tree_par_data)
+                j_list = filter(None, list(chain(*geo_list)))  # 获取所有数据
+                return j_list, geo_list, geo_path
+
+            def _trun_object(self, ref_obj):
+                """引用物体转换为GH内置物体"""
+                if 'ReferenceID' in dir(ref_obj):
+                    if ref_obj.IsReferencedGeometry:
+                        test_pt = ref_obj.Value
+                    else:
+                        test_pt = ref_obj.Value
+                else:
+                    test_pt = ref_obj
+                return test_pt
 
             def Get_different_Center(self, brep, type_str):  # 不同的物体求中心点
                 if "Plane" in type_str:
@@ -131,32 +182,70 @@ try:
                     center = self.Get_different_Center(Box, type_str)
                 return center
 
-            def GeoCenter(self, Geo):
-                if Geo:
-                    center = ghp.run(self.center_box, Geo)
-                    return center
-                else:
-                    return [None]
-
-            def RunScript(self, Geometry):
-                try:
-                    re_mes = Message.RE_MES([Geometry], ['Geometry'])
-                    if len(re_mes) > 0:
-                        for mes_i in re_mes:
-                            Message.message2(self, mes_i)
-                        return gd[object]()
+            def hae_center_pt(self, hae_data_list):
+                bbox = rg.BoundingBox.Empty  # 初始化边界框
+                for hae_geo in hae_data_list:
+                    if type(hae_geo) is not gk.Types.GH_Vector:
+                        sub_box = hae_geo.Boundingbox
                     else:
-                        sc.doc = Rhino.RhinoDoc.ActiveDoc
-                        Center = gd[object]()
-                        Geolist = [list(Branch) for Branch in Geometry.Branches]  # 将树转化为列表
-                        Cenpt = ghp.run(self.GeoCenter, Geolist)  # 主方法运行
-                        Center = self.Restore_Tree(Cenpt, Geometry)  # 还原树分支
-                        sc.doc.Views.Redraw()
-                        ghdoc = GhPython.DocReplacement.GrasshopperDocument()
-                        sc.doc = ghdoc
-                        return Center
-                finally:
-                    self.Message = 'HAE center point'
+                        sub_box = rg.BoundingBox(rg.Point3d(hae_geo))
+                    bbox.Union(sub_box)
+
+                return bbox.Center
+
+            def change_hae_list(self, obj_wrapper, res_hae_wra):
+                hae_obj_wra = obj_wrapper.Value
+                for _ in hae_obj_wra.list_data:
+                    if 'HAE' in str(_):
+                        self.change_hae_list(_, res_hae_wra)
+                    else:
+                        res_hae_wra.append(_)
+                return res_hae_wra
+
+            def geo_center(self, tuple_data):
+                # 分解集合数据
+                geo_list, origin_path = tuple_data
+                # 转换数据类型
+                result_list = []
+                for geo in geo_list:
+                    if type(geo) is not gk.Types.GH_Vector:
+                        if 'HAE' in str(geo):
+                            iter_list = self.change_hae_list(geo, [])
+                            c_cent_pt = self.hae_center_pt(iter_list)
+                        else:
+                            c_cent_pt = geo.Boundingbox.Center
+                    else:
+                        c_cent_pt = rg.Point3d(geo.Value)
+                    result_list.append(c_cent_pt)
+                # geo_list = map(self._trun_object, geo_list)
+                # if geo_list:
+                #     result_list = map(self.center_box, geo_list)
+                # else:
+                #     result_list = [None]
+                # map函数批量处理
+                ungroup_data = self.split_tree(result_list, origin_path)
+                Rhino.RhinoApp.Wait()
+                return ungroup_data
+
+            # def RunScript(self, Geometry):
+            #     try:
+            #         re_mes = Message.RE_MES([Geometry], ['Geometry'])
+            #         if len(re_mes) > 0:
+            #             for mes_i in re_mes:
+            #                 Message.message2(self, mes_i)
+            #             return gd[object]()
+            #         else:
+            #             sc.doc = Rhino.RhinoDoc.ActiveDoc
+            #             Center = gd[object]()
+            #             Geolist = [list(Branch) for Branch in Geometry.Branches]  # 将树转化为列表
+            #             Cenpt = ghp.run(self.GeoCenter, Geolist)  # 主方法运行
+            #             Center = self.Restore_Tree(Cenpt, Geometry)  # 还原树分支
+            #             sc.doc.Views.Redraw()
+            #             ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+            #             sc.doc = ghdoc
+            #             return Center
+            #     finally:
+            #         self.Message = 'HAE center point'
 
 
         # 几何排序
@@ -230,28 +319,104 @@ try:
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
-                p0 = self.marshal.GetInput(DA, 0)
-                p1 = self.marshal.GetInput(DA, 1)
-                p2 = self.marshal.GetInput(DA, 2)
-                p3 = self.marshal.GetInput(DA, 3)
-                p4 = self.marshal.GetInput(DA, 4)
-                result = self.RunScript(p0, p1, p2, p3, p4)
+                # 插件名称
+                self.Message = 'Geometric ordering'
+                # 初始化输出端数据内容
+                A_Objects, A_Values, B_Objects, B_Values = (gd[object]() for _ in range(4))
+                if self.RunCount == 1:
+                    p0 = self.Params.Input[0].VolatileData
+                    p1 = self.Params.Input[1].VolatileData
+                    p2 = self.Params.Input[2].VolatileData
+                    p3 = self.Params.Input[3].VolatileData
+                    p4 = self.Params.Input[4].VolatileData
+                    # 确定不变全局参数
+                    self.loop = p2[0][0].Value
+                    self._sort_list = p3[0][0].Value
 
-                if result is not None:
-                    if not hasattr(result, '__getitem__'):
-                        self.marshal.SetOutput(result, DA, 0, True)
+                    j_bool_f1, geo_trunk, geo_path = self.parameter_judgment(p0)
+                    re_mes = Message.RE_MES([j_bool_f1], ['G end'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
                     else:
-                        self.marshal.SetOutput(result[0], DA, 0, True)
-                        self.marshal.SetOutput(result[1], DA, 1, True)
-                        self.marshal.SetOutput(result[2], DA, 2, True)
-                        self.marshal.SetOutput(result[3], DA, 3, True)
+                        index_trunk, index_path = self.parameter_judgment(p1)[1:]
+                        axis_trunk, axis_path = self.parameter_judgment(p4)[1:]
+
+                        iter_group, max_i = self.match_tree(geo_trunk, index_trunk, axis_trunk)
+                        # 添加原始树路径
+                        new_geo_trunk, new_index_trunk, new_axis_trunk = iter_group
+                        zip_list = zip(new_geo_trunk, new_index_trunk, new_axis_trunk, [geo_path, index_path, axis_path][max_i])
+                        # 多进程函数运行
+                        iter_ungroup_data = zip(*ghp.run(self._do_main, zip_list))
+
+                        A_Objects, A_Values, B_Objects, B_Values = ghp.run(lambda single_tree: self.format_tree(single_tree), iter_ungroup_data)
+                DA.SetDataTree(0, A_Objects)
+                DA.SetDataTree(1, A_Values)
+                DA.SetDataTree(2, B_Objects)
+                DA.SetDataTree(3, B_Values)
+                # p0 = self.marshal.GetInput(DA, 0)
+                # p1 = self.marshal.GetInput(DA, 1)
+                # p2 = self.marshal.GetInput(DA, 2)
+                # p3 = self.marshal.GetInput(DA, 3)
+                # p4 = self.marshal.GetInput(DA, 4)
+                # result = self.RunScript(p0, p1, p2, p3, p4)
+                #
+                # if result is not None:
+                #     if not hasattr(result, '__getitem__'):
+                #         self.marshal.SetOutput(result, DA, 0, True)
+                #     else:
+                #         self.marshal.SetOutput(result[0], DA, 0, True)
+                #         self.marshal.SetOutput(result[1], DA, 1, True)
+                #         self.marshal.SetOutput(result[2], DA, 2, True)
+                #         self.marshal.SetOutput(result[3], DA, 3, True)
 
             def get_Internal_Icon_24x24(self):
                 o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAATRSURBVEhLzZV5TJRHFMA3kFUqupRj10VZFuTa3e/YXWAFQbBdkW4hobCwoCyHFNACcnhU8QAsApVwSFpAjopoUaSlHm2plHqCNJpqtAmtjWnrH7VpjGm0BYXYxtc3H6OJoRCapkl/yeSbN/Nm3jfvvXkj+j8hw2ae7D5Dik0y2f2XONrP7ZQ5zO+hIsFWKpk3KBaLGSKUlZXZ8Bx3iWXZUmH2H8LlRwWBkfNsprIo2EdRXhAdBNhVEjlAq43VabXAsewdjUYzn4zNmpdYj+EvytLAb7HLUwO6hgzTk0prxBPse5AB8vd6PW/W63XHOYYpJGOzYq5YnN1VGA99O1OIgUYylhrO3/i2IRc2x4T+iaI8MjJSwfMc4MY78BRnWYb5jujNBllWRMD9r+ty4HBhAngtcql2d16wpX+XFUb25cJWczhxkbNep2vFE3zJ82yJjueLsT/Ba3jT5BYzoF4sPTJcmQXEPR358eC7SNoml7xgMHIeVdmRgZdjlqrvY5C1er22j2EYLV0mCvTX7eU4roqK0xLRkPEqXMe/P7FtNRzYEA+MUt5F5wi22CzYngW0/vHDvJqJ3zVUnJE5rxlUt26+kw+fl6ZC75tJ0J5nBo27vJvOi9xcHKp85I4HqChQNz76We342CtUnB6pg335QEkaXKleB5/uSIZjmxKhNdcMaoVrL1XxK0lYAQnB6jYqC9RNjPXUjI8aqTgtqu1xYY9vNRYKvj9VvAaOFFmgBQ3ol7h9QBQSgjTDX1Vnw3K1Usiqp6B7uvY++i2Ein9PiK/i/DcNG+BSVRb0l6TA8a2rhQzajwZU7q4HWYVs/UBJKpzdnQ7BfopWukzUODYmb/pj4mLt+MM8OjQVGxtRWndRAow05Asb9O20wodbkqCzIB6ac8yw0MnhJt6BR9dr18MZnA9RKzvpUlHd3bvebQBQO/HwEB2aglOmUX/v9v6NMFiRCQMY3I+3o/83J2KKmqEZT6D1UlxwmW8XFuy9uMIarr2qdpPuo2sFqkcf1Lz94F4AFZ/H19W54+redXCtJgfOla8V3HNy2xo4utGCKWqGJjyB3sd9gKoT5mEjaTorwhvWmuCHpiLh78/sThPc8xH6vwtd1p4XJxjw93E/R/VFXgsd6zVuUiHopJIuWxHIGgxa3fKVBl+jMWihoER5MSmUufljUyFcxhNcKM8Qcv8TTE/i//cxwG25sWggHgx+HoN0DVuZbISkEKaDCBaLZQ7e5madTnsYv99zHHte0KJENWVFwc/tW2AIywIJ7ml0z6niZOhB/x/CALfmxEIjGljq53mBLEhezl29VrMOwhnlc/fAajVJtDz/C6tiV9EhAVtvV+fieiwLI5ieF/dkCO45gf4/tskiZFDLG2ggNx70vsp+wxL5riHUOfdWOoSqPQ7SPQSwVF/BmjRtDYp7faX+Dqk7Q5WZeMnS4SSe4ije4vcwyC35iaBSLvopJtDnHqmmp3elQhjjKcSAEBjoX0HeBCpOi4ubk6QkYZnmRkF08ERp4stQmbIKWyRUpUeTLLqNOm4Se7uklZxXt6fMqYYsMplMEtz8V3TPIMahV6fj3yWBJ3MzQZ7CMDs7cZJC5lQkc1iw0U4stk5OTcEGn0m5Wq32UalULPnS8f8akegvQXjx8z+3HH8AAAAASUVORK5CYII="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
-                self.axis = None
+                pass
+
+            def Branch_Route(self, Tree):
+                """分解Tree操作，树形以及多进程框架代码"""
+                Tree_list = [list(_) for _ in Tree.Branches]
+                Tree_Path = [list(_) for _ in Tree.Paths]
+                return Tree_list, Tree_Path
+
+            def split_tree(self, tree_data, tree_path):
+                """操作树单枝的代码"""
+                new_tree = ght.list_to_tree(tree_data, True, tree_path)  # 此处可替换复写的Tree_To_List（源码参照Vector组-点集根据与曲线距离分组）
+                result_data, result_path = self.Branch_Route(new_tree)
+                if list(chain(*result_data)):
+                    return result_data, result_path
+                else:
+                    return [[]], result_path
+
+            def format_tree(self, result_tree):
+                """匹配树路径的代码，利用空树创造与源树路径匹配的树形结构分支"""
+                stock_tree = gd[object]()
+                for sub_tree in result_tree:
+                    fruit, branch = sub_tree
+                    for index, item in enumerate(fruit):
+                        path = gk.Data.GH_Path(System.Array[int](branch[index]))
+                        if hasattr(item, '__iter__'):
+                            if item:
+                                for sub_index in range(len(item)):
+                                    stock_tree.Insert(item[sub_index], path, sub_index)
+                            else:
+                                stock_tree.AddRange(item, path)
+                        else:
+                            stock_tree.Insert(item, path, index)
+                return stock_tree
+
+            def parameter_judgment(self, tree_par_data):
+                # 获取输入端参数所有数据
+                geo_list, geo_path = self.Branch_Route(tree_par_data)
+                if geo_list:
+                    j_list = any(ghp.run(lambda x: len(list(filter(None, x))), geo_list))  # 去空操作, 判断是否为空
+                else:
+                    j_list = False
+                return j_list, geo_list, geo_path
 
             def _trun_object(self, ref_obj):
                 """引用物体转换为GH内置物体"""
@@ -264,7 +429,31 @@ try:
                     test_pt = ref_obj
                 return test_pt
 
-            def get_value_sort(self, object_list, data_type, sorting):
+            def sub_match(self, tuple_data):
+                # 子树匹配
+                target_tree, other_tree = tuple_data
+                t_len, o_len = len(target_tree), len(other_tree)
+                if o_len == 0:
+                    new_tree = [other_tree] * len(target_tree)
+                else:
+                    new_tree = other_tree + [other_tree[-1]] * (t_len - o_len)
+                return new_tree
+
+            def match_tree(self, *args):
+                # 参数化匹配数据
+                len_list = map(lambda x: len(x), args)  # 得到最长的树
+                max_index = len_list.index(max(len_list))  # 得到最长的树的下标
+                self.max_index = max_index
+                max_trunk = args[max_index]
+                other_list = [args[_] for _ in range(len(args)) if _ != max_index]  # 剩下的树
+                matchzip = zip([max_trunk] * len(other_list), other_list)
+
+                # 插入最大列表，获得最新列表
+                reslut_list = map(self.sub_match, matchzip)
+                reslut_list.insert(max_index, max_trunk)
+                return reslut_list, max_index
+
+            def get_value_sort(self, object_list, data_type, sorting, ax):
                 temp_objects = map(self._trun_object, object_list)
                 origin_data = None
                 if data_type == gk.Types.GH_Brep or data_type == gk.Types.GH_Surface:
@@ -272,7 +461,7 @@ try:
                 elif data_type == gk.Types.GH_Curve or data_type == gk.Types.GH_Circle or data_type == gk.Types.GH_Arc:
                     origin_data = [o.ToNurbsCurve().GetLength() for o in temp_objects]
                 elif data_type == gk.Types.GH_Point:
-                    origin_data = eval('[o.{} for o in temp_objects]'.format(self.axis))
+                    origin_data = eval('[o.{} for o in temp_objects]'.format(ax))
                 elif data_type == gk.Types.GH_Box:
                     origin_data = [o.Area for o in temp_objects]
                 values = sorted(origin_data)
@@ -315,38 +504,64 @@ try:
                         a_list_data, b_list_data = array_data[index], array_data[index]
                     return a_list_data, b_list_data
 
-            def RunScript(self, Geometry, Index, Loop, Sort, Axis):
-                try:
-                    sc.doc = Rhino.RhinoDoc.ActiveDoc
-                    A_Objects, A_Values, B_Objects, B_Values = (gd[object]() for _ in range(4))
-                    # 判断输入的列表是否都为空
-                    structure_tree = self.Params.Input[0].VolatileData
-                    temp_geo_list = [list(i) for i in structure_tree.Branches]  # 获取所有数据
-                    j_list = filter(None, list(chain(*temp_geo_list)))
+            def _do_main(self, tuple_data):
+                # 分解集合数据
+                origin_geo_list, index_list, axis_list, origin_path = tuple_data
+                origin_geo_list = [_ for _ in origin_geo_list if _ is not None]
+                # 转换数据类型
+                index_list = map(lambda x: int(x.Value), index_list)
+                axis_list = map(lambda y: y.Value, axis_list)
 
-                    re_mes = Message.RE_MES([j_list], ['Geometry'])
-                    if len(re_mes) > 0:
-                        for mes_i in re_mes:
-                            Message.message2(self, mes_i)
-                    else:
-                        origin_geo_list = temp_geo_list[self.RunCount - 1]
-                        if len(origin_geo_list) != 0:
-                            self.axis = Axis.upper()
-                            origin_geo = [_ for _ in origin_geo_list if _ is not None]
-                            g_bool, g_type = self.is_sametype(origin_geo)
-                            objs, vals = None, None
-                            if g_bool is True:
-                                objs, vals = self.get_value_sort(origin_geo, g_type, Sort)
-                            A_Objects, B_Objects = self.switch_handing(objs, Index, Loop)
-                            A_Values, B_Values = self.switch_handing(vals, Index, Loop)
-                        else:
-                            A_Objects, B_Objects, A_Values, B_Values = ([] for _ in range(4))
-                    sc.doc.Views.Redraw()
-                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
-                    sc.doc = ghdoc
-                    return A_Objects, A_Values, B_Objects, B_Values
-                finally:
-                    self.Message = 'Geometric ordering'
+                # 获取目标轴
+                aixs = axis_list[0].upper() if len(axis_list) else 'X'
+
+                g_bool, g_type = self.is_sametype(origin_geo_list)
+                if g_bool is True:
+                    objs, vals = self.get_value_sort(origin_geo_list, g_type, self._sort_list, aixs)
+
+                # 判断index列表是否为空
+                index = index_list[0] if len(index_list) else None
+
+                a_objs, b_objs = self.switch_handing(objs, index, self.loop)
+                a_vals, b_vals = self.switch_handing(vals, index, self.loop)
+
+                # map函数批量处理
+                ungroup_data = map(lambda x: self.split_tree(x, origin_path), [a_objs, a_vals, b_objs, b_vals])
+                Rhino.RhinoApp.Wait()
+                return ungroup_data
+
+            # def RunScript(self, Geometry, Index, Loop, Sort, Axis):
+            #     try:
+            #         sc.doc = Rhino.RhinoDoc.ActiveDoc
+            #         A_Objects, A_Values, B_Objects, B_Values = (gd[object]() for _ in range(4))
+            #         # 判断输入的列表是否都为空
+            #         structure_tree = self.Params.Input[0].VolatileData
+            #         temp_geo_list = [list(i) for i in structure_tree.Branches]  # 获取所有数据
+            #         j_list = filter(None, list(chain(*temp_geo_list)))
+            #
+            #         re_mes = Message.RE_MES([j_list], ['Geometry'])
+            #         if len(re_mes) > 0:
+            #             for mes_i in re_mes:
+            #                 Message.message2(self, mes_i)
+            #         else:
+            #             origin_geo_list = temp_geo_list[self.RunCount - 1]
+            #             if len(origin_geo_list) != 0:
+            #                 self.axis = Axis.upper()
+            #                 origin_geo = [_ for _ in origin_geo_list if _ is not None]
+            #                 g_bool, g_type = self.is_sametype(origin_geo)
+            #                 objs, vals = None, None
+            #                 if g_bool is True:
+            #                     objs, vals = self.get_value_sort(origin_geo, g_type, Sort)
+            #                 A_Objects, B_Objects = self.switch_handing(objs, Index, Loop)
+            #                 A_Values, B_Values = self.switch_handing(vals, Index, Loop)
+            #             else:
+            #                 A_Objects, B_Objects, A_Values, B_Values = ([] for _ in range(4))
+            #         sc.doc.Views.Redraw()
+            #         ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+            #         sc.doc = ghdoc
+            #         return A_Objects, A_Values, B_Objects, B_Values
+            #     finally:
+            #         self.Message = 'Geometric ordering'
 
 
         # 几何体的中心平面
