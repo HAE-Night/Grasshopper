@@ -2899,7 +2899,7 @@ try:
                         # 打包源数据
                         zip_list = zip(origin_data, origin_path)
                         # 获取包内数据
-                        temp_data = ghp.run(lambda x: self.split_tree([_.Value.list_data for _ in x[0]], x[1]), zip_list)
+                        temp_data = ghp.run(lambda x: self.split_tree([_.Value.list_data for _ in x[0]] if x[0] else [[]], x[1]), zip_list)
                         # 匹配树
                         Result_Data = self.format_tree(temp_data)
                     sc.doc.Views.Redraw()
