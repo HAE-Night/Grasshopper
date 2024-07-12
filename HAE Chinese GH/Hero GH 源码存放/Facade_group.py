@@ -2532,7 +2532,7 @@ try:
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Picture_Frame", "PF", "Picture frame")
+                self.SetUpParam(p, "Picture_Frame", "FL", "Picture frame")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
