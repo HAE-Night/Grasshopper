@@ -29,104 +29,104 @@ Message = initialization.message()
 TreeFun = initialization.TreeOperation()
 try:
     if Result is True:
-        # 键值对赋值
-        class DATAKEY(component):
-            def __new__(cls):
-                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_DATAKEY", "C4", """Performs an f assignment to the key-value pair of object,when multiple objects are assigned values,pay attention to key-value pair order and data structure；""", "Scavenger", "K-Object")
-                return instance
-
-            def get_ComponentGuid(self):
-                return System.Guid("4b68c580-a4e4-4ca8-9e49-082b8f014c0b")
-
-            @property
-            def Exposure(self):
-                return Grasshopper.Kernel.GH_Exposure.primary
-
-            def SetUpParam(self, p, name, nickname, description):
-                p.Name = name
-                p.NickName = nickname
-                p.Description = description
-                p.Optional = True
-
-            def RegisterInputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_Guid()
-                self.SetUpParam(p, "Objects", "O", "Object set list")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
-                self.Params.Input.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Keys", "K", "Key-key,")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
-                self.Params.Input.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Values", "V", "Value-value")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
-                self.Params.Input.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Toggle", "T", "Assignment or not")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
-                self.Params.Input.Add(p)
-
-            def RegisterOutputParams(self, pManager):
-                pass
-
-            def SolveInstance(self, DA):
-                p0 = self.marshal.GetInput(DA, 0)
-                p1 = self.marshal.GetInput(DA, 1)
-                p2 = self.marshal.GetInput(DA, 2)
-                p3 = self.marshal.GetInput(DA, 3)
-                result = self.RunScript(p0, p1, p2, p3)
-
-            def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAALgSURBVEhLYxgFIwswaRl65ti4pFdbOcSTjW1ckqsNLAKrgOYJQ4xFAFbv8IbPJS1H/ufWbCcbFzbu+x+TOfs/0DwtiLEIwBoY2/GguOnQ/5yqLWCMzQBcGKQ+G4gL6nf/j86YCbJAHWIsArA6eec9iM2a+z88eRIUT/4RkTL1c0TKlC8QDGQnT/6G4EMxUAykPiJlMthwr5BarBYw2LikXE/MWwRWBNT0X0JKIwsoLATEYkDMC6U9gJgPiEHiEkDMBcSmPqF1/+Oz5/9PyF3w382/FLsF7kEV14qbDv7Prd72P6Ns/X9pDUvvDv+yxonR9TJt/hVezf4VXawMrAa13gVLJ4U0K4L0dARVl0WZ+LeHpk79WFC3+39hw97/QbGd2C0A2nytoH7P/6yKjf9Ti1f9l1Qz82/2LdlY7VPQA8QXmvzLdIHKVCo88z4A+ZPr7etZ6n1L/gcZedUHJ096D3JYXu2O/wHRbcRZIK5i4tvkU7ysN6zpf6VnnitUmWK5R05FjXfhnXKv/FKgBY942Ng0QxMn/CXZAil1cz+QBUBD9tV4Fe5eFbqKGahMLdc+RabKu/AzMMh+tgCDECgmFJ40ERy0pFvgW7yn0iPXvtqrcG6Nb9EaNjY2sMZq78JtIJ/NCG9WBnJliLYAFEnZlZv+pxWv/s8nKu8xxzJIHirN0GEfbwGkwBpvMTCwt9pE6IHYQCAeljjhf17Njv/5dTuBFrRit8DaOfl6dPqM/6EJff+D47r/27qmb7fzLmh28i3qcvIt7Lb1LWywckpc6uyTP8HBr6jNxqeg3sW3sA9YPCwEJVOQPpBPgGL/YT5FAb4RzTdALkgvXQPEa//n1+4E50xicGb5erC+7MrN/0GO5OUVxrQgILr9Xnn7MWA47iQbFzce+J+Yu/A/D4+wBtRYBLB3yzgVmTr1XXB8D9k4LGniO4+gqnd8fHwqUGNRAKgIEKQSBiXpUUAIMDAAACzLMF4ss44GAAAAAElFTkSuQmCC"
-                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
-
-            def Set_values_Greater_one(self, Objects, Keys, Values):  # 当key大于1时调用
-
-                if len(Keys) < len(Values):  # Keys的长度小于Values
-                    for i in range(len(Objects)):
-                        if type(Objects[i]) is System.Guid:
-                            for _key in range(len(Keys)):
-                                obj_attr = sc.doc.Objects.FindId(Objects[i]).Attributes
-                                obj_attr.SetUserString(Keys[_key], Values[_key])
-                else:  # Keys的长度大于Values
-                    for i in range(len(Objects)):
-                        if type(Objects[i]) is System.Guid:
-                            for v in range(len(Values)):
-                                obj_attr = sc.doc.Objects.FindId(Objects[i]).Attributes
-                                obj_attr.SetUserString(Keys[v], Values[v])
-
-            def Set_values_Equal_one(self, Objects, Keys, Values):  # 当key等于1时调用
-                n = 0
-                for i in range(len(Objects)):
-                    if type(Objects[i]) is System.Guid:
-                        obj_attr = sc.doc.Objects.FindId(Objects[i]).Attributes
-                        obj_attr.SetUserString(Keys[0], Values[n])
-                        if n < len(Values) - 1:
-                            n += 1
-                        else:
-                            n = 0
-
-            def RunScript(self, Objects, Keys, Values, T):
-                try:
-                    sc.doc = Rhino.RhinoDoc.ActiveDoc
-                    sc.doc.Views.Redraw()
-
-                    if T:
-                        if len(Keys) > 1:
-                            self.Set_values_Greater_one(Objects, Keys, Values)
-                        elif len(Keys) == 1:
-                            self.Set_values_Equal_one(Objects, Keys, Values)
-                        else:
-                            return
-
-                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
-                    sc.doc = ghdoc
-                finally:
-                    self.Message = 'Key-value pair assignment'
+        # # 键值对赋值
+        # class DATAKEY(component):
+        #     def __new__(cls):
+        #         instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+        #                                                            "RPP_DATAKEY", "C4", """Performs an f assignment to the key-value pair of object,when multiple objects are assigned values,pay attention to key-value pair order and data structure；""", "Scavenger", "K-Object")
+        #         return instance
+        #
+        #     def get_ComponentGuid(self):
+        #         return System.Guid("4b68c580-a4e4-4ca8-9e49-082b8f014c0b")
+        #
+        #     @property
+        #     def Exposure(self):
+        #         return Grasshopper.Kernel.GH_Exposure.primary
+        #
+        #     def SetUpParam(self, p, name, nickname, description):
+        #         p.Name = name
+        #         p.NickName = nickname
+        #         p.Description = description
+        #         p.Optional = True
+        #
+        #     def RegisterInputParams(self, pManager):
+        #         p = Grasshopper.Kernel.Parameters.Param_Guid()
+        #         self.SetUpParam(p, "Objects", "O", "Object set list")
+        #         p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+        #         self.Params.Input.Add(p)
+        #
+        #         p = Grasshopper.Kernel.Parameters.Param_String()
+        #         self.SetUpParam(p, "Keys", "K", "Key-key,")
+        #         p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+        #         self.Params.Input.Add(p)
+        #
+        #         p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+        #         self.SetUpParam(p, "Values", "V", "Value-value")
+        #         p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+        #         self.Params.Input.Add(p)
+        #
+        #         p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+        #         self.SetUpParam(p, "Toggle", "T", "Assignment or not")
+        #         p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+        #         self.Params.Input.Add(p)
+        #
+        #     def RegisterOutputParams(self, pManager):
+        #         pass
+        #
+        #     def SolveInstance(self, DA):
+        #         p0 = self.marshal.GetInput(DA, 0)
+        #         p1 = self.marshal.GetInput(DA, 1)
+        #         p2 = self.marshal.GetInput(DA, 2)
+        #         p3 = self.marshal.GetInput(DA, 3)
+        #         result = self.RunScript(p0, p1, p2, p3)
+        #
+        #     def get_Internal_Icon_24x24(self):
+        #         o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAALgSURBVEhLYxgFIwswaRl65ti4pFdbOcSTjW1ckqsNLAKrgOYJQ4xFAFbv8IbPJS1H/ufWbCcbFzbu+x+TOfs/0DwtiLEIwBoY2/GguOnQ/5yqLWCMzQBcGKQ+G4gL6nf/j86YCbJAHWIsArA6eec9iM2a+z88eRIUT/4RkTL1c0TKlC8QDGQnT/6G4EMxUAykPiJlMthwr5BarBYw2LikXE/MWwRWBNT0X0JKIwsoLATEYkDMC6U9gJgPiEHiEkDMBcSmPqF1/+Oz5/9PyF3w382/FLsF7kEV14qbDv7Prd72P6Ns/X9pDUvvDv+yxonR9TJt/hVezf4VXawMrAa13gVLJ4U0K4L0dARVl0WZ+LeHpk79WFC3+39hw97/QbGd2C0A2nytoH7P/6yKjf9Ti1f9l1Qz82/2LdlY7VPQA8QXmvzLdIHKVCo88z4A+ZPr7etZ6n1L/gcZedUHJ096D3JYXu2O/wHRbcRZIK5i4tvkU7ysN6zpf6VnnitUmWK5R05FjXfhnXKv/FKgBY942Ng0QxMn/CXZAil1cz+QBUBD9tV4Fe5eFbqKGahMLdc+RabKu/AzMMh+tgCDECgmFJ40ERy0pFvgW7yn0iPXvtqrcG6Nb9EaNjY2sMZq78JtIJ/NCG9WBnJliLYAFEnZlZv+pxWv/s8nKu8xxzJIHirN0GEfbwGkwBpvMTCwt9pE6IHYQCAeljjhf17Njv/5dTuBFrRit8DaOfl6dPqM/6EJff+D47r/27qmb7fzLmh28i3qcvIt7Lb1LWywckpc6uyTP8HBr6jNxqeg3sW3sA9YPCwEJVOQPpBPgGL/YT5FAb4RzTdALkgvXQPEa//n1+4E50xicGb5erC+7MrN/0GO5OUVxrQgILr9Xnn7MWA47iQbFzce+J+Yu/A/D4+wBtRYBLB3yzgVmTr1XXB8D9k4LGniO4+gqnd8fHwqUGNRAKgIEKQSBiXpUUAIMDAAACzLMF4ss44GAAAAAElFTkSuQmCC"
+        #         return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+        #
+        #     def Set_values_Greater_one(self, Objects, Keys, Values):  # 当key大于1时调用
+        #
+        #         if len(Keys) < len(Values):  # Keys的长度小于Values
+        #             for i in range(len(Objects)):
+        #                 if type(Objects[i]) is System.Guid:
+        #                     for _key in range(len(Keys)):
+        #                         obj_attr = sc.doc.Objects.FindId(Objects[i]).Attributes
+        #                         obj_attr.SetUserString(Keys[_key], Values[_key])
+        #         else:  # Keys的长度大于Values
+        #             for i in range(len(Objects)):
+        #                 if type(Objects[i]) is System.Guid:
+        #                     for v in range(len(Values)):
+        #                         obj_attr = sc.doc.Objects.FindId(Objects[i]).Attributes
+        #                         obj_attr.SetUserString(Keys[v], Values[v])
+        #
+        #     def Set_values_Equal_one(self, Objects, Keys, Values):  # 当key等于1时调用
+        #         n = 0
+        #         for i in range(len(Objects)):
+        #             if type(Objects[i]) is System.Guid:
+        #                 obj_attr = sc.doc.Objects.FindId(Objects[i]).Attributes
+        #                 obj_attr.SetUserString(Keys[0], Values[n])
+        #                 if n < len(Values) - 1:
+        #                     n += 1
+        #                 else:
+        #                     n = 0
+        #
+        #     def RunScript(self, Objects, Keys, Values, T):
+        #         try:
+        #             sc.doc = Rhino.RhinoDoc.ActiveDoc
+        #             sc.doc.Views.Redraw()
+        #
+        #             if T:
+        #                 if len(Keys) > 1:
+        #                     self.Set_values_Greater_one(Objects, Keys, Values)
+        #                 elif len(Keys) == 1:
+        #                     self.Set_values_Equal_one(Objects, Keys, Values)
+        #                 else:
+        #                     return
+        #
+        #             ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+        #             sc.doc = ghdoc
+        #         finally:
+        #             self.Message = 'Key-value pair assignment'
 
 
         # # 物件键值对提取
@@ -238,126 +238,126 @@ try:
         #             self.Message = 'Key-value pair query'
 
         # 拾取图层物体
-        class PickItems(component):
-            def __new__(cls):
-                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_PickItems", "C12", """Pick up the objects of the Rhino sublayer""", "Scavenger", "K-Object")
-                return instance
-
-            def get_ComponentGuid(self):
-                return System.Guid("1947d440-6dc8-4eb7-8338-c936a5f54a4b")
-
-            @property
-            def Exposure(self):
-                return Grasshopper.Kernel.GH_Exposure.secondary
-
-            def SetUpParam(self, p, name, nickname, description):
-                p.Name = name
-                p.NickName = nickname
-                p.Description = description
-                p.Optional = True
-
-            def RegisterInputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_Integer()
-                self.SetUpParam(p, "Father_Keys", "K", "Subscript of the Father layer")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
-                self.Params.Input.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Unique_ID", "U", "Unique_ID")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
-                self.Params.Input.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_Boolean()
-                self.SetUpParam(p, "Switch", "S", "Plug-in run button,input 'True' to run,default is no execution")
-                p.PersistentData.Append(Grasshopper.Kernel.Types.GH_Boolean(False))
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
-                self.Params.Input.Add(p)
-
-            def RegisterOutputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_Geometry()
-                self.SetUpParam(p, "Data", "D", "Picked up objects")
-                self.Params.Output.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Info", "I", "Pick up the layer information")
-                self.Params.Output.Add(p)
-
-            def SolveInstance(self, DA):
-                p0 = self.marshal.GetInput(DA, 0)
-                p1 = self.marshal.GetInput(DA, 1)
-                p2 = self.marshal.GetInput(DA, 2)
-                result = self.RunScript(p0, p1, p2)
-
-                if result is not None:
-                    if not hasattr(result, '__getitem__'):
-                        self.marshal.SetOutput(result, DA, 0, True)
-                    else:
-                        self.marshal.SetOutput(result[0], DA, 0, True)
-                        self.marshal.SetOutput(result[1], DA, 1, True)
-
-            def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAARvSURBVEhL5VVraBxVFI5a6osWhFalIiiKomhEml+CBMGCFFssGmyTNpvsbOY9+5qdxz6SSVtDEtLUZzEbkyabZDfZzc7uZje7adKmaZXGVGmhvqCg6B9Rq9hYsLS+xu8uQyE/JBv0nx9c7txzzj3n3nO+c6fq/wPaH98kRIov8qG8WwjlXUKoWGOr/h1qa411vJ7vEkLTfwYOvm952uYsX/sJK3DwtCWGpj9rCUw8b5uuHZJUulUMTi/oXUsWr+dGWf/k007nwIZmKbmZVbP1CPC12nHGcslJyt6yNtDK5JDW+aHFaOYussZN9iE1A7hNB+NL3kdkCFKUcRtOTm0l64rBBHOPk40tcuoAWcPRJ3D8JadmB3l9qiSGi9dYNV0P1U1iuHSFCaRPEbuKgRS0knw7jKHbGCUzDqcrHHBafgen5SxOj99FByb3S+GSJQWTm2316mAVM4kU/SAZpY2skll2yuYTtuoGGCX9EauZAqtkn/UfWECwbOVpYtVMjFHMnyl34h5WNS9TvuTDtuoGIF/g1IyfUc1tvv0nLUHNPmmrVgcCcKQGYMiDcDTLgkW2qgwuMFlNUiQouS20nOrntdxvsjxyp61eHaxs3o28/s7puXSDNLoRRf4WYw638nH61GExUrqKwN7dwsAWkh4mYEbtrZXD5Z+Qwj3nLLCn+1XuyP0I8IYYnv5YDBXmUPQXnJ7RR6XWY9+LkZlLtD+/yd62NoBBbXrXWQu0PF9VV3eLLa5yecfLhXVHjn1HecYfs8VrgyzPlnMKtmwnzwM5fXmNJvO0zl0XwzMX9tDRTbWGsY7IKwKKVoMcdwrB/JK3/cSPjJYrd7HLl9ildS5aKOwIHywsuttmrzba3cyomXl36+xFdHqMC+Zfqqsz1hP5CtDeRI0ULp4VQ8U/BD3/DeE4RgmpOLSbOlJdtpHTSvjQeUt57QOL8ie3EdleJhqgvPEUq+XOgEmfol7X4OcnRs0yRF8Gp6SfwwmuuyMzJ52+RKRJGu5vEoffbcYMpxhJlnQ0scVGtcWfcpFv6Ha4vIm3Kc/YWw5xuLdJjEUdUkwSQ6Ve0hdo0B5iRxrmlBAqXCDf9XTf503CcIDVMgqC8lrn0lMeY+EBX+/i7YZh3VzeABgpaz1o/JDeubQVBFAZJdveyB+NNjDRGaJvUdKyp23WKhvTqtnsNY7jfS/2OIShl3H613GiwSYplnZ64yZOOE55EzGkYoDyYHjHYk5PfNLpHStizDmlkRK5tYMbpB380L2cnm+G82V0eKEcgIDTzEYpUrqCIL+iUAW8Rd2ULyEjoLSXf8/dQPf569k+mcwY0j6mv6WR79/TKAzvpHwT29GADUKw8CYycYkcFnOfYaRWFnuns3sD+R2CJfNg0i9gDOnkZRTwK1bLnsMLexrjOGTzWC+xau4ibC6j6Qi7/sL8BQjS4fKPP2K7/GfQRv4OLjhVzQdzr8CZBseHUbSjeNzioOUI/gvv4C9ncGqumQtPPyMFS5U/1f8dqqr+Bl7RUaDZ9ES5AAAAAElFTkSuQmCC"
-                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
-
-            def __init__(self):
-                self.factor = None
-
-            def find_true(self, str_list):
-                fix_data = [len(_) for _ in str_list]
-                index_of_need = (fix_data.index(min(fix_data)))
-                return str_list[index_of_need]
-
-            def eliminate_illegal_data(self, list_data):
-                result_list = []
-                for choice in list_data[1]:
-                    result = [_ for _ in list_data[0] if choice in _]
-                    length = len(result)
-                    if length == 1:
-                        re_result_str = result[0]
-                        result_list.append(re_result_str)
-                    elif length > 1:
-                        re_result_str = self.find_true(result)
-                        result_list.append(re_result_str)
-                    else:
-                        pass
-                return result_list
-
-            def _get_rhino_objects(self, uid):
-                object = Rhino.DocObjects.ObjRef(uid[0]).Brep()
-                return object
-
-            def RunScript(self, Father_Keys, Unique_ID, Switch):
-                try:
-                    Data, Info = (gd[object]() for _ in range(2))
-                    self.factor = Switch
-                    if self.factor is True:
-                        if Unique_ID:
-                            duplicate_rm = list(set(Unique_ID))
-                            sc.doc = rd.ActiveDoc
-                            all_layers = rs.LayerNames()
-                            children_layers = [_ for _ in all_layers if "::" in _]
-                            father_layers = [_ for _ in all_layers if "::" not in _]
-                            Father_Keys = Father_Keys if len(Father_Keys) > 0 else [_ for _ in range(len(father_layers))]
-                            value_data = []
-                            for f in father_layers:
-                                re = [_ for _ in children_layers if f in _]
-                                value_data.append(re)
-                            result_children_layers = [[value_data[_], duplicate_rm] for _ in Father_Keys]
-                            result = [_ for _ in ghpara.run(self.eliminate_illegal_data, result_children_layers)]
-                            name_of_list = [name for names in result for name in names]
-                            Info = name_of_list
-                            Data_list = []
-                            for _ in name_of_list:
-                                if _ in all_layers:
-                                    Data_list.append(rs.ObjectsByLayer(_, True))
-                            sc.doc = Rhino.RhinoDoc
-                            Data = [_ for _ in ghpara.run(self._get_rhino_objects, Data_list)]
-                    else:
-                        Message.message2(self, 'The program does not run by default')
-                    return Data, Info
-                finally:
-                    self.Message = 'Pick up layer objects'
+        # class PickItems(component):
+        #     def __new__(cls):
+        #         instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+        #                                                            "RPP_PickItems", "C12", """Pick up the objects of the Rhino sublayer""", "Scavenger", "K-Object")
+        #         return instance
+        #
+        #     def get_ComponentGuid(self):
+        #         return System.Guid("1947d440-6dc8-4eb7-8338-c936a5f54a4b")
+        #
+        #     @property
+        #     def Exposure(self):
+        #         return Grasshopper.Kernel.GH_Exposure.secondary
+        #
+        #     def SetUpParam(self, p, name, nickname, description):
+        #         p.Name = name
+        #         p.NickName = nickname
+        #         p.Description = description
+        #         p.Optional = True
+        #
+        #     def RegisterInputParams(self, pManager):
+        #         p = Grasshopper.Kernel.Parameters.Param_Integer()
+        #         self.SetUpParam(p, "Father_Keys", "K", "Subscript of the Father layer")
+        #         p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+        #         self.Params.Input.Add(p)
+        #
+        #         p = Grasshopper.Kernel.Parameters.Param_String()
+        #         self.SetUpParam(p, "Unique_ID", "U", "Unique_ID")
+        #         p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+        #         self.Params.Input.Add(p)
+        #
+        #         p = Grasshopper.Kernel.Parameters.Param_Boolean()
+        #         self.SetUpParam(p, "Switch", "S", "Plug-in run button,input 'True' to run,default is no execution")
+        #         p.PersistentData.Append(Grasshopper.Kernel.Types.GH_Boolean(False))
+        #         p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+        #         self.Params.Input.Add(p)
+        #
+        #     def RegisterOutputParams(self, pManager):
+        #         p = Grasshopper.Kernel.Parameters.Param_Geometry()
+        #         self.SetUpParam(p, "Data", "D", "Picked up objects")
+        #         self.Params.Output.Add(p)
+        #
+        #         p = Grasshopper.Kernel.Parameters.Param_String()
+        #         self.SetUpParam(p, "Info", "I", "Pick up the layer information")
+        #         self.Params.Output.Add(p)
+        #
+        #     def SolveInstance(self, DA):
+        #         p0 = self.marshal.GetInput(DA, 0)
+        #         p1 = self.marshal.GetInput(DA, 1)
+        #         p2 = self.marshal.GetInput(DA, 2)
+        #         result = self.RunScript(p0, p1, p2)
+        #
+        #         if result is not None:
+        #             if not hasattr(result, '__getitem__'):
+        #                 self.marshal.SetOutput(result, DA, 0, True)
+        #             else:
+        #                 self.marshal.SetOutput(result[0], DA, 0, True)
+        #                 self.marshal.SetOutput(result[1], DA, 1, True)
+        #
+        #     def get_Internal_Icon_24x24(self):
+        #         o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAARvSURBVEhL5VVraBxVFI5a6osWhFalIiiKomhEml+CBMGCFFssGmyTNpvsbOY9+5qdxz6SSVtDEtLUZzEbkyabZDfZzc7uZje7adKmaZXGVGmhvqCg6B9Rq9hYsLS+xu8uQyE/JBv0nx9c7txzzj3n3nO+c6fq/wPaH98kRIov8qG8WwjlXUKoWGOr/h1qa411vJ7vEkLTfwYOvm952uYsX/sJK3DwtCWGpj9rCUw8b5uuHZJUulUMTi/oXUsWr+dGWf/k007nwIZmKbmZVbP1CPC12nHGcslJyt6yNtDK5JDW+aHFaOYussZN9iE1A7hNB+NL3kdkCFKUcRtOTm0l64rBBHOPk40tcuoAWcPRJ3D8JadmB3l9qiSGi9dYNV0P1U1iuHSFCaRPEbuKgRS0knw7jKHbGCUzDqcrHHBafgen5SxOj99FByb3S+GSJQWTm2316mAVM4kU/SAZpY2skll2yuYTtuoGGCX9EauZAqtkn/UfWECwbOVpYtVMjFHMnyl34h5WNS9TvuTDtuoGIF/g1IyfUc1tvv0nLUHNPmmrVgcCcKQGYMiDcDTLgkW2qgwuMFlNUiQouS20nOrntdxvsjxyp61eHaxs3o28/s7puXSDNLoRRf4WYw638nH61GExUrqKwN7dwsAWkh4mYEbtrZXD5Z+Qwj3nLLCn+1XuyP0I8IYYnv5YDBXmUPQXnJ7RR6XWY9+LkZlLtD+/yd62NoBBbXrXWQu0PF9VV3eLLa5yecfLhXVHjn1HecYfs8VrgyzPlnMKtmwnzwM5fXmNJvO0zl0XwzMX9tDRTbWGsY7IKwKKVoMcdwrB/JK3/cSPjJYrd7HLl9ildS5aKOwIHywsuttmrzba3cyomXl36+xFdHqMC+Zfqqsz1hP5CtDeRI0ULp4VQ8U/BD3/DeE4RgmpOLSbOlJdtpHTSvjQeUt57QOL8ie3EdleJhqgvPEUq+XOgEmfol7X4OcnRs0yRF8Gp6SfwwmuuyMzJ52+RKRJGu5vEoffbcYMpxhJlnQ0scVGtcWfcpFv6Ha4vIm3Kc/YWw5xuLdJjEUdUkwSQ6Ve0hdo0B5iRxrmlBAqXCDf9XTf503CcIDVMgqC8lrn0lMeY+EBX+/i7YZh3VzeABgpaz1o/JDeubQVBFAZJdveyB+NNjDRGaJvUdKyp23WKhvTqtnsNY7jfS/2OIShl3H613GiwSYplnZ64yZOOE55EzGkYoDyYHjHYk5PfNLpHStizDmlkRK5tYMbpB380L2cnm+G82V0eKEcgIDTzEYpUrqCIL+iUAW8Rd2ULyEjoLSXf8/dQPf569k+mcwY0j6mv6WR79/TKAzvpHwT29GADUKw8CYycYkcFnOfYaRWFnuns3sD+R2CJfNg0i9gDOnkZRTwK1bLnsMLexrjOGTzWC+xau4ibC6j6Qi7/sL8BQjS4fKPP2K7/GfQRv4OLjhVzQdzr8CZBseHUbSjeNzioOUI/gvv4C9ncGqumQtPPyMFS5U/1f8dqqr+Bl7RUaDZ9ES5AAAAAElFTkSuQmCC"
+        #         return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+        #
+        #     def __init__(self):
+        #         self.factor = None
+        #
+        #     def find_true(self, str_list):
+        #         fix_data = [len(_) for _ in str_list]
+        #         index_of_need = (fix_data.index(min(fix_data)))
+        #         return str_list[index_of_need]
+        #
+        #     def eliminate_illegal_data(self, list_data):
+        #         result_list = []
+        #         for choice in list_data[1]:
+        #             result = [_ for _ in list_data[0] if choice in _]
+        #             length = len(result)
+        #             if length == 1:
+        #                 re_result_str = result[0]
+        #                 result_list.append(re_result_str)
+        #             elif length > 1:
+        #                 re_result_str = self.find_true(result)
+        #                 result_list.append(re_result_str)
+        #             else:
+        #                 pass
+        #         return result_list
+        #
+        #     def _get_rhino_objects(self, uid):
+        #         object = Rhino.DocObjects.ObjRef(uid[0]).Brep()
+        #         return object
+        #
+        #     def RunScript(self, Father_Keys, Unique_ID, Switch):
+        #         try:
+        #             Data, Info = (gd[object]() for _ in range(2))
+        #             self.factor = Switch
+        #             if self.factor is True:
+        #                 if Unique_ID:
+        #                     duplicate_rm = list(set(Unique_ID))
+        #                     sc.doc = rd.ActiveDoc
+        #                     all_layers = rs.LayerNames()
+        #                     children_layers = [_ for _ in all_layers if "::" in _]
+        #                     father_layers = [_ for _ in all_layers if "::" not in _]
+        #                     Father_Keys = Father_Keys if len(Father_Keys) > 0 else [_ for _ in range(len(father_layers))]
+        #                     value_data = []
+        #                     for f in father_layers:
+        #                         re = [_ for _ in children_layers if f in _]
+        #                         value_data.append(re)
+        #                     result_children_layers = [[value_data[_], duplicate_rm] for _ in Father_Keys]
+        #                     result = [_ for _ in ghpara.run(self.eliminate_illegal_data, result_children_layers)]
+        #                     name_of_list = [name for names in result for name in names]
+        #                     Info = name_of_list
+        #                     Data_list = []
+        #                     for _ in name_of_list:
+        #                         if _ in all_layers:
+        #                             Data_list.append(rs.ObjectsByLayer(_, True))
+        #                     sc.doc = Rhino.RhinoDoc
+        #                     Data = [_ for _ in ghpara.run(self._get_rhino_objects, Data_list)]
+        #             else:
+        #                 Message.message2(self, 'The program does not run by default')
+        #             return Data, Info
+        #         finally:
+        #             self.Message = 'Pick up layer objects'
 
 
         # 提取指定图层的物体
@@ -935,11 +935,13 @@ try:
 
                 p = Grasshopper.Kernel.Parameters.Param_Boolean()
                 self.SetUpParam(p, "LayerIgnore", "L", "Ignore hidden or locked layers")
+                p.SetPersistentData(gk.Types.GH_Boolean(False))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Boolean()
                 self.SetUpParam(p, "Select", "S", "Perform operation")
+                p.SetPersistentData(gk.Types.GH_Boolean(False))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
@@ -2137,6 +2139,30 @@ try:
                     pass
 
             def _new_bake(self, data):
+                def sub_bake(o, a):
+                    # 第一次引用Bake主方法，获取Bake结果
+                    if 'BakeGeometry' not in dir(o):
+                        return
+                    try:
+                        first_bool = o.BakeGeometry(self._doc, a, System.Guid.NewGuid())[0]
+                    except:
+                        first_bool = None
+                    # 若失败
+                    if not first_bool:
+                        o = o.Value
+                        obj_member_list = dir(o)
+                        if isinstance(o, rg.InstanceReferenceGeometry):  # Bake图块
+                            block = sc.doc.InstanceDefinitions.FindId(o.ParentIdefId)
+                            sc.doc.Objects.AddInstanceObject(block.Index, o.Xform, a)  # 将图块bake
+
+                        else:
+                            if 'ToNurbsCurve' in obj_member_list:  # 矩形
+                                o = o.ToNurbsCurve()
+                            elif 'ToBrep' in obj_member_list:  # Box
+                                o = o.ToBrep()
+
+                            sc.doc.Objects.Add(o, a)
+
                 # 分解数据流
                 obj, attr = data
                 if 'HAE' in str(attr):
@@ -2147,47 +2173,26 @@ try:
                     layer_index = attr.LayerIndex
                     Layer_name = str(sc.doc.Layers.FindIndex(layer_index))
 
-                # Bake至的图层；若不存在创建
-                self.create_layer(Layer_name)  # 创建图层
-                layer_index = sc.doc.Layers.FindByFullPath(Layer_name, True)
-                new_attr.LayerIndex = layer_index
+                if self.factor:
+                    # Bake至的图层；若不存在创建
+                    self.create_layer(Layer_name)  # 创建图层
+                    layer_index = sc.doc.Layers.FindByFullPath(Layer_name, True)
+                    new_attr.LayerIndex = layer_index
 
-                def sub_bake(o, a):
-                    # 第一次引用Bake主方法，获取Bake结果
-                    if 'BakeGeometry' not in dir(o):
-                        return
-                    first_bool, new_guid = o.BakeGeometry(self._doc, a, System.Guid.NewGuid())
-                    # 若失败
-                    if not first_bool:
-                        o = o.Value
-                        obj_member_list = dir(o)
-                        if isinstance(o, rg.InstanceReferenceGeometry):  # Bake图块
-                            block = sc.doc.InstanceDefinitions.FindId(o.ParentIdefId)
-                            new_guid = sc.doc.Objects.AddInstanceObject(block.Index, o.Xform, a)  # 将图块bake
-
-                        else:
-                            if 'ToNurbsCurve' in obj_member_list:  # 矩形
-                                o = o.ToNurbsCurve()
-                            elif 'ToBrep' in obj_member_list:  # Box
-                                o = o.ToBrep()
-
-                            new_guid = sc.doc.Objects.Add(o, a)
-                    return new_guid
-
-                # 判断是否为HAE内置属性物体
-                if 'HAE' in str(obj):
-                    new_obj_list = [_ for _ in obj.Value.list_data]
-                    # 包内所有空间类型为包的Attr
-                    guid_list = []
-                    for _ in new_obj_list:
-                        gid = sub_bake(_, new_attr)
-                        guid_list.append(gid)
-                    # 将Bake出来的物体加入到群组
-                    guid_list = filter(None, guid_list)
-                    if guid_list:
-                        self._doc.Groups.AddToGroup(self._doc.Groups.Add(), guid_list)
-                else:
-                    sub_bake(obj, new_attr)
+                    # 判断是否为HAE内置属性物体
+                    if 'HAE' in str(obj):
+                        new_obj_list = [_ for _ in obj.Value.list_data]
+                        # 包内所有空间类型为包的Attr
+                        guid_list = []
+                        for _ in new_obj_list:
+                            gid = sub_bake(_, new_attr)
+                            guid_list.append(gid)
+                        # 将Bake出来的物体加入到群组
+                        guid_list = filter(None, guid_list)
+                        if guid_list:
+                            self._doc.Groups.AddToGroup(self._doc.Groups.Add(), guid_list)
+                    else:
+                        sub_bake(obj, new_attr)
 
             def _do_main(self, tuple_data):
                 # 分解集合数据
@@ -2199,9 +2204,7 @@ try:
                 # 获得最新列表
                 map_list = self.match_tree(geo_list, attr_list)[0]
                 sub_zip_list = zip(*map_list)
-                if self.factor:
-                    map(self._new_bake, sub_zip_list)
-                Rhino.RhinoApp.Wait()
+                map(self._new_bake, sub_zip_list)
 
 
         # 分解HAE属性
@@ -2756,12 +2759,12 @@ try:
             def RegisterInputParams(self, pManager):
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
                 self.SetUpParam(p, "Geometry", "G", "Object to be replaced")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
                 self.SetUpParam(p, "Attributes", "A", "Attributes of the object to be replaced")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Boolean()
@@ -2774,10 +2777,39 @@ try:
                 pass
 
             def SolveInstance(self, DA):
-                p0 = self.marshal.GetInput(DA, 0)
-                p1 = self.marshal.GetInput(DA, 1)
-                p2 = self.marshal.GetInput(DA, 2)
-                result = self.RunScript(p0, p1, p2)
+                # 插件名称
+                self.Message = 'Replace Attribute'
+                # 初始化输出端数据内容
+                if self.RunCount == 1:
+                    p0 = self.Params.Input[0].VolatileData
+                    p1 = self.Params.Input[1].VolatileData
+                    p2 = self.Params.Input[2].VolatileData
+                    # 确定不变全局参数
+                    self.switch = p2[0][0].Value
+                    if self.switch:
+                        j_bool_f1, geo_trunk, geo_path = self.parameter_judgment(p0)
+
+                        j_bool_f2, attr_trunk, attr_path = self.parameter_judgment(p1)
+                        re_mes = Message.RE_MES([j_bool_f1, j_bool_f2], ['G end', 'A end'])
+                        if len(re_mes) > 0:
+                            for mes_i in re_mes:
+                                Message.message2(self, mes_i)
+                        else:
+                            sc.doc = Rhino.RhinoDoc.ActiveDoc
+
+                            # 数据匹配
+                            iter_group, max_i = self.match_tree(geo_trunk, attr_trunk)
+                            # 添加原始树路径
+                            geo_trunk, attr_trunk = iter_group
+                            zip_list = zip(geo_trunk, attr_trunk, [geo_path, attr_path][max_i])
+                            # map函数运行
+                            map(self._do_main, zip_list)
+                            ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                            sc.doc = ghdoc
+                # p0 = self.marshal.GetInput(DA, 0)
+                # p1 = self.marshal.GetInput(DA, 1)
+                # p2 = self.marshal.GetInput(DA, 2)
+                # result = self.RunScript(p0, p1, p2)
 
             def get_Internal_Icon_24x24(self):
                 o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAARDSURBVEhLvZRtTJtVFMe7zGTRxRk/+JIl6r7oB4zEiEMSoJX2afu0pVh0dshL1RmFFtlgDMrsRtlo6QqDrlBWWhg6yxiUYViGjIAhCJuYTVfWGRVGzKYJjTiZS/aigj2e+3ApBVqMifGf/PP0ued37zn33PuU979qcrJvw3zwq6y/5vyHgvPje2Zmxp6moajydE7GtHYF9E0dNyx2z4za64X1NLRcwbufPxG8N+wD8APAFc43b56/++1Ev4Yiq+RqvaBzt0392eydBUf7LNg8v0JFw/djxqNTj1JkQbjaujvXuoZg7hzcmj4Ls9P98PP1TyHwYz+M+0/DyJc9MRQNyeUa3NrYfBFqnJeh0u6DCpsP9h2+CJVHp6Do4HAPxRYU8LmfDXzTBj9cboer/g64eqUDvvOdgK/HjsP4pS74pLf5EEVDslR3O6vrR2GveQBKTUNQUjkExQcGoLC8D/LKeoI6w6mnKMrjXeitZvwjTjj/WSN8MeTkPDLYCIO9R2CgrxHcLVUeioZUurfpjN7YDe/rOyFf3wU6dN6ek/Bu0cfw9s6PIFvneImiPN7ZD41bTrXuC/a0m+B0ZxXn7nYztB0rB09rBdRYS/QUDSk332LRFrrgTa0D3tI1cc7Jc0DmO3XwatbBe9nZxuXn4LLtbjnZYgBnXSE01u4Ce3UBOGoLwVKRd8Ns3vkYxULKzTVuydCU31bnmCA9oxxUGfvhle0GUOdUQvr20sMUW5Ldbt/QYC04XmfWBm2WfKgxacF6QOs3Gd97kSKrlKkx8LdlGiZU6jJQbisF5WvFc+nq3U7v697IV5XIXlMcU2/dpao1FwiMRuN9dDiqvF7ves0OI1/9RpFmR751Mx3+T7WOlYrcLCvxi8WC5+nYcsnlcn5qaqqOZdlVVigUWoFA8DhFlyktLW2znGXPIQMymQykLPuHhGWzaHhJYrG4Q6VSAQHDjUlBqVRCYmKimKIhKSSSOCzgGhYHOJ+zVCoF8o7P/RRbkETCtISDi5ZIJNykpKQkAUU54cIZ6Duk6khzSHFSmawNd/ggNwED7mgJiPl8fjIHolJSUoQ49hMZX8mHG+O/i0SiBm4SDjijJ5BCcnIynwNRcXFxDyQkJNwvFAqHo+2AYRgy54X4+PhN3CQM1K/VIjyDlzkwTFhdf7QE5InxZyhKEohspG+R4DUSDPxDgucoyh2y49/uAFs0GDUBGq/20jeBAVfkBGLA20JuUSJFQ8LD7pOtURTuYCtFue2WkPu+EiYmCRj8TvAZg96EfkTBsnKMTZOFIvKMmOz6Sbo8j4cVPswIhZfIh0WAlZPCWvEL+hZ5X7k4qZx0gcSwPWV06SXFxsZuxL5WIRwgEDl08iQJyWLEi78X20DeyaKE5XovEo3iNyOjS0YW3vOHMJEK23YEPYq+jr6Ndzu4WC3DiObx/Tf0BPoM8h9g1RH+1nm8vwEDyuWHn+DinwAAAABJRU5ErkJggg=="
@@ -2821,32 +2853,69 @@ try:
             def parameter_judgment(self, tree_par_data):
                 # 获取输入端参数所有数据
                 geo_list, geo_path = self.Branch_Route(tree_par_data)
-                if geo_list:
-                    j_list = any(ghp.run(lambda x: len(list(filter(None, x))), geo_list))  # 去空操作, 判断是否为空
-                else:
-                    j_list = False
+                j_list = filter(None, list(chain(*geo_list)))  # 获取所有数据
                 return j_list, geo_list, geo_path
 
-            def Run_HAE_Attri(self, haezip_data):
+            def _trun_object(self, ref_obj):
+                """引用物体转换为GH内置物体"""
+                if 'ReferenceID' in dir(ref_obj):
+                    if ref_obj.IsReferencedGeometry:
+                        test_pt = ref_obj.Value
+                    else:
+                        test_pt = ref_obj.Value
+                else:
+                    test_pt = ref_obj
+                return test_pt
+
+            def sub_match(self, tuple_data):
+                # 子树匹配
+                target_tree, other_tree = tuple_data
+                t_len, o_len = len(target_tree), len(other_tree)
+                if o_len == 0:
+                    new_tree = [other_tree] * len(target_tree)
+                else:
+                    new_tree = other_tree + [other_tree[-1]] * (t_len - o_len)
+                return new_tree
+
+            def match_tree(self, *args):
+                # 参数化匹配数据
+                len_list = map(lambda x: len(x), args)  # 得到最长的树
+                max_index = len_list.index(max(len_list))  # 得到最长的树的下标
+                self.max_index = max_index
+                max_trunk = args[max_index]
+                other_list = [args[_] for _ in range(len(args)) if _ != max_index]  # 剩下的树
+                matchzip = zip([max_trunk] * len(other_list), other_list)
+
+                # 插入最大列表，获得最新列表
+                reslut_list = map(self.sub_match, matchzip)
+                reslut_list.insert(max_index, max_trunk)
+                return reslut_list, max_index
+
+            def attr_replace(self, haezip_data):
                 # 分解主数据包
                 geo, attr = haezip_data
                 # 获取传入attr中的数据
-                if '_HAEAttributes__hae_param' in dir(attr):
-                    attr_data = attr._HAEAttributes__hae_param
-                    layer_name = attr.Layer_name
                 # 若属性数据为引用数据
-                elif 'Ref' in str(attr):
+                if 'Ref' in str(attr):
                     ref_rh_id = attr.ReferenceID
                     attr_data = sc.doc.Objects.Find(ref_rh_id).Attributes
-                    layer_index = attr_data.LayerIndex
+                    if not attr_data:
+                        layer_index = -1
+                    else:
+                        layer_index = attr_data.LayerIndex
                     layer_name = str(sc.doc.Layers.FindIndex(layer_index))
                 # 若属性数据为犀牛id
                 elif type(attr) is gk.Types.GH_Guid:
                     attr_data = sc.doc.Objects.Find(System.Guid(attr.ToString())).Attributes
                     layer_index = attr_data.LayerIndex
                     layer_name = str(sc.doc.Layers.FindIndex(layer_index))
+                elif 'HAE' in str(attr):
+                    new_attr = attr.Value
+                    attr_data = new_attr._HAEAttributes__hae_param
+                    layer_name = new_attr.Layer_name
                 else:
                     attr_data, layer_name = None, None
+
                 # 若存在属性
                 if attr_data:
                     # 获取源模型属性
@@ -2863,63 +2932,57 @@ try:
 
                     new_key_list = rh_key_list + replace_key_list
                     new_value_list = rh_value_list + replace_value_list
+                    # 新增图层
+                    BakeGeometry().create_layer(layer_name)
+                    # 新图层的index
+                    layer_index = sc.doc.Layers.FindByFullPath(layer_name, True)
+                    attr_data.LayerIndex = layer_index
+                    # 源模型属性重新赋值
+                    origin_rh_attr.Attributes = attr_data
+                    for k_index, k_item in enumerate(new_key_list):
+                        origin_rh_attr.Attributes.SetUserString(k_item, new_value_list[k_index])
+                    # 重新提交至犀牛空间
+                    origin_rh_attr.CommitChanges()
 
-                    if self.switch:
-                        # 新建图层或修改所在图层
-                        BakeGeometry().create_layer(layer_name)
-                        # 新图层的index
-                        layer_index = sc.doc.Layers.FindByFullPath(layer_name, True)
-                        attr_data.LayerIndex = layer_index
-                        # 源模型属性重新赋值
-                        origin_rh_attr.Attributes = attr_data
-                        for k_index, k_item in enumerate(new_key_list):
-                            origin_rh_attr.Attributes.SetUserString(k_item, new_value_list[k_index])
-                        # 重新提交至犀牛空间
-                        origin_rh_attr.CommitChanges()
+            def _do_main(self, tuple_data):
+                # 分解集合数据
+                geo_list, attr_list, origin_path = tuple_data
+                # 获得最新列表
+                map_list = self.match_tree(geo_list, attr_list)[0]
+                sub_zip_list = zip(*map_list)
+                map(self.attr_replace, sub_zip_list)
 
-            def temp(self, tuple_data):
-                geo_list, attr_list = tuple_data
-                # 子列表匹配
-                gl_len, al_len = len(geo_list), len(attr_list)
-                if gl_len > al_len:
-                    new_attr_list = attr_list + [attr_list[-1]] * (gl_len - al_len)
-                else:
-                    new_attr_list = attr_list
-                # 子列表打包数据
-                sub_zip_list = zip(geo_list, new_attr_list)
-                map(self.Run_HAE_Attri, sub_zip_list)
-
-            def RunScript(self, Geometry, Attributes, Replace):
-                try:
-                    sc.doc = Rhino.RhinoDoc.ActiveDoc
-                    j_bool_f1, geo_trunk, geo_path = self.parameter_judgment(self.Params.Input[0].VolatileData)
-                    j_bool_f2 = self.parameter_judgment(self.Params.Input[1].VolatileData)[0]
-                    re_mes = Message.RE_MES([j_bool_f1, j_bool_f2], ['G end', 'A end'])
-                    self.switch = Replace
-                    if len(re_mes) > 0:
-                        for mes_i in re_mes:
-                            Message.message2(self, mes_i)
-                    # 匹配数据
-                    else:
-                        attr_trunk, attr_path = self.Branch_Route(Attributes)
-                        g_len, a_len = len(geo_trunk), len(attr_trunk)
-                        if g_len > a_len:
-                            new_geo_trunk = geo_trunk
-                            new_attr_trunk = attr_trunk + [attr_trunk[-1]] * (g_len - a_len)
-                        elif g_len < a_len:
-                            new_geo_trunk = geo_trunk + [geo_trunk[-1]] * (a_len - g_len)
-                            new_attr_trunk = attr_trunk
-                        else:
-                            new_geo_trunk = geo_trunk
-                            new_attr_trunk = attr_trunk
-                        # 生成打包数据
-                        zip_list = zip(new_geo_trunk, new_attr_trunk)
-                        ghp.run(self.temp, zip_list)
-                    sc.doc.Views.Redraw()
-                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
-                    sc.doc = ghdoc
-                finally:
-                    self.Message = 'Replace Attribute'
+            # def RunScript(self, Geometry, Attributes, Replace):
+            #     try:
+            #         sc.doc = Rhino.RhinoDoc.ActiveDoc
+            #         j_bool_f1, geo_trunk, geo_path = self.parameter_judgment(self.Params.Input[0].VolatileData)
+            #         j_bool_f2 = self.parameter_judgment(self.Params.Input[1].VolatileData)[0]
+            #         re_mes = Message.RE_MES([j_bool_f1, j_bool_f2], ['G end', 'A end'])
+            #         self.switch = Replace
+            #         if len(re_mes) > 0:
+            #             for mes_i in re_mes:
+            #                 Message.message2(self, mes_i)
+            #         # 匹配数据
+            #         else:
+            #             attr_trunk, attr_path = self.Branch_Route(Attributes)
+            #             g_len, a_len = len(geo_trunk), len(attr_trunk)
+            #             if g_len > a_len:
+            #                 new_geo_trunk = geo_trunk
+            #                 new_attr_trunk = attr_trunk + [attr_trunk[-1]] * (g_len - a_len)
+            #             elif g_len < a_len:
+            #                 new_geo_trunk = geo_trunk + [geo_trunk[-1]] * (a_len - g_len)
+            #                 new_attr_trunk = attr_trunk
+            #             else:
+            #                 new_geo_trunk = geo_trunk
+            #                 new_attr_trunk = attr_trunk
+            #             # 生成打包数据
+            #             zip_list = zip(new_geo_trunk, new_attr_trunk)
+            #             ghp.run(self.temp, zip_list)
+            #         sc.doc.Views.Redraw()
+            #         ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+            #         sc.doc = ghdoc
+            #     finally:
+            #         self.Message = 'Replace Attribute'
 
 
         # 根据颜色筛选物体
