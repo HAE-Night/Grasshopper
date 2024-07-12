@@ -115,102 +115,101 @@ try:
                     self.Message = 'Multiple subscript values'
 
 
-        # 列表多下标取值
-        class Subscript_Value(component):
-            def __new__(cls):
-                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_Subscript_Value", "D5",
-                                                                   """multiple subscript values, can obtain six groups of data at maximum""", "Scavenger", "G-Data")
-                return instance
-
-            def get_ComponentGuid(self):
-                return System.Guid("8eb91efc-115a-4abe-a586-048a30d39705")
-
-            @property
-            def Exposure(self):
-                return Grasshopper.Kernel.GH_Exposure.primary
-
-            def SetUpParam(self, p, name, nickname, description):
-                p.Name = name
-                p.NickName = nickname
-                p.Description = description
-                p.Optional = True
-
-            def RegisterInputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "List", "L", "The original data list")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
-                self.Params.Input.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Index", "I", "The subscript to be valued")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
-                self.Params.Input.Add(p)
-
-            def RegisterOutputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "D1", "D1", "First set of data")
-                self.Params.Output.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "D2", "D2", "Second set of data")
-                self.Params.Output.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "D3", "D3", "Third set of data")
-                self.Params.Output.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "D4", "D4", "Fourth set of data")
-                self.Params.Output.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "D5", "D5", "Fifth set of data")
-                self.Params.Output.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "D6", "D6", "Sixth set of data")
-                self.Params.Output.Add(p)
-
-            def SolveInstance(self, DA):
-                p0 = self.marshal.GetInput(DA, 0)
-                p1 = self.marshal.GetInput(DA, 1)
-                result = self.RunScript(p0, p1)
-
-                if result is not None:
-                    if not hasattr(result, '__getitem__'):
-                        self.marshal.SetOutput(result, DA, 0, True)
-                    else:
-                        self.marshal.SetOutput(result[0], DA, 0, True)
-                        self.marshal.SetOutput(result[1], DA, 1, True)
-                        self.marshal.SetOutput(result[2], DA, 2, True)
-                        self.marshal.SetOutput(result[3], DA, 3, True)
-                        self.marshal.SetOutput(result[4], DA, 4, True)
-                        self.marshal.SetOutput(result[5], DA, 5, True)
-
-            def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAJ+SURBVEhLYxgFVAE+9TO5/Ern8Fqh4fr6eiaoEspASZL0rsY0npdViVxgXJPE87I8UfhFeLy/wv///xn//fvHDVVKHqhI5L/YncHwvyUZgttSGP7XJ7H/X7m5V1pKSnq2s7Pz84cPH/pDleMGQJfwATEn0FUSQCwIFQZaIHi6LRVoaAIENyYy/K9O4Phz4tZaGT4+wUPq6ur/b968WQJVjh0ADWTz8fG54OLi8kRLS+u/m5vbq5MnT7qD5HBZsP/iYhkBAeFdIPW3b9/OBRuECwAt4JCRkXmnr6//e+rUqev4+Pj+tzY3rwPJlScKUMcCeXn5D7GxsZeAwSQpJyf3v6KiYgNIjpAFOjo6/3/+/JkMNggXAIW9goLC/9DQ0EdAtjbIgqqqql0gOXwW8PAK7JaSkvrf09Mzw9HR0WvSpElmYAPRAdAHLF1dXVM3b95cC2QzTpw4ceHFixcTQHLN2cLHJ+Qy/O9Mh2Bwikrn+ANylKOT6wagz/8rKSn919TU/N/Z2fkSFJ9gQ9EBMzOzK5BKBeJ8VlZWkJfTgbjITpfhka8xw39PAwj2MmT472bA8I+DjakemDA2JicnP4+JiXmekJDwPD09fSfIgUB9WAHI0E50rOiY8FwroOK/uk8RGGv4lvxX98r/zyEgNgcoXwvEoCQKw3FATBpIXPb0eMbGL/+TVjwH49TVr/8nLH30b+G/f8JQJZSB8GnnTycsefg/evZVMI6dd/N/5IyL/7w7d6lClVAGRi0gCGhuQcT087czNn7+n7T8GRinrH71P2HJo/8+PTs0oEooAyGTjtdEz7k+J2zKGTCOmHF+TsjEk3N8WzeKQ5UMW8DAAACAOLH5SHqLQQAAAABJRU5ErkJggg=="
-                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
-
-            def handling(self, sub):
-                if len(sub) < 6:
-                    before_list = sub + ([''] * (6 - len(sub)))
-                    after_list = [[_] for _ in before_list]
-                    result_list = [re.split(r"[.。!！?？；;，,\s+]", word[0]) for word in after_list]
-                    return result_list
-
-            def get_value(self, list_data, index_list):
-                return [None if index == '' else list_data[int(index)] for index in index_list]
-
-            def RunScript(self, List, Index):
-                D1, D2, D3, D4, D5, D6 = (gd[object]() for _ in range(6))
-                if List:
-                    index_array = self.handling(Index)
-                    origin_data = [self.get_value(List, _) for _ in index_array]
-                    output_tuple = tuple(origin_data)
-                    D1, D2, D3, D4, D5, D6 = output_tuple
-                return D1, D2, D3, D4, D5, D6
-
+        # # 列表多下标取值
+        # class Subscript_Value(component):
+        #     def __new__(cls):
+        #         instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+        #                                                            "RPP_Subscript_Value", "D5",
+        #                                                            """multiple subscript values, can obtain six groups of data at maximum""", "Scavenger", "G-Data")
+        #         return instance
+        #
+        #     def get_ComponentGuid(self):
+        #         return System.Guid("8eb91efc-115a-4abe-a586-048a30d39705")
+        #
+        #     @property
+        #     def Exposure(self):
+        #         return Grasshopper.Kernel.GH_Exposure.primary
+        #
+        #     def SetUpParam(self, p, name, nickname, description):
+        #         p.Name = name
+        #         p.NickName = nickname
+        #         p.Description = description
+        #         p.Optional = True
+        #
+        #     def RegisterInputParams(self, pManager):
+        #         p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+        #         self.SetUpParam(p, "List", "L", "The original data list")
+        #         p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+        #         self.Params.Input.Add(p)
+        #
+        #         p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+        #         self.SetUpParam(p, "Index", "I", "The subscript to be valued")
+        #         p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+        #         self.Params.Input.Add(p)
+        #
+        #     def RegisterOutputParams(self, pManager):
+        #         p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+        #         self.SetUpParam(p, "D1", "D1", "First set of data")
+        #         self.Params.Output.Add(p)
+        #
+        #         p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+        #         self.SetUpParam(p, "D2", "D2", "Second set of data")
+        #         self.Params.Output.Add(p)
+        #
+        #         p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+        #         self.SetUpParam(p, "D3", "D3", "Third set of data")
+        #         self.Params.Output.Add(p)
+        #
+        #         p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+        #         self.SetUpParam(p, "D4", "D4", "Fourth set of data")
+        #         self.Params.Output.Add(p)
+        #
+        #         p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+        #         self.SetUpParam(p, "D5", "D5", "Fifth set of data")
+        #         self.Params.Output.Add(p)
+        #
+        #         p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+        #         self.SetUpParam(p, "D6", "D6", "Sixth set of data")
+        #         self.Params.Output.Add(p)
+        #
+        #     def SolveInstance(self, DA):
+        #         p0 = self.marshal.GetInput(DA, 0)
+        #         p1 = self.marshal.GetInput(DA, 1)
+        #         result = self.RunScript(p0, p1)
+        #
+        #         if result is not None:
+        #             if not hasattr(result, '__getitem__'):
+        #                 self.marshal.SetOutput(result, DA, 0, True)
+        #             else:
+        #                 self.marshal.SetOutput(result[0], DA, 0, True)
+        #                 self.marshal.SetOutput(result[1], DA, 1, True)
+        #                 self.marshal.SetOutput(result[2], DA, 2, True)
+        #                 self.marshal.SetOutput(result[3], DA, 3, True)
+        #                 self.marshal.SetOutput(result[4], DA, 4, True)
+        #                 self.marshal.SetOutput(result[5], DA, 5, True)
+        #
+        #     def get_Internal_Icon_24x24(self):
+        #         o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAJ+SURBVEhLYxgFVAE+9TO5/Ern8Fqh4fr6eiaoEspASZL0rsY0npdViVxgXJPE87I8UfhFeLy/wv///xn//fvHDVVKHqhI5L/YncHwvyUZgttSGP7XJ7H/X7m5V1pKSnq2s7Pz84cPH/pDleMGQJfwATEn0FUSQCwIFQZaIHi6LRVoaAIENyYy/K9O4Phz4tZaGT4+wUPq6ur/b968WQJVjh0ADWTz8fG54OLi8kRLS+u/m5vbq5MnT7qD5HBZsP/iYhkBAeFdIPW3b9/OBRuECwAt4JCRkXmnr6//e+rUqev4+Pj+tzY3rwPJlScKUMcCeXn5D7GxsZeAwSQpJyf3v6KiYgNIjpAFOjo6/3/+/JkMNggXAIW9goLC/9DQ0EdAtjbIgqqqql0gOXwW8PAK7JaSkvrf09Mzw9HR0WvSpElmYAPRAdAHLF1dXVM3b95cC2QzTpw4ceHFixcTQHLN2cLHJ+Qy/O9Mh2Bwikrn+ANylKOT6wagz/8rKSn919TU/N/Z2fkSFJ9gQ9EBMzOzK5BKBeJ8VlZWkJfTgbjITpfhka8xw39PAwj2MmT472bA8I+DjakemDA2JicnP4+JiXmekJDwPD09fSfIgUB9WAHI0E50rOiY8FwroOK/uk8RGGv4lvxX98r/zyEgNgcoXwvEoCQKw3FATBpIXPb0eMbGL/+TVjwH49TVr/8nLH30b+G/f8JQJZSB8GnnTycsefg/evZVMI6dd/N/5IyL/7w7d6lClVAGRi0gCGhuQcT087czNn7+n7T8GRinrH71P2HJo/8+PTs0oEooAyGTjtdEz7k+J2zKGTCOmHF+TsjEk3N8WzeKQ5UMW8DAAACAOLH5SHqLQQAAAABJRU5ErkJggg=="
+        #         return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+        #
+        #     def handling(self, sub):
+        #         if len(sub) < 6:
+        #             before_list = sub + ([''] * (6 - len(sub)))
+        #             after_list = [[_] for _ in before_list]
+        #             result_list = [re.split(r"[.。!！?？；;，,\s+]", word[0]) for word in after_list]
+        #             return result_list
+        #
+        #     def get_value(self, list_data, index_list):
+        #         return [None if index == '' else list_data[int(index)] for index in index_list]
+        #
+        #     def RunScript(self, List, Index):
+        #         D1, D2, D3, D4, D5, D6 = (gd[object]() for _ in range(6))
+        #         if List:
+        #             index_array = self.handling(Index)
+        #             origin_data = [self.get_value(List, _) for _ in index_array]
+        #             output_tuple = tuple(origin_data)
+        #             D1, D2, D3, D4, D5, D6 = output_tuple
+        #         return D1, D2, D3, D4, D5, D6
 
         # 列表切割
         class List_Cut(component):
@@ -518,201 +517,199 @@ try:
                     self.Message = 'The beginning and end of the list are deleted'
 
 
-        # 树形取值
-        class PickingFruit(component):
-            def __new__(cls):
-                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_PickingFruit", "D21", """Take branches of tree data，enter the number of branches""", "Scavenger", "G-Data")
-                return instance
+        # # 树形取值
+        # class PickingFruit(component):
+        #     def __new__(cls):
+        #         instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+        #                                                            "RPP_PickingFruit", "D21", """Take branches of tree data，enter the number of branches""", "Scavenger", "G-Data")
+        #         return instance
+        #
+        #     def get_ComponentGuid(self):
+        #         return System.Guid("a3450556-ece6-4485-a9c5-bb07f47901c8")
+        #
+        #     @property
+        #     def Exposure(self):
+        #         return Grasshopper.Kernel.GH_Exposure.secondary
+        #
+        #     def SetUpParam(self, p, name, nickname, description):
+        #         p.Name = name
+        #         p.NickName = nickname
+        #         p.Description = description
+        #         p.Optional = True
+        #
+        #     def RegisterInputParams(self, pManager):
+        #         p = Grasshopper.Kernel.Parameters.Param_Integer()
+        #         self.SetUpParam(p, "Index", "I", "Data Tree branches")
+        #         p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+        #         self.Params.Input.Add(p)
+        #
+        #         p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+        #         self.SetUpParam(p, "D1", "D1", "Set of data")
+        #         p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+        #         self.Params.Input.Add(p)
+        #
+        #         p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+        #         self.SetUpParam(p, "D2", "D2", "Set of data")
+        #         p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+        #         self.Params.Input.Add(p)
+        #
+        #         p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+        #         self.SetUpParam(p, "D3", "D3", "Set of data")
+        #         p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+        #         self.Params.Input.Add(p)
+        #
+        #         p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+        #         self.SetUpParam(p, "D4", "D4", "Set of data")
+        #         p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+        #         self.Params.Input.Add(p)
+        #
+        #         p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+        #         self.SetUpParam(p, "D5", "D5", "Set of data")
+        #         p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+        #         self.Params.Input.Add(p)
+        #
+        #         p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+        #         self.SetUpParam(p, "D6", "D6", "Set of data")
+        #         p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+        #         self.Params.Input.Add(p)
+        #
+        #     def RegisterOutputParams(self, pManager):
+        #         p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+        #         self.SetUpParam(p, "R1", "R1", "Obtained data")
+        #         self.Params.Output.Add(p)
+        #
+        #         p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+        #         self.SetUpParam(p, "R2", "R2", "Obtained data")
+        #         self.Params.Output.Add(p)
+        #
+        #         p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+        #         self.SetUpParam(p, "R3", "R3", "Obtained data")
+        #         self.Params.Output.Add(p)
+        #
+        #         p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+        #         self.SetUpParam(p, "R4", "R4", "Obtained data")
+        #         self.Params.Output.Add(p)
+        #
+        #         p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+        #         self.SetUpParam(p, "R5", "R5", "Obtained data")
+        #         self.Params.Output.Add(p)
+        #
+        #         p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+        #         self.SetUpParam(p, "R6", "R6", "Obtained data")
+        #         self.Params.Output.Add(p)
+        #
+        #     def SolveInstance(self, DA):
+        #         p0 = self.marshal.GetInput(DA, 0)
+        #         p1 = self.marshal.GetInput(DA, 1)
+        #         p2 = self.marshal.GetInput(DA, 2)
+        #         p3 = self.marshal.GetInput(DA, 3)
+        #         p4 = self.marshal.GetInput(DA, 4)
+        #         p5 = self.marshal.GetInput(DA, 5)
+        #         p6 = self.marshal.GetInput(DA, 6)
+        #         result = self.RunScript(p0, p1, p2, p3, p4, p5, p6)
+        #
+        #         if result is not None:
+        #             if not hasattr(result, '__getitem__'):
+        #                 self.marshal.SetOutput(result, DA, 0, True)
+        #             else:
+        #                 self.marshal.SetOutput(result[0], DA, 0, True)
+        #                 self.marshal.SetOutput(result[1], DA, 1, True)
+        #                 self.marshal.SetOutput(result[2], DA, 2, True)
+        #                 self.marshal.SetOutput(result[3], DA, 3, True)
+        #                 self.marshal.SetOutput(result[4], DA, 4, True)
+        #                 self.marshal.SetOutput(result[5], DA, 5, True)
+        #
+        #     def get_Internal_Icon_24x24(self):
+        #         o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAOvSURBVEhLzVVfbFNVGL8JKVn/hUzGut577u1Gt3Ww0rS7be+f3rZjSxgJogtBghAycWs7xp/h4pw69MHMMBNBCSGaKYSta3FrcVDWhAUT8I0YEk0MkWjiG8YHeQINPIyP71wO+iKMzT34S25y7jnf9/vO932/cw73v4D7xos2NlxeCOe0IbGg/0imtdtiUb9KJtTNbOm/Q5hUvvDMJUE8HwNxWgepZID0dQz48UgXM1k6SE6NSjMxIOc0wLH58TjmMQBmAlJOkZnp0iDk1cPSbPwf8q80WPtlGJqPBUAqJ+jcGDNdGvis2vUkACUXswoow02w7tMg1GIWuIHLzJSTb8gWd2mRIqjOKy4kvytcNCDyXhO0Z2rh1U2rwTsWBuFKK1ReSryV7PJUePLKyZqS8SuZ0n4jBb3Ej4dDjGJhkIloJ22wNtJs9kIb9sG2nTxUzcZ/2dX+wpEdL1ff3P4agcTbjeC+YIAHMxantXtkUt3AKBaGK69t8Y4rN73jUVgzY8xv76z+MxW0zm7d4b4jogjqsC9bMaj/4wC4p7D5GIjklFuuiYCdUTwH4JUVrrmkv6psNO6NOkf711ru1p2OlL3YFzfKt/FUC8TebAAXZkt75imbvdvNvBcH3H3//saVP6yaS45GjwfAeKMeOvaK0PLBeqgpPg5gimNSHWEuC0MoKAE8zWEO1TJUyRn7/BV/+D4JdJBp/WFyoB70wQZTaZT87wyy2uvM/ekQ8lobNu06koO7FIeqcuKWd0w+uC9gfThYze12XGnt479tgxqz7o/JpUtxEHLqbSlnVDKafwfJRt+XUKIiOvNYZxlLsCXtgY5uCbriq+Z7/dafqR2e7o9IUX9gXiNoS+8tPq89W6pCXlGkGTSe0kxlqO/4IHqkCXwnQ9DeWwsp1QmHI3ZIBSt2UXsypdaTGaNTKOobubRsMUmeBTKpfEivAzytUHsmAptw12toGfAfywSB0Q2/H/BX/NUdsn/PXBaHJwFoTXnMIo5Kaeurg6YTQRAvJ8H5TevRg17LZ71hO6RlRxVze34gsXmT0hLRLLDZ0PC5DLQn+C7c5356id/vW9k/oDpoAIO5LQ58VhmmTaPHX6Kyow0s6t+Rs5EEXe9psR0f1J2QarEt/W1AheikoI3gJXZUKMRa2bSJnpD9+oDmgEzQ1s2mlg89EXtzRrbPH4o6IBWyZtj08iAtcxYszzVaHvrh+F22tDzYE3GuTodsQxnZmukL2/Z0hxzr2NJTwHGPAP8gi3u8n2FzAAAAAElFTkSuQmCC"
+        #         return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+        #
+        #     def __init__(self):
+        #         pass
+        #
+        #     def Picking_Fruit(self, tree_list, sub):
+        #         fruit = []
+        #         for leaf in tree_list:
+        #             if leaf is not None:
+        #                 single_leaf = [list(_) for _ in leaf.Branches]
+        #                 fruit.append(single_leaf[sub])
+        #             else:
+        #                 fruit.append(None)
+        #         return fruit
+        #
+        #     def RunScript(self, Index, D1, D2, D3, D4, D5, D6):
+        #         Index = 0 if Index is None else Index
+        #         origin_data = [D1, D2, D3, D4, D5, D6]
+        #         available_trees = [_ for _ in origin_data if _.BranchCount != 0]
+        #
+        #         single_data = self.Picking_Fruit(available_trees, Index)
+        #         result_list = single_data if len(single_data) == len(origin_data) else single_data + [None] * abs(len(single_data) - len(origin_data))
+        #
+        #         R1, R2, R3, R4, R5, R6 = result_list
+        #         return R1, R2, R3, R4, R5, R6
 
-            def get_ComponentGuid(self):
-                return System.Guid("a3450556-ece6-4485-a9c5-bb07f47901c8")
-
-            @property
-            def Exposure(self):
-                return Grasshopper.Kernel.GH_Exposure.secondary
-
-            def SetUpParam(self, p, name, nickname, description):
-                p.Name = name
-                p.NickName = nickname
-                p.Description = description
-                p.Optional = True
-
-            def RegisterInputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_Integer()
-                self.SetUpParam(p, "Index", "I", "Data Tree branches")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
-                self.Params.Input.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "D1", "D1", "Set of data")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
-                self.Params.Input.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "D2", "D2", "Set of data")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
-                self.Params.Input.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "D3", "D3", "Set of data")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
-                self.Params.Input.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "D4", "D4", "Set of data")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
-                self.Params.Input.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "D5", "D5", "Set of data")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
-                self.Params.Input.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "D6", "D6", "Set of data")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
-                self.Params.Input.Add(p)
-
-            def RegisterOutputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "R1", "R1", "Obtained data")
-                self.Params.Output.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "R2", "R2", "Obtained data")
-                self.Params.Output.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "R3", "R3", "Obtained data")
-                self.Params.Output.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "R4", "R4", "Obtained data")
-                self.Params.Output.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "R5", "R5", "Obtained data")
-                self.Params.Output.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "R6", "R6", "Obtained data")
-                self.Params.Output.Add(p)
-
-            def SolveInstance(self, DA):
-                p0 = self.marshal.GetInput(DA, 0)
-                p1 = self.marshal.GetInput(DA, 1)
-                p2 = self.marshal.GetInput(DA, 2)
-                p3 = self.marshal.GetInput(DA, 3)
-                p4 = self.marshal.GetInput(DA, 4)
-                p5 = self.marshal.GetInput(DA, 5)
-                p6 = self.marshal.GetInput(DA, 6)
-                result = self.RunScript(p0, p1, p2, p3, p4, p5, p6)
-
-                if result is not None:
-                    if not hasattr(result, '__getitem__'):
-                        self.marshal.SetOutput(result, DA, 0, True)
-                    else:
-                        self.marshal.SetOutput(result[0], DA, 0, True)
-                        self.marshal.SetOutput(result[1], DA, 1, True)
-                        self.marshal.SetOutput(result[2], DA, 2, True)
-                        self.marshal.SetOutput(result[3], DA, 3, True)
-                        self.marshal.SetOutput(result[4], DA, 4, True)
-                        self.marshal.SetOutput(result[5], DA, 5, True)
-
-            def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAOvSURBVEhLzVVfbFNVGL8JKVn/hUzGut577u1Gt3Ww0rS7be+f3rZjSxgJogtBghAycWs7xp/h4pw69MHMMBNBCSGaKYSta3FrcVDWhAUT8I0YEk0MkWjiG8YHeQINPIyP71wO+iKMzT34S25y7jnf9/vO932/cw73v4D7xos2NlxeCOe0IbGg/0imtdtiUb9KJtTNbOm/Q5hUvvDMJUE8HwNxWgepZID0dQz48UgXM1k6SE6NSjMxIOc0wLH58TjmMQBmAlJOkZnp0iDk1cPSbPwf8q80WPtlGJqPBUAqJ+jcGDNdGvis2vUkACUXswoow02w7tMg1GIWuIHLzJSTb8gWd2mRIqjOKy4kvytcNCDyXhO0Z2rh1U2rwTsWBuFKK1ReSryV7PJUePLKyZqS8SuZ0n4jBb3Ej4dDjGJhkIloJ22wNtJs9kIb9sG2nTxUzcZ/2dX+wpEdL1ff3P4agcTbjeC+YIAHMxantXtkUt3AKBaGK69t8Y4rN73jUVgzY8xv76z+MxW0zm7d4b4jogjqsC9bMaj/4wC4p7D5GIjklFuuiYCdUTwH4JUVrrmkv6psNO6NOkf711ru1p2OlL3YFzfKt/FUC8TebAAXZkt75imbvdvNvBcH3H3//saVP6yaS45GjwfAeKMeOvaK0PLBeqgpPg5gimNSHWEuC0MoKAE8zWEO1TJUyRn7/BV/+D4JdJBp/WFyoB70wQZTaZT87wyy2uvM/ekQ8lobNu06koO7FIeqcuKWd0w+uC9gfThYze12XGnt479tgxqz7o/JpUtxEHLqbSlnVDKafwfJRt+XUKIiOvNYZxlLsCXtgY5uCbriq+Z7/dafqR2e7o9IUX9gXiNoS+8tPq89W6pCXlGkGTSe0kxlqO/4IHqkCXwnQ9DeWwsp1QmHI3ZIBSt2UXsypdaTGaNTKOobubRsMUmeBTKpfEivAzytUHsmAptw12toGfAfywSB0Q2/H/BX/NUdsn/PXBaHJwFoTXnMIo5Kaeurg6YTQRAvJ8H5TevRg17LZ71hO6RlRxVze34gsXmT0hLRLLDZ0PC5DLQn+C7c5356id/vW9k/oDpoAIO5LQ58VhmmTaPHX6Kyow0s6t+Rs5EEXe9psR0f1J2QarEt/W1AheikoI3gJXZUKMRa2bSJnpD9+oDmgEzQ1s2mlg89EXtzRrbPH4o6IBWyZtj08iAtcxYszzVaHvrh+F22tDzYE3GuTodsQxnZmukL2/Z0hxzr2NJTwHGPAP8gi3u8n2FzAAAAAElFTkSuQmCC"
-                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
-
-            def __init__(self):
-                pass
-
-            def Picking_Fruit(self, tree_list, sub):
-                fruit = []
-                for leaf in tree_list:
-                    if leaf is not None:
-                        single_leaf = [list(_) for _ in leaf.Branches]
-                        fruit.append(single_leaf[sub])
-                    else:
-                        fruit.append(None)
-                return fruit
-
-            def RunScript(self, Index, D1, D2, D3, D4, D5, D6):
-                Index = 0 if Index is None else Index
-                origin_data = [D1, D2, D3, D4, D5, D6]
-                available_trees = [_ for _ in origin_data if _.BranchCount != 0]
-
-                single_data = self.Picking_Fruit(available_trees, Index)
-                result_list = single_data if len(single_data) == len(origin_data) else single_data + [None] * abs(len(single_data) - len(origin_data))
-
-                R1, R2, R3, R4, R5, R6 = result_list
-                return R1, R2, R3, R4, R5, R6
-
-
-        # 树形数据处理
-        class TreeData(component):
-            def __new__(cls):
-                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_TreeData", "D35",
-                                                                   """Data Tree processing problems，A is going to be as long as B is""",
-                                                                   "Scavenger", "G-Data")
-                return instance
-
-            def get_ComponentGuid(self):
-                return System.Guid("22bf3aa8-c9f3-420f-8cdb-eefc24ea864b")
-
-            @property
-            def Exposure(self):
-                return Grasshopper.Kernel.GH_Exposure.tertiary
-
-            def SetUpParam(self, p, name, nickname, description):
-                p.Name = name
-                p.NickName = nickname
-                p.Description = description
-                p.Optional = True
-
-            def RegisterInputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_Geometry()
-                self.SetUpParam(p, "A_Brep", "A", "The Brep set of A")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
-                self.Params.Input.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_Geometry()
-                self.SetUpParam(p, "B_Brep", "B", "The Brep set of B")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
-                self.Params.Input.Add(p)
-
-            def RegisterOutputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Result_list", "R", "Corresponding result")
-                self.Params.Output.Add(p)
-
-            def SolveInstance(self, DA):
-                p0 = self.marshal.GetInput(DA, 0)
-                p1 = self.marshal.GetInput(DA, 1)
-                result = self.RunScript(p0, p1)
-
-                if result is not None:
-                    self.marshal.SetOutput(result, DA, 0, True)
-
-            def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAVoSURBVEhLrZR5UFNXFIefLCF5W1IVS4QWFQRkRAShKbGERHZCBRcMiAoCsggGhCQIIQTCjgs7Qi0oSl1qW7VSmSqjWMXWDlVRWxVHcV8q7h1bGdvT+8Jr/1DHjlO+mTNz3z3n/s65c8952AhhhsxmePn2mCBjBIxwHClHjswqhP1kGIXPt5ZTX4lvcDMcFpg7Ei5EvVspL9p2Duv/T2i8wuUor3paOS9UGE51SZ5THTNfmMnGSlg/Rja6fSt4HA7kAe+n1B7xLcGzOUBumHEKuajhiDfAi7EN558OAP7lYKD2e/9ODwQD/XMAcObZqJB7tMVcaxnR4rGb7g8C6gKKuxhkjCVqp3ciP98owsLjpE1a5ZQgysycGuNkEm2dYe7Cd7dYYW9HfiO+xr+EEvQHAs0kO+77J9kleUBsE13nyK0+YxIyPsuTIUCd9kcxyI5IB8l2T+YWw3CTJkXRKPuYHj9wLve9SV0OAk7hlK3jQx3Vwu7gIWKAEfeH6XsjQHAKJbkpB3KP+C46aodl2RrcOxVP/TsTgXNOBnSfP/KHAirg8bA6gpcwYQX/LKrkXAAQ5/yAfw0J7PLq5UXaJjtrffroH2a9cO1WgGzHEuDcRgkGQoCbbp/PnI3D3MbHaZNAqPO4Q/T5guBhGJBfix+Y+Y7zwrgBlmJih6iHPCy9T5/wM1ZHo0T0GSRyJQTMcx1W+2CYYMJi123T1NIe2xrJGbzD61dym+hHk7QJSWcPHSLLi0v2RiYvjsNcMBvesokFxNppzXjR1AaUm4/h/pbT6X3eYOyCM34g7AkB6+4QwAfQQ7a5HUdBVkyVKxVJ8dEJi/ZptTl5CnlEIrPHUFpa1KFLyA5jP18PT+WQQn3p9R3/Vijwb8iB2Pkh2KvF9yKiFe1sCJaYuPSjZUvjr62vr9+0pXW7JwCYFRUVtGQoknPHGFzDTUOFAWzo6+GtdFiNevwKnu/8OTaLn+Hr7Ssvyy3urKqvl/T29poHersLFQsW3DEYDE0NDQ2GitLSKH16Tq9nrGSrZX8o4Js9jhKtHkfwVLsEzH40zcr+yyhkzFCYYLhpEF7jth9Le1e+KHJhSV1lXUtra6uLLkc1c3lyMhQUFl6trKzcXq0til+oinlGHZAAcQF1DZoDwaMwoHaLwdyJmGpUfRmO4v0Icoeoi3lcGg0LVma3U7lCeay5pllVWVnWrUxLfZ6n1UKWRhecEhW7ebx6xlPuCelwU5wPBKpHdt8izzmWlXsJvrk70f7BEDPm9ClU0YUg4O4Xw7hyz3ul+pLL5aUVX6QkL7uqUqt/L1TqlssTZj/iHfd5YRRHfc9MMt3tM2gRZRPIKr6CGVftsJjsmNnPXPefJKZ93s+l2rB7BSrd2aWxS64WFOQ/1CSmD05OFV3Eb6E41M7GwUJD+s4fcwGvcd3D6r2KqWiMlDooucv8Fpgr0yf9gLgYAFbfB0NmRgbELYl5oFFl/ZU+PzETy38vBQ3iJT7zbzomG8LLXHYRGz0Oc+MnLmLlXoXzsTCMmWb6Jz+guqXPmLcgDkqekNlO2eo8zV3UpkMajQZSUzP9UTiBzB7fMOM80eZ5Ha1HI2Oa5Q04kGO5WZMjeQkT5+PaKXmCwdlAbhXdRh6T9euqtqQrlZC9KgdWqlQLhw8YEWBcMzG7fisseDmOm7gyS+Ph5pq1PjptDixPTUNdpI03Row0xXptV0V5GWhW6ZTs1shSWZg7r31zG2j1xdXs1siyrrygoW3TRtAXlf3Cbo0cjRUGx6rVJU9qa2thTVUN6IvXxLGu/4derzf5tLkhvLG+5reWpjr4pGk91DU2QWvbFqhu3KDTNzfjbOhrwLC/AVZGNqF2VxWhAAAAAElFTkSuQmCC"
-                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
-
-            def RunScript(self, A_Brep, B_Brep):
-                if A_Brep:
-                    if len(B_Brep) > len(A_Brep):
-                        Result_list = A_Brep * len(B_Brep)
-                        return Result_list
-                    elif len(B_Brep) == len(A_Brep):
-                        Result_list = A_Brep * len(B_Brep)
-                        return Result_list
-                    elif len(B_Brep) == 0:
-                        Result_list = A_Brep * 1
-                        return Result_list
-                else:
-                    pass
-
+        # # 树形数据处理
+        # class TreeData(component):
+        #     def __new__(cls):
+        #         instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+        #                                                            "RPP_TreeData", "D35",
+        #                                                            """Data Tree processing problems，A is going to be as long as B is""",
+        #                                                            "Scavenger", "G-Data")
+        #         return instance
+        #
+        #     def get_ComponentGuid(self):
+        #         return System.Guid("22bf3aa8-c9f3-420f-8cdb-eefc24ea864b")
+        #
+        #     @property
+        #     def Exposure(self):
+        #         return Grasshopper.Kernel.GH_Exposure.tertiary
+        #
+        #     def SetUpParam(self, p, name, nickname, description):
+        #         p.Name = name
+        #         p.NickName = nickname
+        #         p.Description = description
+        #         p.Optional = True
+        #
+        #     def RegisterInputParams(self, pManager):
+        #         p = Grasshopper.Kernel.Parameters.Param_Geometry()
+        #         self.SetUpParam(p, "A_Brep", "A", "The Brep set of A")
+        #         p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+        #         self.Params.Input.Add(p)
+        #
+        #         p = Grasshopper.Kernel.Parameters.Param_Geometry()
+        #         self.SetUpParam(p, "B_Brep", "B", "The Brep set of B")
+        #         p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+        #         self.Params.Input.Add(p)
+        #
+        #     def RegisterOutputParams(self, pManager):
+        #         p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+        #         self.SetUpParam(p, "Result_list", "R", "Corresponding result")
+        #         self.Params.Output.Add(p)
+        #
+        #     def SolveInstance(self, DA):
+        #         p0 = self.marshal.GetInput(DA, 0)
+        #         p1 = self.marshal.GetInput(DA, 1)
+        #         result = self.RunScript(p0, p1)
+        #
+        #         if result is not None:
+        #             self.marshal.SetOutput(result, DA, 0, True)
+        #
+        #     def get_Internal_Icon_24x24(self):
+        #         o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAVoSURBVEhLrZR5UFNXFIefLCF5W1IVS4QWFQRkRAShKbGERHZCBRcMiAoCsggGhCQIIQTCjgs7Qi0oSl1qW7VSmSqjWMXWDlVRWxVHcV8q7h1bGdvT+8Jr/1DHjlO+mTNz3z3n/s65c8952AhhhsxmePn2mCBjBIxwHClHjswqhP1kGIXPt5ZTX4lvcDMcFpg7Ei5EvVspL9p2Duv/T2i8wuUor3paOS9UGE51SZ5THTNfmMnGSlg/Rja6fSt4HA7kAe+n1B7xLcGzOUBumHEKuajhiDfAi7EN558OAP7lYKD2e/9ODwQD/XMAcObZqJB7tMVcaxnR4rGb7g8C6gKKuxhkjCVqp3ciP98owsLjpE1a5ZQgysycGuNkEm2dYe7Cd7dYYW9HfiO+xr+EEvQHAs0kO+77J9kleUBsE13nyK0+YxIyPsuTIUCd9kcxyI5IB8l2T+YWw3CTJkXRKPuYHj9wLve9SV0OAk7hlK3jQx3Vwu7gIWKAEfeH6XsjQHAKJbkpB3KP+C46aodl2RrcOxVP/TsTgXNOBnSfP/KHAirg8bA6gpcwYQX/LKrkXAAQ5/yAfw0J7PLq5UXaJjtrffroH2a9cO1WgGzHEuDcRgkGQoCbbp/PnI3D3MbHaZNAqPO4Q/T5guBhGJBfix+Y+Y7zwrgBlmJih6iHPCy9T5/wM1ZHo0T0GSRyJQTMcx1W+2CYYMJi123T1NIe2xrJGbzD61dym+hHk7QJSWcPHSLLi0v2RiYvjsNcMBvesokFxNppzXjR1AaUm4/h/pbT6X3eYOyCM34g7AkB6+4QwAfQQ7a5HUdBVkyVKxVJ8dEJi/ZptTl5CnlEIrPHUFpa1KFLyA5jP18PT+WQQn3p9R3/Vijwb8iB2Pkh2KvF9yKiFe1sCJaYuPSjZUvjr62vr9+0pXW7JwCYFRUVtGQoknPHGFzDTUOFAWzo6+GtdFiNevwKnu/8OTaLn+Hr7Ssvyy3urKqvl/T29poHersLFQsW3DEYDE0NDQ2GitLSKH16Tq9nrGSrZX8o4Js9jhKtHkfwVLsEzH40zcr+yyhkzFCYYLhpEF7jth9Le1e+KHJhSV1lXUtra6uLLkc1c3lyMhQUFl6trKzcXq0til+oinlGHZAAcQF1DZoDwaMwoHaLwdyJmGpUfRmO4v0Icoeoi3lcGg0LVma3U7lCeay5pllVWVnWrUxLfZ6n1UKWRhecEhW7ebx6xlPuCelwU5wPBKpHdt8izzmWlXsJvrk70f7BEDPm9ClU0YUg4O4Xw7hyz3ul+pLL5aUVX6QkL7uqUqt/L1TqlssTZj/iHfd5YRRHfc9MMt3tM2gRZRPIKr6CGVftsJjsmNnPXPefJKZ93s+l2rB7BSrd2aWxS64WFOQ/1CSmD05OFV3Eb6E41M7GwUJD+s4fcwGvcd3D6r2KqWiMlDooucv8Fpgr0yf9gLgYAFbfB0NmRgbELYl5oFFl/ZU+PzETy38vBQ3iJT7zbzomG8LLXHYRGz0Oc+MnLmLlXoXzsTCMmWb6Jz+guqXPmLcgDkqekNlO2eo8zV3UpkMajQZSUzP9UTiBzB7fMOM80eZ5Ha1HI2Oa5Q04kGO5WZMjeQkT5+PaKXmCwdlAbhXdRh6T9euqtqQrlZC9KgdWqlQLhw8YEWBcMzG7fisseDmOm7gyS+Ph5pq1PjptDixPTUNdpI03Row0xXptV0V5GWhW6ZTs1shSWZg7r31zG2j1xdXs1siyrrygoW3TRtAXlf3Cbo0cjRUGx6rVJU9qa2thTVUN6IvXxLGu/4derzf5tLkhvLG+5reWpjr4pGk91DU2QWvbFqhu3KDTNzfjbOhrwLC/AVZGNqF2VxWhAAAAAElFTkSuQmCC"
+        #         return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+        #
+        #     def RunScript(self, A_Brep, B_Brep):
+        #         if A_Brep:
+        #             if len(B_Brep) > len(A_Brep):
+        #                 Result_list = A_Brep * len(B_Brep)
+        #                 return Result_list
+        #             elif len(B_Brep) == len(A_Brep):
+        #                 Result_list = A_Brep * len(B_Brep)
+        #                 return Result_list
+        #             elif len(B_Brep) == 0:
+        #                 Result_list = A_Brep * 1
+        #                 return Result_list
+        #         else:
+        #             pass
 
         # 简化树形数据
         class Simplify_Data(component):
@@ -746,18 +743,48 @@ try:
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
-                p0 = self.marshal.GetInput(DA, 0)
-                result = self.RunScript(p0)
+                # 插件名称
+                self.Message = 'Simplify'
+                # 初始化输出端数据内容
+                result = gd[object]()
+                # 获取输入端
+                p0 = self.Params.Input[0].VolatileData
 
-                if result is not None:
-                    self.marshal.SetOutput(result, DA, 0, True)
+                self.j_bool_f1 = self.parameter_judgment(p0)[0]
+                re_mes = Message.RE_MES([self.j_bool_f1], ['DT end'])
+                if len(re_mes) > 0:
+                    for mes_i in re_mes:
+                        Message.message2(self, mes_i)
+                else:
+                    Tree, Tree_Path = self.Branch_Route(self.Params.Input[0].VolatileData)
+                    origin_tree = self.format_tree(map(lambda x: self.split_tree(x[0], x[1]), zip(Tree, Tree_Path)))
+                    origin_tree.SimplifyPaths()
+
+                    origin_data = [list(_) for _ in origin_tree.Branches]
+                    path_list = [list(d.Indices) for d in origin_tree.Paths]
+                    # 检测简化后的树形结构有多少不同的下标
+                    minpath = set([_[0] for _ in path_list if len(_) != 0])
+                    depest_list = []
+
+                    for father_index in minpath:
+                        sub_list = []
+                        for index, _ in enumerate(path_list):
+                            if len(_) == 0 or _[0] == father_index:
+                                sub_list.append(origin_data[index])
+                        depest_list.append(sub_list)
+
+                    zip_list = zip(minpath, depest_list)
+                    ungroup_data = map(self.handle_list_data, zip_list)
+                    result = self.format_tree(ungroup_data)
+
+                    result.SimplifyPaths()
+
+                # 将结果添加进输出端
+                DA.SetDataTree(0, result)
 
             def get_Internal_Icon_24x24(self):
                 o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAWjSURBVEhLlVULbBRlEB7ves/d27v2Wkrf7yu9vd277fXau6O0QCkUSluLbVqosVQESVADRSKPCihSLPJQlISXEENJQ5WoCAElmABGI4IiVcEHKj4IjwgoiKRFf2f2lkYRK36Xyf47O9/MP//M/Ae3gROiokq09f9FPEpxZHk75HKSdY33CNdV9EfUUOcMTduPcCAQ8vuVbsXrXVraXGrW1BFIdr9lrXKc6wz0GcLRUzUtgF4Uxpjm5q4ytqTNNE5KXWQ/PY45LtUwy1PiATBAvl52VKFZWm1t7SCvLF9BYYrPxxTRt0UfiB5jmp+70tSc+rChJb3d8UMlc1ysYeaFeXvBavDrJVs16MpiG4RPRzPhxBjG7y2+IfTg+iSuXw2f43cNvc5tDzIwgrtI8beRc9njYRKKnCP+5BidvtB2Eu0/Gc34N4v76Klyd4TO8nuKe7mthQwMzWmTbe+PZPYvKtSPwsflTDhWrr7bfxzPuD3F16Jy+BKvWzosSxLzeqUuDNAjZ4ssujpzK//BCGb/XOMiT+V+qXF3hq8CBJMt5tk5L6oGx9GAMvgsEsj+9VhmWiHtTs6Ky5ZEzw10fIiOtbq62ubzevfL8fEZxvmuzWoA4lIGN7mnxjLzUnEXRGXbgtYN+Rcc56qY/ZtxTPhwFLMdGs7s31UyO56puTNw2emOf8znxt1L0jIKQOju7tbrc7nh1i0FF/u5R8qY7R3M6PsIF7/9Qo3FGRuSJpjb8t6ybMw/alkp9xqb03qsXUXnTXNc2yCPL6nODSf6vDKTJGmx5j+COOANE5MbzY8P2cdt8h+zdEjMMDn9FHIvmFpdL+nTuBGaZT8KdSmWmbosrhXXNhSHqhxWmOGVJebxeLro/V8wUuePflBfMqgc16koxL8FscYcy7PevdZtgZ91QWeTpoVZs+osotv9K9bgakFBQYqmvjPo8+yjTK3ZSwz3pk4z1qfM75+DJ9wH8LOoz+TK8JmEHfQ2FpbJsvxeaektQzYQdMNxDqhzUPjdQ69TJ1BXcK8Ez3Cvha9yndTLIBZ5lBaaAxKsxU7G2F2ai4FhuC+thaqv9j2121/n4Mx4HL5hvZBpLq4LBumYztKQaZk8qrn4D9TH8eY5rs1/mwOabK2XLR2efeC2DiZTLHIlDRsF8YjiBTwqXvUxIHIshZb1+ecc57GXv8Ve/gjn4F3sZawFZWDdGrim98fUa9YUZDpdFxRIUZQKTT0AsmMEQ3Nqk+VJ8ZB1S6DHssZ3wzAl/SuswWXTgrwdep+jRrPshySK6/IVhWqxQFPdEaLwFwZFWAAB+2R8p2Nxql9uQWGhz011wGw2aKqboO6SIsvbwAUwZAY4D06DmMNDwODR1P9AfX0pL3nE30VR7NZUYAFIbIGY/Y9A3DUJzJM0NY2cwV8L9vZy4KfcDY7V6yCVrUUpAa49C8yhJDCNRDNdxDqCpooKQZI8fS6X62AtCB0NEN0+Avi5qyCZbYI01gjRb+SBqcwN5omYD1f2NCSxFfixDQb3Lcd1B0orDDrTDomsDoSDzpAvEAwHp2v+oaQkFFAUH8vIydo2D+Iu0qYWQwIjP8+gn3kQf4m4U8D5Gx46X9MGCVcoOgUhI5LVuH4BUlgzCBsTlbz7qaihUKixrq4qw5+v7JOxBq70zKWt4Dy6Em3JMfGWodA7cadB7GHakOkecKynALR7EjK+SagC7qFsv1Sn/pvRH44s9WpzwOLGlQ4eBdap5JQ2R1x60gk8hwGaIKYbb2uD+ADEnqQdU5BFmCrJ82hAaU/ADOzuHB+eueoUp1m9LrCDXsfNCQ3g2E0ByOkSPJZWiFe5C5E7EWL2UAaExJCOm90IMV2VYD9dDrbtWLiXE0BPV68Kj8f9VCQDvItE8QR2UP+t6taZm8aCsBy5J0LAd9aBY0MCGHF+QPcnKMknGTxeNDYAAAAASUVORK5CYII="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
-
-            def __init__(self):
-                pass
 
             def Branch_Route(self, Tree):
                 """分解Tree操作，树形以及多进程框架代码"""
@@ -791,6 +818,15 @@ try:
                             stock_tree.Insert(item, path, index)
                 return stock_tree
 
+            def parameter_judgment(self, tree_par_data):
+                # 获取输入端参数所有数据
+                geo_list, geo_path = self.Branch_Route(tree_par_data)
+                if geo_list:
+                    j_list = any(ghp.run(lambda x: len(list(filter(None, x))), geo_list))  # 去空操作, 判断是否为空
+                else:
+                    j_list = False
+                return j_list, geo_list, geo_path
+
             def handle_list_data(self, tuple):
                 path, data = tuple
                 for single in data:
@@ -799,36 +835,36 @@ try:
 
                 return self.split_tree(data, [path])
 
-            def RunScript(self, Data_Tree):
-                try:
-                    re_mes = Message.RE_MES([Data_Tree], ['Data_Tree'])
-                    result = gd[object]()
-                    if len(re_mes) > 0:
-                        for mes_i in re_mes:
-                            Message.message2(self, mes_i)
-                    else:
-                        Tree, Tree_Path = self.Branch_Route(self.Params.Input[0].VolatileData)
-                        origin_tree = self.format_tree(map(lambda x: self.split_tree(x[0], x[1]), zip(Tree, Tree_Path)))
-                        origin_tree.SimplifyPaths()
-
-                        origin_data = [list(_) for _ in origin_tree.Branches]
-                        path_list = [list(d.Indices) for d in origin_tree.Paths]
-                        minpath = set([_[0] for _ in path_list])
-                        depest_list = []
-                        for father_index in minpath:
-                            sub_list = []
-                            for index, _ in enumerate(path_list):
-                                if _[0] == father_index:
-                                    sub_list.append(origin_data[index])
-                            depest_list.append(sub_list)
-
-                        zip_list = zip(minpath, depest_list)
-                        ungroup_data = map(self.handle_list_data, zip_list)
-                        result = self.format_tree(ungroup_data)
-                        result.SimplifyPaths()
-                    return result
-                finally:
-                    self.Message = 'Simplify'
+            # def RunScript(self, Data_Tree):
+            #     try:
+            #         re_mes = Message.RE_MES([Data_Tree], ['Data_Tree'])
+            #         result = gd[object]()
+            #         if len(re_mes) > 0:
+            #             for mes_i in re_mes:
+            #                 Message.message2(self, mes_i)
+            #         else:
+            #             Tree, Tree_Path = self.Branch_Route(self.Params.Input[0].VolatileData)
+            #             origin_tree = self.format_tree(map(lambda x: self.split_tree(x[0], x[1]), zip(Tree, Tree_Path)))
+            #             origin_tree.SimplifyPaths()
+            #
+            #             origin_data = [list(_) for _ in origin_tree.Branches]
+            #             path_list = [list(d.Indices) for d in origin_tree.Paths]
+            #             minpath = set([_[0] for _ in path_list])
+            #             depest_list = []
+            #             for father_index in minpath:
+            #                 sub_list = []
+            #                 for index, _ in enumerate(path_list):
+            #                     if _[0] == father_index:
+            #                         sub_list.append(origin_data[index])
+            #                 depest_list.append(sub_list)
+            #
+            #             zip_list = zip(minpath, depest_list)
+            #             ungroup_data = map(self.handle_list_data, zip_list)
+            #             result = self.format_tree(ungroup_data)
+            #             result.SimplifyPaths()
+            #         return result
+            #     finally:
+            #         self.Message = 'Simplify'
 
 
         # 树形数据修剪
@@ -1800,101 +1836,100 @@ try:
                     self.Message = 'data tree filtering in batches'
 
 
-        # 树形数据同步
-        class TreeSynchronization(component):
-            def __new__(cls):
-                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_TreeSynchronization", "D22", """Tree data synchronization，match the missing parts of the two data tree（Similar to an empty placeholder）""", "Scavenger", "G-Data")
-                return instance
-
-            def get_ComponentGuid(self):
-                return System.Guid("d8f4e8f5-56ce-4464-96bc-7469c0374158")
-
-            @property
-            def Exposure(self):
-                return Grasshopper.Kernel.GH_Exposure.secondary
-
-            def SetUpParam(self, p, name, nickname, description):
-                p.Name = name
-                p.NickName = nickname
-                p.Description = description
-                p.Optional = True
-
-            def RegisterInputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "A_Tree", "A", "A data tree，can be a target tree or a synchronization tree")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
-                self.Params.Input.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "B_Tree", "B", "B data tree，can be a target tree or a synchronization tree")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
-                self.Params.Input.Add(p)
-
-            def RegisterOutputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Result_Tree", "RT", "After pairing,the tree related to missing part,can be A or B")
-                self.Params.Output.Add(p)
-
-            def SolveInstance(self, DA):
-                p0 = self.marshal.GetInput(DA, 0)
-                p1 = self.marshal.GetInput(DA, 1)
-                result = self.RunScript(p0, p1)
-
-                if result is not None:
-                    self.marshal.SetOutput(result, DA, 0, True)
-
-            def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAARtSURBVEhLrVR9TJVlFD/j3sv7dd/nBfnmXr4u3CtcLvdy+S75CBHEkIkfhGJlzUpwECjYh1mtJhYJ1hR0bdps8w9Y6RZZrsx0MyitNpWszMqVrqzmGthsk+LpnPe+EGu13ZG/7bzPe85zfr9znvO8e2EWSEWLCLzeWmhpIFS2QtQvy0E7gX4sxfSdWSLGWHUUgrT8UYjl/ZDAd4CdN0DYZQwnBnZngQwQO1sg8ux6iPpkBYTvqgG2eSeKPw823geJfBNEnzcD5FWC2lUO1sckMNUb1ODgB+XuXux0D4rR+gzE824UpwLb0d8CseMbIHq8D4tuxT07WFYa1OBQDayHhEmMhGklcbLn0HrQfxGN1i4sgPfTbFCDwxJgDa0QfRLFJqc6/zejJnCMH7pBKjCowcMFYsMTEDtBXU4JUrGpglMnWwMRB0tAzkFKSIAZBJwg3NcJMfxlvIOXcM40jhcMYSpI7xTrx/0nIY7PA6UbaXjvQWIOACsFtRa7G2mBqKsdEH3B6HZiLUSO0WgegZiL9RD+pgymGoM2K/jQbAUgP10FSn8jsKFSkGqrgK2OAHNHIOXWIANcSek5aa7hPLvDY8SCn3kw8Hq9/uwcP3dnZ7uN0P/CdHd+vz8+Pz/f5fP57vJmZXFc68hHo//RTAR1yYLU4XpVesgxiO8WtBDs/O0c7JzEPZmZ+prjR9/rfU1nYJ60Pm2b1OY8hu8q+XrUgGysOsQO5xvat4u4dr6Ki02pb1GsGrLshe7cYo/Hs5HE3W53R5YpZUEeaA6d05y6m41W8bBLd3J5o/NjDP39lzXFCHfIWz3D8m7/u8Iy+1r19aJR7XIN136s5coreUdMKUplSHPS/ZBgqvKkuLx+XzaPmxO91Nw1d0A8kHco9N7kNuve3KOUTzzrodvOma3mMuHBlBbzXNYEFpvs046V8bBfl3B2aj5nH6Gdq+Tsi4XcOjTvmjp0+4R2pYZb1iX3lUBqgjfTczTBGlmiHCwaC7tex9mnCzgbLud0Ap3zTskYFrkR9lMtFze5joO0OnEFG0HRr6o5w7Gwz9DOYoEzaBcwhkYFcAw0b/3ixbq4Yna4eFK7tCiQTzzKJ8MipKX9sJhLT2WMQOgqm1Pp9e1jpysmp8VnmHaxmlsPF18TFsdXkDhBqrHblC7Pdnay/Cb7HAX/wWFfLuTq+6W/W1baV1G+Cb+YdnW4/E+9OiVQITLqCLvB5Otim/NxzFWIQBDvSW5Q3yu9oZ+cODSiqZNgARzbTWlzejdY4uRcZWf2Fe17vNhv8MjYMfsAZzpSzvUY+uqR4j+kdY5e1A18cQI4pGczRzX8auiL00d5uoKrJ8r0iyYOO17GpU7Xfj0fES42Ju5T2px71cGiq0geF9tdp5SBwp/lNmefiQnVRt5MSMJSW4+ywbXfeqDga3mH7ze8pzPWwaLv5C3pA6EO6zIjbxrUncXsUB4OXZPULjzgmI9+Aloabf4HRHqYnUqruT6+SWxKaUQ3HI1+kAiAvwBOdrtcIZYjSgAAAABJRU5ErkJggg=="
-                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
-
-            def __init__(self):
-                pass
-
-            def mes_box(self, info, button, title):
-                return rs.MessageBox(info, button, title)
-
-            def synchronism(self, origin_data, synchro_data):
-                exported_data = [_ for _ in synchro_data]
-                for index, item in enumerate(origin_data):
-                    if item not in synchro_data:
-                        exported_data.insert(index, item)
-                return exported_data
-
-            def RunScript(self, A_Tree, B_Tree):
-                try:
-                    A_Tree.SimplifyPaths()
-                    B_Tree.SimplifyPaths()
-                    a_trunk_list = [list(_) for _ in A_Tree.Branches]
-                    b_trunk_list = [list(_) for _ in B_Tree.Branches]
-
-                    re_mes = Message.RE_MES([A_Tree, B_Tree], ['A_Tree', 'B_Tree'])
-                    if len(re_mes) > 0:
-                        for mes_i in re_mes:
-                            Message.message2(self, mes_i)
-                        return gd[object]()
-                    else:
-                        sc.doc = Rhino.RhinoDoc.ActiveDoc
-                        if A_Tree.BranchCount > B_Tree.BranchCount:
-                            target_paths = [_ for _ in A_Tree.Paths]
-                            synchro_paths = [_ for _ in B_Tree.Paths]
-                            target_tree = B_Tree
-                        else:
-                            target_paths = [_ for _ in B_Tree.Paths]
-                            synchro_paths = [_ for _ in A_Tree.Paths]
-                            target_tree = A_Tree
-                        _out_data = self.synchronism(target_paths, synchro_paths)
-                        for single_data in _out_data:
-                            if single_data not in synchro_paths:
-                                target_tree.AddRange([], single_data)
-                        Result_Tree = target_tree
-                        sc.doc.Views.Redraw()
-                        ghdoc = GhPython.DocReplacement.GrasshopperDocument()
-                        sc.doc = ghdoc
-                        return Result_Tree
-                finally:
-                    self.Message = 'Tree data synchronization'
-
+        # # 树形数据同步
+        # class TreeSynchronization(component):
+        #     def __new__(cls):
+        #         instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+        #                                                            "RPP_TreeSynchronization", "D22", """Tree data synchronization，match the missing parts of the two data tree（Similar to an empty placeholder）""", "Scavenger", "G-Data")
+        #         return instance
+        #
+        #     def get_ComponentGuid(self):
+        #         return System.Guid("d8f4e8f5-56ce-4464-96bc-7469c0374158")
+        #
+        #     @property
+        #     def Exposure(self):
+        #         return Grasshopper.Kernel.GH_Exposure.secondary
+        #
+        #     def SetUpParam(self, p, name, nickname, description):
+        #         p.Name = name
+        #         p.NickName = nickname
+        #         p.Description = description
+        #         p.Optional = True
+        #
+        #     def RegisterInputParams(self, pManager):
+        #         p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+        #         self.SetUpParam(p, "A_Tree", "A", "A data tree，can be a target tree or a synchronization tree")
+        #         p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+        #         self.Params.Input.Add(p)
+        #
+        #         p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+        #         self.SetUpParam(p, "B_Tree", "B", "B data tree，can be a target tree or a synchronization tree")
+        #         p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+        #         self.Params.Input.Add(p)
+        #
+        #     def RegisterOutputParams(self, pManager):
+        #         p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+        #         self.SetUpParam(p, "Result_Tree", "RT", "After pairing,the tree related to missing part,can be A or B")
+        #         self.Params.Output.Add(p)
+        #
+        #     def SolveInstance(self, DA):
+        #         p0 = self.marshal.GetInput(DA, 0)
+        #         p1 = self.marshal.GetInput(DA, 1)
+        #         result = self.RunScript(p0, p1)
+        #
+        #         if result is not None:
+        #             self.marshal.SetOutput(result, DA, 0, True)
+        #
+        #     def get_Internal_Icon_24x24(self):
+        #         o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAARtSURBVEhLrVR9TJVlFD/j3sv7dd/nBfnmXr4u3CtcLvdy+S75CBHEkIkfhGJlzUpwECjYh1mtJhYJ1hR0bdps8w9Y6RZZrsx0MyitNpWszMqVrqzmGthsk+LpnPe+EGu13ZG/7bzPe85zfr9znvO8e2EWSEWLCLzeWmhpIFS2QtQvy0E7gX4sxfSdWSLGWHUUgrT8UYjl/ZDAd4CdN0DYZQwnBnZngQwQO1sg8ux6iPpkBYTvqgG2eSeKPw823geJfBNEnzcD5FWC2lUO1sckMNUb1ODgB+XuXux0D4rR+gzE824UpwLb0d8CseMbIHq8D4tuxT07WFYa1OBQDayHhEmMhGklcbLn0HrQfxGN1i4sgPfTbFCDwxJgDa0QfRLFJqc6/zejJnCMH7pBKjCowcMFYsMTEDtBXU4JUrGpglMnWwMRB0tAzkFKSIAZBJwg3NcJMfxlvIOXcM40jhcMYSpI7xTrx/0nIY7PA6UbaXjvQWIOACsFtRa7G2mBqKsdEH3B6HZiLUSO0WgegZiL9RD+pgymGoM2K/jQbAUgP10FSn8jsKFSkGqrgK2OAHNHIOXWIANcSek5aa7hPLvDY8SCn3kw8Hq9/uwcP3dnZ7uN0P/CdHd+vz8+Pz/f5fP57vJmZXFc68hHo//RTAR1yYLU4XpVesgxiO8WtBDs/O0c7JzEPZmZ+prjR9/rfU1nYJ60Pm2b1OY8hu8q+XrUgGysOsQO5xvat4u4dr6Ki02pb1GsGrLshe7cYo/Hs5HE3W53R5YpZUEeaA6d05y6m41W8bBLd3J5o/NjDP39lzXFCHfIWz3D8m7/u8Iy+1r19aJR7XIN136s5coreUdMKUplSHPS/ZBgqvKkuLx+XzaPmxO91Nw1d0A8kHco9N7kNuve3KOUTzzrodvOma3mMuHBlBbzXNYEFpvs046V8bBfl3B2aj5nH6Gdq+Tsi4XcOjTvmjp0+4R2pYZb1iX3lUBqgjfTczTBGlmiHCwaC7tex9mnCzgbLud0Ap3zTskYFrkR9lMtFze5joO0OnEFG0HRr6o5w7Gwz9DOYoEzaBcwhkYFcAw0b/3ixbq4Yna4eFK7tCiQTzzKJ8MipKX9sJhLT2WMQOgqm1Pp9e1jpysmp8VnmHaxmlsPF18TFsdXkDhBqrHblC7Pdnay/Cb7HAX/wWFfLuTq+6W/W1baV1G+Cb+YdnW4/E+9OiVQITLqCLvB5Otim/NxzFWIQBDvSW5Q3yu9oZ+cODSiqZNgARzbTWlzejdY4uRcZWf2Fe17vNhv8MjYMfsAZzpSzvUY+uqR4j+kdY5e1A18cQI4pGczRzX8auiL00d5uoKrJ8r0iyYOO17GpU7Xfj0fES42Ju5T2px71cGiq0geF9tdp5SBwp/lNmefiQnVRt5MSMJSW4+ywbXfeqDga3mH7ze8pzPWwaLv5C3pA6EO6zIjbxrUncXsUB4OXZPULjzgmI9+Aloabf4HRHqYnUqruT6+SWxKaUQ3HI1+kAiAvwBOdrtcIZYjSgAAAABJRU5ErkJggg=="
+        #         return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+        #
+        #     def __init__(self):
+        #         pass
+        #
+        #     def mes_box(self, info, button, title):
+        #         return rs.MessageBox(info, button, title)
+        #
+        #     def synchronism(self, origin_data, synchro_data):
+        #         exported_data = [_ for _ in synchro_data]
+        #         for index, item in enumerate(origin_data):
+        #             if item not in synchro_data:
+        #                 exported_data.insert(index, item)
+        #         return exported_data
+        #
+        #     def RunScript(self, A_Tree, B_Tree):
+        #         try:
+        #             A_Tree.SimplifyPaths()
+        #             B_Tree.SimplifyPaths()
+        #             a_trunk_list = [list(_) for _ in A_Tree.Branches]
+        #             b_trunk_list = [list(_) for _ in B_Tree.Branches]
+        #
+        #             re_mes = Message.RE_MES([A_Tree, B_Tree], ['A_Tree', 'B_Tree'])
+        #             if len(re_mes) > 0:
+        #                 for mes_i in re_mes:
+        #                     Message.message2(self, mes_i)
+        #                 return gd[object]()
+        #             else:
+        #                 sc.doc = Rhino.RhinoDoc.ActiveDoc
+        #                 if A_Tree.BranchCount > B_Tree.BranchCount:
+        #                     target_paths = [_ for _ in A_Tree.Paths]
+        #                     synchro_paths = [_ for _ in B_Tree.Paths]
+        #                     target_tree = B_Tree
+        #                 else:
+        #                     target_paths = [_ for _ in B_Tree.Paths]
+        #                     synchro_paths = [_ for _ in A_Tree.Paths]
+        #                     target_tree = A_Tree
+        #                 _out_data = self.synchronism(target_paths, synchro_paths)
+        #                 for single_data in _out_data:
+        #                     if single_data not in synchro_paths:
+        #                         target_tree.AddRange([], single_data)
+        #                 Result_Tree = target_tree
+        #                 sc.doc.Views.Redraw()
+        #                 ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+        #                 sc.doc = ghdoc
+        #                 return Result_Tree
+        #         finally:
+        #             self.Message = 'Tree data synchronization'
 
         # 树性数据插入
         class Tree_AddRange(component):
