@@ -1368,7 +1368,8 @@ try:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
                     else:
-                        origin_pts = map(lambda x: filter(None, x), pt_trunk)
+                        # origin_pts = map(lambda x: filter(None, x), pt_trunk)
+                        origin_pts = pt_trunk
                         zip_list = zip(origin_pts, pt_path)
                         # 多进程
                         iter_ungroup_data = zip(*ghp.run(self.group_pts, zip_list))
@@ -1450,7 +1451,8 @@ try:
             def group_pts(self, tuple_data):
                 # 解构参数
                 ref_origin_pts, origin_path = tuple_data
-                gh_pts = map(self._trun_object, ref_origin_pts)
+                gh_pts = map(lambda x: x.Value if x else None, ref_origin_pts)
+                # gh_pts = map(self._trun_object, ref_origin_pts)
                 origin_pt_length = len(gh_pts)
 
                 total, count, group_sub_list = 0, 0, []
@@ -1458,6 +1460,7 @@ try:
                 while origin_pt_length > total:
                     if not gh_pts[count]:
                         total += 1
+                        count += 1
                         continue
                     flatten_list = list(chain(*group_sub_list))
 
@@ -1465,9 +1468,13 @@ try:
                         sub_index = []
                         # 第count个点与所有点循环比较距离
                         for _ in range(len(gh_pts)):
-                            if gh_pts[count].DistanceTo(gh_pts[_]) <= self.distance:
-                                if _ not in flatten_list:
-                                    sub_index.append(_)
+                            if gh_pts[_]:
+                                if gh_pts[count].DistanceTo(gh_pts[_]) <= self.distance:
+                                    if _ not in flatten_list:
+                                        sub_index.append(_)
+                            else:
+                                sub_index.append(None)
+                        sub_index = [_ for _ in sub_index if _ is not None]
                         group_sub_list.append(sub_index)
                         # 条件长度增加
                         total += len(sub_index)
