@@ -680,7 +680,8 @@ try:
                 return instance
 
             def __init__(self):
-                pass
+                self.Menu_list = ['取末尾0', '不取末尾0']  # 需要添加的菜单列表
+                self.settings = Grasshopper.Instances.Settings
 
             def get_ComponentGuid(self):
                 return System.Guid("0b6b166d-332d-4c95-95bd-b7f85482351c")
@@ -721,9 +722,44 @@ try:
                 self.SetUpParam(p, "Ceil", "C", "rounded up")
                 self.Params.Output.Add(p)
 
+            def OnTextMenuClick(self, sender, args):
+                try:  # always everything inside try
+                    # self.settings = Grasshopper.Instances.Settings
+                    self.settings.SetValue(str(self.InstanceGuid), sender.Tag)
+
+                    self.ExpireSolution(True)
+                except Exception, ex:
+                    System.Windows.Forms.MessageBox.Show(str(ex))
+
+            def AppendAdditionalMenuItems(self, items):
+                component.AppendAdditionalMenuItems(self, items)
+                try:  # always everything inside try
+                    image = None
+                    Menu_EN_list = []
+
+                    for index, menu_name in enumerate(self.Menu_list):
+                        Menu_item = items.Items.Add(menu_name, image, self.OnTextMenuClick)
+                        Menu_item.Tag = index
+                        Menu_EN_list.append(Menu_item)
+
+                    self.enabled = self.settings.GetValue(str(self.InstanceGuid), 0)
+
+                    for item in Menu_EN_list:
+                        if item.Tag == self.enabled:
+                            item.Checked = True
+                        else:
+                            item.Checked = False
+
+                    # self.ExpireSolution(True)
+                except Exception, ex:
+                    System.Windows.Forms.MessageBox.Show(str(ex))
+
             def SolveInstance(self, DA):
                 self.Message = 'Half Adjust'
                 Result, Floor, Ceil = (gd[object]() for _i in range(3))
+                # 获取右击菜单的设置值
+                self.ComponentPropertyValue = self.settings.GetValue(str(self.InstanceGuid), 0)
+
                 if self.RunCount == 1:
                     def _do_main(tuple_data):
                         a_part_trunk, b_part_trunk, origin_path = tuple_data
@@ -865,15 +901,38 @@ try:
 
                 return iter_group
 
+            def eliminate_zero(self, str_num):
+                # 将小数点后位倒叙
+                if '.' in str_num:
+                    pt_before, pt_after = str_num.split('.')
+                    pt_num = [int(_) for _ in pt_after][::-1]
+                    # 寻找列表中第一个不为0的下标
+                    first_non_zero_index = next((i for i, v in enumerate(pt_num) if v != 0), None)
+                    if first_non_zero_index is not None:
+                        new_pt_num = pt_num[first_non_zero_index:]
+                        new_pt_after = ''.join([str(_) for _ in new_pt_num[::-1]])
+                        new_str_num = pt_before + '.' + new_pt_after
+                    else:
+                        new_str_num = str(int(float(str_num)))
+                else:
+                    new_str_num = str_num
+                return new_str_num
+
             def run_main(self, tuple_data):
                 """运行主方法"""
                 Decimal, Precision = tuple_data
                 decimal.getcontext().prec = 10000
                 Precision = 0 if Precision is None else Precision
                 if Decimal is not None:
-                    Result = str(
+                    temp_result = str(
                         dd(Decimal).quantize(dd("1e-{}".format(Precision)), rounding="ROUND_HALF_UP")) if "e" in str(
                         Decimal) else NewRound().handle_str(Decimal, Precision)
+                    if self.ComponentPropertyValue == 0:
+                        Result = temp_result
+                    elif self.ComponentPropertyValue == 1:
+                        Result = self.eliminate_zero(temp_result)
+                    else:
+                        Result = 'Invalid'
                     Floor = math.floor(Decimal)
                     Ceil = math.ceil(Decimal)
                 else:
