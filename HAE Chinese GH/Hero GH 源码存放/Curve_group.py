@@ -21,7 +21,8 @@ import re
 import clr
 import System.Collections.Generic.IEnumerable as IEnumerable
 from Grasshopper.Kernel.Data import GH_Path
-import math
+import decimal
+from decimal import Decimal as dd
 
 clr.AddReference("System.Management")
 import System.Management
@@ -75,18 +76,49 @@ try:
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                p = Grasshopper.Kernel.Parameters.Param_Line()
                 self.SetUpParam(p, "Line", "L", "output line")
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
-                p0 = self.marshal.GetInput(DA, 0)
-                p1 = self.marshal.GetInput(DA, 1)
-                p2 = self.marshal.GetInput(DA, 2)
-                result = self.RunScript(p0, p1, p2)
+                # 插件名称
+                self.Message = 'P+V=L'
+                # 初始化输出端数据内容
+                Result_Line = gd[object]()
+                if self.RunCount == 1:
+                    p0 = self.Params.Input[0].VolatileData
+                    p1 = self.Params.Input[1].VolatileData
+                    p2 = self.Params.Input[2].VolatileData
+                    # 确定不变全局参数
+                    self.factor = p2[0][0].Value
 
-                if result is not None:
-                    self.marshal.SetOutput(result, DA, 0, True)
+                    j_bool_f1, pt_trunk, pt_path = self.parameter_judgment(p0)
+                    re_mes = Message.RE_MES([j_bool_f1], ['P end'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                    else:
+                        dir_trunk, dir_path = self.parameter_judgment(p1)[1:]
+                        pt_trunk = list(ghp.run(lambda x: list(ghp.run(self._trun_object, x)), pt_trunk))
+                        dir_trunk = list(ghp.run(lambda x: list(ghp.run(lambda v: v.Value, x)), dir_trunk))
+                        # 树形匹配
+                        iter_group, max_i = self.match_tree(pt_trunk, dir_trunk)
+                        # 添加原始树路径
+                        pt_trunk, dir_trunk = iter_group
+                        zip_list = zip(pt_trunk, dir_trunk, [pt_path, dir_path][max_i])
+                        # 多进程函数运行
+                        ghp.run(self._do_main, zip_list)
+                        iter_ungroup_data = ghp.run(self._do_main, zip_list)
+                        Result_Line = self.format_tree(iter_ungroup_data)
+
+                DA.SetDataTree(0, Result_Line)
+                # p0 = self.marshal.GetInput(DA, 0)
+                # p1 = self.marshal.GetInput(DA, 1)
+                # p2 = self.marshal.GetInput(DA, 2)
+                # result = self.RunScript(p0, p1, p2)
+                #
+                # if result is not None:
+                #     self.marshal.SetOutput(result, DA, 0, True)
 
             def get_Internal_Icon_24x24(self):
                 o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAF4SURBVEhLYxhywNj4DKuHxy12KJf6wNbjTLSz752dTt7X7ji6n9eGClMP2PucEbHzOLMbaMFze7czAVBh6gBn55PC9h6nj9m5n/KzczuRZu9+2gEqRTlwcTnDb+9x5iTQ0BSoEPWAq+sFbqDhR4FBkwUVoh6wt9/PAXT1QXuPs4VQIeoBUJK0cz+zB+j6CqgQ9UBo6CpmO4/T24HBUg8VogIQ3sAroXY2VkzxsCvQ8EVA3AaVoQbYz+Efcf74lp3///dO+fLfxP7EUqgEtcAa+frWh/9B4Ofv//+tnE+vhEpQB4jr7eR28z/3ePbCT//L6x7/1jE7Qb1cqhV6hQ2U/a2cTmcw8BywZWDbogmVohyAUgswne8E4lqoEHUBMKVscfA40wzlUhfYu59dZ+dxtgvKpS4AloorgXgilEtdAIxQYCY6NQPKpS6wdz8zB2jBPCiXegBYKrIADZ4OTC1LoELUBQ7uZ9yBJeNiKJf6AJSZoEwqAgYGAFDLiEMQByWiAAAAAElFTkSuQmCC"
@@ -95,31 +127,118 @@ try:
             def __init__(self):
                 self.factor = None
 
-            def create_line(self, start, vector):
-                if self.factor is False:
+            def Branch_Route(self, Tree):
+                """分解Tree操作，树形以及多进程框架代码"""
+                Tree_list = [list(_) for _ in Tree.Branches]
+                Tree_Path = [list(_) for _ in Tree.Paths]
+                return Tree_list, Tree_Path
+
+            def split_tree(self, tree_data, tree_path):
+                """操作树单枝的代码"""
+                new_tree = ght.list_to_tree(tree_data, True, tree_path)  # 此处可替换复写的Tree_To_List（源码参照Vector组-点集根据与曲线距离分组）
+                result_data, result_path = self.Branch_Route(new_tree)
+                if list(chain(*result_data)):
+                    return result_data, result_path
+                else:
+                    return [[]], result_path
+
+            def format_tree(self, result_tree):
+                """匹配树路径的代码，利用空树创造与源树路径匹配的树形结构分支"""
+                stock_tree = gd[object]()
+                for sub_tree in result_tree:
+                    fruit, branch = sub_tree
+                    for index, item in enumerate(fruit):
+                        path = gk.Data.GH_Path(System.Array[int](branch[index]))
+                        if hasattr(item, '__iter__'):
+                            if item:
+                                for sub_index in range(len(item)):
+                                    stock_tree.Insert(item[sub_index], path, sub_index)
+                            else:
+                                stock_tree.AddRange(item, path)
+                        else:
+                            stock_tree.Insert(item, path, index)
+                return stock_tree
+
+            def parameter_judgment(self, tree_par_data):
+                # 获取输入端参数所有数据
+                geo_list, geo_path = self.Branch_Route(tree_par_data)
+                j_list = filter(None, list(chain(*geo_list)))  # 获取所有数据
+                return j_list, geo_list, geo_path
+
+            def _trun_object(self, ref_obj):
+                """引用物体转换为GH内置物体"""
+                if 'ReferenceID' in dir(ref_obj):
+                    if ref_obj.IsReferencedGeometry:
+                        test_pt = ref_obj.Value
+                    else:
+                        test_pt = ref_obj.Value
+                else:
+                    test_pt = ref_obj
+                return test_pt
+
+            def sub_match(self, tuple_data):
+                # 子树匹配
+                target_tree, other_tree = tuple_data
+                t_len, o_len = len(target_tree), len(other_tree)
+                if o_len == 0:
+                    new_tree = [other_tree] * len(target_tree)
+                else:
+                    new_tree = other_tree + [other_tree[-1]] * (t_len - o_len)
+                return new_tree
+
+            def match_tree(self, *args):
+                # 参数化匹配数据
+                len_list = map(lambda x: len(x), args)  # 得到最长的树
+                max_index = len_list.index(max(len_list))  # 得到最长的树的下标
+                self.max_index = max_index
+                max_trunk = args[max_index]
+                other_list = [args[_] for _ in range(len(args)) if _ != max_index]  # 剩下的树
+                matchzip = zip([max_trunk] * len(other_list), other_list)
+
+                # 插入最大列表，获得最新列表
+                reslut_list = map(self.sub_match, matchzip)
+                reslut_list.insert(max_index, max_trunk)
+                return reslut_list, max_index
+
+            def create_line(self, args):
+                start, vector = args
+
+                if not self.factor:
                     line = rg.Line(start, vector)
                 else:
                     line = rg.Line(rg.Line.PointAt(rg.Line(start, vector), 1), -vector * 2)
                 return line
 
-            def RunScript(self, Point, Direction, Whole):
-                try:
+            def _do_main(self, tuple_data):
+                # 分解集合数据
+                pts, dir_list, origin_path = tuple_data
+                # 获得最新列表
+                map_list = self.match_tree(pts, dir_list)[0]
+                sub_zip_list = zip(*map_list)
+                # map函数批量处理
+                line_list = map(self.create_line, sub_zip_list)
+                ungroup_data = self.split_tree(line_list, origin_path)
+                Rhino.RhinoApp.Wait()
+                return ungroup_data
 
-                    structure_tree = self.Params.Input[0].VolatileData
-                    temp_geo_list = [list(i) for i in structure_tree.Branches]
-                    if len(temp_geo_list) < 1:
-                        Message.message2(self, 'The Point-terminal cannot be empty！')
-                        return gd[object]()
-
-                    re_mes = Message.RE_MES([Point], ['Point'])
-                    if len(re_mes) > 0:
-                        return None
-                    else:
-                        self.factor = Whole
-                        Line = self.create_line(Point, Direction)
-                        return Line
-                finally:
-                    self.Message = 'P+V=L'
+            # def RunScript(self, Point, Direction, Whole):
+            #     try:
+            #
+            #         structure_tree = self.Params.Input[0].VolatileData
+            #         temp_geo_list = [list(i) for i in structure_tree.Branches]
+            #         if len(temp_geo_list) < 1:
+            #             Message.message2(self, 'The Point-terminal cannot be empty！')
+            #             return gd[object]()
+            #
+            #         re_mes = Message.RE_MES([Point], ['Point'])
+            #         if len(re_mes) > 0:
+            #             return None
+            #         else:
+            #             self.factor = Whole
+            #             Line = self.create_line(Point, Direction)
+            #             return Line
+            #     finally:
+            #         self.Message = 'P+V=L'
 
 
         # 曲线修剪（简化控制点）
@@ -1352,15 +1471,36 @@ try:
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
-                p0 = self.marshal.GetInput(DA, 0)
-                result = self.RunScript(p0)
+                # 插件名称
+                self.Message = 'Length Sorting'
+                # 初始化输出端数据内容
+                Curve, Length = (gd[object]() for _ in range(2))
 
-                if result is not None:
-                    if not hasattr(result, '__getitem__'):
-                        self.marshal.SetOutput(result, DA, 0, True)
+                if self.RunCount == 1:
+                    p0 = self.Params.Input[0].VolatileData
+
+                    j_bool_f1, curve_trunk, curve_path = self.parameter_judgment(p0)
+                    re_mes = Message.RE_MES([j_bool_f1], ['C end'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
                     else:
-                        self.marshal.SetOutput(result[0], DA, 0, True)
-                        self.marshal.SetOutput(result[1], DA, 1, True)
+                        origin_curve_tr = ghp.run(lambda x: map(self._trun_object, filter(None, x)), curve_trunk)
+                        zip_list = zip(origin_curve_tr, curve_path)
+                        # 多进程
+                        iter_ungroup_data = zip(*ghp.run(self._do_main, zip_list))
+                        Curve, Length = ghp.run(lambda single_tree: self.format_tree(single_tree), iter_ungroup_data)
+                DA.SetDataTree(0, Curve)
+                DA.SetDataTree(1, Length)
+                # p0 = self.marshal.GetInput(DA, 0)
+                # result = self.RunScript(p0)
+                #
+                # if result is not None:
+                #     if not hasattr(result, '__getitem__'):
+                #         self.marshal.SetOutput(result, DA, 0, True)
+                #     else:
+                #         self.marshal.SetOutput(result[0], DA, 0, True)
+                #         self.marshal.SetOutput(result[1], DA, 1, True)
 
             def get_Internal_Icon_24x24(self):
                 o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAK9SURBVEhL7Y9rSFNxGMaPUASlkjcUPGeXlIwo6EtBWByXbO7utqYkLTU3BC0yxKRiEAR9EKm++CGhL0WRic0rXsowuxzbdOpUXPM2nTrMSxZJS6W9/d3+gWbEWq5P/eDh8D7P+38fDvEfnxn7Usp2rJQeBijfjq2tpXtR/3oebsKLKX06tjxI1F2nZSpzLh79x/ThitEJJdAyXqzFlgexstMmUhpdePQfZv4SY4fr0GQvysaWB5HSZEQF03j0n/bZC4wN9NAQqILn7/OZQbgKtSMFgSlodOqYHiiEKlt+YArqp88yJrgIldYAFdROapkOKIAHVt3GAkWnSaTomMSj/zxBBa/gPNwb0GZhywMq6JKetHyVqS3F0rTeIkXGu0KxyszGse9UjGuYVrcO7vbmnMKWBx6v77Y8zTonTH37TaQwrsrUAyti5RsJjn2nYkLT1bCkgUqHxmqYznxmcGY+bfmU11zlyL4ll9eE0HRZMJ9/f5dUWr4TP/kzHo2eqa5b0LkNM9lQM5cFhlkNNLu08HA0ox+vbGJfsjEiTjGWezDvYxi2fo/bHRwFQES63UQE+oYh7cbRL4naXxbMktiAk2p37lFN6Q9oP0fj6GcgiBTO0qG8VUH4CRc/nLckCOe5kJYEMZIFcVy6QxGn2iyubEhLpvQss6RDwFFMAVs2PM9VTpYkZC1y8GEv9LW2bZTIssBRzgFb7gB26kZx1gvlP8SWTwAl7EOyIPUCSzyIdtaKRla58pHHXFmH949oum0bye+cYUntQIkGgUKL67X2cJPQ3pq8x71iSYbRcQeQAvMimfzyzl66LtJTgAgijxuOxCY2JUUnVvus2KP1alLQvcyWjaPD6G8E5gmK13455tCNKHz374gXDoVSwn6gUnpsZFLruYiEnBAcbQ2sYw1hsXSjOp4gdmDrX0MQ3wEezYpPK8Qy/wAAAABJRU5ErkJggg=="
@@ -1398,167 +1538,192 @@ try:
                             stock_tree.Insert(item, path, index)
                 return stock_tree
 
-            # 排序
-            def CurveLen(self, Curve):
-                Length = [i.GetLength() for i in Curve]
-                CL = zip(Curve, Length)
-                AREAS = sorted(CL, key=lambda x: x[1], reverse=False)
-                return [_i[0] for _i in AREAS], [_i[1] for _i in AREAS]
+            def parameter_judgment(self, tree_par_data):
+                # 获取输入端参数所有数据
+                geo_list, geo_path = self.Branch_Route(tree_par_data)
+                j_list = filter(None, list(chain(*geo_list)))  # 获取所有数据
+                return j_list, geo_list, geo_path
 
-            def RunScript(self, Curve):
-                try:
-                    temp_geo_list = self.Branch_Route(self.Params.Input[0].VolatileData)[0]
-                    length_list = [len(filter(None, _)) for _ in temp_geo_list]
-                    Abool_factor = any(length_list)
-                    re_mes = Message.RE_MES([Abool_factor], ['Curve'])
-                    if len(re_mes) > 0:
-                        for mes_i in re_mes:
-                            Message.message2(self, mes_i)
-                        return gd[object](), gd[object]()
+            def _trun_object(self, ref_obj):
+                """引用物体转换为GH内置物体"""
+                if 'ReferenceID' in dir(ref_obj):
+                    if ref_obj.IsReferencedGeometry:
+                        test_pt = ref_obj.Value
                     else:
-                        if len(Curve) == 0:
-                            return [], []
-                        else:
-                            Curve, Length = self.CurveLen(filter(None, Curve))
-                            return Curve, Length
-                except Exception as e:
-                    Message.message1(self, "run error：\n{}".format(str(e)))
-                finally:
-                    self.Message = 'Length Sorting'
+                        test_pt = ref_obj.Value
+                else:
+                    test_pt = ref_obj
+                return test_pt
+
+            def _do_main(self, tuple_data):
+                curve_list, origin_path = tuple_data
+                # 创建一个元组列表，每个元组包含原始数据和其下标
+                total_list = [(i.GetLength(), i) for i in curve_list]
+                index_list, new_curves = zip(*sorted(total_list, reverse=False))
+
+                ungroup_data = map(lambda x: self.split_tree(x, origin_path), [new_curves, index_list])
+                Rhino.RhinoApp.Wait()
+                return ungroup_data
+            # 排序
+            # def CurveLen(self, Curve):
+            #     Length = [i.GetLength() for i in Curve]
+            #     CL = zip(Curve, Length)
+            #     AREAS = sorted(CL, key=lambda x: x[1], reverse=False)
+            #     return [_i[0] for _i in AREAS], [_i[1] for _i in AREAS]
+
+            # def RunScript(self, Curve):
+            #     try:
+            #         temp_geo_list = self.Branch_Route(self.Params.Input[0].VolatileData)[0]
+            #         length_list = [len(filter(None, _)) for _ in temp_geo_list]
+            #         Abool_factor = any(length_list)
+            #         re_mes = Message.RE_MES([Abool_factor], ['Curve'])
+            #         if len(re_mes) > 0:
+            #             for mes_i in re_mes:
+            #                 Message.message2(self, mes_i)
+            #             return gd[object](), gd[object]()
+            #         else:
+            #             if len(Curve) == 0:
+            #                 return [], []
+            #             else:
+            #                 Curve, Length = self.CurveLen(filter(None, Curve))
+            #                 return Curve, Length
+            #     except Exception as e:
+            #         Message.message1(self, "run error：\n{}".format(str(e)))
+            #     finally:
+            #         self.Message = 'Length Sorting'
 
 
         # 曲线取值
-        class DTS_Get_Vale(component):
-            def __new__(cls):
-                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_DTS_Get_Vale", "W44",
-                                                                   """Decomposed line，and the subscript value（S is the edge, V is the point）""",
-                                                                   "Scavenger", "B-Curve")
-                return instance
-
-            def get_ComponentGuid(self):
-                return System.Guid("50fd4090-ae7a-4e99-8ef2-075c8be0ac09")
-
-            @property
-            def Exposure(self):
-                return Grasshopper.Kernel.GH_Exposure.quarternary
-
-            def SetUpParam(self, p, name, nickname, description):
-                p.Name = name
-                p.NickName = nickname
-                p.Description = description
-                p.Optional = True
-
-            def RegisterInputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_Curve()
-                self.SetUpParam(p, "Curve", "C", "Curve to be decomposed")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
-                self.Params.Input.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "Index", "I", "The subscript of a decomposed edge or point")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
-                self.Params.Input.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_String()
-                self.SetUpParam(p, "S_V", "B", "select edge or point，not to select edge by default")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
-                self.Params.Input.Add(p)
-
-            def RegisterOutputParams(self, pManager):
-                p = Grasshopper.Kernel.Parameters.Param_Geometry()
-                self.SetUpParam(p, "data1", "D1", "First set of data")
-                self.Params.Output.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_Geometry()
-                self.SetUpParam(p, "data2", "D2", "Second set of data")
-                self.Params.Output.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_Geometry()
-                self.SetUpParam(p, "data3", "D3", "Third set of data")
-                self.Params.Output.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_Geometry()
-                self.SetUpParam(p, "data4", "D4", "Fourth set of data")
-                self.Params.Output.Add(p)
-
-                p = Grasshopper.Kernel.Parameters.Param_Geometry()
-                self.SetUpParam(p, "data5", "D5", "Fifth set of data")
-                self.Params.Output.Add(p)
-
-            def SolveInstance(self, DA):
-                p0 = self.marshal.GetInput(DA, 0)
-                p1 = self.marshal.GetInput(DA, 1)
-                p2 = self.marshal.GetInput(DA, 2)
-                result = self.RunScript(p0, p1, p2)
-
-                if result is not None:
-                    if not hasattr(result, '__getitem__'):
-                        self.marshal.SetOutput(result, DA, 0, True)
-                    else:
-                        self.marshal.SetOutput(result[0], DA, 0, True)
-                        self.marshal.SetOutput(result[1], DA, 1, True)
-                        self.marshal.SetOutput(result[2], DA, 2, True)
-                        self.marshal.SetOutput(result[3], DA, 3, True)
-                        self.marshal.SetOutput(result[4], DA, 4, True)
-
-            def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAM4SURBVEhL7VRdSBRRFLYesh5Ksz+EXkohs5+XSFbbnXvnZ2fuzOyu7mI/IJGEEEGBLz4EglSPPRQFPRW9GWhEPVRKDyXors7O7uzOrqar/dHaD1GRVkgg07mz00amub5ED34w3DlnvnvuOWe+e4qW8f+Al5N7asjgOsfMwyWGy5CSbMZK8iaWkwOsYnZj1WyqJPeLHcriQJLWJta/tBCJpd2quZ76eH5oA5bN81gxZ6TgGwtJ0a/wZBiiT5PQOwsrqSwmRpMdYAHw6sgx+wU2DguBZ1buEN1NfQyJjsuNHy3I+gEjx70IPVptc2FlpFiIVdMjcuMHOCgZ9pCoWH0wvYp+57jIFpYkjkMCo/4jMxb10QPapWDWguzGaUtyPu2oR9Y5mzA/ViKSOM2qqc9SCCok+hQjRbPQQovaUPkEJvFcBRS8L7WftsUxC8Y+4WEJkpMt0M4uLCd64YBLLDFE+LQix/hXQGRwq8sVXuOYedCqONk8Bdn1wU99D+skZNvpUWKMQ1kcWNQOC/7xb5jEUm4S30R9qN4oxUqiA3oMKnpNFZZliHYH/lcvlo1Zp893kThQZQeZB5zvyQn7BUn6Yy8oSApOWlQh1Iel2AX10LTFyskeJBnYJjpAPn0jVHOO949ZQmAClBa/7CaRvYKgl9SR/gpE4idBfRnfLxXpbVTrkNkUS6IV1OdWte28z6y1CQsAieFKuHSd3vrnFn3gIIv3Z+xEWSU1BnGbHSq9FKZQJ/XvcMwlAYl6FaemWlklfZGVzTNYTh1wPhUOQjLFUvBFOax/jJOC4BJ7ymq9A5sdMw+qaejnbWjfNO8bpW2cBa33eHJaLwwciVdDkLeckv4EN9JFfW6iIVYdjuTmTmKGkbRuUNBZWK+BVH/Oo3usNLTLDjIHjBLZyQcmunIG0Tqo7KgcMdGv5HxRnfNnviBitCJklNpEB3WB/rVIMdpBhpYXZhiSjeuMOMgir7YbEgjBnlv2bGt4lZ9FmJKFwFMg6w3U55Gi5TDYfgs8Fx5v3za4dDd42EuDUSWJMNNgAH6HO3KVqsyhAlkM1yASsSfpUkGnAFLTjZxvpAWpw8LcipfxFxQV/QB4Loa50TfLBgAAAABJRU5ErkJggg=="
-                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
-
-            def __init__(self):
-                pass
-
-            @staticmethod
-            def get_v_s(array_list):
-                c_list = [i for i in array_list]
-                point = []
-                for i in c_list:
-                    point.append(i.PointAtStart)
-                    point.append(i.PointAtEnd)
-                p_list = list(set(point))
-                p_list.sort(key=point.index)
-                p_list += [p_list[-1]]
-                return c_list, p_list
-
-            @staticmethod
-            def subscript_value(mod_list, list_data):
-                new_list = []
-                for index, i in enumerate(list_data):
-                    new_list.append(mod_list[i])
-                return new_list
-
-            @staticmethod
-            def index_erreor(P_Slist):
-                if len(P_Slist) < 5:
-                    P_Slist = P_Slist + [None] * (5 - len(P_Slist))
-                    return P_Slist
-                else:
-                    return P_Slist
-
-            def RunScript(self, Curve, index, S_V):
-                try:
-                    data1, data2, data3, data4, data5 = (gd[object]() for _ in range(5))
-                    re_mes = Message.RE_MES([Curve], ['Curve'])
-                    if len(re_mes) > 0:
-                        for mes_i in re_mes:
-                            Message.message2(self, mes_i)
-                    else:
-                        curve = Curve.DuplicateSegments()
-                        C_List, P_List = self.get_v_s(curve)
-                        I_List = [list(map(int, re.split(r"[.。!！?？；;，,\s+]", i))) for i in index]
-                        New_C_List = self.index_erreor(
-                            [self.subscript_value(C_List, I_List[i]) for i in range(len(I_List))])
-                        New_P_List = self.index_erreor(
-                            [self.subscript_value(P_List, I_List[i]) for i in range(len(I_List))])
-                        if S_V == 'S' or S_V == 's' or S_V is None:
-                            data1, data2, data3, data4, data5 = New_C_List
-                        elif S_V == 'V' or S_V == 'v':
-                            data1, data2, data3, data4, data5 = New_P_List
-                    return data1, data2, data3, data4, data5
-                finally:
-                    self.Message = 'decompose curve'
-
+        # class DTS_Get_Vale(component):
+        #     def __new__(cls):
+        #         instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+        #                                                            "RPP_DTS_Get_Vale", "W44",
+        #                                                            """Decomposed line，and the subscript value（S is the edge, V is the point）""",
+        #                                                            "Scavenger", "B-Curve")
+        #         return instance
+        #
+        #     def get_ComponentGuid(self):
+        #         return System.Guid("50fd4090-ae7a-4e99-8ef2-075c8be0ac09")
+        #
+        #     @property
+        #     def Exposure(self):
+        #         return Grasshopper.Kernel.GH_Exposure.quarternary
+        #
+        #     def SetUpParam(self, p, name, nickname, description):
+        #         p.Name = name
+        #         p.NickName = nickname
+        #         p.Description = description
+        #         p.Optional = True
+        #
+        #     def RegisterInputParams(self, pManager):
+        #         p = Grasshopper.Kernel.Parameters.Param_Curve()
+        #         self.SetUpParam(p, "Curve", "C", "Curve to be decomposed")
+        #         p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+        #         self.Params.Input.Add(p)
+        #
+        #         p = Grasshopper.Kernel.Parameters.Param_String()
+        #         self.SetUpParam(p, "Index", "I", "The subscript of a decomposed edge or point")
+        #         p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+        #         self.Params.Input.Add(p)
+        #
+        #         p = Grasshopper.Kernel.Parameters.Param_String()
+        #         self.SetUpParam(p, "S_V", "B", "select edge or point，not to select edge by default")
+        #         p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+        #         self.Params.Input.Add(p)
+        #
+        #     def RegisterOutputParams(self, pManager):
+        #         p = Grasshopper.Kernel.Parameters.Param_Geometry()
+        #         self.SetUpParam(p, "data1", "D1", "First set of data")
+        #         self.Params.Output.Add(p)
+        #
+        #         p = Grasshopper.Kernel.Parameters.Param_Geometry()
+        #         self.SetUpParam(p, "data2", "D2", "Second set of data")
+        #         self.Params.Output.Add(p)
+        #
+        #         p = Grasshopper.Kernel.Parameters.Param_Geometry()
+        #         self.SetUpParam(p, "data3", "D3", "Third set of data")
+        #         self.Params.Output.Add(p)
+        #
+        #         p = Grasshopper.Kernel.Parameters.Param_Geometry()
+        #         self.SetUpParam(p, "data4", "D4", "Fourth set of data")
+        #         self.Params.Output.Add(p)
+        #
+        #         p = Grasshopper.Kernel.Parameters.Param_Geometry()
+        #         self.SetUpParam(p, "data5", "D5", "Fifth set of data")
+        #         self.Params.Output.Add(p)
+        #
+        #     def SolveInstance(self, DA):
+        #         p0 = self.marshal.GetInput(DA, 0)
+        #         p1 = self.marshal.GetInput(DA, 1)
+        #         p2 = self.marshal.GetInput(DA, 2)
+        #         result = self.RunScript(p0, p1, p2)
+        #
+        #         if result is not None:
+        #             if not hasattr(result, '__getitem__'):
+        #                 self.marshal.SetOutput(result, DA, 0, True)
+        #             else:
+        #                 self.marshal.SetOutput(result[0], DA, 0, True)
+        #                 self.marshal.SetOutput(result[1], DA, 1, True)
+        #                 self.marshal.SetOutput(result[2], DA, 2, True)
+        #                 self.marshal.SetOutput(result[3], DA, 3, True)
+        #                 self.marshal.SetOutput(result[4], DA, 4, True)
+        #
+        #     def get_Internal_Icon_24x24(self):
+        #         o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAM4SURBVEhL7VRdSBRRFLYesh5Ksz+EXkohs5+XSFbbnXvnZ2fuzOyu7mI/IJGEEEGBLz4EglSPPRQFPRW9GWhEPVRKDyXors7O7uzOrqar/dHaD1GRVkgg07mz00amub5ED34w3DlnvnvuOWe+e4qW8f+Al5N7asjgOsfMwyWGy5CSbMZK8iaWkwOsYnZj1WyqJPeLHcriQJLWJta/tBCJpd2quZ76eH5oA5bN81gxZ6TgGwtJ0a/wZBiiT5PQOwsrqSwmRpMdYAHw6sgx+wU2DguBZ1buEN1NfQyJjsuNHy3I+gEjx70IPVptc2FlpFiIVdMjcuMHOCgZ9pCoWH0wvYp+57jIFpYkjkMCo/4jMxb10QPapWDWguzGaUtyPu2oR9Y5mzA/ViKSOM2qqc9SCCok+hQjRbPQQovaUPkEJvFcBRS8L7WftsUxC8Y+4WEJkpMt0M4uLCd64YBLLDFE+LQix/hXQGRwq8sVXuOYedCqONk8Bdn1wU99D+skZNvpUWKMQ1kcWNQOC/7xb5jEUm4S30R9qN4oxUqiA3oMKnpNFZZliHYH/lcvlo1Zp893kThQZQeZB5zvyQn7BUn6Yy8oSApOWlQh1Iel2AX10LTFyskeJBnYJjpAPn0jVHOO949ZQmAClBa/7CaRvYKgl9SR/gpE4idBfRnfLxXpbVTrkNkUS6IV1OdWte28z6y1CQsAieFKuHSd3vrnFn3gIIv3Z+xEWSU1BnGbHSq9FKZQJ/XvcMwlAYl6FaemWlklfZGVzTNYTh1wPhUOQjLFUvBFOax/jJOC4BJ7ymq9A5sdMw+qaejnbWjfNO8bpW2cBa33eHJaLwwciVdDkLeckv4EN9JFfW6iIVYdjuTmTmKGkbRuUNBZWK+BVH/Oo3usNLTLDjIHjBLZyQcmunIG0Tqo7KgcMdGv5HxRnfNnviBitCJklNpEB3WB/rVIMdpBhpYXZhiSjeuMOMgir7YbEgjBnlv2bGt4lZ9FmJKFwFMg6w3U55Gi5TDYfgs8Fx5v3za4dDd42EuDUSWJMNNgAH6HO3KVqsyhAlkM1yASsSfpUkGnAFLTjZxvpAWpw8LcipfxFxQV/QB4Loa50TfLBgAAAABJRU5ErkJggg=="
+        #         return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+        #
+        #     def __init__(self):
+        #         pass
+        #
+        #     @staticmethod
+        #     def get_v_s(array_list):
+        #         c_list = [i for i in array_list]
+        #         point = []
+        #         for i in c_list:
+        #             point.append(i.PointAtStart)
+        #             point.append(i.PointAtEnd)
+        #         p_list = list(set(point))
+        #         p_list.sort(key=point.index)
+        #         p_list += [p_list[-1]]
+        #         return c_list, p_list
+        #
+        #     @staticmethod
+        #     def subscript_value(mod_list, list_data):
+        #         new_list = []
+        #         for index, i in enumerate(list_data):
+        #             new_list.append(mod_list[i])
+        #         return new_list
+        #
+        #     @staticmethod
+        #     def index_erreor(P_Slist):
+        #         if len(P_Slist) < 5:
+        #             P_Slist = P_Slist + [None] * (5 - len(P_Slist))
+        #             return P_Slist
+        #         else:
+        #             return P_Slist
+        #
+        #     def RunScript(self, Curve, index, S_V):
+        #         try:
+        #             data1, data2, data3, data4, data5 = (gd[object]() for _ in range(5))
+        #             re_mes = Message.RE_MES([Curve], ['Curve'])
+        #             if len(re_mes) > 0:
+        #                 for mes_i in re_mes:
+        #                     Message.message2(self, mes_i)
+        #             else:
+        #                 curve = Curve.DuplicateSegments()
+        #                 C_List, P_List = self.get_v_s(curve)
+        #                 I_List = [list(map(int, re.split(r"[.。!！?？；;，,\s+]", i))) for i in index]
+        #                 New_C_List = self.index_erreor(
+        #                     [self.subscript_value(C_List, I_List[i]) for i in range(len(I_List))])
+        #                 New_P_List = self.index_erreor(
+        #                     [self.subscript_value(P_List, I_List[i]) for i in range(len(I_List))])
+        #                 if S_V == 'S' or S_V == 's' or S_V is None:
+        #                     data1, data2, data3, data4, data5 = New_C_List
+        #                 elif S_V == 'V' or S_V == 'v':
+        #                     data1, data2, data3, data4, data5 = New_P_List
+        #             return data1, data2, data3, data4, data5
+        #         finally:
+        #             self.Message = 'decompose curve'
 
         # 曲线筛选
         class FilterCurve(component):
@@ -1603,16 +1768,38 @@ try:
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
-                p0 = self.marshal.GetInput(DA, 0)
-                p1 = self.marshal.GetInput(DA, 1)
-                result = self.RunScript(p0, p1)
+                # 插件名称
+                self.Message = 'Filter Curve（curvature）'
+                # 初始化输出端数据内容
+                Curve_Result, Line_Result = (gd[object]() for _ in range(2))
+                if self.RunCount == 1:
+                    p0 = self.Params.Input[0].VolatileData
+                    p1 = self.Params.Input[1].VolatileData
+                    # 确定不变全局参数
+                    self.tol = float(p1[0][0].Value)
 
-                if result is not None:
-                    if not hasattr(result, '__getitem__'):
-                        self.marshal.SetOutput(result, DA, 0, True)
+                    j_bool_f1, curve_trunk, curve_path = self.parameter_judgment(p0)
+                    re_mes = Message.RE_MES([j_bool_f1], ['C end'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
                     else:
-                        self.marshal.SetOutput(result[0], DA, 0, True)
-                        self.marshal.SetOutput(result[1], DA, 1, True)
+                        zip_list = zip(curve_trunk, curve_path)
+                        iter_ungroup_data = zip(*ghp.run(self._do_main, zip_list))
+
+                        Curve_Result, Line_Result = ghp.run(lambda single_tree: self.format_tree(single_tree), iter_ungroup_data)
+                DA.SetDataTree(0, Curve_Result)
+                DA.SetDataTree(1, Line_Result)
+                # p0 = self.marshal.GetInput(DA, 0)
+                # p1 = self.marshal.GetInput(DA, 1)
+                # result = self.RunScript(p0, p1)
+                #
+                # if result is not None:
+                #     if not hasattr(result, '__getitem__'):
+                #         self.marshal.SetOutput(result, DA, 0, True)
+                #     else:
+                #         self.marshal.SetOutput(result[0], DA, 0, True)
+                #         self.marshal.SetOutput(result[1], DA, 1, True)
 
             def get_Internal_Icon_24x24(self):
                 o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAXnSURBVEhLbVZ5bBRVGJ8gR+RoRSkQkLZQ2tJikaR0e+3um9ljrm63pQcoRkVEE5CYSEgQhW4pPWgBC3jgQTyimIjR/zSaRs6yy+5Ou7RdurS0GqCCXEVEAgKd5/e9nS5F+SWTnfmO9/ve+463HO8MFjrdfYutUsDNS5pkEQMFFkWz8bLfzt7loIg6fF6r2LfynZWNtctKflgmyEEV7Yd1D3scxX1lnEXSlpOSSHJ2tjbGIh6exSudTYLSEeLVE52C0rXL6jiUSsjB0QXuyKRLG/Leou/n0lPrnbaFcm9CoaMl0eOho1D3sIeIbXM5q6QtwQUg2lm82tmjVAxSm6ubCkVhqlRcxd9zguSfzwF0T+oauiOD6h9yKQvsPfvsxacvmp1HclH3MBCiTeF4sa3c5dLGA4FXKb9CrbL2qSB1pBPRO5fIbTulsj8okbQedNA3z15Dt8+n+i4uZT7fv1ouvwQBdN8slHw8W/E/yHcem8pFz1hbIi0ewIUOGboYiBT8HoknmG4JtGnccroNCDyzF6DOKvnXiuBnK4rcsTp9CnMYAUZApBBP5OB7LHoxuMzQxYAByGWXaJL1Qg1tGmUQpDECBBF9q5wlZ+BYI9Qq+coMMQMjgEUFImtfSGUXKC5m6GIgin+RWHqOppCBnfrWca/Qpkyq12SwnAzDIvtfdLj7qaP4NLWI3ucM8X0COPcqTKhVPF5l6GIwQ4RqxTU6zTK4hjaOeZURbEzNMNQxwHEtsRf3UGfJb9QieVeijLggyUTRXEQNLYQKugcJu0pEbR7zAGBlCWrXOYe7j3JZ+pN63ZQ3aGMmpRvSYjYjYXX43Lai7iGx9CyFnKyW5d5xrEyZUvS/rVRcoURp/xuiabbKwSZeDl3G6C3i8V1oQz3p1Uhwa0vi7Bx7WC6UfWaUj4RV9DkFV/dtdiJK8AVGYJJ746LKQBVE/A8mXCnHHuiCxLVtY54AfVNaLW1Io5GNQnqOs+s6HgeRAs8b6hisUqvF7u7/zgzTgBHkid7HDR1nlo8k2NSIwLtO2onqn26IGfSq9AbakEFvfDBhapatt8LuOkWxAGD36w2TB5Dt0OIZgbmoc7Ih47Kh6eyurhy7qzvfbvc/YYgZgKARCfQtGUn4jcdhKzp5AxsOm5IZjUC0ioDA4eiPRwGc/euCGr4ml12kcvllPKK7UARbmTUA6n87rc+g1JOZaIi4AmfrQvA5i7kicvs3mZn7xxqq+wT4wbIOC/PKiSGYhHvh2c3L7YPoCMTvog3soJnWwQ5qU2fi9zDYkFQ729XK6+h/OMfewnaea/NNA4KA26z400BxE1r+pkUMmpgXoNChJYLjGaf7V8o9TZP12ml1tA76oI5LMExiMJl+jCNK6KcoSUc3TtICd+skDme/VQquxcqBctxh2McAzbcCJ+wMy+V1+taJHr1mztDul2tNBVLER+TAOsPMgGcUUdo+L37mDuxa+5aJWCeLgT0sUYpWyoQjQJyBp7AcU/kzn+h1k+v1zcn3PM/uMeVJXXcxTzBm/heUTQ0vB6JFJvl4XJRACm6LjurACsMmBjPceNLi8zSFH2jWG+IbaA0kOcyNzbJHsiC5AyxHcuhrvFMMlxhyyMHpeKNJMB5Ksb0hmlZDFwPs7jM8oscK/irR6+Oa6OZ5ME0zWd/kC8eSeLWjw0juAbP5aKzcEdFxLQcr8vK8j0KzHMVdEKltr9kemGMr8s6E92psJCi/32FQjIYL52NanQ5lmvSYsQY0U0s8LN7CSNSOsMV5eLahihLAQFuaWRkeK6gsmj7cMo4IXgnBlTkI7yf/xMsfHfRN876CeQQ7mMtGyzAqK/c/wivtX0btw+et9mM5KGdlSuRQJWtpAEZjUzs9QOQVlE4Nzrg5X/iFdS1Cr07Zp1elDtGPuPGG6AFALhswX3Cn38Zyxz8ScCO1vSS4I+m4HQcj8sC/hNZJ7B0iIyQ80Sy3J6D+4pv5B2hNLvUs3ZOM3yMfHCtO588TYArX4zUKR7/K4Y7M+BfSUhTIJ1pA7QAAAABJRU5ErkJggg=="
@@ -1653,6 +1840,23 @@ try:
                             stock_tree.Insert(item, path, index)
                 return stock_tree
 
+            def parameter_judgment(self, tree_par_data):
+                # 获取输入端参数所有数据
+                geo_list, geo_path = self.Branch_Route(tree_par_data)
+                j_list = filter(None, list(chain(*geo_list)))  # 获取所有数据
+                return j_list, geo_list, geo_path
+
+            def _trun_object(self, ref_obj):
+                """引用物体转换为GH内置物体"""
+                if 'ReferenceID' in dir(ref_obj):
+                    if ref_obj.IsReferencedGeometry:
+                        test_pt = ref_obj.Value
+                    else:
+                        test_pt = ref_obj.Value
+                else:
+                    test_pt = ref_obj
+                return test_pt
+
             def find_curvature(self, o_curve):
                 if o_curve:
                     start_pt, end_pt, mid_pt = o_curve.PointAtStart, o_curve.PointAtEnd, ghc.CurveMiddle(o_curve)
@@ -1661,35 +1865,52 @@ try:
                     curvature = abs(mid_pt.DistanceTo(ref_mid))
                     return o_curve if curvature >= self.tol else None
 
-            def RunScript(self, Curve, Tolerance):
-                try:
-                    Curve_Result, Line_Result = (gd[object]() for _ in range(2))
-                    self.tol = Tolerance
+            def _do_main(self, tuple_data):
+                # 分解集合数据
+                origin_curve_list, origin_path = tuple_data
+                curve_list = map(self._trun_object, origin_curve_list)
 
-                    structure_tree = self.Params.Input[0].VolatileData
-                    temp_geo_list = [list(i) for i in structure_tree.Branches]
-                    if len(temp_geo_list) < 1:
-                        Message.message2(self, 'The C-terminal cannot be empty！')
-                        return gd[object](), gd[object]()
-                    re_mes = Message.RE_MES([Curve], ['Curve'])
-                    if len(re_mes) > 0:
-                        return [], []
+                result_cur = map(self.find_curvature, curve_list)
+                index_fit_cur, index_line_cur = [], []
+                for index_c in range(len(result_cur)):
+                    if result_cur[index_c] is None:
+                        index_line_cur.append(origin_curve_list[index_c])
                     else:
-                        structure_tree = self.Params.Input[0].VolatileData
-                        origin_curve = self.Branch_Route(structure_tree)[0][self.RunCount - 1]
+                        index_fit_cur.append(origin_curve_list[index_c])
 
-                        result_cur = ghp.run(self.find_curvature, Curve)
-                        index_fit_cur, index_line_cur = [], []
-                        for index_c in range(len(result_cur)):
-                            if result_cur[index_c] is None:
-                                index_line_cur.append(origin_curve[index_c])
-                            else:
-                                index_fit_cur.append(origin_curve[index_c])
-                        #                index_fit_cur.AddRange(List_Length,GH_Path(tuple(Curve_path)))
-                        Curve_Result, Line_Result = index_fit_cur, index_line_cur
-                    return Curve_Result, Line_Result
-                finally:
-                    self.Message = 'filter curve（curvature）'
+                ungroup_data = map(lambda x: self.split_tree(x, origin_path), [index_fit_cur, index_line_cur])
+                Rhino.RhinoApp.Wait()
+                return ungroup_data
+
+            # def RunScript(self, Curve, Tolerance):
+            #     try:
+            #         Curve_Result, Line_Result = (gd[object]() for _ in range(2))
+            #         self.tol = Tolerance
+            #
+            #         structure_tree = self.Params.Input[0].VolatileData
+            #         temp_geo_list = [list(i) for i in structure_tree.Branches]
+            #         if len(temp_geo_list) < 1:
+            #             Message.message2(self, 'The C-terminal cannot be empty！')
+            #             return gd[object](), gd[object]()
+            #         re_mes = Message.RE_MES([Curve], ['Curve'])
+            #         if len(re_mes) > 0:
+            #             return [], []
+            #         else:
+            #             structure_tree = self.Params.Input[0].VolatileData
+            #             origin_curve = self.Branch_Route(structure_tree)[0][self.RunCount - 1]
+            #
+            #             result_cur = ghp.run(self.find_curvature, Curve)
+            #             index_fit_cur, index_line_cur = [], []
+            #             for index_c in range(len(result_cur)):
+            #                 if result_cur[index_c] is None:
+            #                     index_line_cur.append(origin_curve[index_c])
+            #                 else:
+            #                     index_fit_cur.append(origin_curve[index_c])
+            #             #                index_fit_cur.AddRange(List_Length,GH_Path(tuple(Curve_path)))
+            #             Curve_Result, Line_Result = index_fit_cur, index_line_cur
+            #         return Curve_Result, Line_Result
+            #     finally:
+            #         self.Message = 'filter curve（curvature）'
 
 
         # 曲线按照参照平面排序
@@ -2899,13 +3120,40 @@ try:
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
-                p0 = self.marshal.GetInput(DA, 0)
-                p1 = self.marshal.GetInput(DA, 1)
-                p2 = self.marshal.GetInput(DA, 2)
-                result = self.RunScript(p0, p1, p2)
+                # 插件名称
+                self.Message = 'Create Intermediate Line'
+                # 初始化输出端数据内容
+                Result_Curve = gd[object]()
+                if self.RunCount == 1:
+                    p0 = self.Params.Input[0].VolatileData
+                    p1 = self.Params.Input[1].VolatileData
+                    p2 = self.Params.Input[2].VolatileData
 
-                if result is not None:
-                    self.marshal.SetOutput(result, DA, 0, True)
+                    j_bool_f1, curve_1_trunk, curve_1_path = self.parameter_judgment(p0)
+                    j_bool_f2, curve_2_trunk, curve_2_path = self.parameter_judgment(p1)
+                    re_mes = Message.RE_MES([j_bool_f1, j_bool_f2], ['C1 end', 'C2 end'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                    else:
+                        count_trunk, conut_path = self.parameter_judgment(p2)[1:]
+
+                        iter_group, max_i = self.match_tree(curve_1_trunk, curve_2_trunk, count_trunk)
+                        # 添加原始树路径
+                        new_curve_1_trunk, new_curve_2_trunk, new_count_trunk = iter_group
+                        zip_list = zip(new_curve_1_trunk, new_curve_2_trunk, new_count_trunk, [curve_1_path, curve_2_path, conut_path][max_i])
+                        # 多进程函数运行
+                        iter_ungroup_data = ghp.run(self._do_main, zip_list)
+                        Result_Curve = self.format_tree(iter_ungroup_data)
+
+                DA.SetDataTree(0, Result_Curve)
+                # p0 = self.marshal.GetInput(DA, 0)
+                # p1 = self.marshal.GetInput(DA, 1)
+                # p2 = self.marshal.GetInput(DA, 2)
+                # result = self.RunScript(p0, p1, p2)
+                #
+                # if result is not None:
+                #     self.marshal.SetOutput(result, DA, 0, True)
 
             def get_Internal_Icon_24x24(self):
                 o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAKjSURBVEhLzZVfSFNRHMelKFN0kiu1tGTEoDbZde7u3rt773b3N7VkFQW9WNhbD4VFSET0IFk9BIWIgSWJZKsgNUuD2T//FiEIQUQPVkT0UERUlIUmt++5niDn2q7mQx/4sP2+57Dfzj07Zyn/BS7/3cNysH+MV7qiDilSazIf5OjQwlDENW4VvD0tvHJrVArcV32bn6qccrM3Pd2SR6csIBmrVjBc0z5P6eMpwXv7GZK06YEFJj9/u00pG1GL+eazNNJFMayAJq1Kgo1tOCKHBtWcHH8ujZIyBFXqS3gOeuHfSBV9veN24WI9rZNihvthBL6Bv5sNwBI4C4Y/XyuHBlSDoSCbRrpZBHl4AZImU7AMxrA8Sww8+MG6r3fQYF744Df4Fa4hwZ9sYE5UBsNjKufpupKXt6mQxnNmCyQruaxVMViYU1VSoO+LiHPCeW48YeWONla+dpwO62YYkiazVkEx2NjGnfjgZs7dOSKFhl7QXDfbIGlwVKv04vJFPQ4xspfhm6tszoZSo1FcTYdiWQY/wVdapRd3aLhVCvZPCkr3hOi/o8rBAdXuukTOwOLpGTNogGQVbq2aAxkwM3ftDhMjtNQEKp6rNq4p3iZZIWkQ1ar5Yhda63lvz3e8XTqdzKAdkiaVWjUfTNZDTinYpxaaq8n9FAvZo/eQNKmG8R5lYsjRx+arDNu4h0axMJDcV6QJ+Tkeg+Tkk0etD2z6B4d0tYmW8ciCdfAjJI2I4/AhLIWJcXrao7zS/ZqWiSDfuhyeho/gZ3gAJsZqP7OL3DHrLDVhGukllb4mZYnT3TnoLR9VWVekbn3RSVeBeXe+oWBjtsFgyTYaw5l03j+RVuJqq8P/71vclj+d7o5J3tM1ISg9U6L/3ju5bHQlnReHlJRfaUG7tHobhpIAAAAASUVORK5CYII="
@@ -2913,9 +3161,6 @@ try:
 
             def __init__(self):
                 pass
-
-            def mes_box(self, info, button, title):
-                return rs.MessageBox(info, button, title)
 
             def Branch_Route(self, Tree):
                 """分解Tree操作，树形以及多进程框架代码"""
@@ -2949,31 +3194,116 @@ try:
                             stock_tree.Insert(item, path, index)
                 return stock_tree
 
-            def Tween_Cruve(self, c1, c2, n):
-                curve = rg.Curve.CreateTweenCurves(c1, c2, n)
-                return curve
+            def parameter_judgment(self, tree_par_data):
+                # 获取输入端参数所有数据
+                geo_list, geo_path = self.Branch_Route(tree_par_data)
+                if geo_list:
+                    j_list = any(ghp.run(lambda x: len(list(filter(None, x))), geo_list))  # 去空操作, 判断是否为空
+                else:
+                    j_list = False
+                return j_list, geo_list, geo_path
 
-            def RunScript(self, C1, C2, n):
-                try:
-                    sc.doc = Rhino.RhinoDoc.ActiveDoc
-
-                    structure_tree, structure_tree1 = self.Params.Input[0].VolatileData, self.Params.Input[1].VolatileData
-                    temp_geo_list = [list(i) for i in structure_tree.Branches]
-                    temp_geo_list1 = [list(i) for i in structure_tree1.Branches]
-                    if len(temp_geo_list) < 1 or len(temp_geo_list1) < 1:
-                        Message.message2(self, 'The Curve1 or Curve2-terminal cannot be empty！')
-                        return gd[object]()
-
-                    re_mes = Message.RE_MES([C1, C2], ['C1', 'C2'])
-                    if len(re_mes) > 0:
-                        return []
+            def _trun_object(self, ref_obj):
+                """引用物体转换为GH内置物体"""
+                if 'ReferenceID' in dir(ref_obj):
+                    if ref_obj.IsReferencedGeometry:
+                        test_pt = ref_obj.Value
                     else:
-                        return self.Tween_Cruve(C1, C2, n)
-                    sc.doc.Views.Redraw()
-                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
-                    sc.doc = ghdoc
-                finally:
-                    self.Message = 'create Intermediate line'
+                        test_pt = ref_obj.Value
+                else:
+                    test_pt = ref_obj
+                return test_pt
+
+            def sub_match(self, tuple_data):
+                # 子树匹配
+                target_tree, other_tree = tuple_data
+                t_len, o_len = len(target_tree), len(other_tree)
+                if o_len == 0:
+                    new_tree = [other_tree] * len(target_tree)
+                else:
+                    new_tree = other_tree + [other_tree[-1]] * (t_len - o_len)
+                return new_tree
+
+            def match_tree(self, *args):
+                # 参数化匹配数据
+                len_list = map(lambda x: len(x), args)  # 得到最长的树
+                max_index = len_list.index(max(len_list))  # 得到最长的树的下标
+                self.max_index = max_index
+                max_trunk = args[max_index]
+                other_list = [args[_] for _ in range(len(args)) if _ != max_index]  # 剩下的树
+                matchzip = zip([max_trunk] * len(other_list), other_list)
+
+                # 插入最大列表，获得最新列表
+                reslut_list = map(self.sub_match, matchzip)
+                reslut_list.insert(max_index, max_trunk)
+                return reslut_list, max_index
+
+            def Tween_Cruve(self, set_data_list):
+                c1, c2, n = set_data_list
+                iso_curves = []
+                if c1 and c2:
+                    new_c2 = ghc.FlipCurve(c2, c1)['curve']
+                    n = float(int(n))
+                    # 创建Ruled面
+                    ruled_surface = ghc.RuledSurface(c1, new_c2)
+                    if ruled_surface:
+                        # 创建uv列表
+                        new_n = (n + 1)
+                        par = float(1) / new_n
+                        range_list = list(range(0, int(new_n + 1)))
+                        uv_list = [(_ * par) for _ in range_list][1: -1]
+                        # 参数化面几何体
+                        domin = rg.Interval(0, 1)
+                        srf = ruled_surface.Faces[0].ToNurbsSurface()
+                        srf.SetDomain(0, domin)
+                        srf.SetDomain(1, domin)
+
+                        # 通过uv分解面获取点列表
+                        pts = [rg.Point3d(0, _, 0) for _ in uv_list]
+
+                        # 获取uv值在曲面中的曲线
+                        for p in pts:
+                            curve = srf.IsoCurve(0, p[1])
+                            iso_curves.append(curve)
+                return iso_curves
+
+            def _do_main(self, tuple_data):
+                # 分解集合数据
+                curve1_list, curve2_list, count_list, origin_path = tuple_data
+                # 转换数据类型
+                curve1_list = map(self._trun_object, curve1_list)
+                curve2_list = map(self._trun_object, curve2_list)
+                count_list = map(lambda y: y.Value if y else None, count_list)
+                # 获得最新列表
+                map_list = self.match_tree(curve1_list, curve2_list, count_list)[0]
+                sub_zip_list = zip(*map_list)
+                # map函数批量处理
+                result_curve = map(self.Tween_Cruve, sub_zip_list)
+                ungroup_data = self.split_tree(result_curve, origin_path)
+                Rhino.RhinoApp.Wait()
+                return ungroup_data
+
+            # def RunScript(self, C1, C2, n):
+            #     try:
+            #         sc.doc = Rhino.RhinoDoc.ActiveDoc
+            #
+            #         structure_tree, structure_tree1 = self.Params.Input[0].VolatileData, self.Params.Input[1].VolatileData
+            #         temp_geo_list = [list(i) for i in structure_tree.Branches]
+            #         temp_geo_list1 = [list(i) for i in structure_tree1.Branches]
+            #         if len(temp_geo_list) < 1 or len(temp_geo_list1) < 1:
+            #             Message.message2(self, 'The Curve1 or Curve2-terminal cannot be empty！')
+            #             return gd[object]()
+            #
+            #         re_mes = Message.RE_MES([C1, C2], ['C1', 'C2'])
+            #         if len(re_mes) > 0:
+            #             return []
+            #         else:
+            #             return self.Tween_Cruve(C1, C2, n)
+            #         sc.doc.Views.Redraw()
+            #         ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+            #         sc.doc = ghdoc
+            #     finally:
+            #         self.Message = 'create Intermediate line'
 
 
         # 平面修剪曲线
@@ -3516,10 +3846,10 @@ try:
             def remove_duplicate_lines(self, lines, tolerance):
                 unique_lines = []
                 for line in lines:
+                    line = line.ToNurbsCurve()
                     is_duplicate = False
                     for unique_line in unique_lines:
-                        if rs.Distance(line.PointAtStart, unique_line.PointAtStart) < tolerance and \
-                                rs.Distance(line.PointAtEnd, unique_line.PointAtEnd) < tolerance:
+                        if rs.Distance(line.PointAtStart, unique_line.PointAtStart) < tolerance and rs.Distance(line.PointAtEnd, unique_line.PointAtEnd) < tolerance:
                             is_duplicate = True
                             break
                     if not is_duplicate:
