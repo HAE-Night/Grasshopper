@@ -27,8 +27,6 @@ clr.AddReference("System.Management")
 import System.Management
 
 # 定义全局变量
-designer_database = ['Niko', 'Nancy', 'Landon', 'Levi', 'Jiang', 'Claire', 'Bella', 'Lauren', 'Night', 'Mary', 'John', 'kiki', 'Radish', 'Juhair', 'Mohamed Shoman', 'Ivan', 'Hasir', 'Hari', 'Nikki',
-                     'Zubair', 'Riyas', 'Najeeb', 'Roberto', 'Mohamed Gomaa', 'Leo', 'James', 'Mia', 'Bynn', 'Vince', 'Noora', 'Xin', 'Jim', 'Lydia', 'Jim']
 Mac_Array = []
 
 
