@@ -29,104 +29,104 @@ Message = initialization.message()
 TreeFun = initialization.TreeOperation()
 try:
     if Result is True:
-        # # 键值对赋值
-        # class DATAKEY(component):
-        #     def __new__(cls):
-        #         instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-        #                                                            "RPP_DATAKEY", "C4", """Performs an f assignment to the key-value pair of object,when multiple objects are assigned values,pay attention to key-value pair order and data structure；""", "Scavenger", "K-Object")
-        #         return instance
-        #
-        #     def get_ComponentGuid(self):
-        #         return System.Guid("4b68c580-a4e4-4ca8-9e49-082b8f014c0b")
-        #
-        #     @property
-        #     def Exposure(self):
-        #         return Grasshopper.Kernel.GH_Exposure.primary
-        #
-        #     def SetUpParam(self, p, name, nickname, description):
-        #         p.Name = name
-        #         p.NickName = nickname
-        #         p.Description = description
-        #         p.Optional = True
-        #
-        #     def RegisterInputParams(self, pManager):
-        #         p = Grasshopper.Kernel.Parameters.Param_Guid()
-        #         self.SetUpParam(p, "Objects", "O", "Object set list")
-        #         p.Access = Grasshopper.Kernel.GH_ParamAccess.list
-        #         self.Params.Input.Add(p)
-        #
-        #         p = Grasshopper.Kernel.Parameters.Param_String()
-        #         self.SetUpParam(p, "Keys", "K", "Key-key,")
-        #         p.Access = Grasshopper.Kernel.GH_ParamAccess.list
-        #         self.Params.Input.Add(p)
-        #
-        #         p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-        #         self.SetUpParam(p, "Values", "V", "Value-value")
-        #         p.Access = Grasshopper.Kernel.GH_ParamAccess.list
-        #         self.Params.Input.Add(p)
-        #
-        #         p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-        #         self.SetUpParam(p, "Toggle", "T", "Assignment or not")
-        #         p.Access = Grasshopper.Kernel.GH_ParamAccess.item
-        #         self.Params.Input.Add(p)
-        #
-        #     def RegisterOutputParams(self, pManager):
-        #         pass
-        #
-        #     def SolveInstance(self, DA):
-        #         p0 = self.marshal.GetInput(DA, 0)
-        #         p1 = self.marshal.GetInput(DA, 1)
-        #         p2 = self.marshal.GetInput(DA, 2)
-        #         p3 = self.marshal.GetInput(DA, 3)
-        #         result = self.RunScript(p0, p1, p2, p3)
-        #
-        #     def get_Internal_Icon_24x24(self):
-        #         o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAALgSURBVEhLYxgFIwswaRl65ti4pFdbOcSTjW1ckqsNLAKrgOYJQ4xFAFbv8IbPJS1H/ufWbCcbFzbu+x+TOfs/0DwtiLEIwBoY2/GguOnQ/5yqLWCMzQBcGKQ+G4gL6nf/j86YCbJAHWIsArA6eec9iM2a+z88eRIUT/4RkTL1c0TKlC8QDGQnT/6G4EMxUAykPiJlMthwr5BarBYw2LikXE/MWwRWBNT0X0JKIwsoLATEYkDMC6U9gJgPiEHiEkDMBcSmPqF1/+Oz5/9PyF3w382/FLsF7kEV14qbDv7Prd72P6Ns/X9pDUvvDv+yxonR9TJt/hVezf4VXawMrAa13gVLJ4U0K4L0dARVl0WZ+LeHpk79WFC3+39hw97/QbGd2C0A2nytoH7P/6yKjf9Ti1f9l1Qz82/2LdlY7VPQA8QXmvzLdIHKVCo88z4A+ZPr7etZ6n1L/gcZedUHJ096D3JYXu2O/wHRbcRZIK5i4tvkU7ysN6zpf6VnnitUmWK5R05FjXfhnXKv/FKgBY942Ng0QxMn/CXZAil1cz+QBUBD9tV4Fe5eFbqKGahMLdc+RabKu/AzMMh+tgCDECgmFJ40ERy0pFvgW7yn0iPXvtqrcG6Nb9EaNjY2sMZq78JtIJ/NCG9WBnJliLYAFEnZlZv+pxWv/s8nKu8xxzJIHirN0GEfbwGkwBpvMTCwt9pE6IHYQCAeljjhf17Njv/5dTuBFrRit8DaOfl6dPqM/6EJff+D47r/27qmb7fzLmh28i3qcvIt7Lb1LWywckpc6uyTP8HBr6jNxqeg3sW3sA9YPCwEJVOQPpBPgGL/YT5FAb4RzTdALkgvXQPEa//n1+4E50xicGb5erC+7MrN/0GO5OUVxrQgILr9Xnn7MWA47iQbFzce+J+Yu/A/D4+wBtRYBLB3yzgVmTr1XXB8D9k4LGniO4+gqnd8fHwqUGNRAKgIEKQSBiXpUUAIMDAAACzLMF4ss44GAAAAAElFTkSuQmCC"
-        #         return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
-        #
-        #     def Set_values_Greater_one(self, Objects, Keys, Values):  # 当key大于1时调用
-        #
-        #         if len(Keys) < len(Values):  # Keys的长度小于Values
-        #             for i in range(len(Objects)):
-        #                 if type(Objects[i]) is System.Guid:
-        #                     for _key in range(len(Keys)):
-        #                         obj_attr = sc.doc.Objects.FindId(Objects[i]).Attributes
-        #                         obj_attr.SetUserString(Keys[_key], Values[_key])
-        #         else:  # Keys的长度大于Values
-        #             for i in range(len(Objects)):
-        #                 if type(Objects[i]) is System.Guid:
-        #                     for v in range(len(Values)):
-        #                         obj_attr = sc.doc.Objects.FindId(Objects[i]).Attributes
-        #                         obj_attr.SetUserString(Keys[v], Values[v])
-        #
-        #     def Set_values_Equal_one(self, Objects, Keys, Values):  # 当key等于1时调用
-        #         n = 0
-        #         for i in range(len(Objects)):
-        #             if type(Objects[i]) is System.Guid:
-        #                 obj_attr = sc.doc.Objects.FindId(Objects[i]).Attributes
-        #                 obj_attr.SetUserString(Keys[0], Values[n])
-        #                 if n < len(Values) - 1:
-        #                     n += 1
-        #                 else:
-        #                     n = 0
-        #
-        #     def RunScript(self, Objects, Keys, Values, T):
-        #         try:
-        #             sc.doc = Rhino.RhinoDoc.ActiveDoc
-        #             sc.doc.Views.Redraw()
-        #
-        #             if T:
-        #                 if len(Keys) > 1:
-        #                     self.Set_values_Greater_one(Objects, Keys, Values)
-        #                 elif len(Keys) == 1:
-        #                     self.Set_values_Equal_one(Objects, Keys, Values)
-        #                 else:
-        #                     return
-        #
-        #             ghdoc = GhPython.DocReplacement.GrasshopperDocument()
-        #             sc.doc = ghdoc
-        #         finally:
-        #             self.Message = 'Key-value pair assignment'
+        # 键值对赋值
+        class DATAKEY(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP_DATAKEY", "C4", """Performs an f assignment to the key-value pair of object,when multiple objects are assigned values,pay attention to key-value pair order and data structure；""", "Scavenger", "K-Object")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("4b68c580-a4e4-4ca8-9e49-082b8f014c0b")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.primary
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Guid()
+                self.SetUpParam(p, "Objects", "O", "Object set list")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_String()
+                self.SetUpParam(p, "Keys", "K", "Key-key,")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Values", "V", "Value-value")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Toggle", "T", "Assignment or not")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                pass
+
+            def SolveInstance(self, DA):
+                p0 = self.marshal.GetInput(DA, 0)
+                p1 = self.marshal.GetInput(DA, 1)
+                p2 = self.marshal.GetInput(DA, 2)
+                p3 = self.marshal.GetInput(DA, 3)
+                result = self.RunScript(p0, p1, p2, p3)
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAALgSURBVEhLYxgFIwswaRl65ti4pFdbOcSTjW1ckqsNLAKrgOYJQ4xFAFbv8IbPJS1H/ufWbCcbFzbu+x+TOfs/0DwtiLEIwBoY2/GguOnQ/5yqLWCMzQBcGKQ+G4gL6nf/j86YCbJAHWIsArA6eec9iM2a+z88eRIUT/4RkTL1c0TKlC8QDGQnT/6G4EMxUAykPiJlMthwr5BarBYw2LikXE/MWwRWBNT0X0JKIwsoLATEYkDMC6U9gJgPiEHiEkDMBcSmPqF1/+Oz5/9PyF3w382/FLsF7kEV14qbDv7Prd72P6Ns/X9pDUvvDv+yxonR9TJt/hVezf4VXawMrAa13gVLJ4U0K4L0dARVl0WZ+LeHpk79WFC3+39hw97/QbGd2C0A2nytoH7P/6yKjf9Ti1f9l1Qz82/2LdlY7VPQA8QXmvzLdIHKVCo88z4A+ZPr7etZ6n1L/gcZedUHJ096D3JYXu2O/wHRbcRZIK5i4tvkU7ysN6zpf6VnnitUmWK5R05FjXfhnXKv/FKgBY942Ng0QxMn/CXZAil1cz+QBUBD9tV4Fe5eFbqKGahMLdc+RabKu/AzMMh+tgCDECgmFJ40ERy0pFvgW7yn0iPXvtqrcG6Nb9EaNjY2sMZq78JtIJ/NCG9WBnJliLYAFEnZlZv+pxWv/s8nKu8xxzJIHirN0GEfbwGkwBpvMTCwt9pE6IHYQCAeljjhf17Njv/5dTuBFrRit8DaOfl6dPqM/6EJff+D47r/27qmb7fzLmh28i3qcvIt7Lb1LWywckpc6uyTP8HBr6jNxqeg3sW3sA9YPCwEJVOQPpBPgGL/YT5FAb4RzTdALkgvXQPEa//n1+4E50xicGb5erC+7MrN/0GO5OUVxrQgILr9Xnn7MWA47iQbFzce+J+Yu/A/D4+wBtRYBLB3yzgVmTr1XXB8D9k4LGniO4+gqnd8fHwqUGNRAKgIEKQSBiXpUUAIMDAAACzLMF4ss44GAAAAAElFTkSuQmCC"
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def Set_values_Greater_one(self, Objects, Keys, Values):  # 当key大于1时调用
+
+                if len(Keys) < len(Values):  # Keys的长度小于Values
+                    for i in range(len(Objects)):
+                        if type(Objects[i]) is System.Guid:
+                            for _key in range(len(Keys)):
+                                obj_attr = sc.doc.Objects.FindId(Objects[i]).Attributes
+                                obj_attr.SetUserString(Keys[_key], Values[_key])
+                else:  # Keys的长度大于Values
+                    for i in range(len(Objects)):
+                        if type(Objects[i]) is System.Guid:
+                            for v in range(len(Values)):
+                                obj_attr = sc.doc.Objects.FindId(Objects[i]).Attributes
+                                obj_attr.SetUserString(Keys[v], Values[v])
+
+            def Set_values_Equal_one(self, Objects, Keys, Values):  # 当key等于1时调用
+                n = 0
+                for i in range(len(Objects)):
+                    if type(Objects[i]) is System.Guid:
+                        obj_attr = sc.doc.Objects.FindId(Objects[i]).Attributes
+                        obj_attr.SetUserString(Keys[0], Values[n])
+                        if n < len(Values) - 1:
+                            n += 1
+                        else:
+                            n = 0
+
+            def RunScript(self, Objects, Keys, Values, T):
+                try:
+                    sc.doc = Rhino.RhinoDoc.ActiveDoc
+                    sc.doc.Views.Redraw()
+
+                    if T:
+                        if len(Keys) > 1:
+                            self.Set_values_Greater_one(Objects, Keys, Values)
+                        elif len(Keys) == 1:
+                            self.Set_values_Equal_one(Objects, Keys, Values)
+                        else:
+                            return
+
+                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                    sc.doc = ghdoc
+                finally:
+                    self.Message = 'Key-value pair assignment'
 
 
         # # 物件键值对提取
