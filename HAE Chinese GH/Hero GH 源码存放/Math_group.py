@@ -459,13 +459,12 @@ try:
                         new_list_data = list(b_part_trunk)
                         new_list_data.insert(self.max_index, a_part_trunk)  # 将最长的数据插入到原列表中
 
-                        match_Decimal, match_Precision = new_list_data
-                        Decimal, Precision = self.match_list(match_Decimal, match_Precision)  # 将数据二次匹配列表里面的数据
+                        Decimal, Precision = self.match_list(*new_list_data)  # 将数据二次匹配列表里面的数据
 
-                        turn__Decimal = ghp.run(self._trun_object, Decimal)  # 将引用数据转为Rhino内置数据
-                        turn__Precision = ghp.run(self._trun_object, Precision)
+                        # turn__Decimal = ghp.run(self._trun_object, Decimal)  # 将引用数据转为Rhino内置数据
+                        # turn__Precision = ghp.run(self._trun_object, Precision)
 
-                        zip_list = zip(turn__Decimal, turn__Precision)
+                        zip_list = zip(Decimal, Precision)
                         zip_ungroup_data = ghp.run(self.run_main, zip_list)  # 传入获取主方法中
 
                         Result, Percentage, Per_thousand = zip(*zip_ungroup_data)
@@ -503,7 +502,7 @@ try:
 
                         zip_list = zip(max_trunk, other_zip_trunk, ref_trunk_path)
                         # 多进程函数运行
-                        iter_ungroup_data = zip(*ghp.run(_do_main, zip_list))
+                        iter_ungroup_data = zip(*map(_do_main, zip_list))
                         Result, Percentage, Per_thousand = ghp.run(lambda single_tree: self.format_tree(single_tree),
                                                                    iter_ungroup_data)
                         return Result, Percentage, Per_thousand
@@ -577,8 +576,9 @@ try:
                 """运行主方法"""
                 Decimal, Precision = tuple_data
                 decimal.getcontext().prec = 10000
-                Precision = 0 if Precision is None else Precision
+                Precision = 0 if Precision is None else Precision.Value
                 if Decimal is not None:
+                    Decimal = Decimal.Value
                     per = Decimal * 100
                     per_th = Decimal * 1000
                     Result = str(dd(Decimal).quantize(dd("1e-{}".format(Precision)),
@@ -728,7 +728,7 @@ try:
                     self.settings.SetValue(str(self.InstanceGuid), sender.Tag)
 
                     self.ExpireSolution(True)
-                except Exception, ex:
+                except Exception as ex:
                     System.Windows.Forms.MessageBox.Show(str(ex))
 
             def AppendAdditionalMenuItems(self, items):
@@ -751,7 +751,7 @@ try:
                             item.Checked = False
 
                     # self.ExpireSolution(True)
-                except Exception, ex:
+                except Exception as ex:
                     System.Windows.Forms.MessageBox.Show(str(ex))
 
             def SolveInstance(self, DA):
@@ -769,10 +769,10 @@ try:
                         match_Decimal, match_Precision = new_list_data
                         Decimal, Precision = self.match_list(match_Decimal, match_Precision)  # 将数据二次匹配列表里面的数据
 
-                        turn__Decimal = ghp.run(self._trun_object, Decimal)
-                        turn__Precision = ghp.run(self._trun_object, Precision)
+                        # turn__Decimal = ghp.run(self._trun_object, Decimal)
+                        # turn__Precision = ghp.run(self._trun_object, Precision)
 
-                        zip_list = zip(turn__Decimal, turn__Precision)
+                        zip_list = zip(Decimal, Precision)
                         zip_ungroup_data = ghp.run(self.run_main, zip_list)  # 传入获取主方法中
 
                         Result, Floor, Ceil = zip(*zip_ungroup_data)
@@ -809,7 +809,7 @@ try:
 
                         zip_list = zip(max_trunk, other_zip_trunk, ref_trunk_path)
                         # 多进程函数运行
-                        iter_ungroup_data = zip(*ghp.run(_do_main, zip_list))
+                        iter_ungroup_data = zip(*map(_do_main, zip_list))
                         Result, Floor, Ceil = ghp.run(lambda single_tree: self.format_tree(single_tree),
                                                       iter_ungroup_data)
                         return Result, Floor, Ceil
@@ -922,8 +922,9 @@ try:
                 """运行主方法"""
                 Decimal, Precision = tuple_data
                 decimal.getcontext().prec = 10000
-                Precision = 0 if Precision is None else Precision
+                Precision = 0 if Precision is None else Precision.Value
                 if Decimal is not None:
+                    Decimal = Decimal.Value
                     temp_result = str(
                         dd(Decimal).quantize(dd("1e-{}".format(Precision)), rounding="ROUND_HALF_UP")) if "e" in str(
                         Decimal) else NewRound().handle_str(Decimal, Precision)
