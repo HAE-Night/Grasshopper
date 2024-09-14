@@ -834,8 +834,7 @@ try:
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
                 self.SetUpParam(p, "Tolerance", "T", "cutting accuracy")
-                tol = sc.doc.ModelAbsoluteTolerance
-                p.SetPersistentData(gk.Types.GH_Number(tol))
+                p.SetPersistentData(gk.Types.GH_Number(0.001))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
                 self.Params.Input.Add(p)
 
@@ -1086,6 +1085,12 @@ try:
                                     temp_surface_cut = list(rg.Brep.CreatePlanarBreps(curves, 0.1))
                                     # c_len, temp_s_len = len(curves), len(temp_surface_cut)
                                     surface_cut = self.get_box_surface(temp_surface_cut, pl)
+
+                                    temp_surface_Prop = rg.AreaMassProperties.Compute(temp_surface_cut[0])  # 计算面积质量属性
+                                    surface_Prop = rg.AreaMassProperties.Compute(surface_cut[0])
+
+                                    if temp_surface_Prop and surface_Prop and temp_surface_Prop.Area > surface_Prop.Area:
+                                        surface_cut = temp_surface_cut
                                     cutts += surface_cut
                             else:
                                 surface_cut = [ghc.BoundarySurfaces(array_c)]
@@ -1143,15 +1148,14 @@ try:
                     res_list_brep = self._handle_brep(temp_list_brep)
                     return res_list_brep
 
-            def get_single_surf(self, crv):
+            def get_single_surf(self, uu_set_data):
                 # 获取相交线两边偏移后的面
-                rc, pln = crv.TryGetPlane()
-                if rc:
-                    crv_1 = crv.Offset(pln, 0.1, 0.01, rg.CurveOffsetCornerStyle.Sharp)[0]
-                    crv_2 = crv.Offset(pln, -0.1, 0.01, rg.CurveOffsetCornerStyle.Sharp)[0]
-                else:
-                    crv_1 = crv
-                    crv_2 = crv
+                crv, pln = uu_set_data
+                temp_crv_1 = crv.Offset(pln, 0.1, 0.01, rg.CurveOffsetCornerStyle.Sharp)[0]
+                temp_crv_2 = crv.Offset(pln, -0.1, 0.01, rg.CurveOffsetCornerStyle.Sharp)[0]
+
+                crv_1 = temp_crv_1 if temp_crv_1 else crv
+                crv_2 = temp_crv_2 if temp_crv_1 else crv
                 surface = ghc.Loft([crv_1, crv_2], ghc.LoftOptions(False, False, 0, 0, rg.LoftType.Normal))
                 return surface
 
@@ -1161,7 +1165,8 @@ try:
                     single_event = rg.Intersect.Intersection.BrepPlane(surf, pl, self.tol)
                     if single_event[0]:
                         temp_cutts = map(lambda x: x if "ToNurbsCurve" in dir(x) else None, list(single_event[1]))
-                        single_cutts = map(lambda c: self.get_single_surf(c), temp_cutts)
+                        pls = [pl] * len(temp_cutts)
+                        single_cutts = map(lambda c: self.get_single_surf(c), zip(temp_cutts, pls))
                     else:
                         single_cutts = [None]
                     cutts_curve += [single_cutts]
@@ -1182,7 +1187,7 @@ try:
                         if brep_item:
                             brep_list = [_ for _ in brep_item.Faces]
                             if len(brep_list) == 1:
-                            # if not brep_item.IsSolid:
+                                # if not brep_item.IsSolid:
                                 res_list.append(self._get_surface(brep_item, list_pln[brep_index]))
                             else:
                                 if not brep_item.IsSolid:
@@ -1855,15 +1860,39 @@ try:
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
-                p0 = self.marshal.GetInput(DA, 0)
-                p1 = self.marshal.GetInput(DA, 1)
-                p2 = self.marshal.GetInput(DA, 2)
-                p3 = self.marshal.GetInput(DA, 3)
-                p4 = self.marshal.GetInput(DA, 4)
-                result = self.RunScript(p0, p1, p2, p3, p4)
+                # p0 = self.marshal.GetInput(DA, 0)
+                # p1 = self.marshal.GetInput(DA, 1)
+                # p2 = self.marshal.GetInput(DA, 2)
+                # p3 = self.marshal.GetInput(DA, 3)
+                # p4 = self.marshal.GetInput(DA, 4)
+                # result = self.RunScript(p0, p1, p2, p3, p4)
+                #
+                # if result is not None:
+                #     self.marshal.SetOutput(result, DA, 0, True)
 
-                if result is not None:
-                    self.marshal.SetOutput(result, DA, 0, True)
+                New_Brep = gd[object]()
+                self.Message = 'offset surface'
+                if self.RunCount == 1:
+                    Brep = self.Params.Input[0].VolatileData
+                    Distance = self.Params.Input[1].VolatileData
+                    self.cap = self.marshal.GetInput(DA, 4)
+                    self.tol = self.marshal.GetInput(DA, 3)
+                    self.b_side = self.marshal.GetInput(DA, 2)
+                    sc.doc = Rhino.RhinoDoc.ActiveDoc
+                    j_list_1, temp_brep_list, brep_path = self.parameter_judgment(Brep)
+
+                    re_mes = Message.RE_MES([j_list_1], ['Brep'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                    else:
+                        New_Brep = self.temp_by_match_tree(Brep, Distance)
+
+                    sc.doc.Views.Redraw()
+                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                    sc.doc = ghdoc
+
+                DA.SetDataTree(0, New_Brep)
 
             def get_Internal_Icon_24x24(self):
                 o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAMhSURBVEhL1ZVbSJNhGMd3cOo2JTe3qVszy1k6kwpTSCNadlC80Moi8KLoYCGr6EBFdKIsM7qIDhchBnUjmHeBF4ERFSEYFakUUUldKIGlWNCB6t//eb9ZIp+n6qY//PjY9u33vO/7Pe/7Gf6n2CPXf5pF5Cx5QnrIZWIkf5Uosom0ExSmWlG33IOG8hTERZvA7+rJH2cV6YynaOcCBx5XTwdOZgFngsC52Whe45UCwly5eTJxkkaC6nwHXu8NaFKRH5sFHCVyrQuiIhgvBa7Lnyaa+eRF0BWNO5unaeIaikU6klNZ6KpOG5pFtvx5vKwgH9ZyVIOHZ6oR6oqHkFlwVgV+qxTYoAxjZAn5Gs5LAGo5Yhn1kRFCPTjD8yUeKXCTmEWklyzyYVsu5TLq45n6Mj24TA+qpoG9+pUOj7KNiI08LQnY1c2TkgsnMtG3LwCbxfSJHp8yjshFX3wU3h/M0LpET6IHxWq2p4OqgMtm/kZXuqb8nTyCG+t8WreMt+byu8yQ977ZnY6TITdyE61wx0bBZFSdlKGsw3KrJINLIyMZ6u/REDkf/uChmQjnOSkzwukyYnOlFfk5FpG3kGhljaSA4CEfkOoaPekQIucgZCd7rRY4nAY0HJ+CL+3JQN9UhNfYpECDsg5L49IZtonJuc7tW9Ng4qiLF0Zj4H4S8NILPCc9U1FVrvbBNU2rJZEMNlXwhvE2U00m3u7PgM1oQlkoBuhK0cSdKWi54EBlqRWuBHXoNStzJDvcNjMGDrBzxmtLDqA4LQ6pfhO+P9Lk/XeTsDIUK9LvRMRbyTzyK02ZPGtUW45VgPuibWOqiHCv3gm88uFjWzLystRD7SC5ItPLFoLaIjdwNnv0Ihz9yvR4zMk2A8+0Nd+uPdBu4hLRWCklfWEex5+lRc+wENdbbSCBs/vBIrEGExprpwAf/ehvTYIlSvV7uTJMIAHSmuOJwdXVXnTvSkcvz/7ePbzy+dxe71fLc2CDHZdqErCpTHXLOyJvuUmlinRYzEbY+fayWwivMfzM74VO8jjCFfJHkaO2iCwjIbI4QiGZ4IvdYPgJEM+2UYRmKHsAAAAASUVORK5CYII="
@@ -1973,31 +2002,112 @@ try:
                     res_brep.Flip()
                 return res_brep
 
-            def RunScript(self, Brep, Distance, Both, Tolerance, Cap):
-                try:
-                    sc.doc = Rhino.RhinoDoc.ActiveDoc
-                    self.cap = Cap
-                    self.tol = Tolerance
-                    self.b_side = Both
-                    New_Brep = gd[object]()
-                    j_list_1, temp_brep_list, brep_path = self.parameter_judgment(self.Params.Input[0].VolatileData)
+            def _do_main(self, tuple_data):
+                a_part_trunk, b_part_trunk, origin_path = tuple_data
+                new_list_data = list(b_part_trunk)
+                new_list_data.insert(self.max_index, a_part_trunk)  # 将最长的数据插入到原列表中
+                match_brep, match_dis = new_list_data
 
-                    re_mes = Message.RE_MES([j_list_1], ['Brep'])
-                    if len(re_mes) > 0:
-                        for mes_i in re_mes:
-                            Message.message2(self, mes_i)
+                GH_brep_list, GH_dis_list = self.match_list(match_brep, match_dis)  # 将数据二次匹配列表里面的数据
+
+                brep_list = [_.Value if _ is not None else _ for _ in GH_brep_list]  # 将引用物体转换为GH内置物体
+                dis_list = [_.Value if _ is not None else _ for _ in GH_dis_list]
+
+                zip_list = zip(brep_list, dis_list)
+                New_Brep = ghp.run(self._run_main, zip_list)  # 传入获取主方法中
+
+                ungroup_data = self.split_tree(New_Brep, origin_path)
+                Rhino.RhinoApp.Wait()
+                return ungroup_data
+
+            def temp_by_match_tree(self, *args):
+                # 参数化匹配数据
+                value_list, trunk_paths = zip(*map(self.Branch_Route, args))
+                len_list = map(lambda x: len(x), value_list)  # 得到最长的树
+                max_index = len_list.index(max(len_list))  # 得到最长的树的下标
+                self.max_index = max_index
+                max_trunk = [_ if len(_) != 0 else [None] for _ in value_list[max_index]]
+                ref_trunk_path = trunk_paths[max_index]
+                other_list = [
+                    map(lambda x: x if len(x) != 0 else [None], value_list[_]) if len(value_list[_]) != 0 else [[None]]
+                    for _ in range(len(value_list)) if _ != max_index]  # 剩下的树, 没有的值加了个None进去方便匹配数据
+                matchzip = zip([max_trunk] * len(other_list), other_list)
+
+                def sub_match(tuple_data):
+                    # 子树匹配
+                    target_tree, other_tree = tuple_data
+                    t_len, o_len = len(target_tree), len(other_tree)
+                    if o_len == 0:
+                        new_tree = [other_tree] * len(target_tree)
                     else:
-                        if Brep:
-                            New_Brep = self.offset(Brep, Distance)
-                        else:
-                            New_Brep = None
+                        new_tree = other_tree + [other_tree[-1]] * (t_len - o_len)
+                    return new_tree
 
-                    sc.doc.Views.Redraw()
-                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
-                    sc.doc = ghdoc
-                    return New_Brep
-                finally:
-                    self.Message = 'offset surface'
+                # 打包数据结构
+                other_zip_trunk = zip(*map(sub_match, matchzip))
+
+                zip_list = zip(max_trunk, other_zip_trunk, ref_trunk_path)
+                # 多进程函数运行
+                iter_ungroup_data = ghp.run(self._do_main, zip_list)
+                temp_data = self.format_tree(iter_ungroup_data)
+                return temp_data
+
+            def match_list(self, *args):
+                """匹配列表里面的数据"""
+                zip_list = list(args)
+                len_list = map(lambda x: len(x), zip_list)  # 得到最长的树
+                max_index = len_list.index(max(len_list))  # 得到最长的树的下标
+                max_list = zip_list[max_index]  # 最长的列表
+                other_list = [zip_list[_] for _ in range(len(zip_list)) if _ != max_index]  # 剩下的列表
+                matchzip = zip([max_list] * len(other_list), other_list)
+
+                def sub_match(tuple_data):  # 数据匹配
+                    target_tree, other_tree = tuple_data
+                    t_len, o_len = len(target_tree), len(other_tree)
+                    if o_len == 0:
+                        return other_tree
+                    else:
+                        new_tree = other_tree + [other_tree[-1]] * (t_len - o_len)
+                        return new_tree
+
+                iter_group = map(sub_match, matchzip)  # 数据匹配
+                iter_group.insert(max_index, max_list)  # 将最长的数据插入进去
+
+                return iter_group
+
+            def _run_main(self, tuple_data):
+                Brep, Distance = tuple_data
+                if Brep:
+                    New_Brep = self.offset(Brep, Distance)
+                else:
+                    New_Brep = None
+                return New_Brep
+
+            # def RunScript(self, Brep, Distance, Both, Tolerance, Cap):
+            #     try:
+            #         sc.doc = Rhino.RhinoDoc.ActiveDoc
+            #         self.cap = Cap
+            #         self.tol = Tolerance
+            #         self.b_side = Both
+            #         New_Brep = gd[object]()
+            #         j_list_1, temp_brep_list, brep_path = self.parameter_judgment(self.Params.Input[0].VolatileData)
+            #
+            #         re_mes = Message.RE_MES([j_list_1], ['Brep'])
+            #         if len(re_mes) > 0:
+            #             for mes_i in re_mes:
+            #                 Message.message2(self, mes_i)
+            #         else:
+            #             if Brep:
+            #                 New_Brep = self.offset(Brep, Distance)
+            #             else:
+            #                 New_Brep = None
+            #
+            #         sc.doc.Views.Redraw()
+            #         ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+            #         sc.doc = ghdoc
+            #         return New_Brep
+            #     finally:
+            #         self.Message = 'offset surface'
 
 
         # 截面实体
@@ -4897,7 +5007,7 @@ class AssemblyInfo(GhPython.Assemblies.PythonAssemblyInfo):
         return """HAE plug-in"""
 
     def get_AssemblyVersion(self):
-        return "v4.6.9"
+        return "v4.7.1"
 
     def get_AuthorName(self):
         return "by HAE Development Team"
@@ -4907,6 +5017,10 @@ class AssemblyInfo(GhPython.Assemblies.PythonAssemblyInfo):
 
     def get_AuthorContact(self):
         return "software_team@heroesae.com"
+
+    def get_AssemblyIcon(self):
+        icon_text = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAT+SURBVEhLrVVrTJtVGD7hWnTCkPa79ELblQKVbmEKShYNYW6LOEyAjrG1fJe2XwtlM1smDEWzEv3jEhNDzOKYiMv0j+yHiy4maoz+MLIsDtkyFcZFiAMMUIFSbkM4vqe0CB+IMbHJk/d857zned7b9xWRnx/jmP8TQBiD/YWKH7zeeDTE63JCPNs7wzG90w5A1G4LehUcwbp9sq5i+mZ5amzGreu8Lxqb0TjH5GFBhTGvxMvcKlZ4VRjy5/WQ+xGLnQAvjYOc+vMet9kyzBveRWMO9vH5KgrPOpR4xv7fEXKowpaQzwv09IRT6yRl73VZSkd5fXtEQIXnQCDqHLVyEmI3nMF6EaLHbhqHBOarHt6suePbnXpPynXfd5lax6rU19YESAbrL8tFtgIW4Z5ALwVE/RkS9aAna1+PJ7cu4NJ/+KebWph0UN+GBRY4akMGBNsJzFeRqCkc4pkbv7oy9n5TW7hjwG2qHHKam0JO9iYRxi4VDlQxX6wJbNUDuWAQLBmIRYHB05ymiUTd0tISf8+T44PaXwSeSSys+pOeBBzMlxtKFCVbI7X/LUAyDEctsN2/Oc1PtVdUxP7i3fNCtye3GOr/NYl6ETIjQRD/fxQgkYYiTgTkQngEgWBa0Lzj9/sTur2Z2X1ui2/UabgwJ9BBchb1j2KTwBwpR0RkKTzTVNiJYFZkhiZE40FSkh7JWjbg2lUf5NXXl6FcSzBF0aijIJnLBFZ7QEZuimMHR1wZNb+LRvsMz7RPitrrpIn93sfSe6qtJ0dFw1sLHN2PnUo8GyWU9YrYTQLRKQoSISf1xzCva/D7T+286Ss4MMSb+QFXZsOUU3ttEZq4DBnKo5Zjk0AIiBci4xfkqRujLuPhzpN5xbdqn362T9p9PMizPeGoI2UkWB+5HDKB1SZCw1Zg3M6RWpNfX01u8ZA3p/FTb8lDkxzbsQI1J5flxFuWSFRGBDj1XvKqz4rs3UHRtC/CjcYE3dUHAr2MJQYPStklAV730VbTIscmgXF7WhE08soHfkFBiMcFXU1Q1H02ZVeFsAcmhKMGb9UWZAQ5ZuQBlFBOGIU8q7USjVfR+ydE9RVCPsybX8ESjbFE4Xlo5BxMUFdNnnVK0F4mY7ue4N+wlsGswD6BaxmoP9sfcJna5iWDd1HSeOYlvRj0GKrhE3wb+0AUvi3YBe/Gtja6BtRQ8Dmhv0MfH9Jm9B7TtswJmgu9lWxbp033xvel6vqOMs35Thvzyc9H2KtdpUzbHRvTerecfm/Ern57WdK8fruceZ/sdVewF38qZy51lTNtP5bRl1ef6UsDx9StHTZNA9rxKFWG4lU8KRFSqM7GUcZXEUo4DU92hOgnUYrxCKwdABeKSz2DUtK9sLYCDiMUQ/5cyBnZK0bokQKEKACqBgDnwy+i9PR0m0qlqoONyrS0tLrMzMzmlNQU8qU8q1AozlksluLk5GRfQkJCvdFobFSr1c2xsbGH4HwnoDEuLu40+EFQqB5sHXD4YmJiXgb4KYo6j2iaLklNTa0HhwSwXq1W+1pSUtIpIClTKpWFer3+TfA5CmfpYJsgGCecQfSIAxIfWDfYE7BXBALPJCYmkmyq4fmARqOxoby8vF0QmWQymTwQ/XOQ0X6IssRsNlsAZfn5+RI47gEUGQyGQjh7CcQq4c4JgA18RLB2q9X6PKyPZ2Vl1UFQPuA7mp2dXfIXO8FFxSea9bcAAAAASUVORK5CYII="
+        return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(icon_text)))
 
 
 class Listener(gk.GH_AssemblyPriority):
@@ -4967,7 +5081,8 @@ class Cancel_connection(object):
     def _Cancel_connection(self, canvas):
         Grasshopper.Instances.CanvasCreated -= self._Cancel_connection
         _toolbar = Grasshopper.Instances.DocumentEditor.Controls[0].Controls[1]
-        button = System.Windows.Forms.ToolStripButton("Cancel connection Wire\nClick the left mouse button to disconnect the front wire of the selected battery\nClick the right mouse button to disconnect the behind wire of the selected battery\nClick the middle mouse button to disconnect all the wire of the selected battery\nPowered by HAE Development Team")
+        button = System.Windows.Forms.ToolStripButton(
+            "Cancel connection Wire\nClick the left mouse button to disconnect the front wire of the selected battery\nClick the right mouse button to disconnect the behind wire of the selected battery\nClick the middle mouse button to disconnect all the wire of the selected battery\nPowered by HAE Development Team")
         _toolbar.Items.Insert(7, button)
         button.Image = self.Cancel_connection_Icon_24x24()
         button.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image
@@ -4976,7 +5091,8 @@ class Cancel_connection(object):
     def _Display_connection(self, canvas):
         Grasshopper.Instances.CanvasCreated -= self._Display_connection
         _toolbar = Grasshopper.Instances.DocumentEditor.Controls[0].Controls[1]
-        button = System.Windows.Forms.ToolStripButton("Display Wire\nClick the left mouse button to hide the front wire of selected battery\nClick the right mouse button to hide the behind wire of selected battery\nClick the middle mouse button to hide all wire of selected battery\nPowered by HAE Development Team")
+        button = System.Windows.Forms.ToolStripButton(
+            "Display Wire\nClick the left mouse button to hide the front wire of selected battery\nClick the right mouse button to hide the behind wire of selected battery\nClick the middle mouse button to hide all wire of selected battery\nPowered by HAE Development Team")
         _toolbar.Items.Insert(7, button)
         button.Image = self.Display_connection_Icon_24x24()
         button.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image
@@ -4985,7 +5101,8 @@ class Cancel_connection(object):
     def _Show_connection(self, canvas):
         Grasshopper.Instances.CanvasCreated -= self._Show_connection
         _toolbar = Grasshopper.Instances.DocumentEditor.Controls[0].Controls[1]
-        button = System.Windows.Forms.ToolStripButton("Show Wire\nClick the left mouse button to show the front wire of selected battery\nClick the right mouse button to show the behind wire of selected battery\nClick the middle mouse button to show all wire of selected battery\nPowered by HAE Development Team")
+        button = System.Windows.Forms.ToolStripButton(
+            "Show Wire\nClick the left mouse button to show the front wire of selected battery\nClick the right mouse button to show the behind wire of selected battery\nClick the middle mouse button to show all wire of selected battery\nPowered by HAE Development Team")
         _toolbar.Items.Insert(7, button)
         button.Image = self.Show_connection_Icon_24x24()
         button.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image
