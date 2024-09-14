@@ -949,10 +949,44 @@ try:
                 pass
 
             def SolveInstance(self, DA):
-                p0 = self.marshal.GetInput(DA, 0)
-                p1 = self.marshal.GetInput(DA, 1)
-                p2 = self.marshal.GetInput(DA, 2)
-                result = self.RunScript(p0, p1, p2)
+                # p0 = self.marshal.GetInput(DA, 0)
+                # p1 = self.marshal.GetInput(DA, 1)
+                # p2 = self.marshal.GetInput(DA, 2)
+                # result = self.RunScript(p0, p1, p2)
+                self.Message = 'Object Select'
+                if self.RunCount == 1:
+                    def select_obj(id, bool_factor):  # 亮显物体主方法
+                        if bool_factor:
+                            rs.SelectObjects(id)
+                        else:
+                            rs.UnselectObjects(id)
+
+                    flattened_list = list(chain(*self.Params.Input[0].VolatileData.Branches))
+                    LayerIgnore = self.marshal.GetInput(DA, 1)
+                    Select = self.marshal.GetInput(DA, 2)
+
+                    sc.doc = Rhino.RhinoDoc.ActiveDoc
+                    re_mes = Message.RE_MES([flattened_list], ['G'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                    else:
+                        Guid_list = [G.Value for G in filter(None, flattened_list)]
+                        layer_name = [rs.ObjectLayer(Guid) for Guid in Guid_list]
+                        lock_factor = [rs.IsLayerLocked(ln) for ln in layer_name]
+                        visible_factor = [rs.IsLayerVisible(ln) for ln in layer_name]
+
+                        if LayerIgnore:
+                            if all(lock_factor) or not all(visible_factor):
+                                Message.message3(self, "Objects exist on locked or invisible layers")
+                                select_obj(Guid_list, Select)
+                            else:
+                                select_obj(Guid_list, Select)
+                        else:
+                            select_obj(Guid_list, Select)
+                    sc.doc.Views.Redraw()
+                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                    sc.doc = ghdoc
 
             def get_Internal_Icon_24x24(self):
                 o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAVXSURBVEhLzZR9VNNlFMcnwUFNOpl5Cut0KhFoL7/fbwzQQ8ud1CzBADHeJSaC8tIYDRgMgW3iGHMoDIQxGSooICCgCQgZ+AIaJCA6MJKkQIwQTDBfEbk9PzbNP9Tgvz7nfLfn3t37fHee556H8r8FAGb9PVjj9XCsoX7iXrNu4s7ZikcPzu95eL8laPKhDh8Ya1lgKJ05w71HrLrb8jtu/VYO8KAR4FEL8mtFuoDUAY/v/QgT462jPT01Ww0t02dysO7VykJpd9vJLOhuzoWh3iNw8/pxGL5Wg1QNI+h7dLAWHt9tgrbWEp2hbfrUFYQuzdgR/vuxQsldXaMaOs/nQ4+uBLovFkFX20G49FM+dLTsh97LZfB99e5WQ9t/o8nv8ss9fOeMWKWLIOOyfXE7G6t3Qm2FAo4dVkBDjQqOVyrhaEkyFO1NhP2auImMVEHyVDNiCZIAKeB5MjExCnJyDQMPrhJWro0ACsVoc3p6+FuFe0Rnq0rlULhPciNNHq5MTgjMloo2SuKFfm5buG7knk9ZheSINPt5Mjc3n7veO67Mi5sCLh6xVcbGxiEoT+HxfF87kCtOrK5McyXjl8FBWq5fvhAjd3c+weFwjNHaF8lsKjtNSAO7gqOjFplFw4v0qZdCHt08/XJ64B7e0dqM/L5xacblW8HxJ5hkMi+vmZpV0NckU/fU8GTtC6cq9czYgOrmGXk7VtYA4fFV8HVYTkzNmcmF8dISbUp2J8TvbIMtkYWJ2rKR1ZnFY5ao3hNpRgYsKv1j0XqfxA4X96h2uaqxW6ntGw2LKRtw8Yi7vcaV3x8rKenKKLiOzC6MvWdhR47fK/rW6bECiUYuxGIlNUb6HURt+wE28vL6RdIKTVzK6SJe9N6feaJyCBEegiVUdilZOxPsPl35VYjm0FB90u7uBg//7a2fO/OvcoO21+3IvvBYpr4KAfz8zpWrucVrvgyTmJiYkHcwV986PT7y3BB3PSW7C+JT24DL2ytI3d3IFiVVJQbxc2ETTwuB4eq6orpJ/6pOeBvVuyPNaEzxpQ7OWk//5FFHt8i+SJE2LT2v535S1hXw2rTr2PIVXkKp4vhIxsFhiJY3DZi9Yc5HPUb29ixXDGNkstlsjGVDnCZwRjtB4PU4jnP12/4L28xszjK5qqkqXtncErG1uEKQcBTCYivALySHfEIom8Iyr4UKS8E3KH18/oJ3YskcQWCRdBqt3d7e1o9Op09Qra29aTTaNozBABQnkDVPoDuuDdAo1ZdAouqEQEGhbo0Lr9zVXXASmXbu2j94I1hYUue8XqB1XhfhhOrJMaUwcfwbZNBoZ2fjizYcIHMkTCaTh/ITLBbr6T3ZYNgnUT4BiiHvACWs805MIpMpQuG7W2W1IJI3AZef3zVVqWcj+fGMgQ8y+GPqFwTHwcEWxxiAYdgHhhRlGYax1yZntJxEY1ivUqlM1Qd+5ctzrqg8/WUdbt7iv/w3K3JyS0dSFNp+8h3yIZteZLDcwcGZPCYGgzHfkKJg/kGym+n7+iEq+dx9obS8KDVHB4rcfgiOqVRbW1svkKXWVmce+BMS0jpgCZ2jJZsIDAtnUGnnbG2ZG+h02pBYLJ7t5OT0oS3L5hcqlVo7tbMBwtEltDdUWAw+gWnjwfzszECeBrYICtAlZ0nIgpBvNSWh0cXgH5o9/v5iZhZKzUIGIQwa7ZSdHfMLNE2AJqifSeA3GQzaKYIgnn27KMScOfOUuM2qixZWtkdQ7GlFczhBxzgdpqamgSj2Mnv9TT7O+qxrsYVNEYojkUysrKzM0IUuIp9wND04+tf2lpaWT8+dQqFQ/gEqlmmdsWBYiwAAAABJRU5ErkJggg=="
@@ -995,38 +1029,6 @@ try:
                         else:
                             stock_tree.Insert(item, path, index)
                 return stock_tree
-
-            def RunScript(self, Guid, LayerIgnore, Select):
-                try:
-                    sc.doc = Rhino.RhinoDoc.ActiveDoc
-                    re_mes = Message.RE_MES([Guid], ['G'])
-                    if len(re_mes) > 0:
-                        for mes_i in re_mes:
-                            Message.message2(self, mes_i)
-                    else:
-                        layer_name = rs.ObjectLayer(Guid)
-                        lock_factor = rs.IsLayerLocked(layer_name)
-                        visible_factor = rs.IsLayerVisible(layer_name)
-
-                        def select_obj(id, bool_factor):
-                            if bool_factor:
-                                rs.SelectObject(id)
-                            else:
-                                rs.UnselectObject(id)
-
-                        if LayerIgnore:
-                            if (lock_factor is True) or (visible_factor is False):
-                                Message.message3(self, "Objects exist on locked or invisible layers")
-                            else:
-                                select_obj(Guid, Select)
-                        else:
-                            select_obj(Guid, Select)
-
-                    sc.doc.Views.Redraw()
-                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
-                    sc.doc = ghdoc
-                finally:
-                    self.Message = 'Object Select'
 
 
         # 替换犀牛物体
