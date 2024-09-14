@@ -1283,16 +1283,81 @@ try:
                 self.Params.Output.Add(p)
 
             def SolveInstance(self, DA):
-                p0 = self.marshal.GetInput(DA, 0)
-                p1 = self.marshal.GetInput(DA, 1)
-                result = self.RunScript(p0, p1)
+                # 插件名称
+                self.Message = 'Objects follow the curve in order '
+                # 初始化输出端数据内容
+                Result, Index = (gd[object]() for _ in range(2))
+                if self.RunCount == 1:
+                    def temp(tuple_data):
+                        # 解包元组元素
+                        geo_list, curve_list, origin_path = tuple_data
+                        origin_geo_list, origin_curve_list = filter(None, geo_list), filter(None, curve_list)  # 去空
+                        # 若曲线有多个，重新赋值
+                        o_curve_len = len(origin_curve_list)
+                        if o_curve_len == 1:
+                            origin_geo_list = [origin_geo_list]
+                        else:
+                            origin_geo_list = [origin_geo_list[:] for _ in range(o_curve_len)]
 
-                if result is not None:
-                    if not hasattr(result, '__getitem__'):
-                        self.marshal.SetOutput(result, DA, 0, True)
+                        res_geo_list, res_index = [[]], [[]]
+                        if len(list(chain(*origin_geo_list))):
+                            # 每个单元切片进行主方法排序
+                            sub_zip_list = zip(origin_geo_list, origin_curve_list)
+                            res_geo_list, res_index = zip(*map(self.sort_geo, sub_zip_list))
+
+                        ungroup_data = map(lambda x: self.split_tree(x, origin_path), [res_geo_list, res_index])
+                        Rhino.RhinoApp.Wait()
+                        return ungroup_data
+
+                    sc.doc = Rhino.RhinoDoc.ActiveDoc
+                    p0 = self.Params.Input[0].VolatileData
+                    p1 = self.Params.Input[1].VolatileData
+                    j_bool_1 = self.parameter_judgment(p0)[0]
+                    j_bool_2 = self.parameter_judgment(p1)[0]
+
+                    re_mes = Message.RE_MES([j_bool_1, j_bool_2], ['G end', 'C end'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
                     else:
-                        self.marshal.SetOutput(result[0], DA, 0, True)
-                        self.marshal.SetOutput(result[1], DA, 1, True)
+                        geo_trunk, geo_path_trunk = self.Branch_Route(p0)
+                        curve_trunk, curve_path_trunk = self.Branch_Route(p1)
+                        geo_len, curve_len = len(geo_trunk), len(curve_path_trunk)
+                        # 树形匹配
+                        if geo_len > curve_len:
+                            new_geo_trunk = geo_trunk
+                            new_curve_trunk = curve_trunk + [curve_trunk[-1]] * (geo_len - curve_len)
+                            path_trunk = geo_path_trunk
+                        elif geo_len < curve_len:
+                            new_geo_trunk = geo_trunk + [geo_trunk[-1]] * (curve_len - geo_len)
+                            new_curve_trunk = curve_trunk
+                            path_trunk = curve_path_trunk
+                        else:
+                            new_geo_trunk = geo_trunk
+                            new_curve_trunk = curve_trunk
+                            path_trunk = geo_path_trunk
+
+                        zip_list = zip(new_geo_trunk, new_curve_trunk, path_trunk)
+                        iter_ungroup_data = zip(*map(temp, zip_list))
+                        Result, Index = ghp.run(lambda single_tree: self.format_tree(single_tree), iter_ungroup_data)
+                    sc.doc.Views.Redraw()
+                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+                    sc.doc = ghdoc
+
+                # 将结果添加进输出端
+                DA.SetDataTree(0, Result)
+                DA.SetDataTree(1, Index)
+
+                # p0 = self.marshal.GetInput(DA, 0)
+                # p1 = self.marshal.GetInput(DA, 1)
+                # result = self.RunScript(p0, p1)
+                #
+                # if result is not None:
+                #     if not hasattr(result, '__getitem__'):
+                #         self.marshal.SetOutput(result, DA, 0, True)
+                #     else:
+                #         self.marshal.SetOutput(result[0], DA, 0, True)
+                #         self.marshal.SetOutput(result[1], DA, 1, True)
 
             def get_Internal_Icon_24x24(self):
                 o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAANVSURBVEhLY6ARYIHSNAFCxd6mtwNMVWugfOoCXyOl2qNN0f89DRWLoEKUAQ0JoaBoG621GpJCrkAu06QElw89MY7PgWx2sAIKAVO6i8G7TwsK/ic46J7TlhUp2F8X+d9RSy4XKk85cNCWbaoPtr4nJ8rfMinB+WlfnONLoDAnRJaKwMNAqeJQQ/R/OzWJLKgQRYAbiPUhTDAQnZPu+b093PaBRkWb8Pzvn517Hz0SgsqRDDjj7HVOLczy/u+sI98NEkiw01kGCnstXma/hb9+2Ux98+JX35OHLmDVJACYi/jyvUy+XO1J/h9spjZfmJPTdHtl6P9ib7NjIMkZzx9799y4kt11+bQyWDURgNnPWGVRZ6T9O1sN6QqQACcni6menEgekCnXG+N0Z1me739WBgadf//+sU9+fL8LpIYUwJXvZfz71azc/xFWmmehYmCQ7KS37FRr3H83PYV6EH/Gi8dpEx7c8gFLkgLUJAQ9fI2UZ/BzcRlChRhcdeUbTgINz/MwPATi////n2nCneuJoatWMYMVEAkk+TnZgoE0I4QLAZbq0vn7aiP+d0U7PGWQUJAHie3//5/kAo4lwV7nypHG6P8h5mo7oWIMzroKNXtqIv5PTXT9BOSqrPv3z3LOx3e3Jz58aAxRgR+o2mrItEoI8NgB2cxxdjpn99SE/w+z0JgP5LMlOeguPNES+39igssbIN8QFCxTHj+s6L13c3bv7dsqIAPwglAL9eMPp2b+z/Uw/gLkgrI7DxBbAbFbZ5TD5fOdCf+BxcIlIF8FaDjXlEcP+rtu3LAG8hnqgZaBaLzASVuufWqS688wS821UCGBVGf91vUlgf+3lwf/j7FUmwEU4wImR87JD+93tV+9Co90UgAfEHN7GioXTUt2fQ9KKT2xjretLYziIdJA1165wlN/5owIlEsSYPc2UIqfEO9872hTzP9Zqe4/AoyU6kAS2/79M5378f3DSWQUASDA56GnkNsf5/TwUEPU/7npHn/j7XUmAMVFQZILPryNnPTwbkXP/dtdzVevgpMlSSDQRG3WwfoosIsT7HV7gEIKIPEt//5pTn38oKf//s0Ehvp6wpGIC1hrSFsEmanmAJmSEBEI6L9927L5wgVFKHcwAgYGAHtkM9d0Oy2GAAAAAElFTkSuQmCC"
@@ -1300,9 +1365,6 @@ try:
 
             def __init__(self):
                 pass
-
-            def mes_box(self, info, button, title):
-                return rs.MessageBox(info, button, title)
 
             def Branch_Route(self, Tree):
                 """分解Tree操作，树形以及多进程框架代码"""
@@ -1314,10 +1376,10 @@ try:
                 """操作树单枝的代码"""
                 new_tree = ght.list_to_tree(tree_data, True, tree_path)  # 此处可替换复写的Tree_To_List（源码参照Vector组-点集根据与曲线距离分组）
                 result_data, result_path = self.Branch_Route(new_tree)
-                if result_data:
+                if list(chain(*result_data)):
                     return result_data, result_path
                 else:
-                    return [[]], [tree_path]
+                    return [[]], result_path
 
             def format_tree(self, result_tree):
                 """匹配树路径的代码，利用空树创造与源树路径匹配的树形结构分支"""
@@ -1327,8 +1389,11 @@ try:
                     for index, item in enumerate(fruit):
                         path = gk.Data.GH_Path(System.Array[int](branch[index]))
                         if hasattr(item, '__iter__'):
-                            for sub_index in range(len(item)):
-                                stock_tree.Insert(item[sub_index], path, sub_index)
+                            if item:
+                                for sub_index in range(len(item)):
+                                    stock_tree.Insert(item[sub_index], path, sub_index)
+                            else:
+                                stock_tree.AddRange(item, path)
                         else:
                             stock_tree.Insert(item, path, index)
                 return stock_tree
@@ -1353,18 +1418,6 @@ try:
                     test_pt = ref_obj
                 return test_pt
 
-            def center_box(self, Box):
-                type_str = str(type(Box))
-                if 'List[object]' in type_str:
-                    bbox = rg.BoundingBox.Empty
-                    for brep in Box:
-                        bbox.Union(brep.GetBoundingBox(rg.Plane.WorldXY))  # 获取几何边界
-                    center = bbox.Center
-                else:
-                    center = Box.GetBoundingBox(
-                        True).Center if "Box" and "Plane" not in type_str else Box.Origin if "Plane" in type_str else Box.Center
-                return center
-
             def sort_points_on_curve(self, points, curve):
                 param_list, index_list = [], []
                 for pt_index, point in enumerate(points):
@@ -1378,33 +1431,48 @@ try:
                     sorted_indexes = None
                 return sorted_indexes
 
-            def RunScript(self, Geo, Curve):
-                try:
-                    sc.doc = Rhino.RhinoDoc.ActiveDoc
-                    Result, Index = (gd[object]() for _ in range(2))
-                    j_bool_1, geo_list, geo_path = self.parameter_judgment(self.Params.Input[0].VolatileData)
-                    j_bool_2 = self.parameter_judgment(self.Params.Input[1].VolatileData)[0]
+            def sort_geo(self, set_data):
+                origin_geo, origin_curve = set_data
+                geometry_list = map(self._trun_object, origin_geo)
+                curve = self._trun_object(origin_curve)
 
-                    re_mes = Message.RE_MES([j_bool_1, j_bool_2], ['G end', 'C end'])
-                    if len(re_mes) > 0:
-                        for mes_i in re_mes:
-                            Message.message2(self, mes_i)
-                    else:
-                        # 获取输入端引用物体
-                        if Geo and Curve:
-                            center_pt_list = ghp.run(GeoCenter().center_box, Geo)  # 获取中心点
-                            sorted_indexes = self.sort_points_on_curve(center_pt_list, Curve)  # 排序拿下标
-                            Result = [geo_list[self.RunCount - 1][_] for _ in sorted_indexes]
-                            Index = sorted_indexes
-                        else:
-                            Result, Index = ([] for _ in range(2))
+                if geometry_list and curve:
+                    center_pt_list = ghp.run(GeoCenter().center_box, geometry_list)  # 获取中心点
+                    sorted_indexes = self.sort_points_on_curve(center_pt_list, curve)  # 排序拿下标
+                    Result = [origin_geo[_] for _ in sorted_indexes]
+                    Index = list(sorted_indexes)
+                else:
+                    Result, Index = ([] for _ in range(2))
 
-                    sc.doc.Views.Redraw()
-                    ghdoc = GhPython.DocReplacement.GrasshopperDocument()
-                    sc.doc = ghdoc
-                    return Result, Index
-                finally:
-                    self.Message = 'Objects follow the curve in order '
+                return Result, Index
+
+            # def RunScript(self, Geo, Curve):
+            #     try:
+            #         sc.doc = Rhino.RhinoDoc.ActiveDoc
+            #         Result, Index = (gd[object]() for _ in range(2))
+            #         j_bool_1, geo_list, geo_path = self.parameter_judgment(self.Params.Input[0].VolatileData)
+            #         j_bool_2 = self.parameter_judgment(self.Params.Input[1].VolatileData)[0]
+            #
+            #         re_mes = Message.RE_MES([j_bool_1, j_bool_2], ['G end', 'C end'])
+            #         if len(re_mes) > 0:
+            #             for mes_i in re_mes:
+            #                 Message.message2(self, mes_i)
+            #         else:
+            #             # 获取输入端引用物体
+            #             if Geo and Curve:
+            #                 center_pt_list = ghp.run(GeoCenter().center_box, Geo)  # 获取中心点
+            #                 sorted_indexes = self.sort_points_on_curve(center_pt_list, Curve)  # 排序拿下标
+            #                 Result = [geo_list[self.RunCount - 1][_] for _ in sorted_indexes]
+            #                 Index = sorted_indexes
+            #             else:
+            #                 Result, Index = ([] for _ in range(2))
+            #
+            #         sc.doc.Views.Redraw()
+            #         ghdoc = GhPython.DocReplacement.GrasshopperDocument()
+            #         sc.doc = ghdoc
+            #         return Result, Index
+            #     finally:
+            #         self.Message = 'Objects follow the curve in order '
 
 
         # 多重向量偏移
