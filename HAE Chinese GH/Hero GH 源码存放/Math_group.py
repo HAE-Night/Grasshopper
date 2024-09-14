@@ -459,13 +459,12 @@ try:
                         new_list_data = list(b_part_trunk)
                         new_list_data.insert(self.max_index, a_part_trunk)  # 将最长的数据插入到原列表中
 
-                        match_Decimal, match_Precision = new_list_data
-                        Decimal, Precision = self.match_list(match_Decimal, match_Precision)  # 将数据二次匹配列表里面的数据
+                        Decimal, Precision = self.match_list(*new_list_data)  # 将数据二次匹配列表里面的数据
 
-                        turn__Decimal = ghp.run(self._trun_object, Decimal)  # 将引用数据转为Rhino内置数据
-                        turn__Precision = ghp.run(self._trun_object, Precision)
+                        # turn__Decimal = ghp.run(self._trun_object, Decimal)  # 将引用数据转为Rhino内置数据
+                        # turn__Precision = ghp.run(self._trun_object, Precision)
 
-                        zip_list = zip(turn__Decimal, turn__Precision)
+                        zip_list = zip(Decimal, Precision)
                         zip_ungroup_data = ghp.run(self.run_main, zip_list)  # 传入获取主方法中
 
                         Result, Percentage, Per_thousand = zip(*zip_ungroup_data)
@@ -503,7 +502,7 @@ try:
 
                         zip_list = zip(max_trunk, other_zip_trunk, ref_trunk_path)
                         # 多进程函数运行
-                        iter_ungroup_data = zip(*ghp.run(_do_main, zip_list))
+                        iter_ungroup_data = zip(*map(_do_main, zip_list))
                         Result, Percentage, Per_thousand = ghp.run(lambda single_tree: self.format_tree(single_tree),
                                                                    iter_ungroup_data)
                         return Result, Percentage, Per_thousand
@@ -577,8 +576,9 @@ try:
                 """运行主方法"""
                 Decimal, Precision = tuple_data
                 decimal.getcontext().prec = 10000
-                Precision = 0 if Precision is None else Precision
+                Precision = 0 if Precision is None else Precision.Value
                 if Decimal is not None:
+                    Decimal = Decimal.Value
                     per = Decimal * 100
                     per_th = Decimal * 1000
                     Result = str(dd(Decimal).quantize(dd("1e-{}".format(Precision)),
@@ -680,7 +680,8 @@ try:
                 return instance
 
             def __init__(self):
-                pass
+                self.Menu_list = ['取末尾0', '不取末尾0']  # 需要添加的菜单列表
+                self.settings = Grasshopper.Instances.Settings
 
             def get_ComponentGuid(self):
                 return System.Guid("0b6b166d-332d-4c95-95bd-b7f85482351c")
@@ -721,9 +722,44 @@ try:
                 self.SetUpParam(p, "Ceil", "C", "rounded up")
                 self.Params.Output.Add(p)
 
+            def OnTextMenuClick(self, sender, args):
+                try:  # always everything inside try
+                    # self.settings = Grasshopper.Instances.Settings
+                    self.settings.SetValue(str(self.InstanceGuid), sender.Tag)
+
+                    self.ExpireSolution(True)
+                except Exception as ex:
+                    System.Windows.Forms.MessageBox.Show(str(ex))
+
+            def AppendAdditionalMenuItems(self, items):
+                component.AppendAdditionalMenuItems(self, items)
+                try:  # always everything inside try
+                    image = None
+                    Menu_EN_list = []
+
+                    for index, menu_name in enumerate(self.Menu_list):
+                        Menu_item = items.Items.Add(menu_name, image, self.OnTextMenuClick)
+                        Menu_item.Tag = index
+                        Menu_EN_list.append(Menu_item)
+
+                    self.enabled = self.settings.GetValue(str(self.InstanceGuid), 0)
+
+                    for item in Menu_EN_list:
+                        if item.Tag == self.enabled:
+                            item.Checked = True
+                        else:
+                            item.Checked = False
+
+                    # self.ExpireSolution(True)
+                except Exception as ex:
+                    System.Windows.Forms.MessageBox.Show(str(ex))
+
             def SolveInstance(self, DA):
                 self.Message = 'Half Adjust'
                 Result, Floor, Ceil = (gd[object]() for _i in range(3))
+                # 获取右击菜单的设置值
+                self.ComponentPropertyValue = self.settings.GetValue(str(self.InstanceGuid), 0)
+
                 if self.RunCount == 1:
                     def _do_main(tuple_data):
                         a_part_trunk, b_part_trunk, origin_path = tuple_data
@@ -733,10 +769,10 @@ try:
                         match_Decimal, match_Precision = new_list_data
                         Decimal, Precision = self.match_list(match_Decimal, match_Precision)  # 将数据二次匹配列表里面的数据
 
-                        turn__Decimal = ghp.run(self._trun_object, Decimal)
-                        turn__Precision = ghp.run(self._trun_object, Precision)
+                        # turn__Decimal = ghp.run(self._trun_object, Decimal)
+                        # turn__Precision = ghp.run(self._trun_object, Precision)
 
-                        zip_list = zip(turn__Decimal, turn__Precision)
+                        zip_list = zip(Decimal, Precision)
                         zip_ungroup_data = ghp.run(self.run_main, zip_list)  # 传入获取主方法中
 
                         Result, Floor, Ceil = zip(*zip_ungroup_data)
@@ -773,7 +809,7 @@ try:
 
                         zip_list = zip(max_trunk, other_zip_trunk, ref_trunk_path)
                         # 多进程函数运行
-                        iter_ungroup_data = zip(*ghp.run(_do_main, zip_list))
+                        iter_ungroup_data = zip(*map(_do_main, zip_list))
                         Result, Floor, Ceil = ghp.run(lambda single_tree: self.format_tree(single_tree),
                                                       iter_ungroup_data)
                         return Result, Floor, Ceil
@@ -865,15 +901,39 @@ try:
 
                 return iter_group
 
+            def eliminate_zero(self, str_num):
+                # 将小数点后位倒叙
+                if '.' in str_num:
+                    pt_before, pt_after = str_num.split('.')
+                    pt_num = [int(_) for _ in pt_after][::-1]
+                    # 寻找列表中第一个不为0的下标
+                    first_non_zero_index = next((i for i, v in enumerate(pt_num) if v != 0), None)
+                    if first_non_zero_index is not None:
+                        new_pt_num = pt_num[first_non_zero_index:]
+                        new_pt_after = ''.join([str(_) for _ in new_pt_num[::-1]])
+                        new_str_num = pt_before + '.' + new_pt_after
+                    else:
+                        new_str_num = str(int(float(str_num)))
+                else:
+                    new_str_num = str_num
+                return new_str_num
+
             def run_main(self, tuple_data):
                 """运行主方法"""
                 Decimal, Precision = tuple_data
                 decimal.getcontext().prec = 10000
-                Precision = 0 if Precision is None else Precision
+                Precision = 0 if Precision is None else Precision.Value
                 if Decimal is not None:
-                    Result = str(
+                    Decimal = Decimal.Value
+                    temp_result = str(
                         dd(Decimal).quantize(dd("1e-{}".format(Precision)), rounding="ROUND_HALF_UP")) if "e" in str(
                         Decimal) else NewRound().handle_str(Decimal, Precision)
+                    if self.ComponentPropertyValue == 0:
+                        Result = temp_result
+                    elif self.ComponentPropertyValue == 1:
+                        Result = self.eliminate_zero(temp_result)
+                    else:
+                        Result = 'Invalid'
                     Floor = math.floor(Decimal)
                     Ceil = math.ceil(Decimal)
                 else:

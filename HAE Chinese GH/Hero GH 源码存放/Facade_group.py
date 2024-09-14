@@ -786,6 +786,7 @@ try:
                 PLANE = rg.Plane.WorldXY
                 p.SetPersistentData(gk.Types.GH_Plane(PLANE))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                p.Hidden = True  # 隐藏输入端预览
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
@@ -882,13 +883,6 @@ try:
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
                     sc.doc = ghdoc
-
-                    no_rendering_line = self.Branch_Route(Dimension)[0]
-                    self.dim = filter(None, list(chain(*no_rendering_line)))
-                    self.bbox = rg.BoundingBox.Empty  # 覆写zoom方法
-                    for _ in self.dim:
-                        if _:
-                            self.bbox.Union(_.GetBoundingBox(True))
 
                 DA.SetDataTree(0, Dimension)  # 返回值
                 DA.SetDataTree(1, Real_Value)  # 返回值
@@ -1005,6 +999,9 @@ try:
                         sub_dim.RichText = sub_over_data
                     real_dim_value = sub_dim.NumericValue
                     show_dim_value = sub_dim.PlainUserText
+
+                    sub_dim = initialization.HAE_LinearDim(sub_dim)  # 调用至自定义类
+
                 else:
                     sub_dim, real_dim_value, show_dim_value = (None for i in range(3))
 
@@ -1036,16 +1033,6 @@ try:
 
                 Rhino.RhinoApp.Wait()
                 return ungroup_data
-
-            def DrawViewportWires(self, args):
-                try:
-                    for sub_dim in self.dim:
-                        args.Display.DrawAnnotation(sub_dim, System.Drawing.Color.FromArgb(0, 150, 0))
-                except:
-                    pass
-
-            def get_ClippingBox(self):
-                return self.bbox
 
 
         # 平面的Y轴标注（垂直标注）
@@ -1086,6 +1073,7 @@ try:
                 PLANE = rg.Plane.WorldXY
                 p.SetPersistentData(gk.Types.GH_Plane(PLANE))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                p.Hidden = True  # 隐藏输入端预览
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
@@ -1182,12 +1170,6 @@ try:
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
                     sc.doc = ghdoc
-
-                    no_rendering_line = self.Branch_Route(Dimension)[0]
-                    self.dim = filter(None, list(chain(*no_rendering_line)))
-                    self.bbox = rg.BoundingBox.Empty  # 覆写zoom方法
-                    for _ in self.dim:
-                        if _: self.bbox.Union(_.GetBoundingBox(True))
 
                 DA.SetDataTree(0, Dimension)  # 返回值
                 DA.SetDataTree(1, Real_Value)  # 返回值
@@ -1307,6 +1289,9 @@ try:
                         sub_dim.RichText = sub_over_data
                     real_dim_value = sub_dim.NumericValue
                     show_dim_value = sub_dim.PlainUserText
+
+                    sub_dim = initialization.HAE_LinearDim(sub_dim)  # 调用自定义类
+
                 else:
                     sub_dim, real_dim_value, show_dim_value = (None for i in range(3))
 
@@ -1337,16 +1322,6 @@ try:
 
                 Rhino.RhinoApp.Wait()
                 return ungroup_data
-
-            def DrawViewportWires(self, args):
-                try:
-                    for sub_dim in self.dim:
-                        args.Display.DrawAnnotation(sub_dim, System.Drawing.Color.FromArgb(0, 150, 0))
-                except:
-                    pass
-
-            def get_ClippingBox(self):
-                return self.bbox
 
 
         # 在犀牛空间中创建表格
@@ -1382,6 +1357,7 @@ try:
                 DEFAULT_PL = rg.Plane.WorldXY
                 p.SetPersistentData(gk.Types.GH_Plane(DEFAULT_PL))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
+                p.Hidden = True  # 隐藏输入端预览
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
@@ -1427,6 +1403,7 @@ try:
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Plane()
+                p.Hidden = True  # 隐藏输出端预览
                 self.SetUpParam(p, "Pln", "Pl", "Position of table text")
                 self.Params.Output.Add(p)
 
@@ -1449,7 +1426,7 @@ try:
                         self.marshal.SetOutput(result[2], DA, 2, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAARsSURBVEhLbVVLbxtVGB2JCkVVoKXQUtEiIR79EQgJ8QcQCzYI8Uu6YIEptAtYdMNjw6NRW1UJcZzWcfz2zPj9Gns8fsYeP+KoxGnFglcR9+N815nmOmFxJN9zzszc+53vftZeO3Xq3Y9PP3+V8QnwzrNLVz84vSzXHyng9dvQPvwfjTnWVN77rb2/tPz1P5ev0N+X3yJ69QqtvHiRhq+8Tk+w/kPBv9B+OneRHl56Q3o9/i/g8aU36YdzL9MTeDzee157T3vGZ529QNYLF6gF0xdLyxQ58xLVsK4ocKBdW3qOEmfOS6/HV4H82fP0GZ5TeX6+BF4L3v3Ut377Jt369oa49c0NsfqjT9z+/ku5XlHA619+/hza9RPaynfXhX/l2gLHHv+dm6T9uR/y9d0BmQWLjFyNBj1DFKslMvMWpcF5MPJzrVCpkFlc1DKlKrk7ulA5k/3DAWm/je/6JuM02dWQsMshMWlviHYtKOxKSDTAeeD1pLMhWrUtwV5Vc6pbYtL1L3Ds38V7tceje75BP0+lQlSUclExcDZFrbwtSvmoKIPzwOtBc1NYpbBgr6pVihHhtgILHPvdQZ60fXfV12xYlEwZlEiY1MRuMukkJZMGpcB5SCShWVsibaakV9V0XacWTq1ySfhbjjUv0d6uIQ0tKyim3XXRa9xHKYKyVB54Pe2ti6794ITWqT8Qe9BUjj17U2N+Ase2sEODYnGTHNQvbSZxGt7FEWI4nWOFhGmkpFfVUimdmshG5WQ1UBmZgdvPUbkQmdcNda5XtlHHiKgo4LqzViuHT2jVYlgMkYHKcQ7DQQ4fGN/zjdwscXhsHMHIXcHrmoIqMGoHZIcc1+poihG6T+XYMx5mSXvYX/U1anWKxtMUiWaogd3rhk7RWBolO0IkBq26LVK6Ib2qFj8sn8pF4XfqdYS8Ow+5XV8MWYYFzoMXcg8hH9dkyDsIWeHYI0M+QMjddpnSaE0OsAuxmI8RB83t6sFEe3btoCjk4tKrarlMgnhTKsft3OuU8YERPtApUQYmfmkXu0HYMCUoC84Dv5RbtJiLSa+q5bNx2mlsCpXnj/S6pfk92J1wDbcQLq53xy86eBEHzRfLg9QwDjo4IXtVTZYPpVV59k93zXnINkKOIJgwQrbREXwzIwiZw/QQRmg2GoBvKXtVTfY8Xqrysik4ZG7T8TBD3Gq10rYYo93YzGsVPJ9Y410e1xpyEPpP8JNR5nDY7WDYoe6o7+GwCxMGn+Q8SE0Ou8gCz+CL5TYDMrunQFYuhujTURHHcOL+5dqZCJt7mwech1gCGnrdQKexV9V4VHAOKh+HX46K33EPZvsJ4qvOu5gN1uRxh62NBfA4nrlrYoz/hOMa3+KZu4rfAYUPiINZYn6CTquMPk+Soaeog51wr5sG9/IReOfcQflsQnpVLYuW7tn35ck9Tt4p3C/t0Wjtq9mvfXKcKjVQqhlatod74TSq1ATnoYHjztB2/BB7Va3drNCjqb7AO/Af7PfpP3YH/bFQZXVQAAAAAElFTkSuQmCC"
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAALXSURBVEhLtZVrSFNhGMcPc/PsltNZtihRLDU1dU6dly1nXuZ0S53YZZhCaMPUeVlt5CzDvCWERXQxCTSJFMENU9JKDbJmIgwGI/DLCII+JoRdoNjTc47Q5z68Hvjxcv7Pef7PeznPORReKYhlF6HsIXsEoM45ChpVIhSfSGE5jveqrHhQZ8f/G7Wo6wpToUhzDLU4VmPjyjgoRK2sOA1Ki+RsLuMnFvOBKWDR5CYAwAqszF6FXHyY4bPvPmpzAD9mAH45AX46of5cPhTkJcFgtwljL3ZiDLAATx40sQVqqlUAW1OozUNW+pGdAvnqRBRWYRkLpCZFsXz5+BC1RYDfswABLPTnOVSUpkNC3EHo7KjA2NJOjAEnN9xXCzFREaBUHAb4No3aS8jOiGULtErDxGDA5JM6BZTjyGAoUYBem/afKHD2cnb7GJhcgy4dQiVCtsBpZGXXCJMIesfuNQZck7aAc8JKDJfTEWhvLA1QNM1trizL8JqqVd4zxhximEx53pzMWC8lFtMXcR89RoPSU6nPJIbRmO2RJ0d7qAP7Jb0TI03genYZZiasxHA5u6CpXssechufz9sUCulNoYAg6MenuZuUSCTon5+yw8bbIVhf6iPGxvowDF43sSuwBgVxPnG5QcRhfCmZLGzA9fQSLM91w2tXFzGWcRXWZj3ga8q7kJwY6ZanRLvx1Mkhj3FHHgp3UxKJqMNiLvHb28r9NouBGHZblb+kINVP7ZWGXMMP1fboXfP2yO0GYow+atmuO5v3nRLSPHOoRPRBEiIkC3rygjhuSq2MH3Qv3oC1V73wfrGHGGtrt+B8jQYoDodzRSgI3sLG2MIGIQf6BQdzvzJ90Df5uBXcbwbg3UIPMdyrQ3BnoI5ttOpwqXhaFhE6LdsnIQf6SdEX+4BusZh1PoetytdprSSGw3HKZ9QrfZRAQN8c7q+F8dEWwB8PMcbH2qG5QQt/AV41JveCu0G4AAAAAElFTkSuQmCC"
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
@@ -1547,7 +1524,7 @@ try:
                     if sub_text:
                         ref_pln.Origin = rectangle[sub_index].Center
                         sub_text.Plane = ref_pln
-                        new_text_list.append(sub_text)
+                        new_text_list.append(initialization.HAE_Text(sub_text))  # 将文本传入自定义文本类
                         pln_list.append(sub_text.Plane)
                     else:
                         new_text_list.append(None)
@@ -1564,7 +1541,8 @@ try:
                     if type(gh_obj) is rg.Rectangle3d:
                         sc.doc.Objects.AddRectangle(gh_obj, attr)
                     else:
-                        sc.doc.Objects.Add(gh_obj, attr)
+                        gh_obj.BakeGeometry(sc.doc, attr, None)  # 调用自定义文本类中的Bake方法
+                        # sc.doc.Objects.Add(gh_obj, attr)
 
             def _do_main(self, tuple_data):
 
@@ -1635,8 +1613,6 @@ try:
 
                         zip_list = zip(str_trunk, str_trunk_path, h_text_trunk, pln_trunk)
                         iter_ungroup_data = zip(*map(self._do_main, zip_list))
-                        self.unrendered_rec3d = list(chain(*zip(*iter_ungroup_data[1])[0]))
-                        self.unrendered_text = list(chain(*zip(*iter_ungroup_data[0])[0]))
                         Text_TEN, Cells, Pln = ghp.run(lambda single_tree: self.format_tree(single_tree),
                                                        iter_ungroup_data)
 
@@ -1645,19 +1621,6 @@ try:
                     return Text_TEN, Cells, Pln
                 finally:
                     self.Message = 'Table frame'
-
-            def DrawViewportWires(self, args):
-                try:
-                    for text_index, text_item in enumerate(self.unrendered_text):
-                        for sub_index, sub_text in enumerate(text_item):
-                            if sub_text:
-                                args.Display.DrawText(sub_text, System.Drawing.Color.FromArgb(0, 150, 0),
-                                                      sub_text.GetTextTransform(sub_text.DimensionScale,
-                                                                                sub_text.DimensionStyle))
-                            rec_curve = self.unrendered_rec3d[text_index][sub_index].ToNurbsCurve()
-                            args.Display.DrawCurve(rec_curve, System.Drawing.Color.FromArgb(0, 150, 0), 2)
-                except:
-                    pass
 
 
         # 创建标注样式
@@ -1735,7 +1698,7 @@ try:
                     self.marshal.SetOutput(result, DA, 0, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAIvSURBVEhLYxgFgxqw8vLyCoMwlM8gKirKA6SYhYWFeY2NjVkhogwMQkJCfECKCcIjHuQyMjJeYWJiOgCkl8jLy3MA2TtZWVmNgPRhIN4HUgSk04D4LZCpBeKTAnqABs8H0rxA+h4LC0sGkD4I5NsADdwDxB/Y2dkVmZmZlwPFvwPFTUGaSAFdQI1TQAygYbuAFtQB+TuBXFugoUuA7CVA8Z1QNSCLrUFqSQGdQM2XgLgbiO9ycHDIA+lrQHEnoMH7gJZ4AOn/QBwGFDsFxA4gTTiBBwMD++ZwvyOr3FzqoUK6QFwANKCQi4tLEiLEEArEkkDDvYE0KMIDgBgUwSBawodBkmuNu8vylbYO8UA+BuC8s6j6//G6tFVQPskAaJPQk0U1/082p8+FCqEAzsszS34erU5eCOWTAwSuziz9f6o1czKUjwI4r8wq/XWoLBGr7UQCzuuzy/6faEjvhfJRAOe1ueUvDhfGvj9cl3jpeH0qSfhEc8alramB1x8tqP5/rCa1GWomCuC8MqfszeGCuAf7SmNWH65IWn24PIF4XJ28el2c76YH86v+H61LbYWaiQJAcfD7aFXyLCifHMByc27F/6M1KZ1QPgqgOJL1GBjEbg2oBdcXVv4/0Zi+FMonGYAsuL+09v/xxvQuqBACyAAt2JsT9XZzmN9MqBDJwImBQfxcbdr/7QnBPVAhBPjPwMAYCHRBNCTrkwX2AyO5iYHfuIVBSBoqNAoIAQYGAMi83N/s4LrqAAAAAElFTkSuQmCC"
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAJVSURBVEhL5ZZdSFNhHMYt5rpYBksnDaNmx4V9mJx0YYnIMl2FFLhdpEhrNI2VBZG26GPowD5oIggOk/KijChBxbQkCjLsepHdRkRUFBRBUCHa0/Pf1o0VnTPv6gc/zsv7Hs5zzvt50kgpbZnjQWqkejDTNhqeY1rHvrpyRKMBRDv86DrvxVKzaYb1S6RRB/Z1+csRe3wRsYlziMW60NTggjSEh/ubATykd4BvQ1Bs2e9YnyGNOlhVUmSfAW4D00N81gNEwvWJgGs9h4DvI8Cnm/j65ipsK7JSCnCoygw+DwAfbzBgFO2n9/wnAQuS17+hO2ARtdCTNECLaDHdQo9TIYcGE0X9Ael0Da2lsiYOUz910UGaTd20lwopBeRTj9xEDtD9dHfyejR5lVBBd4C8tZWGaCOVLiqjVcmyfFkJ3UWFlAdZ0LJt6Ap4z3oZZEHe1J4o/oJK5YsEGwNmNQXkrrS8Zr3ZWbb2wtnWOlSWr79f7dp4eWel2ru9YkPPjorCqFjlLJgMBT2wK1bpQusmVZnWFJBjNb/IyswYf/msmzfKHjX2B0fpBCbvtsJoNNwqVpUPGrvI8spkSi9o9FaMjQycQHNT9fNTzTVPQi01T9uCnqnWoJt6pkJB99t7I2fgrS2/bjCklTrUvC96xmChNJIIldnyO2QdxPd8skzzGCRnkd7zQJnPNNXCvNaBFv7lgOH+Y6z4eSYP8ky2pBSw2bF6FhiPPxx4hM52bzwg0rB3K/quHEFfdwCXOv3INC9O5a8ij4sTvnonfPxL8fm2oagwFz8AR6AKmXAF0KwAAAAASUVORK5CYII="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
@@ -1841,6 +1804,7 @@ try:
                 REF_PLANE = rg.Plane.WorldXY
                 p.SetPersistentData(Grasshopper.Kernel.Types.GH_Plane(REF_PLANE))
                 p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                p.Hidden = True  # 隐藏输入端预览
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
@@ -1915,16 +1879,10 @@ try:
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
                     sc.doc = ghdoc
 
-                    no_rendering_line = self.Branch_Route(Leader)[0]
-                    self.dim = filter(None, list(chain(*no_rendering_line)))
-                    self.bbox = rg.BoundingBox.Empty  # 覆写zoom方法
-                    for _ in self.dim:
-                        if _: self.bbox.Union(_.GetBoundingBox(True))
-
                 DA.SetDataTree(0, Leader)  # 返回值
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAIdSURBVEhLYxgRgBGIvYE4C4gNQAJAYA7EgkBsC8SSIAEgcAViMQiTNMALxNeBuAiITwGxAxAvB2I7IL4NxB1AzAbE/4HYE4hJBiCX7oUwGYKBeCEQTwNiNyDeD8SbgDgKiL8BcSAQkwyQLUgE4ulAPAWIw4AYZBHIN8eAeBEQg4KRLHAGiEFBBLJIEYhnAHEcEPcCcQoQr4Pyq4GYePDv3x6jzctLbYWEeKr4+bkmycgIB5ibq2qKi/MngtgSEgKxqqoSdnJyIt7y8iJeUlKCEYe3Nfr++7lty7/Xy/ygxuAG398sf3Fsb+vfygL/h1WFAfdLc3xeFmZ4fSzL9X1Wku3zCkg/L87yfgMSB/GB9ItDW+v///9/7f/f18t2Qo3BDtwd9L17m2P/F+eGaAG5osTiNfOLNP793Nz488UyPSAfNwC66FxSjMNSKJe6QE9P3rCxIvS/goKUOlSIuiA3zXNjYZbXISiXukCIk1O6vjzkv42Fhj1UiLogJdZxclme7x0ol7qAjZnZqyzP73uQv3k4VIiqgHVKV+LbS0e7/zMzM4NKT6oD05c3Z/5fOa/gPjc3N1nFLl6QmexWd+VY939JSSFQKUl90FYbcaswyxtU9FIfqKiIKnu5Gb0EMiUgItQGXKzJDEwMSVAedUE9g7SMHTN/UwWDmGUng4QJNfFkBlkTYIUq1TqVQfZPF4P0304G6f/UxFMYZP8DAOqPyxw9e5AIAAAAAElFTkSuQmCC"
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAKgSURBVEhLxdRtSFNRGAfwba6VJLmlNleOWUa+NJGVq4RS0FRYq5yoOJeSNFOxF2orKqyVYrlWUuYX3YTeFUxhpkUUEVoRfQpfPoREXwqNoCCnZlRP/3PviogYsW70hx97zjn3nnt37rlX9D+SCpVQBnLQQQZkActayObL4GKBdZAG1VAEpXAFWJqhhi+DSyEshblggwLI8ddW2AdGCDr5UAXsLlPABJuBLV09sCUyQNAJhRUQzrVEonkg48sfSYI4vvw32atftWw2VRfXj3oHLOF6/zDV2RnaoTzjmqGthtXDeQb9cN6m1BETY9SP5oMxVzf+5G49zX7opts9R6imIncyKT7mJs4th4AXk2Wla1/Tl14iuhfYTA/R+w7Ut+AB0XQ3uS9UknJR+FfMw3baQm7GX2Lu6zjAndTeXEmnT1jIebyEnI4SanSY6dQxM508WkwNtcX08lkzjrtD42NtdKl1F20rTn+VotW4Q0NlWzCPCiTcjD9Hl6x5Sh97aeSRi9BsgpXAHiiT6JcAjZbC9WQtz5lQKRUX0Wa7LAwCZkOLczvuapAqyjKn0I7ku38bPbAX8vtOCxgFhCxWKbp8b67R2xduki+Y7+GHBIhMJrWpYyJHa22mGaIBqjtcMI3u5fyoAJFKJXa25T75btAU/oE2QT2G7ngQcwcIENvIYxfRZy/Wv5/O1FlILBazBxfCD/997EODTkx+n7ydBylWHdWOvjn8kDCxTzxvpa7LNsKauPx9wiUqIuxQVflGtu/38z0CRyIROfDTAuxFUUK0wEQOdUzERHKyZlKbqPYJRhvrU0XLfewC9VfxLSHqI3rXKRx8z5oaytjSi+q819kHboDbpsJ5SG3nKrgLnLWWZpLHs5vc53cKxuPZQ0WmNPoGX37toVJqzMYAAAAASUVORK5CYII="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
@@ -1996,6 +1954,7 @@ try:
                 else:
                     DimStyle = self.Find_DimStyle(Style)
                     leader = rg.Leader.Create(Text, Plane, DimStyle, Pts)
+                    leader = initialization.HAE_Leader(leader)
                 return leader
 
             def Get_curve_pt(self, curve):
@@ -2069,16 +2028,6 @@ try:
 
                 return ungroup_data
 
-            def DrawViewportWires(self, args):
-                try:
-                    for sub_dim in self.dim:
-                        args.Display.DrawAnnotation(sub_dim, System.Drawing.Color.FromArgb(0, 150, 0))
-                except:
-                    pass
-
-            def get_ClippingBox(self):
-                return self.bbox
-
 
         # 角度标注
         class AngularDim(component):
@@ -2126,7 +2075,7 @@ try:
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
                 self.SetUpParam(p, "Style", "S", "dimension style")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
@@ -2172,7 +2121,7 @@ try:
                         self.marshal.SetOutput(result[2], DA, 2, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAANOSURBVEhL1ZV7SFNRHMdvZm6aJlrQwwg3t7Q0rCTsH/OfHhBEf0QRQURCGpZoPvIxS1vLdI/r5mNLTY18pPMRiWk6pzHQEAl16t18ZFo+Kq1maJbEPZ0zz8hh8wH2Rx/4cXe+v989353nJRAAACYA09uMjX/Be01azniTzEDTMzuwtLZo8+M1fdKbcCAzPlhaW7oLbqt0achgej+W1pbuwsT/3IAqNhkADyytLWgNBnJ4gKbpU9DECcsWAQSxTmzLCc1gchXCTZ5uWLZM/7PkuhdnToN2WQxoz+F9H6ghW2cmqpJoeu4QLjGDtOMcT7FxlacxWX4iBrsAy5bprbhX1xIeALSP7/c0J4WMt90NAfqkMNAhDgejLdmNND16DJcSCUSCVar9niMSG5Zaas3KkthzgxR23JMy5307ccliKLjIfYpYNEWecIps4NN7+mNVVGd+Yk8XLxhQwggwN1mdDXN2QQThkmm3W5zO5EaikYiY7FzFBjc+fGY/3OzugLs0hyq+o9LDRabprwewZAR2aEXTnZc6M2LHqMgrYEzzoB1qu3CagNMjSl7veuIssddGxGAVyzgcRhbbxxGn/7DA4CCWzIAj2vqhNfd5V1gAeFslfgPb26FsJWawy7KsOf5ChmuVxJZzWOrk4UXac4tIRw/zfqgn0EBm2cDE1GBFETIZVsleo6kUMlhH5bYckXSjhxfKo3UgHdxDFc7eLsYXTKzUAPGpI6+BigwEn9+VybG0PLpSvkq3QgP4z7do5dETffIYWD/ui+WlWY0BYtZQe1V/6xr4MlRUg6Wl0SmhgTRqxQZo/jW8wJHBMgF8Z3b5k7xaA0THo/iUMTm6XtpvYMkyujLBqg2+jVX6a+ODwayhshpLljEZQFZ8m8KzYKu6fnFu5FX6EJYsQyn5Tb2ZaFf8OkfTP73+FuhbgT6pABiMAQ1821LDJ6lS/g/4228+vzAAjOH5m3mwTlzeevkC0JLRoIuMmA+JeVBwhPq0aIDOC9pxOlkcaAw4D9AtrJPyAEVGgh5TwHq9NA5MUHmU0WDWUM0eriWVPSWCZr2SvzjKBc26Ev5LqiSxAW7p+VDyGwaqU+oHa4X1veWwXS5Q95qiUqDufypRTw0X8n8Dfq1Qvtb5Hd0AAAAASUVORK5CYII="
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAN/SURBVEhL3ZZZbExRHMbPi9jaqlmq7nRMNaXVJrUVI9pIxVqhFAki9mkV04ililQRaTu2TtEyM6q6oFqaKKXiQYREPHkhsYvUNqV6S2vvfP7n3okud8YSnnzJl0zO/7vnd8495/4zjBRONnmwP/mfyDxpXBSs1iRYsxbBunspQoIDQOORcvnvZcrJnAfgGrmGfBlxsREcwHf2T2TauiGRJj4PV8NJoOUMYoxh/wfAIJf/XgrAmFEDOWCyXPauTKb1cf/8qToCmk/TIUciIizoG9WukJeQ/XiwvXJY35jdTJdqYbp495BXdQS8q8A4Aty5sQe3bubCnBIPrcavjnIZZJX0BCmbCUtzmM5ITrYwta972KMUgNjR4RJAvrqX4Hx8BDsy5kLt3/MZ5RdWsJCYg8wQn8MEG+0kbRcTUixMmC5Pp5TiDIzRoa3DBvdHfq4JzkdHJAj/Pp7ePYxZ00by86mx0iuys+BJWTRxHgvtSjtJtzC9YGPDu8jTtkkBiB0d9pXGE8g7ArR+dRvWJLhBl4HWamxeP5ND7LksMLGAGYzZLMhMO5mQzXQ7CRLNJ20vBcB9TfVyWTrgdbq+KvFs+UbKXZCcmjyZZxxlzBC3hwlSlgCDPZ2HN0DnD20A+XZV2XrKXoSruRJDooJdNPbLnvW7AC59L9/uDS/u2Shfi2s1mTx3XS55158AuFavWTGF8tQYv1VjYlwUz46VS571p4AeapVvfdPTInrmAmor03m2Si55ljdAiFz2qPyqkrX0TK2UjwzXfaKxQLmkVFJnQPTQEA4wktVePJ9/D85XpXj95gTWrpzK81s6Zbg1ZGbemjarDUC9aE6CEf0NAe+C+wWIBr1W7BekEfU6tRgkqEV+XYXA3o2BffwROUiPCHJYqACVv49Lq/EVNWofUa2S3a1rlyYJkLlxtgRopdVwf3GW4TOt7tPLUnx8UYIP5JbnxWh5VozmumN4X1eExieFqL9vg5NuVP0DO948dOAttZSGRw7pdwMt1r0zZt6e3hGAxnJAPKV0U3tXtJn6l8LUXjLo1UuAvTsX0ABvbOd+bpc3V8umNvLDuIpttHAOSJsyfgis1NisWQuRl70I+y2LcXDXEhTQP4xDe5fh8L7lsFHdbjXBkZeEwv3JOHpgBYryU1BckIKSQytRZluF4/bVOOkwo7wwFacrN2HG1BH4DqNEGyW/VsxMAAAAAElFTkSuQmCC"
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
@@ -2219,13 +2168,10 @@ try:
                     j_list = False
                 return j_list, geo_list, geo_path
 
-            def match_tree(self, data_1, data_2, data_3, data_4, data_5, ):
-                one_trunk, two_trunk, three_trunk, four_trunk, five_trunk = \
-                    zip(*map(self.Branch_Route, [data_1, data_2, data_3, data_4, data_5]))[0]
-                if len(four_trunk) == 0 and len(five_trunk) == 0 == 0:
-                    Defult_LayerName = str(sc.doc.Layers.FindIndex(0))
-                    four_trunk = [[Defult_LayerName]]
-                zip_list = [one_trunk, two_trunk, three_trunk, four_trunk, five_trunk]
+            def match_tree(self, data_1, data_2, data_3, data_4, data_5, data_6):
+                one_trunk, two_trunk, three_trunk, four_trunk, five_trunk, six_trunk = \
+                    zip(*map(self.Branch_Route, [data_1, data_2, data_3, data_4, data_5, data_6]))[0]
+                zip_list = [one_trunk, two_trunk, three_trunk, four_trunk, five_trunk, six_trunk]
                 len_list = map(lambda x: len(x), zip_list)  # 得到最长的树
                 max_index = len_list.index(max(len_list))  # 得到最长的树的下标
                 max_trunk = zip_list[max_index]
@@ -2312,15 +2258,15 @@ try:
 
             def Create_AngularDim(self, tuble):
                 """创建角度标注"""
-                Vector, Center_Point, Start_Point, End_Point, Coeff_Point, OverWrite = tuble
+                Vector, Center_Point, Start_Point, End_Point, Coeff_Point, OverWrite, Style = tuble
                 # 如果输入的点有空值，直接返回空值
                 if Vector is None or Center_Point is None or Start_Point is None \
                         or End_Point is None or Coeff_Point is None:
                     return None, None, None
 
-                Dimstyle = self.dimstyle
+                Dimstyle = self.Find_DimStyle(Style)
                 Plane = rg.Plane.WorldXY  # 以世界XY坐标轴作为参考平面
-                rg.Plane.Origin
+
                 Plane.Origin = Center_Point
                 AngularDim = rg.AngularDimension.Create(Dimstyle, Plane, Vector, Center_Point, Start_Point, End_Point,
                                                         Coeff_Point)
@@ -2328,6 +2274,8 @@ try:
                     AngularDim.RichText = str(OverWrite)  # 标注覆写
                 True_Value = math.degrees(AngularDim.NumericValue)  # 角度真实值
                 DisPlay_Value = AngularDim.PlainUserText  # 显示值
+
+                AngularDim = initialization.HAE_AngularDim(AngularDim)  # 调用自定义类
 
                 return AngularDim, True_Value, DisPlay_Value
 
@@ -2382,12 +2330,13 @@ try:
 
             def run_main(self, tuple):
                 # 创建标注主方法，还原数据结构
-                target_Path, Ref_Vector, CP_trunk_list, new_Sp_Point, new_Ep_Point, Coeff_Point, OverWrite = tuple
+                target_Path, Ref_Vector, CP_trunk_list, new_Sp_Point, new_Ep_Point, Coeff_Point, OverWrite, Style = tuple
 
-                iter_group = self.match_list(Ref_Vector, CP_trunk_list, OverWrite)
-                match_ReV, match_CP, match_Over = iter_group
+                iter_group = self.match_list(Ref_Vector, CP_trunk_list, OverWrite, Style)
+                match_ReV, match_CP, match_Over, match_Style = iter_group
 
-                sub_zip_list = zip(Ref_Vector, match_CP, new_Sp_Point, new_Ep_Point, Coeff_Point, match_Over)
+                sub_zip_list = zip(Ref_Vector, match_CP, new_Sp_Point, new_Ep_Point, Coeff_Point, match_Over,
+                                   match_Style)
                 # 创建角度标注
 
                 AngularDim, True_Value, DisPlay_Value = zip(*map(self.Create_AngularDim, sub_zip_list))
@@ -2410,7 +2359,7 @@ try:
                     else:
                         # 匹配树形
                         max_index, iter_group, max_group = self.match_tree(Center_Point, Start_Point, End_Point,
-                                                                           Coefficient, OverWrite)
+                                                                           Coefficient, OverWrite, Style)
                         iter_group.insert(max_index, max_group)  # 将得到的最长的列表插入到匹配后的数据中
                         target_Path = self.Branch_Route(self.Params.Input[max_index].VolatileData)[1]  # 得到最长的目标路径
                         if len(target_Path) == 0: target_Path = [[0]]  # 如果目标路径为0, 给一个默认的路径
@@ -2423,10 +2372,9 @@ try:
                         OverWrite_trunk_list = iter_group[4]
                         OverWrite_trunk_list = OverWrite_trunk_list if OverWrite_trunk_list else [[None] for i in range(
                             len(CP_trunk_list))]  # 覆写没有值默认为None
-                        self.dimstyle = self.Find_DimStyle(Style)
+                        Style_trunk_list = iter_group[5] if iter_group[5] else [[None] for i in range(len(CP_trunk_list))]
 
                         self.Dihedral = Dihedral  # 反角
-                        Coefficient_trunk_list = Coefficient_trunk_list
 
                         new_list1 = map(self.temp_get_newSPEp, zip(CP_trunk_list, SP_trunk_list, EP_trunk_list))
                         new_Sp_Point, new_Ep_Point = [result[0] for result in new_list1], [result[1] for result in
@@ -2439,17 +2387,11 @@ try:
 
                         # 此处运行创建角度标注主方法
                         sub_zip_list = zip(target_Path, Ref_Vector, CP_trunk_list, new_Sp_Point, new_Ep_Point,
-                                           Coeff_Point, OverWrite_trunk_list)
+                                           Coeff_Point, OverWrite_trunk_list, Style_trunk_list)
                         iter_ungroup_data = zip(*ghp.run(self.run_main, sub_zip_list))
                         AngularDim, True_Value, DisPlay_Value = ghp.run(
                             lambda single_tree: self.format_tree(single_tree), iter_ungroup_data)
 
-                    no_rendering_line = self.Branch_Route(AngularDim)[0]
-                    self.dim = filter(None, list(chain(*no_rendering_line)))
-                    self.bbox = rg.BoundingBox.Empty  # 覆写zoom方法
-                    for _ in self.dim:
-                        if _:
-                            self.bbox.Union(_.GetBoundingBox(True))
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
                     sc.doc = ghdoc
@@ -2457,16 +2399,6 @@ try:
                     return AngularDim, True_Value, DisPlay_Value
                 finally:
                     self.Message = 'Angle dimension'
-
-            def DrawViewportWires(self, args):
-                try:
-                    for sub_dim in self.dim:
-                        args.Display.DrawAnnotation(sub_dim, System.Drawing.Color.FromArgb(0, 150, 0))
-                except:
-                    pass
-
-            def get_ClippingBox(self):
-                return self.bbox
 
 
         # 增加绘图框
@@ -2532,7 +2464,7 @@ try:
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
-                self.SetUpParam(p, "Picture_Frame", "PF", "Picture frame")
+                self.SetUpParam(p, "Picture_Frame", "FL", "Picture frame")
                 self.Params.Output.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_GenericObject()
@@ -2558,7 +2490,7 @@ try:
                         self.marshal.SetOutput(result[2], DA, 2, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAALOSURBVEhL7ZZdSFNhGMefqxZ5kZVJYinVLLRQy1KGhTl3kVaEZhCBRJCVlpDWpG3NraamFn6UIeQXWn6BEk5T0kJsfkBZWua328wuMtz6JKNw79Nz3OlCSJqnmy76wx/e8z/nfX68nPc574FfkkjE26ymolTGOl35SJAQG2WjPbmpNJxfRxLkdRI/1CBjj/z4SJAYu589PV6INJxfhwBHrMYiAkyK+UiQGGvRjDzN4QDr7QmAM9nT1XV5koXICvWxMLpeJ9Rmc3Hu8JNsDhBJ9gN9lVzeYcjCjqbL+MNSgb2GTDToU9DQoFm8ad7bsdv4beoO9ndk4eBgAdJLMWxgrC9KX3OxdMZYgq+yznX36mILBtLP5i/G/enx+b3aE4XjJcqJL5Ol2NaYksbYsyhahV1hUUFxQ2VKTKJlbgJwOQXgEwPg7ai556mMqCvuaLL5wVUEkSjUXplXTKzs/ECZAlsiIry1sPJ4NnhszwQ3h30N3Pckw7J94wUXks1NaegbvOUAX9ouDjBYrsS64FA/NawI52OHlQBikRyW7h7JS1SYm9MXBtTvkvpqwHk/HzssDXg6EyDkP2BB/TsAobvoMPgsIcCfd1GTdK8P1wc54B6UAWsDHTX1jUxJfTB6i/pgIQDXaG3R0eIr4OJFE4LTwM1h36DnNbB6zVBeksr0u0aTRgaeGb6rQjnAZj4SpLaYQ9qJ1gwEJyfpXIDY44H4UtZcp7r5/U059uWqxtrVp1s71QmLdntK3ENjpW764+tivFchV9JHVAqttYpL3V3X8cXjTMRPdKJ9rX03a6kSZJu1eorN1H2etVSi8XkemkxF3LkAq8jinf4bM7kbjDVs5UKhovk6q3HuyIwnS+ZCTpERAYmz0xyg0ZuPBInZ6nXcyUjDHfaE18HwgGQ74C9XYKtP5QEh9oQXAbT0y4Fkfz4SJGbT5+D7ag4gAwD4Ce1sUa8jKyeEAAAAAElFTkSuQmCC"
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAJoSURBVEhL7dZdSFNhGAfwly5Kbbtw2V2IdBN9WFd9YHUxK7UMLDGTzMK12QzZKtrC1vwgzY/UbLRKlijO0mgZc86mW2rNAi2TpAspsst2ESuyTKHt6f+e01UXyTnX/uHH2fMezvOwM3jfsX+i+kspVBITG8vWpGxbZ9qSnGhCGSOuikkCfW15XtjlKg/n5+yaRL1dKoUipuzLRwcF+ysItQ42AlsGR6FzuNdKv+Z9VKJNm0XdIsPg9FgT9TjP8wE1oGFxcSvSqyy5ocbakwvt9mK632qk2w2nqK7imGT1lfnU2VJCbejTfF03m75n80OmUsXmULibiF6CD7zgh2GZngDvM0E1ZXkjTKFYntVqK4p4XKXRvm4zeR9cJE+XKdrXZfotFZ6LeNGD9/H0WqNHsnYM4DWxlZAPz9vtenoz2UK6E6nvUa+VoXjEU0aOG0X8N2iDPBCyE7xvg3X4akG6WV84JS5LS0KCMnP+s5NeD1/lAxpgn3ADSQXfeKAKAwLUWHX8nbgsLSqVIvvrp1Z64avkA5phv3ADWRogZGnAolkasGj+NyAFvFPCVjEqe6uIj1ceWAg5aULcKq6Bmq+vgkIYvWsrorFxO2kL1B9Qb5DB4H9soTtNWj6gA3QseX2imW/RAbeVBh5dglIaxNXfI90g8Od5n4D/CllN2T+Yevcmq3hAPAMcNhE3rgMwJMNT8AA/tF7xgVGWlLi6wGw4OHPuTOa3Ww0a6nAYqdqSGzHqM75LZTidMcePS97HdOFw6FDm1mm8JiH8X4F9yH2Zfs71k16zdwH1WRnuzUzahBMNn6sZY2l/AAwq0nZ7CWt1AAAAAElFTkSuQmCC"
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
@@ -2771,7 +2703,7 @@ try:
                     self.marshal.SetOutput(result, DA, 0, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAP/SURBVEhL5ZVrTFt1GMb/ZoSRGELUeCFqjKKRRLNkkiWzEUNwGuOcynTZMhcvbIlU5tzmaOd0MqDQQgdb1nFpoYVyH72NlTE2RIII6LINgQ0HLW259AIUgSx1bB98fEvPbGWHxZl980l+H85Jz+/p/+17Uvb/yEeMxZx6Y9O+AvZkPF2GB+7eo2jj1+0e1lXMYcGBuf7vMVCuGGkVClWFT7z4XiRjD3Efu/t8wyIFPZL0bkz1A5girMQYMU04cWO0B0M6tbfzgNhUtTZxx0bGnuEevXNSGHuk5Kk1R+3mOhJdJzzEMDEUgv/aQUwGmO2H/Wztwi+5GZ2GDUkH9jMWR6r7AsYlqV6XkOlpkKBP4+cInN1m3Ji/TCIn4T+BhQgt8zNCuAj/SUfhPd+C2oQ3B3cw9jSnDaZl14dtN+dPwDVUjOG2bFxUi9CTL8KvZfkY72zEwuwASSYIvjIXFty9OF8qhyppg0/Ioh7gtIE8z1hkV8Gu3+dcWjivFMM9pMSUQw33cAks7Tm4qKGyAhF6VXKMdZhwfaaPpOOEv9AJ+5l61H2ZDKP2W5Ru3WjktMFkhUW/YjVLMGVXLxaE4rqqxCTdd1tKYO2Q4lKFmMrScEmZh7H2RvyskEIj+gT1+gw012Ti6LOr6edckspXE8RzAyWLsqUFodwq81iVGL1QgHP7tkFFcoNZCtMpGarThX+ms/BYThtMs3CL2ees5JUux8xYOdpyU1Gt3A/diQw0nZajLHnzb6S7bYsiOmWp7nn3XRQM0mn7jkOf9inq6zOgI1qMMhQnvlbEOYM5yKLiruoPYdqh4Zfx4LGoYGnJQbV4O/SmbOgNEjQWf428B59L4rTBlMcJvpjtLYKHNsdFD4fCJ/czNarBhTIRtJLURflJcy60acm+r+hl5bTBNG3f1PDHuPY2OR+3CqZphVslKagqEi3Ov5nmX7ol6UdO+Y+EdUg+c1yj+fMJeRmkEQ0UwiCi+dcdWiw4Uy+B4iXBd5wzmN3s/hcu1x7EDB2ZV8aDZ1gFWyutpCgZOpq/gdDJ9yAr7GEBpw1GGbt6z80+JXzeGkzb1PTtaDt4pKH4l6G3XAxt5uc0/yw0nc2Heuc278e0jZw2mMPRMXGnt75T+JNMaHc058Bn0+Cau+qOZV4q+CFHiMrjaTCZZThXkwXFy/EqTrlsImQro183ffBWUZdMaLOHltGb+3cZzX/yShGMNH8Dyc20moo1AgU9vyKg+XeJkK98PPHk5rePdUuFVltTNnwjgbKZiQrY2/NgyN4Jff5eHIlZtZd75j8nXLri0UTj++uPdeWkWCfaD2O0IQNl7673yR+LpT+ze5twRVRMQu0qgSydRa7l7i0Txv4CN34MAJiCgl0AAAAASUVORK5CYII="
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAPOSURBVEhLzZV7TNVlGMeZkhwRdR0VJwqHGBhylQAxNakUo3bEG8KAOZS8RTacAdp0q7wsEmtIS5iIECBXL9xUXGQWM52Ymzidf4hr2IwVhRgMUo/fvs/vVY8Hz8FL/tF3++z8zjm/9/s87/M+7/va/R9kT1JIBHGQH56nJpKfVidFICF2JkbpnVr5/WsyhziS/6TYCS76zurydABHgbt1aL+Sh9K9KYhdNA1jnUe28Z09xEhGyICn0Qqdwws49d02mp8ATLXAzUrg7yr1TDp+yceBklQsiQvHeBf9dY4pIouIXgwGlIOD/bmE6OkIf80Xxshg5O5cibZLOcCdGs6EASSQBJRgnNmNa4Wor9qAlctm4yWD8x+0qCQJZLz49ZdnaJCHCTjCLPeiaPcaxMfMQGiwJ4xvhyA7MwmtLV8Bt6o18wfBtOD83r0fx6o3Qf+iE+h1RllaKn3LxhiW5jBwo0INRB062wpQVbwOifGvY0qIJyIjgpC5bQku/5wF9B3S3pExVy/uQhRn/bKXiwT4Qllaqrml6XMOOghTR+kDtGCSNY26rxehhou/PHEWwkK9EPFGAL7MWIrSgrVwnzAaxXkfII6NQK8wZWmWl7+Pq+muTPmvMosAD4PO8nvB6tH7ewkaWJKlXGz7wYNw4fQOmPi/0zCdtPRgZWvWuk82RGsD+5vaQguGb1FbmoboqDA+n0R+9irJPlNZWqqppWn7I+V5HLK4c1n3ktz3GaARb70ZKAGmKEuzDP4+brdUecqtGlkDXRX4szUPAb5uuPlrITqu5mGYo+4K/R4pT/KmDxcwg8NWjWwhXVack6zNQDblN7uSJfssZWmpxubGrcA/h6wa2ULWS2q/O2sFn49j3jshEmCmsjRrnLfXuN47smCkv4ktpHW7uD8C/AwszR50XSvAyBGOckYNUbZmJaWuMT59eW7XoIq9HzkrkGO/R0V+imSfqywtVX+yYbPW2/1NBkLKE88zK/uzRD6fQMyCVyWA3BsWcjO4jlE7lecPeg8OuMnuI6Xs4Y6e7O+O3y7noKe9mPfF8Hb6DVW2ZgXqdEPOzpjqjYxPE3D+1A51gDE72Q+2WlZmW7svFeHTJ2nlqS9Lk+wLlKV1+ZF00hQc5HH7448Wo/mHDK3PtWDsrocbQNZLjodsnkFSHuOcVyTAXDF6EslVuZYcnxxg6NuYtlC7fOSM0YLxHuhlSST7i5xxzPypYl5InunO9iDvkQZfH7ee1JQonP5xO45UroeHuzMmTXTp43+r5cXnIVfyLqkb7jS0m5+XSAixITu7fwGUqPnwTQWg8AAAAABJRU5ErkJggg=="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
@@ -2987,7 +2919,7 @@ try:
                         self.marshal.SetOutput(result[2], DA, 2, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAU8SURBVEhLrZUNUNNlHMef1JTT67y4yre88izirEjlssTzSkvJ0DjLN9LsBBNIPAWCwrcxZTA3QWPyssEYA2UDBnMwh0EnV4IvQPkCgjrYeJmAMgSkwVTg27M//xzo8qrre/e9/Z/d8/98n9/v+T//P7Ep9Y35S6SvzfVjBlQbCZnjTsiz7JBwyAsuHDJnPDv89zrq+tYys4KL4m3rE3wJWVixd1u3eNbctasImXX2G5/cNLcFEnbqKHEIGcMhzi+zw6erTr5bj3416tIjAGhRnfxdl159oNdyPh6RZOJX6uVrdsWRmYvp1FGViF9xExx/5z0eOyRhZMJH9Gfs8Ig8w6yCrnr6Gf8N5UAhMHASg+Ys4IGaBulQErjRcjVD3AW0o/vqz6iWiRpKArdLRFNcV1LApN2EzO/VCVC6c1M6b8z0DbXxofjxeZd1PKepH1SFbrlEQslE98rIbX0PzQoMdlJTOOPOYeuVXBg1yWir1NFAE7WZuhX9DWWozU0xaUOCVNekEX2w5uNOsYCpnnbhvrlShI4SIZgy1Gu8YgdMmRjqybYH2HxXAdxX4fLRIJzjcTBwv54CbrJuZoK6KnSoPBQM9OUC1jwMdpxgugAUQbPaq8AWMEbrs0oCsxLozaET7AGwUrgoFHotvUY3dQu1nvoGc60vzMBF7lYM3lM+Vr0CQ11KtBQd6iQ53p7huJICa4MU1uZ0pgp0KzFkWz1dUZ0sAqd3+KHmeDxazmpg7aqmcFurbBWYcDkpGj01CRjqdlD9YAGIasWKRfnLPtkkmDQzpKPsCAboRKtRxpRafsAf5XGBuJq9B8YLQvyWFo7zceH4XSxAW1URepouoiaVS2FZgK29I6une1ERGXDT1iJGaa8vWNx3QYSLwiCUcf1hKopBlSQM5lY52vQStNYl47ZRSq+TYSgXoIzOy/FcjmZdFG6VCtHfKAP+oPvA7iMeamDM2MNsMqNEl7e3ajyX9xrK49B8+RgKfLzpyvcz0FvXkka5vSEVhrJYVKaEoEYdidM7N6KTPjXWJhn69akArSR/padC8/HSUBZPSAAhL6l8vIstbZlor09BAwU0VhxlVv54wK2aRLTdkOBOUxru3snEOf52NOVwkLtrMwp+8EMXfVz3ksnzWPQjjT0rCDL1tGVQQBIDaL0ufhI+0rX0fNyUQLFkCeS+66CgZyZHvh8S90X3Yp2dZ7DcYe0jk92vqyLR0ZjmGObA7XRv6ktiINu6Htn5POSpedBI9iBq4qubWaxdMnePHV2XEtF+Q4xWevNIO4Lb3EFbVJUaDnnMDqjyo3Cy8BDkYb6WYEKcWaxdWr+1OX0t8ifgjvwooFGKkqgAZCaGIzebC90pIVI2rP6VRY7SuF+i/Bt7af8dAR26lraoOgF54VugVEQyAUXKKIjme+xnmXbtIpPerMnah05askOYA7fTzTWU8HE83Be5tPe2/ucKg3Fw3IseLNYuseu84AdXxLCYT6DDIKWrS3YIHWnbw3BJ9j3kB76FKu8gtD/FQhq0yfw1IU4s1q7D02a7n/rys4QyfqCxURcNiyENvfQ8PC3MTAPORAci41gY1IV8FJ84CNHCxQ6/fCPlxJ8wbZl6zaeJ5fxAg3FkGD3Rj8Jo/29fS0Q+7X8ehRcmRUD0roeI3v/Xl+wfyUk4YcbSk+tXxp+LCaw3aHmwNAyHdZrSYSwVII8XBFVsCI7Mdgth7/nPGh8zdsrS/C+84sujA+pNpYfpq4GLVG8vi3Cq6+fsnP9N40WTZ3+Y5ebB55Dn3mf/+xsR8icvktiv9W4r2wAAAABJRU5ErkJggg=="
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAASpSURBVEhLtZZ7UJRVGMY/dpdl7xeWRWBZFsF1FzKdUUiZwAuWohBgKTiIJUI3ktEupCNqUBoZSRcdJZi8YICIRIH0B6JGTkzolE0OMiWRQ9CQmRcuCQL79J5vYRNZZqSZnpnffOfbPec573nPe84ud4+UI8//TbHEx4SUf7PLMvIclYFQ2ZuTl1rIcTZ6NhPziAyim5hKmIi9RCPx31cqcXE5kKvRI1QsQbibFEXuXhC7uHRESeQ9VlcxqEuSvefkJSDciXeeV2hw1286OgyBgH8QCmmSRJkSKoHgNn0fwjo/oBYQwfYmx/kTvyWQUcMUI+Bn4XlT7YGlEjkylFrMdHUDRTFM/S4RecQyYgoxKi2RZm9yUUQfYeXfRpQ4100y1Gc0o80nANFSOTYoNeild/hbUUwrcRcK8fSahSj/NBMZ6dHw9Xa/SeMqiGRi6zSRK0QcV0Yp7jeLXG8xU4foi22UChtMVj4lOoEQb2k8cMrTiBZPEwxyKc6d2QWgnjhJ1OGHxjz4SSRIEsthIvMltFq1QID3tHo87CpuI9sg5i0jimgzsZqM42UKfpO7aA+q9QYsp3cvjmMbjMyNsbjYtAe4fZwmqCG+QnZOEnYIZPxKW7ynoobGbFPr+InYGDaBB7GWWEKEEZdZRPGcAJUKPd6VarAgJgS5u1Ow+eU4xEWHIiZqDl7fFIfPK7Pw1KpwpEsUgCmIsGDAOB07aIJpIr7qWJmP01UPuQQ5eamICDFDQlE0NeRStGfsqfm7Es3n87FvTyoSVoRBTpE+S3tVrPNGrd4Xc2n1eVTqaQo1vITCrhFPh4L9/fSDP154n8zq0fXrJ1j82Cz88v2HQE8Fhq+XwvZXKd/GcDX1qUP5sUxYXETIUrrzabno7c+nK4D2xGxfxRhl7929jh84/GcJ0HsCw2Q40HWUN78foBYvpi/HSlrlC1IVsig113wC8apCy4zvECztDgmkUrefOpv3241HTW4eo6jLxhjzn/edQEtTPvRaBZ6kVMkMWuRK1QhTKSGSiaGhKiRPdr4cevSJqNnAUDVs95k5w0aV1PrdB7hyaR9uXD0ItVrODiLWr1sMnU71DfkVEOzAOVRQfnAjYKtxajgOlkK+XE8hZ8sqREY8hM2vxCN7y0oWeYrdknMbeXIyvU71R3f7IX6QU0Mn2G5Q6rqPI3R2IC6c3okh+sxq9uklP1b6Y7QiNXkRRXPSqdFEYKAKp6uyEBFmpbH1OFu9nUVfbrccq6pztdnA4BdOjSaCVdEzq+cjL2cNtRuQnBDOJoi2W/6rAKNBh97OI/wAvr57K5xWzr3gVjl6Og5j1gwTrrUWouf3I9BqFJ3k58j7qMxisag4yGJoS1m7CGWHNqH98gGg/zM+Zeiv4kt13ARUbUcLXsLSyJnUrxGlhRtY9B/ZLZ2Lzczuou0qlfTryIUz7rz9RhLOn83FIDNklxtbHTvF7DTbqhG3LAR1lVvR3noYwRZfNsEcZvSgYr/D7BIsCQ4ytj+3/nFUlryGriuFNNmXuN5ahHl0VxXkp8FTp/iZ+o2p+cmKXenziZ0eOtW3sTGP3E2k00upZVHvJyb4p8Fx/wAq6HDUOYq6dQAAAABJRU5ErkJggg=="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
@@ -3120,7 +3052,7 @@ try:
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
                 self.SetUpParam(p, "Style", "S", "dimension style")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
             def RegisterOutputParams(self, pManager):
@@ -3185,26 +3117,6 @@ try:
                     j_list = False
                 return j_list, geo_list, geo_path
 
-            def match_tree(self, data_1, data_2):
-                one_trunk, two_trunk = zip(*map(self.Branch_Route, [data_1, data_2]))[0]
-                zip_list = [one_trunk, two_trunk]
-                len_list = map(lambda x: len(x), zip_list)  # 得到最长的树
-                max_index = len_list.index(max(len_list))  # 得到最长的树的下标
-                max_trunk = zip_list[max_index]
-                other_list = [zip_list[_] for _ in range(len(zip_list)) if _ != max_index]  # 剩下的树
-                matchzip = zip([max_trunk] * len(other_list), other_list)
-
-                def sub_match(tuple_data):
-                    target_tree, other_tree = tuple_data
-                    t_len, o_len = len(target_tree), len(other_tree)
-                    if o_len == 0:
-                        return other_tree
-                    else:
-                        new_tree = other_tree + [other_tree[-1]] * (t_len - o_len)
-                        return new_tree
-
-                return max_index, map(sub_match, matchzip), max_trunk
-
             def Find_DimStyle(self, dimstyle):
                 """获取标注样式"""
                 Style = sc.doc.DimStyles.FindName(str(dimstyle))
@@ -3220,19 +3132,20 @@ try:
 
             def Creat_TextEntity(self, tuple):
                 """创建文本标注"""
-                plane, text = tuple
+                plane, text, style = tuple
                 if plane and text:
-                    TextEntity = rg.TextEntity.Create(text, plane, self.DimStyle, True, 0, 0)
+                    DimStyle = self.Find_DimStyle(style)
+                    TextEntity = rg.TextEntity.Create(text, plane, DimStyle, True, 0, 0)
                     TextEntity.Justification = rg.TextJustification.MiddleCenter  # 设置对齐方式
+                    TextEntity = initialization.HAE_Text(TextEntity)  # 传入自定义文本类
                 else:
                     TextEntity = None
 
                 return TextEntity
 
-            # -------------修改----------------
-            def match_list(self, data1, data2):
-                """匹配两个列表的数据"""
-                zip_list = [data1, data2]
+            def match_list(self, *args):
+                """匹配列表里面的数据"""
+                zip_list = list(args)
                 len_list = map(lambda x: len(x), zip_list)  # 得到最长的树
                 max_index = len_list.index(max(len_list))  # 得到最长的树的下标
                 max_list = zip_list[max_index]  # 最长的列表
@@ -3252,21 +3165,59 @@ try:
                 iter_group.insert(max_index, max_list)  # 将最长的数据插入进去
 
                 return iter_group
-                # -------------修改----------------
 
-            def run_main(self, tuple):
-                Plane, Text, Path = tuple
+            def run_main(self, tuple_data):
+                """匹配方法"""
+                a_part_trunk, b_part_trunk, origin_path = tuple_data
+                new_list_data = list(b_part_trunk)
+                new_list_data.insert(self.max_index, a_part_trunk)  # 将最长的数据插入到原列表中
+
+                Plane, Text, Style = new_list_data
+
                 if len(Plane) == 0 or len(Text) == 0:
                     Text_List = []
                 else:
-                    # -------------修改----------------
-                    match_Plane, match_Text = self.match_list(Plane, Text)
-                    Text_List = map(self.Creat_TextEntity, zip(match_Plane, match_Text))
-                    # -------------修改----------------
+                    match_Plane, match_Text, match_Style = self.match_list(Plane, Text, Style)
 
-                ungroup_data = self.split_tree(Text_List, Path)
+                    Text_List = map(self.Creat_TextEntity, zip(match_Plane, match_Text, match_Style))
+
+                ungroup_data = self.split_tree(Text_List, origin_path)
+
                 Rhino.RhinoApp.Wait()
                 return ungroup_data
+
+            def temp_by_match_tree(self, *args):
+                # 参数化匹配数据
+                value_list, trunk_paths = zip(*map(self.Branch_Route, args))
+                len_list = map(lambda x: len(x), value_list)  # 得到最长的树
+                max_index = len_list.index(max(len_list))  # 得到最长的树的下标
+                self.max_index = max_index
+                max_trunk = [_ if len(_) != 0 else [None] for _ in value_list[max_index]]
+                ref_trunk_path = trunk_paths[max_index]
+                other_list = [
+                    map(lambda x: x if len(x) != 0 else [None], value_list[_]) if len(value_list[_]) != 0 else [[None]]
+                    for _ in range(len(value_list)) if _ != max_index]  # 剩下的树, 没有的值加了个None进去方便匹配数据
+                matchzip = zip([max_trunk] * len(other_list), other_list)
+
+                def sub_match(tuple_data):
+                    # 子树匹配
+                    target_tree, other_tree = tuple_data
+                    t_len, o_len = len(target_tree), len(other_tree)
+                    if o_len == 0:
+                        new_tree = [other_tree] * len(target_tree)
+                    else:
+                        new_tree = other_tree + [other_tree[-1]] * (t_len - o_len)
+                    return new_tree
+
+                # 打包数据结构
+                other_zip_trunk = zip(*map(sub_match, matchzip))
+
+                zip_list = zip(max_trunk, other_zip_trunk, ref_trunk_path)
+                # 多进程函数运行
+                iter_ungroup_data = map(self.run_main, zip_list)
+                Text = self.format_tree(iter_ungroup_data)
+
+                return Text
 
             def RunScript(self, Plane, Text, Style):
                 try:
@@ -3278,29 +3229,8 @@ try:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
                     else:
-                        self.DimStyle = self.Find_DimStyle(Style)  # 查找标注样式
-
-                        max_index, iter_group, max_group = self.match_tree(Plane, Text)
-
-                        iter_group.insert(max_index, max_group)  # 将得到的最长的列表插入到匹配后的数据中
-                        target_Path = self.Branch_Route(self.Params.Input[max_index].VolatileData)[1]  # 得到最长的目标路径
-                        if len(target_Path) == 0: target_Path = [[0]]  # 如果目标路径为0, 给一个默认的路径
-
-                        Plane_trunk_list = iter_group[0]
-                        Text_trunk_list = iter_group[1]
-
-                        zip_list = zip(Plane_trunk_list, Text_trunk_list, target_Path)
-
-                        iter_ungroup_data = map(self.run_main, zip_list)
-                        Text_result = self.format_tree(iter_ungroup_data)
-
-                    no_rendering_line = self.Branch_Route(Text_result)[0]
-                    self.dim = filter(None, list(chain(*no_rendering_line)))
-                    self.bbox = rg.BoundingBox.Empty  # 覆写zoom方法
-                    for _ in self.dim:
-                        if _:
-                            self.bbox.Union(_.GetBoundingBox(True))
-
+                        # self.DimStyle = self.Find_DimStyle(Style)  # 查找标注样式
+                        Text_result = self.temp_by_match_tree(Plane, Text, Style)
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
                     sc.doc = ghdoc
@@ -3309,15 +3239,583 @@ try:
                 finally:
                     self.Message = 'Text'
 
-            def DrawViewportWires(self, args):
-                try:
-                    for sub_dim in self.dim:
-                        args.Display.DrawAnnotation(sub_dim, System.Drawing.Color.FromArgb(0, 150, 0))
-                except:
-                    pass
+
+        class ViewMake2D(component):
+            def __new__(cls):
+                instance = Grasshopper.Kernel.GH_Component.__new__(cls,
+                                                                   "RPP_ViewMake2D", "F111", """Create 2D Views of an Object from Multiple Angles""", "Scavenger", "H-Facade")
+                return instance
+
+            def get_ComponentGuid(self):
+                return System.Guid("4bdbdb2c-b060-41f7-8636-1b04ec504717")
+
+            @property
+            def Exposure(self):
+                return Grasshopper.Kernel.GH_Exposure.tertiary
+
+            def SetUpParam(self, p, name, nickname, description):
+                p.Name = name
+                p.NickName = nickname
+                p.Description = description
+                p.Optional = True
+
+            def RegisterInputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_GenericObject()
+                self.SetUpParam(p, "Obj", "G", "Object for Make2D")
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.list
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Plane()
+                self.SetUpParam(p, "Plane", "P", "Main View Plane for Make2D")
+                p.SetPersistentData(gk.Types.GH_Plane(rg.Plane.WorldXY))
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Number()
+                self.SetUpParam(p, "X Spacing", "X", "Spacing between Views in X Direction")
+                p.SetPersistentData(gk.Types.GH_Number(100))
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Number()
+                self.SetUpParam(p, "Y Spacing", "Y", "Spacing between Views in Y Direction")
+                p.SetPersistentData(gk.Types.GH_Number(100))
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Number()
+                self.SetUpParam(p, "3D Scale", "3D S", "Scaling Ratio of 3D View")
+                p.SetPersistentData(gk.Types.GH_Number(0.5))
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Number()
+                self.SetUpParam(p, "3D X", "3D X", "Distance of 3D View in X Direction")
+                p.SetPersistentData(gk.Types.GH_Number(300))
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Number()
+                self.SetUpParam(p, "3D Y", "3D Y", "Distance of 3D View in Y Direction")
+                p.SetPersistentData(gk.Types.GH_Number(300))
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                self.Params.Input.Add(p)
+
+            def RegisterOutputParams(self, pManager):
+                p = Grasshopper.Kernel.Parameters.Param_Curve()
+                self.SetUpParam(p, "Visible Curve", "Vi", "Visible Lines of Views")
+                self.Params.Output.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Curve()
+                self.SetUpParam(p, "Hidden Curve", "Hi", "Hidden Lines of Views")
+                self.Params.Output.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Rectangle()
+                self.SetUpParam(p, "Single Frame", "S", "Bounding Box of Single View Frame")
+                self.Params.Output.Add(p)
+
+                p = Grasshopper.Kernel.Parameters.Param_Rectangle()
+                self.SetUpParam(p, "Frame List", "B", "Overall Bounding Box Frame")
+                self.Params.Output.Add(p)
+
+            def SolveInstance(self, DA):
+                # 插件名称
+                self.Message = 'Three-View Drawing'
+                # 初始化输出端数据内容
+                Visible_Curve, Hidden_Curve, Singe_View, View_Outline = [gd[object]() for _ in range(4)]
+                if self.RunCount == 1:
+                    p0 = self.Params.Input[0].VolatileData
+                    p1 = self.Params.Input[1].VolatileData
+                    p2 = self.Params.Input[2].VolatileData
+                    p3 = self.Params.Input[3].VolatileData
+                    p4 = self.Params.Input[4].VolatileData
+                    p5 = self.Params.Input[5].VolatileData
+                    p6 = self.Params.Input[6].VolatileData
+                    # 判断是否为空
+                    j_bool_f1, obj_trunk, obj_path = self.parameter_judgment(p0)
+                    pln_trunk = self.parameter_judgment(p1)[1]
+                    x_spac_trunk = self.parameter_judgment(p2)[1]
+                    y_spac_trunk = self.parameter_judgment(p3)[1]
+                    _3d_scal_trunk = self.parameter_judgment(p4)[1]
+                    _3d_x_spac_trunk = self.parameter_judgment(p5)[1]
+                    _3d_y_spac_trunk = self.parameter_judgment(p6)[1]
+                    re_mes = Message.RE_MES([j_bool_f1], ['O end'])
+                    if len(re_mes) > 0:
+                        for mes_i in re_mes:
+                            Message.message2(self, mes_i)
+                        self.bbox = rg.BoundingBox.Unset
+                    else:
+                        # 获取右击菜单的设置值
+                        self.meun_list_num = []
+                        for _ in ['A', 'B', 'C', 'D', 'E', 'F']:
+                            self.meun_list_num.append(self.settings.GetValue(str(self.InstanceGuid) + _, 0))
+
+                        if self.meun_list_num[2] == 0:
+                            self.meun_list_num[2] = 1
+                        else:
+                            self.meun_list_num[2] = 0
+
+                        if self.meun_list_num[4] == 0:
+                            self.meun_list_num[4] = 1
+                        else:
+                            self.meun_list_num[4] = 0
+
+                        if self.meun_list_num[5] == 0:
+                            self.meun_list_num[5] = 1
+                        else:
+                            self.meun_list_num[5] = 0
+
+                        # 生成原始zip列表
+                        iter_group, max_i = self.match_tree(obj_trunk, pln_trunk, x_spac_trunk, y_spac_trunk, _3d_scal_trunk, _3d_x_spac_trunk, _3d_y_spac_trunk)
+                        obj_trunk, pln_trunk, x_spac_trunk, y_spac_trunk, _3d_scal_trunk, _3d_x_spac_trunk, _3d_y_spac_trunk = iter_group
+                        zip_list = zip(obj_trunk, pln_trunk, x_spac_trunk, y_spac_trunk, _3d_scal_trunk, _3d_x_spac_trunk, _3d_y_spac_trunk, obj_path)
+                        # 多进程函数运行
+                        iter_ungroup_data = zip(*ghp.run(self._do_main, zip_list))
+
+                        Visible_Curve, Hidden_Curve, Singe_View, View_Outline = ghp.run(lambda single_tree: self.format_tree(single_tree), iter_ungroup_data)
+
+                        self.bbox = rg.BoundingBox.Unset
+                        view_list_box = [_.BoundingBox for _ in list(chain(*(zip(*zip(*iter_ungroup_data[-1])[0])[0])))]
+                        for _ in view_list_box:
+                            self.bbox.Union(_)
+
+                DA.SetDataTree(0, Visible_Curve)
+                DA.SetDataTree(1, Hidden_Curve)
+                DA.SetDataTree(2, Singe_View)
+                DA.SetDataTree(3, View_Outline)
 
             def get_ClippingBox(self):
                 return self.bbox
+
+            def get_Internal_Icon_24x24(self):
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAQRSURBVEhLrZV/TJVlFMfhgiDmvQjcixAKiGmMQpGx2szSEHVgisuZ/BC6zKWwnEJNK5loSS5cIPKjS4VXowIVrSXOUkhC+EObUQjhFhO8VPbD0pDSsKvfvueBF5rV9eY622fv8573Oec8zznPc14XijcJv0MCiA8J+xf8iUuaq6srPDzc/4an56h/1AtubjrQtpzk0t6u0+nsHNu1sTz5XkVc0iPCg2DrKIftTBl6viglJTjfVoqfz72Jb758DT2flwzpB7HZdiMzI04CWMjmxIQYdHVZETrRhA1rF3FcDXPybPleLQHSoqeHAgPvA9feA349AFw9qJ6rzXHoPFkI3Dw0qNfAMWx8Zom2g03m5Eeoa8TUyYHY8XI6x6ewfs1j8v0dFSAqMgT4ZR9waS9u/FQN9O1D/9d7ZALqqtfT4EOHAVY8MYu6jzAlLAAFW1I4bkJ2ZrzjAFd6d8PbMAbW0tXo/up1nGvdOUx39y7ubu7IDlJm0+kJ3HtPIEpeMXPciufXLXYUYD8u9+yC0U8Pd3c3eN5SYE+PUX8t8qaF82fg+McFMPrqkbR0Jmpq8rAgdpqDAFf2s8CV0I8djcqdq9D+WTHamguGaT9TjozUOcMBDHovtdvx/t7wNxlgNOoxxsvDcYAfu96AFyedrN/KLbMGUngNNCD32ZEaJD0+E32X96Kfab16oQp2+6Hb1KC/Ft+dtUCnc0XT4c3qhIleAzisjqMWIHWZFPmIqp3ywwXlZCWMBIiZETa4SplEYzkR4Iqm3x+C3vYyvtcP6TWaseW5pcMBJF3AJ6RuiBN4ITtxOMDKoEAfFG1LRxHPcGF+mqKIbMxZgldfWqHGml59K3oKsQ/fJw6sJF8WWFaaidKCDEVZWRYenRUh3w9KgHnk+B2yjphJM2kijaSBHCVHSDb5X8WNjCOTyIMknjgtU4jsNoXIyraRSvIBaSGd5ALpJ5IeIYM4JYvJNaIM5bLJ08SLGBE+AQ89MBUpbG5xcyIhnXlo3jLilCwi9gBeotp3N6ClPh9Bgb5IjI8ZbJDq5DXhos2K6Gmh/9n5QvLHeJM3Oj4tpqMGrHpyrrofVRVP463KtepU5eUuR3CQn+Z8uRg6Iwnkur/RgPZTbNlsx29bspSTcd53qfRMZnv29RmrORaSiFMi1b/u72dAm/wPeHluXKpB33kruk4X4/uzFbj52wHYOi2IjAjWnEvxnZIFZEBy3nl6B50fHew/Kt9yi4+p3XzLXiX9n3OFVDF0RuaT30MmGtHavB12/lx6+Rtta9mOxro81O7JgaVwJV7MS8akYJPmPE0MnRHJuTKacLcvoqPCIPn3Gq3a7q0MkB9IOnFK4shFIkYdRK699JEKspWsIXI6YkkUCSEGchtxcfkTSFRBFEkY0KUAAAAASUVORK5CYII="
+                return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
+
+            def __init__(self):
+                self.settings = Grasshopper.Instances.Settings
+
+            def Branch_Route(self, Tree):
+                """分解Tree操作，树形以及多进程框架代码"""
+                Tree_list = [list(_) for _ in Tree.Branches]
+                Tree_Path = [list(_) for _ in Tree.Paths]
+                return Tree_list, Tree_Path
+
+            def split_tree(self, tree_data, tree_path):
+                """操作树单枝的代码"""
+                new_tree = ght.list_to_tree(tree_data, True, tree_path)  # 此处可替换复写的Tree_To_List（源码参照Vector组-点集根据与曲线距离分组）
+                result_data, result_path = self.Branch_Route(new_tree)
+                if list(chain(*result_data)):
+                    return result_data, result_path
+                else:
+                    return [[]], result_path
+
+            def format_tree(self, result_tree):
+                """匹配树路径的代码，利用空树创造与源树路径匹配的树形结构分支"""
+                stock_tree = gd[object]()
+                for sub_tree in result_tree:
+                    fruit, branch = sub_tree
+                    for index, item in enumerate(fruit):
+                        path = gk.Data.GH_Path(System.Array[int](branch[index]))
+                        if hasattr(item, '__iter__'):
+                            if item:
+                                for sub_index in range(len(item)):
+                                    stock_tree.Insert(item[sub_index], path, sub_index)
+                            else:
+                                stock_tree.AddRange(item, path)
+                        else:
+                            stock_tree.Insert(item, path, index)
+                return stock_tree
+
+            def parameter_judgment(self, tree_par_data):
+                # 获取输入端参数所有数据
+                geo_list, geo_path = self.Branch_Route(tree_par_data)
+                if geo_list:
+                    j_list = any(ghp.run(lambda x: len(list(filter(None, x))), geo_list))  # 去空操作, 判断是否为空
+                else:
+                    j_list = False
+                return j_list, geo_list, geo_path
+
+            def sub_match(self, tuple_data):
+                # 子树匹配
+                target_tree, other_tree = tuple_data
+                t_len, o_len = len(target_tree), len(other_tree)
+                if o_len == 0:
+                    new_tree = [other_tree] * len(target_tree)
+                else:
+                    new_tree = other_tree + [other_tree[-1]] * (t_len - o_len)
+                return new_tree
+
+            def match_tree(self, *args):
+                # 参数化匹配数据
+                len_list = map(lambda x: len(x), args)  # 得到最长的树
+                max_index = len_list.index(max(len_list))  # 得到最长的树的下标
+                self.max_index = max_index
+                max_trunk = args[max_index]
+                other_list = [args[_] for _ in range(len(args)) if _ != max_index]  # 剩下的树
+                matchzip = zip([max_trunk] * len(other_list), other_list)
+
+                # 插入最大列表，获得最新列表
+                reslut_list = map(self.sub_match, matchzip)
+                reslut_list.insert(max_index, max_trunk)
+                return reslut_list, max_index
+
+            def AppendAdditionalMenuItems(self, items):
+                try:  # always everything inside try
+                    # context menu item 1
+                    component.AppendAdditionalMenuItems(self, items)
+                    image = None
+
+                    self.item_1 = items.Items.Add("Front View", image, self.OnClicked1)
+                    enabled_a = self.settings.GetValue(str(self.InstanceGuid) + 'A', 0)
+                    if enabled_a == 0:
+                        self.item_1.Checked = True
+                    else:
+                        self.item_1.Checked = False
+
+                    self.item_2 = items.Items.Add("Left View", image, self.OnClicked2)
+                    enabled_b = self.settings.GetValue(str(self.InstanceGuid) + 'B', 0)
+                    if enabled_b == 0:
+                        self.item_2.Checked = True
+                    else:
+                        self.item_2.Checked = False
+
+                    self.item_3 = items.Items.Add("Right View", image, self.OnClicked3)
+                    self.item_3.Checked = False
+                    enabled_c = self.settings.GetValue(str(self.InstanceGuid) + 'C', 0)
+                    if enabled_c == 1:
+                        self.item_3.Checked = True
+                    else:
+                        self.item_3.Checked = False
+
+                    self.item_4 = items.Items.Add("Top View", image, self.OnClicked4)
+                    enabled_d = self.settings.GetValue(str(self.InstanceGuid) + 'D', 0)
+                    if enabled_d == 0:
+                        self.item_4.Checked = True
+                    else:
+                        self.item_4.Checked = False
+
+                    self.item_5 = items.Items.Add("Bottom View", image, self.OnClicked5)
+                    self.item_5.Checked = False
+                    enabled_e = self.settings.GetValue(str(self.InstanceGuid) + 'E', 0)
+                    if enabled_e == 1:
+                        self.item_5.Checked = True
+                    else:
+                        self.item_5.Checked = False
+
+                    self.item_6 = items.Items.Add("3D Perspective", image, self.OnClicked6)
+                    self.item_6.Checked = False
+                    enabled_f = self.settings.GetValue(str(self.InstanceGuid) + 'F', 0)
+                    if enabled_f == 1:
+                        self.item_6.Checked = True
+                    else:
+                        self.item_6.Checked = False
+
+                except Exception, ex:
+                    System.Windows.Forms.MessageBox.Show(str(ex))
+
+            def OnClicked1(self, sender, none_e):
+                try:
+                    tool_button_1 = self.item_1.Checked
+                    if tool_button_1 is True:
+                        self.settings.SetValue(str(self.InstanceGuid) + 'A', 1)
+                    else:
+                        self.settings.SetValue(str(self.InstanceGuid) + 'A', 0)
+                    self.ExpireSolution(True)
+                except Exception, ex:
+                    System.Windows.Forms.MessageBox.Show(str(ex))
+
+            def OnClicked2(self, index, value):
+                try:
+                    tool_button_2 = self.item_2.Checked
+                    if tool_button_2 is True:
+                        self.settings.SetValue(str(self.InstanceGuid) + 'B', 1)
+                    else:
+                        self.settings.SetValue(str(self.InstanceGuid) + 'B', 0)
+                    self.ExpireSolution(True)
+                except Exception, ex:
+                    System.Windows.Forms.MessageBox.Show(str(ex))
+
+            def OnClicked3(self, index, value):
+                try:
+                    tool_button_3 = self.item_3.Checked
+                    if tool_button_3 is True:
+                        self.settings.SetValue(str(self.InstanceGuid) + 'C', 0)
+                    else:
+                        self.settings.SetValue(str(self.InstanceGuid) + 'C', 1)
+                    self.ExpireSolution(True)
+                except Exception, ex:
+                    System.Windows.Forms.MessageBox.Show(str(ex))
+
+            def OnClicked4(self, index, value):
+                try:
+                    tool_button_4 = self.item_4.Checked
+                    if tool_button_4 is True:
+                        self.settings.SetValue(str(self.InstanceGuid) + 'D', 1)
+                    else:
+                        self.settings.SetValue(str(self.InstanceGuid) + 'D', 0)
+                    self.ExpireSolution(True)
+                except Exception, ex:
+                    System.Windows.Forms.MessageBox.Show(str(ex))
+
+            def OnClicked5(self, index, value):
+                try:
+                    tool_button_5 = self.item_5.Checked
+                    if tool_button_5 is True:
+                        self.settings.SetValue(str(self.InstanceGuid) + 'E', 0)
+                    else:
+                        self.settings.SetValue(str(self.InstanceGuid) + 'E', 1)
+                    self.ExpireSolution(True)
+                except Exception, ex:
+                    System.Windows.Forms.MessageBox.Show(str(ex))
+
+            def OnClicked6(self, index, value):
+                try:
+                    tool_button_6 = self.item_6.Checked
+                    if tool_button_6 is True:
+                        self.settings.SetValue(str(self.InstanceGuid) + 'F', 0)
+                    else:
+                        self.settings.SetValue(str(self.InstanceGuid) + 'F', 1)
+                    self.ExpireSolution(True)
+                except Exception, ex:
+                    System.Windows.Forms.MessageBox.Show(str(ex))
+
+            def get_xy_point(self, pt):
+                new_pt = copy.copy(pt)
+                new_pt.Z = 0
+                return new_pt
+
+            def get_xy_min_max_pt(self, curves):
+                mid_pts = []
+                for crv in curves:
+                    crv.Domain = rg.Interval(0, 1)
+                    mid_pts.append(crv.PointAt(0.5))
+                # X轴方向最大最小的点
+                x_sorted_point = sorted([(_[0], _) for _ in mid_pts])
+                x_max_point = x_sorted_point[-1][1]
+                x_min_point = x_sorted_point[0][1]
+
+                # y轴方向最大最小的点
+                y_sorted_point = sorted([(_[1], _) for _ in mid_pts])
+                y_max_point = y_sorted_point[-1][1]
+                y_min_point = y_sorted_point[0][1]
+
+                return x_max_point, x_min_point, y_max_point, y_min_point
+
+            def get_new_view_plane_x(self, origin_pt, dis_1, dis_2):
+                view_pt = copy.copy(origin_pt)
+                view_pt.X += dis_1
+                view_pt.X += dis_2
+                return view_pt
+
+            def get_new_view_plane_y(self, origin_pt, dis_1, dis_2):
+                view_pt = copy.copy(origin_pt)
+                view_pt.Y += dis_1
+                view_pt.Y += dis_2
+                return view_pt
+
+            def get_bbox(self, geo_list):
+                unset_bbox = rg.BoundingBox.Unset
+                for _ in geo_list:
+                    unset_bbox.Union(_.GetBoundingBox(True))
+                return unset_bbox
+
+            def get_thickness_box(self, u_bbox):
+                u_box = rg.Box(u_bbox)
+                if u_box.Z == rg.Interval(0, 0):
+                    u_box.Z = rg.Interval(-50, 50)
+                else:
+                    u_box = u_box
+                return u_box
+
+            def new_make_2d(self, view_geo_list):
+                visible_curve, hidden_curve = [], []
+                # 单一视窗
+                bbox_list = map(self.get_bbox, view_geo_list)
+                # 定义视图参数
+                parameters = rg.HiddenLineDrawingParameters()
+                parameters.AbsoluteTolerance = sc.doc.ModelAbsoluteTolerance
+                parameters.Flatten = True
+                parameters.IncludeHiddenCurves = True
+                parameters.IncludeTangentEdges = True
+                parameters.IncludeTangentSeams = True
+                # 整体视窗
+                view_bbox = rg.BoundingBox.Unset
+                for b in bbox_list:
+                    view_bbox.Union(b)
+
+                chain_view_geo_list = chain(*view_geo_list)
+                for view_index, view_g in enumerate(chain_view_geo_list):
+                    # 添加物体
+                    parameters.AddGeometry(view_g, '')
+
+                # 设置视图方位
+                point_list = list(view_bbox.GetCorners())
+                rot_pt = (point_list[0] + point_list[6]) / 2
+                ht = point_list[4].Z - point_list[0].Z
+                z_vec = Rhino.Geometry.Vector3d.ZAxis
+                __view = Rhino.Display.RhinoViewport()
+                __view.ChangeToParallelProjection(True)
+                __view.SetCameraTarget(rot_pt - (z_vec * ht), False)
+                __view.SetCameraLocation(rot_pt + z_vec * ht, False)
+                # 设置视图
+                parameters.SetViewport(__view)
+                # 生成视图
+                hld = rg.HiddenLineDrawing.Compute(parameters, True)
+
+                for hld_curve in hld.Segments:
+                    cur = hld_curve.CurveGeometry.DuplicateCurve()
+                    if cur.IsValid and cur.GetLength() != 0:
+                        # 区分可见线与不可见线
+                        if hld_curve.SegmentVisibility == Rhino.Geometry.HiddenLineDrawingSegment.Visibility.Visible:
+                            visible_curve.append(cur)
+                        elif hld_curve.SegmentVisibility == Rhino.Geometry.HiddenLineDrawingSegment.Visibility.Hidden:
+                            hidden_curve.append(cur)
+                        else:
+                            pass
+                # 可见线与不可见线视框
+                visible_bbox, hidden_bbox = rg.BoundingBox.Unset, rg.BoundingBox.Unset
+                for c1 in visible_curve:
+                    c1_bbox = c1.GetBoundingBox(True)
+                    visible_bbox.Union(c1_bbox)
+                for c2 in hidden_curve:
+                    c2_bbox = c2.GetBoundingBox(True)
+                    hidden_bbox.Union(c2_bbox)
+                # 将物体位置置于水平面
+                tg_box_point = view_bbox.Center
+                tg_box_point.Z = 0
+                visible_point = visible_bbox.Center
+                hidden_point = visible_bbox.Center
+
+                target_plane = ghc.XYPlane(tg_box_point)
+                visible_plane = ghc.XYPlane(visible_point)
+                hidden_plane = ghc.XYPlane(hidden_point)
+
+                xform_visible = rg.Transform.PlaneToPlane(visible_plane, target_plane)
+
+                xform_hidden = rg.Transform.PlaneToPlane(hidden_plane, target_plane)
+
+                [_.Transform(xform_visible) for _ in visible_curve]
+                [_.Transform(xform_hidden) for _ in hidden_curve]
+
+                # 闭包算法分割每个视窗线位置
+                def get_view_point(con_curve):
+                    sub_visible_list, sub_hidden_list = [], []
+                    for v_ in visible_curve:
+                        if con_curve.Contains(v_.PointAt(v_.DivideByCount(2, False)[0])) != rg.PointContainment.Outside:
+                            sub_visible_list.append(v_)
+
+                    for h_ in hidden_curve:
+                        if con_curve.Contains(h_.PointAt(h_.DivideByCount(2, False)[0])) != rg.PointContainment.Outside:
+                            sub_hidden_list.append(h_)
+                    return sub_visible_list, sub_hidden_list
+
+                curve_list = map(self.get_curve_list, bbox_list)
+                res_visible_curve, res_hidden_curve = zip(*map(get_view_point, curve_list))
+                # 整体View线框返回
+                total_box = rg.BoundingBox.Unset
+                for view_c in bbox_list:
+                    total_box.Union(view_c)
+
+                def flatten_box(need_box):
+                    need_box = rg.Box(need_box)
+                    need_box.Z = rg.Interval(0, 0)
+                    return need_box
+
+                box_list = map(flatten_box, bbox_list)
+                total_box = flatten_box(total_box)
+
+                return res_visible_curve, res_hidden_curve, box_list, total_box
+
+            def get_curve_list(self, sub_bbox):
+                temp_pts = sub_bbox.GetCorners()
+                pts = [temp_pts[0], temp_pts[1], temp_pts[2], temp_pts[3], temp_pts[0]]
+                cur = rg.PolylineCurve(pts)
+                return cur
+
+            def get_obj_list_bbox(self, obj_list, data_list):
+                # 获取集合内数据
+                pln, x_spac, y_spac, _3d_scal, _3d_x_spac, _3d_y_spac = data_list
+                # 初始化集合数据
+                x_spac, y_spac, _3d_scal, _3d_x_spac, _3d_y_spac = float(x_spac.Value), float(y_spac.Value), float(_3d_scal.Value), float(_3d_x_spac.Value), float(_3d_y_spac.Value)
+                pln = pln.Value
+                # 初始化物体列表包围框
+                obj_group_bbox = rg.BoundingBox.Unset
+                for o in obj_list:
+                    obj_group_bbox.Union(o.Boundingbox)
+                # 物体中心点
+                obj_group_bbox_center = obj_group_bbox.Center
+                obj_group_bbox_center_xy = self.get_xy_point(obj_group_bbox_center)
+                center_pln, center_pt_xy = rg.Plane(obj_group_bbox_center, rg.Vector3d(0, 0, 1)), rg.Plane(obj_group_bbox_center_xy, rg.Vector3d(0, 0, 1))
+
+                orient_obj_list = ghc.Orient(obj_list, center_pln, center_pt_xy)['geometry']
+                orient_obj_list = orient_obj_list if type(orient_obj_list) is list else [orient_obj_list]
+
+                # 获取映射物体的外包围框和中心点
+                orient_obj_list_bbox = rg.BoundingBox.Unset
+                [orient_obj_list_bbox.Union(_.GetBoundingBox(True)) for _ in orient_obj_list]
+
+                orient_obj_list_center = obj_group_bbox_center_xy
+
+                pln.Origin = orient_obj_list_center
+                orient_obj_list = ghc.Orient(orient_obj_list, pln, center_pt_xy)['geometry']
+                orient_obj_list = orient_obj_list if type(orient_obj_list) is list else [orient_obj_list]
+
+                # 获得最底下的面
+                orient_obj_list_bbox = self.get_thickness_box(orient_obj_list_bbox)
+                orient_obj_surface = orient_obj_list_bbox.ToBrep().Faces[4].ToNurbsSurface()
+                brep_ = orient_obj_surface.ToBrep()
+                box_pts = [_.PointAt(_.DivideByCount(2, False)[0]) for _ in brep_.Edges]
+                box_distances = [_.DistanceTo(orient_obj_list_center) for _ in box_pts]
+
+                # 主视图平面
+                front_plane = rg.Plane(orient_obj_list_center, rg.Vector3d(0, 0, 1))
+                # 获得四个方向的视图
+                right_pt = self.get_new_view_plane_x(orient_obj_list_center, -1 * box_distances[0], -1 * x_spac)
+                right_plane = rg.Plane(right_pt, front_plane.ZAxis, front_plane.YAxis)
+
+                left_pt = self.get_new_view_plane_x(orient_obj_list_center, box_distances[2], x_spac)
+                left_plane = rg.Plane(left_pt, front_plane.ZAxis * -1, front_plane.YAxis)
+
+                bottom_pt = self.get_new_view_plane_y(orient_obj_list_center, -1 * box_distances[1], -1 * y_spac)
+                bottom_plane = rg.Plane(bottom_pt, front_plane.XAxis, front_plane.ZAxis)
+
+                top_pt = self.get_new_view_plane_y(orient_obj_list_center, box_distances[3], y_spac)
+                top_plane = rg.Plane(top_pt, front_plane.XAxis, front_plane.ZAxis * -1)
+                # 获取3D视图平面
+                _3d_point = bottom_pt
+                _3d_point.X -= _3d_x_spac
+                _3d_point.Y -= _3d_y_spac
+                _3d_plane = rg.Plane(_3d_point, rg.Vector3d(0, 0, 1))
+                _3d_plane.Rotate(math.radians(-55), _3d_plane.XAxis)
+                _3d_plane.Rotate(math.radians(-45), _3d_plane.ZAxis)
+                # 判断有多少个选择项
+                pln_list = [front_plane, left_plane, right_plane, bottom_plane, top_plane, _3d_plane]
+                need_obj_list = []
+                for index, meun_item in enumerate(self.meun_list_num):
+                    if meun_item == 0:
+                        new_geo_list = ghc.Orient(orient_obj_list, front_plane, pln_list[index])['geometry']
+                        new_geo_list = new_geo_list if type(new_geo_list) is list else [new_geo_list]
+                        need_obj_list.append(new_geo_list)
+
+                v_curve_list, h_curve_list, single_outline, total_outline = self.new_make_2d(need_obj_list)
+
+                return v_curve_list, h_curve_list, single_outline, total_outline
+
+            def _do_main(self, tuple_data):
+                # 分解集合数据
+                obj_list, pln_list, x_spac_list, y_spac_list, _3d_scal_list, _3d_x_spac_list, _3d_y_spac_list, origin_path = tuple_data
+
+                # 获得最新列表
+                map_list = self.match_tree(pln_list, x_spac_list, y_spac_list, _3d_scal_list, _3d_x_spac_list, _3d_y_spac_list)[0]
+                sub_zip_list = zip(*map_list)
+                # 返回列表物体的包围盒
+                reslut_list = []
+                for set_data in sub_zip_list:
+                    reslut_list.append(self.get_obj_list_bbox(obj_list, set_data))
+                # 多进程批量处理
+                ungroup_data = map(lambda x: self.split_tree(x, origin_path), zip(*reslut_list))
+                Rhino.RhinoApp.Wait()
+                return ungroup_data
 
 
         # 获取CAD图框信息
@@ -3408,7 +3906,7 @@ try:
                         self.marshal.SetOutput(result[6], DA, 6, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAKeSURBVEhLY6A5kBQTcvVyNZzp62k61dfdmHrY23Sqh7P+bAY7K82mORPTSzaurFBZPz9fYfPSUlVK8fLp+Qpb11WozZmQOo3BxU67qr4iyOX//7v8/z6sDP/3Y33wv/cryMe/NwHplSH///9nm9gam8vgYKNd1dMU7ffv39bgf1+XSf17tJKTYvx6pfq/f/vce5qBFtjb6lTO7k2N+vfvqDs0WqgC/v8/5TKlPb4UbMHMyRnB5yeXpk1gkHLuhOJWBmlHEG5nkHYiFc/gU/a4Mqs6cuqE1HywBdMmpwZfmlGR1gsx0AGEu1jkqztY5HI6GWTsScWz+VRcUSyY3pMY+e/fYU+o78BgAreacxeXqgGUSzIABdHkjoQSiA96kyL+/dvsB5UDgz4uVe8uDmVLKJck8O/WRPZ//3a5T+lMLB61ACsYPhZM7aJRKgKB//9vO/S3xBeALZjeD8oHlFvQxSUv0c0o29nDIjvneFVGXu/UlDiwBVO6E8OAFoRA1YFBLYOwcz4DKykZjamHUeYKsBT4n8Ug+r+HQexzT4THUgYnYHHdWBXm/u/XRut/r5fF/P64xuv3lzVeBwvjao43Zeb/+7LS49/bZfjx740ee7Ijy6cyyPzPARruzsD3fwqD5P9eS4v/YAv62hP8QU4AluOK/36u1v73ebX2x2uz1D7em6P+79NKrZ/Pl2njw//+bdDalR7pNZlR9n820AIbBu7/sxik/nc7WD8CW9BRG4VSDpELWhnE8tsYxF/XMoh+bWcQmNVeGZHNYG+t2bh8Tl7V9ZN9JpdOdpKNr5/oMf74b4P6gZb0wEMliTHPgSGxeF7uRAZpaWGHiECrpTHhdotjwmwpxpHRdrMiYuxnREfZLwzyM18G9RytAAMDAFEHdIgDgZ+iAAAAAElFTkSuQmCC"
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAHmSURBVEhL7dVPSBRhGAbwSRGUrQVdx0oNdXbXFrq4Mop07CAeAm8KHhb2YEqZqx4qMgQ7qZtBEVTQzYMkKigIYSF4EFEPoUSi5dr6jy5RBm4G8ozPuzoiC6ssjrd94cd+37vD+/DNwIzCukmPqPMcyFzlBRk2W/o3Ndu+YQnVvpGRkbYkcyWg11OcGwZCvcD3ZmDRAqFmw1jtynFc+iwBPQXX1G2fr3KA64BVGhpuD2U7Lq5yrfTQOslxrLRDy6QE83Mdv+vqbskJHh6Sh/OL5MLZw15C/P6qwaxMW4hrJVihu/8ZRviObI6VpEvAq+guwQJW2lza5R+yDuolWgT41BL956BSaYUk4J00Ei3Oa9cK1GRA/EoGnFrJgNhKo2qqoUxpAB+fWBWg0hzJtSJMbmA+YFXAczKHm4aBL/e1QjX6uj5rwCTFBiwBHzoYIDPiBpiv635pnFDdFBvwHvjadHSC8lJtF5i4K5tj9ZTeUG10d3KN0H/ao2myAwtNrqKcNa6VZzeu520BM2+ByRY5CcMCwLIfCPv4sOoPevFM3ZPfsYEHo8N9rePYHXrM4Y3A9Osrqn1BAl6mpFwwPJ78n7rXGZHbJcpKtB2T2YunzKv9rdBdW7RZ7nX+0UudEbf7Kj/DirEPMGPhbMpTHOwAAAAASUVORK5CYII="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
@@ -3619,7 +4117,7 @@ try:
                 result = self.RunScript(p0, p1, p2, p3, p4, p5, p6, p7)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAI/SURBVEhL7ZXLaxNRFMa/mYm0Yk2b93umiTW6EdwpFKmiiyKabmwUKtZdWx+NpaIiaGyaZPKw0ZRqN7F1ERSlUqgPEDfJylWLoKsERP8Ck1AqLjrXe8ehuogUNOgmH/zmMpy53zl3ZjgH/0wE4OjSMDQ/YApuYxzO4SScARmOvkbB/Jgv6MVPOZYWpINZeIIJOIMpuPr/FLaf+SQF8bAMz3FEYXYkOM8kS3AfouEOpI6/hfkkdd4DSc4dRwqSXYYzG4bNqr6zBklGuyEBx4yagB4rE4XbpcUaohisNvodss0Ev1UzwaZqJthUGwnuwmtLwDUdg92ixRqii4BebRWs8iTvupoXdh0qYocnj05pka7zkDpr2GvJt3ZKD3bu8WldV8PsHwTsrKh6pLf5rLIgHrmB9iu0Xbu7ZiF279NtDwW4jsQZmEaCvGF8kDcNd3Ntj8bs3nNvY2Pjcdh7U3CrTMLSW358s1D7/LBafT9bj1qllFv9tBQtoojdjgBniECHa/RkLRC4W5QMtvAD4DHUZtPfVpTS/h8H/ynl68I7Ql4SsvasDguEkOdk7ePcNzyFTxzgjSEImKAEqHmKEoUgyOC4iFO0nFeUlR7Nd0NK9ckHQt4Qsr5UH/KarJZy62BzYBqeoQuwjZ7mTBMxOE+l4ToxAnPoLIzX7+n9Jxf7jl6mf5o67RgRmIMrmUvzlfJc4cvyTF0q5VxheWr0hVpNGNAR9FDC/Ct0tTAI+gV2T2Ot9BEdnd1bf0Xd+P8FfAfbe0sf/26VsQAAAABJRU5ErkJggg=="
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAFlSURBVEhL7Za/SwJhGMcdQghqbGiJBmlsMvH0Oi4kCETyTsvkEvyVg1CLtuRBmU2RS5MErSHUYA5JYUKbEDQG/QdtDQ1S8fDtOQnjFoU4m/zCB77vOzyfF97hfW0cH3PIlIaAMddWZjBEuiaj7DOqhewxXcHRT3EZCwszz5gExl1YGZEZCfpmJBiYkWBgRoKB+X+B11hYGCdjEsQYh4VEmK7AeDexoXooFlmkxrVO25kVKuQUat0c0FrQTXpepWJhneLaEvlkJ4leF3kEN4miSLIskyRJJAgCeT0ukqUFioQlniWSSVC/2MXrSwXAA9p3JeCtyr2J53YZ+Kxxb6HVOEOn0+HeP0+P97i9zBvDfwV8ehwXNdBXHdXzHTRrOj7er6DnFJyUNlE5zSC75Uc45IcSXEU0GkUikUA6nUYymYSmaVAVBSE1gFQ8gGxquScw/SrmHNOYnBiH3T6G2Zmp3v7fsOEbA/wow72a5+gAAAAASUVORK5CYII="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
@@ -3785,7 +4283,7 @@ try:
         class PolylineAngleDim(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_PolylineAngleDim", "RPP_PolylineAngleDim", """Multi-line Angle dimension""", "Scavenger", "H-Facade")
+                                                                   "RPP_PolylineAngleDim", "F34", """Multi-line Angle dimension""", "Scavenger", "H-Facade")
                 return instance
 
             def get_ComponentGuid(self):
@@ -3809,7 +4307,7 @@ try:
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
                 self.SetUpParam(p, "Style", "S", "dimension style")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
@@ -3860,7 +4358,7 @@ try:
                         self.marshal.SetOutput(result[2], DA, 2, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAPMSURBVEhL3ZV7TNNXFMc7OslEtNakIp2FFNry+BVxdGpAYHVCNAhmPjFWK1HECUETNVsWomYLoKjDLaIGFZ2KjhrkoRUBFUyIiQ+s+2NRY2ZcfCHZhAJDsco9nvP73bKhgvSf/eEnOf2d8z338bu/e+6t7IMmOD46NNMcK2TGx9IzVHy+aWIe22F7vdRtiGzISroK7DTAs5MA3WTlku+2/8Zgh2+yU67zru9Ho1FZnY+PAmP2Sva8csXzltKs2vKN+8l3W33FpmJX67FMMWZnjjofHga1WrmIDzEoviU/Z7QydrYD7hYruBaEFiO5brxn4c8w8u41HvoEJ2nbXZD2gBKkDci0OGErwBl8+4ZlFOt0uvEhISHZ4eHhvmIDjsFgCEXSeShjrH4l9FTAZ8bAdVx6J0EXqnN6u5+WtajVmhQceAEOkoHmz/P9wEli0VaHhYXFTxSEyH/ay7psB9Z0YGq01OIN0i3mUwB1wJ5Vxctkw9XYMZCnBgRXNgbbxY1QjJ3uaNqxgVafaI7YztP/IpfLp9+/uQdu3yi6g+FwSfUc3Lsr5ytzXqEbICkSXvk5C2/iRrn2bls1Van0S0XtIynlGSePf5cNUA+L50aXckkm+zxSm+Vy2vDTVGymGJe9QBAEjZj0gODgEPOoUaoZjNXaf2sqAJRMpCsP7lrVgzXfior41vhNE/R6fST5Q4WqzF1V4DxhAjgH2Rkz6in2/nZtSgNO4GJO22QScIJUT1eAE+gEITSZfNZlWwcvqmHO7EkFYhLRX7RvZozVXNF+qp2g1eoWc33I0HlRKscl4b3hg3vZ9UvR13+hPFLKItIBs0NlWU4Jhl6S6hFytOTux0f2v+oqB8Ewni7AfvjsK0x/wti5h4xVjfT39/fBZQ9+7Dkmk0m8MkqK1k4BqIXCXMsfGH5MWj/8/JSpnS1H4JZj11m5XDEHN82Kp9mCpuZN+oF6BFqa0Wi0yL1HJ79sL7e1PzoM41SK+bzJ26xfndQEUIN3UaOOYpzEgIOswaqiC68PLIQpVDX47VUUX6z6fhpVzsb1XzWLDQYhorlxC7DeUw08Jnw1gUFp3CdGBAQE9110BOutrvnz9z2AN4KZSwMzK2FikXijvqhYCFA8DCvDa1JUpGXJksSxFMfERMVFT476EnU5xezp8Zn09lkrEur4EO9Fgf8Jf1Mn1nmijczVWtrD2ss6+vy2XzvdOdrYS3U/0MmdIHUfAtoA1bxtuUsv78y3OgpzrY6f8q3XduYtvU4+PpvJyC/Mszp+3LH8auIXxjze9f9EJnsNBUjR2nHS7t8AAAAASUVORK5CYII="
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAQZSURBVEhL3ZV7UJRVGMZ3WXZZcLntLgsICTpdSCIdFWrNBEmGNBZUwGZWrZwsR0ciTaPLKBTeaLzkoIOO4wUFDMxILhFqV5sma6wZs6wpR5w0MgrxQiKXfXrOy9oQA7H90x89M7/Z/c73fc973nPe836a/7UcZB1Z6yGriIF4pAhyIyUxDlkz7chMS8AcZyJGRtnAcSEtdRxmZ09CpiMBWbMmwhxkUuPLiUc6mPxgLIA6wFXD32O4cqEUAf6+KMp3YlxcNLLS75NxoEF+y0oWqwBtJEQc/kEP+xoNOPvVFvfLDWj5aS+iIq1ItMfwuhFN35bA6KPHzEficfNKlfu5OtgT7lRBSnptBpYP+TEvNx3XLlfiy+NFWFc4F4EmIyaMHYWrl8qAaweB7sM4/fkmhIcGITLcjK2bF6Dp3G4cbyhQgXvocY+4DaBCguFhwfDz84Fer0MEDQpezEbX5TeAPw6hp6VcQOfbaLtYiqVL0mA1+0PvrUPUbVYYjXqVRaO49dNdpJNg5YpZ+OSj9fjh5OtwtdIYtUBbZa/5bxW9qCBX1fLUooOZnWS2e7kPfr4GKQIyjfxNx+Y7k7Bo/lTExkRyc2na8RbAmf9lOgjqGbXRq1ZkShZPzZuiAnxDdOJMOU3DjGg5uxPdfNib6W5ePU9m199sINBRjRNHV8vMP67PB9oPIcwWpK4XK/NwrVb7y5b1j0slAO/gpWUzEDncjB4ugav1wICmfVHZpk8bj6RJo90e9dhdvBD0bVEBcizcpM5bFcLZfPHeGnh5aXHh620y1t+wL/j9AGf8JqJHhKCowCnmam+6fi1HiCVAZaGxabWaixtYjnLzZjU+bXwVOp0Xfma9DxVAge4aJD0w2n346MEsdrB0mcElFUApW5XluVPFvPk+nl00HaOiQ+HizDxaoq7DqN63TPag+cx2dLHyQqwy+6fF3a13H2XfaWsul1NauSuXwT6Ueu8t0UHMeU9lDRxBavIYci/ynnEo81NEK85u3c5l6RgbOwLmYBPKdixByaYFqK/MQ3vzPjm9fY1dau17anCdh+2zI4VorMtHxc4c7p2XZEJSxLWfVMuF1eIPG9tARIRFTqZKt7bqBVnbvuZbNzyJ4KBhMBi84W/yRagtUEqcHvXiNoD05PuFTzwkBmAjU41ueY6kjKrSpRJE8dorc2Rs49rHcP677WhnMVTvf05tbDfHY8igmqqO+5kTG2VZcJ2lyw665uXZYth0ehvOs3zV//1sDcBR4AZPPPfKHi/dtFiZDKWKyao1qyxugQ8wlx+Y8WNGInlyLGZMnyBjMgm2iT08WHyvlVjEYQiFkfbEiXcjnT3fwa9XBms8JSlOZq6wx9+BjIz75Z6DX7zAAD81nks8VipZ+S94nniT/1IazZ+rPaF8jnr+egAAAABJRU5ErkJggg=="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
@@ -3956,19 +4454,21 @@ try:
 
                 return Ref_Vector, Coeff_Point
 
-            def Create_AngularDim(self, Vector, Center_Point, Start_Point, End_Point, Coeff_Point):
+            def Create_AngularDim(self, Vector, Center_Point, Start_Point, End_Point, Coeff_Point, style):
                 """创建角度标注"""
                 # 如果输入的点有空值，直接返回空值
                 if Vector is None or Center_Point is None or Start_Point is None \
                         or End_Point is None or Coeff_Point is None:
                     return None, None, None
 
-                Dimstyle = self.dimstyle
+                Dimstyle = self.Find_DimStyle(style)
                 Plane = rg.Plane.WorldXY  # 以世界XY坐标轴作为参考平面
                 Plane.Origin = Center_Point
                 AngularDim = rg.AngularDimension.Create(Dimstyle, Plane, Vector, Center_Point, Start_Point, End_Point, Coeff_Point)
                 True_Value = math.degrees(AngularDim.NumericValue)  # 角度真实值
                 DisPlay_Value = AngularDim.PlainUserText  # 显示值
+
+                AngularDim = initialization.HAE_AngularDim(AngularDim)  # 调用自定义类
 
                 return AngularDim, True_Value, DisPlay_Value
 
@@ -3995,7 +4495,7 @@ try:
 
             def Get_Curve_AngularDim(self, tuple_data):
                 # 得到线的角度标注
-                curve_1, curve_2, coefficient = tuple_data
+                curve_1, curve_2, coefficient, style = tuple_data
                 curve_1_MP = self.Get_SP_EP_MP(curve_1)  # 获取线的中点
                 curve_2_MP = self.Get_SP_EP_MP(curve_2)  # 获取线的中点
 
@@ -4005,7 +4505,7 @@ try:
                 Ref_Vector, Coeff_Point = self.get_Vector(Center_Point, curve_1_MP, curve_2_MP, coefficient)  # 得到参考向量和系数点
 
                 # 得到角度标注，真实值和显示值
-                AngularDim, True_Value, DisPlay_Value = self.Create_AngularDim(Ref_Vector, Center_Point, New_SP_Point, New_END_Point, Coeff_Point)
+                AngularDim, True_Value, DisPlay_Value = self.Create_AngularDim(Ref_Vector, Center_Point, New_SP_Point, New_END_Point, Coeff_Point, style)
 
                 if not self.Retain:  # 如果为False则0, 90, 180, 270不标注
                     if True_Value in [0, 90, 180, 270]:
@@ -4037,7 +4537,7 @@ try:
 
             def _run_main(self, tuple_data):
                 """运行主方法"""
-                curve, coefficient = tuple_data
+                curve, coefficient, style = tuple_data
                 AngularDim, True_Value, DisPlay_Value = [], [], []
                 if curve is None:  # 如果curve为空
                     return AngularDim, True_Value, DisPlay_Value
@@ -4047,21 +4547,23 @@ try:
                         Shift_Explode_Curves = list(Explode_Curves[1:])
                         Shift_Explode_Curves.extend(list(Explode_Curves[:1]))  # 偏移一下曲线列表
                         match_coefficient = self.match_list(Shift_Explode_Curves, [coefficient])[1]
-                        curve_zip_list = zip(Explode_Curves, Shift_Explode_Curves, match_coefficient)
+                        match_style = self.match_list(match_coefficient, [style])[1]
+                        curve_zip_list = zip(Explode_Curves, Shift_Explode_Curves, match_coefficient, match_style)
                         AngularDim, True_Value, DisPlay_Value = zip(*map(self.Get_Curve_AngularDim, curve_zip_list))  # 得到角度标注
                 else:
                     Explode_Curves = curve.DuplicateSegments()  # 炸开线段
                     if len(Explode_Curves) > 1:  # 线数小于1，你求个嘚的角度
                         if len(Explode_Curves) == 2:
                             # 只有两根线的情况
-                            curve_zip_list = zip([Explode_Curves[0]], [Explode_Curves[1]], [coefficient])
+                            curve_zip_list = zip([Explode_Curves[0]], [Explode_Curves[1]], [coefficient], [style])
                             AngularDim, True_Value, DisPlay_Value = zip(*map(self.Get_Curve_AngularDim, curve_zip_list))  # 得到角度标注
                         else:
                             Curves_1_List = Explode_Curves[1:]  # 去除首尾两根线段
                             Curves_2_List = Explode_Curves[:-1]
 
                             match_coefficient = self.match_list(Curves_1_List, [coefficient])[1]
-                            curve_zip_list = zip(Curves_2_List, Curves_1_List, match_coefficient)
+                            match_style = self.match_list(match_coefficient, [style])[1]
+                            curve_zip_list = zip(Curves_2_List, Curves_1_List, match_coefficient, match_style)
 
                             AngularDim, True_Value, DisPlay_Value = zip(*map(self.Get_Curve_AngularDim, curve_zip_list))  # 得到角度标注
 
@@ -4077,11 +4579,11 @@ try:
                 new_list_data = list(b_part_trunk)
                 new_list_data.insert(self.max_index, a_part_trunk)  # 将最长的数据插入到原列表中
 
-                match_curves, match_coefficient = new_list_data
+                match_curves, match_coefficient, match_Style = new_list_data
 
-                curves, coefficient = self.match_list(match_curves, match_coefficient)
+                curves, coefficient, Style = self.match_list(match_curves, match_coefficient, match_Style)
 
-                zip_list = zip(curves, coefficient)
+                zip_list = zip(curves, coefficient, Style)
                 AngularDim, True_Value, DisPlay_Value = zip(*ghp.run(self._run_main, zip_list))
 
                 ungroup_data = map(lambda x: self.split_tree(x, origin_path), [AngularDim, True_Value, DisPlay_Value])
@@ -4126,7 +4628,7 @@ try:
                     sc.doc = Rhino.RhinoDoc.ActiveDoc
                     AngularDim, True_Value, DisPlay_Value = (gd[object]() for _ in range(3))
 
-                    self.dimstyle = self.Find_DimStyle(Style)
+                    # self.dimstyle = self.Find_DimStyle(Style)
                     self.Dihedral = Dihedral if Dihedral is not None else False
                     self.Retain = Retain if Retain is not None else False
                     re_mes = Message.RE_MES([Curves], ['Curves'])
@@ -4134,13 +4636,7 @@ try:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
                     else:
-                        AngularDim, True_Value, DisPlay_Value = self.temp_by_match_tree(Curves, Coefficient)
-                    no_rendering_line = self.Branch_Route(AngularDim)[0]
-                    self.dim = filter(None, list(chain(*no_rendering_line)))
-                    self.bbox = rg.BoundingBox.Empty  # 覆写zoom方法
-                    for _ in self.dim:
-                        if _:
-                            self.bbox.Union(_.GetBoundingBox(True))
+                        AngularDim, True_Value, DisPlay_Value = self.temp_by_match_tree(Curves, Coefficient, Style)
 
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
@@ -4148,16 +4644,6 @@ try:
                     return AngularDim, True_Value, DisPlay_Value
                 finally:
                     self.Message = 'Multi-line Angle dimension'
-
-            def DrawViewportWires(self, args):
-                try:
-                    for sub_dim in self.dim:
-                        args.Display.DrawAnnotation(sub_dim, System.Drawing.Color.FromArgb(0, 150, 0))
-                except:
-                    pass
-
-            def get_ClippingBox(self):
-                return self.bbox
 
 
         # 线长标注
@@ -4261,7 +4747,7 @@ try:
         class PolylineDimension(component):
             def __new__(cls):
                 instance = Grasshopper.Kernel.GH_Component.__new__(cls,
-                                                                   "RPP_PolylineDimension", "RPP_PolylineDimension", """Line length dimension""", "Scavenger", "H-Facade")
+                                                                   "RPP_PolylineDimension", "F35", """Line length dimension""", "Scavenger", "H-Facade")
                 return instance
 
             def get_ComponentGuid(self):
@@ -4285,7 +4771,7 @@ try:
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
                 self.SetUpParam(p, "Style", "S", "Dimension Style")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
@@ -4322,7 +4808,7 @@ try:
                         self.marshal.SetOutput(result[2], DA, 2, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAPtSURBVEhLY8AFXFwMpYqyfJxzUt1d8OGCTG+XggxPJwMVCVGoVqKAkIyMcHF+tld5Wb5fXlm+Dx7sl5ca61QnIMAdA9QnAtGOBySHuAnFhNstAzIn66hJx+hpK4QTwhqqkqlA9R0hAZbzi3P9tMAG4QKVRYFdft5mIeW5vlv//9v8//+3tYTx/y3/Kwv89js66hpXFQfNgBqFCbJSXc1rSoMmMTMwBH54tvj/v39b1v/7vj6ZIP63dfGHpwv/A41wry4NacrN9LCHmIgGasuClwIp0wVT0u/++7f94/+7M/khMvjB/f3zOYCOeT+tK/EmkKtZXRo8HyKDBIpyfVKAKSLf3Ei5+P//bf//fV2dDZUiCgB9kvv/5/r/ygqisWUF/iV56d6BUCkGhsQQG9H68pAVQKbm/s21P4GuufL/PwMjRJY48P/MTNZ//zY/XD0//xWQq15bHrIISLOAJcuLAvrDg63ckqMd5v//v+v//8+rHcASJIJ/39ZGgHxvZ6VZlp/lnVqU65fEUJjp5VhbETwJKG/y+PqM//9+bVgLUU4e+Pd308W9G2p+AJmaDZWhCxla6yKKeXh4NDtqw08DU8Pv/+8WykGUkgeAceH8///O/2H+FhMSYp1CwYJ6OvIZvz+u+v/v27p6sACF4N+vjXvOH+oEJVtHEN9l7qR0YMRuew4UISlicYF/r5eZ/P+/+39ksNUTEF+wosBvDzDl/Pr3dYUpWAWF4N/nlUX/f2787+FsMIWhszHaFiimf3Br/R9gMjsHUUI++PdkoTAwLj8vnpZ5R0ZGKJChviKkqCDLJ9baXBWYwYDFz5c1yVC1ZIF/39b0//2y9r+ICE9ydUnQRAYLCxlOYKZYDZRTmjMx9T7Q9nfEFhHo4P/z5QrAIubPhNaY06ZGKtFVJUHVYIn8DE/PmtLgdiDT9fMLYCH3cx0oX5AM/n1ft/TD00X/mZiYIuvKQ6ZHRtoj6oeK4sBZjo4GVqXZ3ptAufHHm5X4y3U08O/dMj1QKVBTHLDDw80orbwoELUsi4+3V2ioCFsMZGqf3t/2H5gj90FkiAPAEmDn/ctTQWk/uKEybKaFhQUnRAYJlOT6lGSneSa6OejUgSP857qw//9nshLC/94u8wCl+4wEpyVRoTaFpfm+kVAjUYGxsTFrXUXIKiBTc+Xc3GsgTf8+rXpHCP//v+P/qb1tn4H6fIBhPxNI486wedmerkW5vtN5uNj7mqrDj/S1xO4hhLu7k3aoK0ls8HI3WlhZGAQuHvACF0e9WCCVYWakMjE01KYqKMCqGoRDwNiyBoaDAy1rQTg83K5OUV58gqysqA3EBBhgYAAAz4lKfMW9pwQAAAAASUVORK5CYII="
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAK/SURBVEhLtdVdSFNhHAZwt0zXZiVmZBnmRxZ2U2gRZKBU9AVFRYQUGBhY0UU3hkEf2E1JIkSZlqIkkV8tldRpN1IRIREYWnaR0BLL0LRMTU23p+d/xqGTnrPNix74MZG9z//d2XvOAgwSSDbPn/8nydRDhZRCJjKKhXbQXWohM/nMBYLGW8qlrBnu0EfSvjeafKaVlAW2EAts1mBYSX3Vkv9ZgudrBxwhrwmjEYKjJht9zlL0vis09OV9EXo+FCNxfYw64BZ5zR5CZvo2AM3AqJ0eGhshONBaf1Ed8FpKvOVp+JKFGHSWscAO17cKn9yDFYDrMfbtSpQB4xSpNOnkOKHs5knuqgmugQe6hXowWYeutnwEzjPLEDl9sxJK/cmb1wITdXAPVekWeSObOnNipwyYpnVSqk2R2WxC+7NcYKqeu9cv8QZjdvR3lyB0sVWGNHlqPdlEOJu523NpdBb7hZdU1uflHJUBYruUy534KmbVUgz3liunQnexnzBcjQm+JqyJlAHtMmA/4cbVdE5/Ale//1+sLuVTtOB2Xob6KZQbqztpQyx+f6+C+0e1/kI/uaWDx3srDwt7nTJAotxc1y6lcbpjTsfzH8ruG3Gv4JS6+zQpV1NrXRAEZ0cBMF6rX+ADftZg9Ot9rFwRJuVtntq/iaKxA3s3Au4G3p2VuiWGlN07cOX8YXX38siflWxCY+U5vrlhTpcKvx7hMx98ITaLlNuVNp3IL1lnXPQyjMui4RrdspncJOc/41iqlE9SnJQZ5SDhctYhLuLTlKfCJ17SN89zYTKZZEC+0uIlETQRFBSIjhfX4eKRm+K9YWSa39XYUCVStiSo1z5JSnylk5RnSjzvyPjYCGOrlyPKc2qE/FCFk8+Uk7pIDFA9lWg0UB9p39dFfuU0faJikkeJ3O16WUSplEMvqZQ0CQj4AxtlJxdqDIoRAAAAAElFTkSuQmCC"
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
@@ -4414,20 +4900,22 @@ try:
                             result_curves.append(save_curve)
                 return result_curves
 
-            def Create_Dim(self, sub_align, Start_Point, End_Point, Dim_Point):
+            def Create_Dim(self, sub_align, Start_Point, End_Point, Dim_Point, style):
                 """创建标注"""
                 Plane = ghc.Line_Pt(sub_align, rg.Point3d(0, 0, 0))  # 从线得到平面
-
+                dimstyle = self.Find_DimStyle(style)
                 ann_type = rg.AnnotationType.Rotated  # 标注类型
-                Dimension = rg.LinearDimension.Create(ann_type, self.dimstyle, Plane, Plane.XAxis, Start_Point, End_Point, Dim_Point, 0)
+                Dimension = rg.LinearDimension.Create(ann_type, dimstyle, Plane, Plane.XAxis, Start_Point, End_Point, Dim_Point, 0)
 
                 True_Value = Dimension.NumericValue  # 真实值
                 DisPlay_Value = Dimension.PlainUserText  # 显示值
 
+                Dimension = initialization.HAE_LinearDim(Dimension)  # 调用自定义类
+
                 return Dimension, True_Value, DisPlay_Value
 
             def Get_Curves_Dim(self, tuple_data):
-                Curve, coefficient = tuple_data
+                Curve, coefficient, style = tuple_data
                 new_offset = ghc.OffsetCurve(Curve, coefficient, None, 1)  # 线根据系数偏移
 
                 # 获取线的中点
@@ -4438,13 +4926,13 @@ try:
                 Start_Point = Curve.PointAtStart  # 线起点
                 End_Point = Curve.PointAtEnd  # 线终点
 
-                Dimension, True_Value, DisPlay_Value = self.Create_Dim(new_offset, Start_Point, End_Point, Mid_Point)
+                Dimension, True_Value, DisPlay_Value = self.Create_Dim(new_offset, Start_Point, End_Point, Mid_Point, style)
 
                 return Dimension, True_Value, DisPlay_Value
 
             def _run_main(self, tuple_data):
                 """运行主方法"""
-                curve, coefficient = tuple_data
+                curve, coefficient, style = tuple_data
                 Dimension, True_Value, DisPlay_Value = [], [], []
                 if curve is None:  # 如果curve为空
                     return Dimension, True_Value, DisPlay_Value
@@ -4452,12 +4940,13 @@ try:
                     Close_UnifyCurve = UnifyCurve().unify_curve(curve, rg.Plane.WorldXY)[0]
                     Explode_Curves = Close_UnifyCurve.DuplicateSegments()  # 炸开线段
                     match_coefficient = self.match_list(Explode_Curves, [coefficient])[1]
-                    curve_zip_list = zip(Explode_Curves, match_coefficient)
+                    match_style = self.match_list(match_coefficient, [style])[1]
+                    curve_zip_list = zip(Explode_Curves, match_coefficient, match_style)
                     Dimension, True_Value, DisPlay_Value = zip(*map(self.Get_Curves_Dim, curve_zip_list))
                 else:
                     Explode_Curves = curve.DuplicateSegments()  # 炸开线段
                     if len(Explode_Curves) == 1:  # 炸开线只有一根的情况
-                        curve_zip_list = zip(Explode_Curves, [coefficient])
+                        curve_zip_list = zip(Explode_Curves, [coefficient], [style])
                         Dimension, True_Value, DisPlay_Value = zip(*map(self.Get_Curves_Dim, curve_zip_list))
                     else:
                         control_point = [cp.Location for cp in curve.ToNurbsCurve().Points]
@@ -4467,7 +4956,8 @@ try:
                         Explode_UnifyCurve = Close_UnifyCurve.DuplicateSegments()  # 炸开线段
                         New_Explode_Curves = self.compare_curves(Explode_Curves, Explode_UnifyCurve)
                         match_coefficient = self.match_list(New_Explode_Curves, [coefficient])[1]
-                        curve_zip_list = zip(New_Explode_Curves, match_coefficient)
+                        match_style = self.match_list(match_coefficient, [style])[1]
+                        curve_zip_list = zip(New_Explode_Curves, match_coefficient, match_style)
                         Dimension, True_Value, DisPlay_Value = zip(*map(self.Get_Curves_Dim, curve_zip_list))
 
                 return Dimension, True_Value, DisPlay_Value
@@ -4478,11 +4968,11 @@ try:
                 new_list_data = list(b_part_trunk)
                 new_list_data.insert(self.max_index, a_part_trunk)  # 将最长的数据插入到原列表中
 
-                match_curves, match_coefficient = new_list_data
+                match_curves, match_coefficient, match_style = new_list_data
 
-                curves, coefficient = self.match_list(match_curves, match_coefficient)
+                curves, coefficient, style = self.match_list(match_curves, match_coefficient, match_style)
 
-                zip_list = zip(curves, coefficient)
+                zip_list = zip(curves, coefficient, style)
                 Dimension, True_Value, DisPlay_Value = zip(*ghp.run(self._run_main, zip_list))
                 ungroup_data = map(lambda x: self.split_tree(x, origin_path), [Dimension, True_Value, DisPlay_Value])
                 Rhino.RhinoApp.Wait()
@@ -4526,21 +5016,12 @@ try:
                     sc.doc = Rhino.RhinoDoc.ActiveDoc
                     Dimension, True_Value, DisPlay_Value = (gd[object]() for _ in range(3))
 
-                    self.dimstyle = self.Find_DimStyle(Style)
-
                     re_mes = Message.RE_MES([Curves], ['Curves'])
                     if len(re_mes) > 0:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
                     else:
-                        Dimension, True_Value, DisPlay_Value = self.temp_by_match_tree(Curves, Coefficient)
-
-                    no_rendering_line = self.Branch_Route(Dimension)[0]
-                    self.dim = filter(None, list(chain(*no_rendering_line)))
-                    self.bbox = rg.BoundingBox.Empty  # 覆写zoom方法
-                    for _ in self.dim:
-                        if _:
-                            self.bbox.Union(_.GetBoundingBox(True))
+                        Dimension, True_Value, DisPlay_Value = self.temp_by_match_tree(Curves, Coefficient, Style)
 
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
@@ -4549,16 +5030,6 @@ try:
                     return Dimension, True_Value, DisPlay_Value
                 finally:
                     self.Message = 'Line length dimension'
-
-            def DrawViewportWires(self, args):
-                try:
-                    for sub_dim in self.dim:
-                        args.Display.DrawAnnotation(sub_dim, System.Drawing.Color.FromArgb(0, 150, 0))
-                except:
-                    pass
-
-            def get_ClippingBox(self):
-                return self.bbox
 
 
         # 连续标注
@@ -4595,7 +5066,7 @@ try:
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
                 self.SetUpParam(p, "Style", "S", "Dimension Style")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_Number()
@@ -4636,11 +5107,11 @@ try:
                         self.marshal.SetOutput(result[1], DA, 1, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAALnSURBVEhL7ZNfSFNRGMCv1eiPBdoM/8w/IWm0pswkRdtopmi1sJRlOtucK53KMGhFgVazpKmprIZajSCsfKkQQuyPFYlZ1z8ZBNVNpYceeqke0rCX4vR959zdNvKhh6AXf/Djft/ZOd85u/c73AIL/FMWgRHiE1kMysEgmjFWgTjuYwm4lIUSOH+Z+AwAFw+BYTTjOAX4BPQv0A8qWUgxgJ0slFgN9oEraeYHbjAK+jaIAcdB/w14MJmFFAt4k4USa8AXINYLIBh8DuIJkCgQC8poxsB/qGIhZT94g4USuB7rYL0AsNAw6NsZT/KMhRKDYCILKcXgNRZK4Hqsww6mUkaXt7vM/NkT+8YiI0Jmncf3jrtbrHydY88E5s1O46jbVca7YY4iKnTmUNX2V+5mC+9uO8AX7kqbViZGf3a3H+TbG00wp4zH9biuyWkcc50s4TnD7jQXIcOEkPtEp1US8vMOxGOEzN0iui2Qk0cg/v6U5GYlkZkPVyHmwQnysLeOVFpyIH4JDoIwD9bTOnTdPcKlqOKqvB6b4Gkpn4xVyOdaz5ROebtqBNepkumYKPn3zjbrO/z9isf2Zm1s2Lf6IwXvvR3VgveSXTAVaT6qk+K+er124fL5CgHn4Xqs09FqnfS0WAT6mkTw3eE7x95HokH8yP5dhF22kYUUE9jDQgnsQvzIf3QRXpoR0Ne/kSBOxHGu1rbDXmzQEH2O+iLmIngPulkoEQriQVfQzEf+zs212brkH0UFGQ3iEN5q7AZ6c63GrZaB/tOzh2v0TZgDstSU+IF18eGfjEZNvDiG4MmxnfE2/6bSnF0/MtRKHHb9BXEoAXwN4ol8hItPZDl0zpfe6w6izVifKY5xMplMDY8pEC9qAEEhwTK8pbR/y0t13Y1OE7GVbWvDfD7S0xM26PNSdWJKOVqbf7fLU02KCzPPiUPzU2PNrXjQ1/DWbNDge/5rbOaskts9xx7r8zZpxaEF/isc9wsmoAFASCWSkAAAAABJRU5ErkJggg=="
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAJkSURBVEhL7dRdSNNhFMfxkzYca2DbINPShYMWURpJZJlFodCkdBcatAoqqY0iNGItsJdBFDEryFUYtFlEBUokiFYrRiC9XFiK2EVXRa9008Wgujz9zuG/i4Zsu6iLwAPfi8+zZzx/2LM/zczM/NUpRDvQPuSQBcwWJK5UETWjCGpSEdUh8S4V0Qok9qsyxox+IUY1soAZR+KdKqLrSBxVER1F4kcqot1I/Fo1zXxEsmGRiugJEntUROeQ+JSKaC8S31YRbUXi9IE6btSGfOg7kg1BY+2N4YuGhw0PGo4bfmH4kuEpwxKdiPX4OXG/ix12q3zIV8+3cyJxhquWVqi7jnjhbvY2rVJv89bCF/hAe6O6vtYNR/hYZ4u6epkTPs23eg+KKfjt7TVmfsgLy+y64f1EFH7ODRuWq0f6Q/A4hzqa1eFQKzzJsahf7Wutg1/x0N2gunFjFTzKqQ99Yjo5ljzLqU83uLRkrm4YHQlzKnWP1612q/uuBOBhDuxpUHcGPPADjoR96hZPDTzEsZ796vo1S+ABnnrWLSZP+QJHvNI572ZBwawfsqGsxDbocpXGTabCr2K7zZoUWyxF+ptYLeZJcXGx5aXYbDa9E9ttc56KTabZX1yu+fGKcof8Rn9M5i16jMSbVUSXkVjuukxetyg9Regzkg3VsoDRJ0J6GzCbkNyw9SqiQ0g+H1ARbUfipCpj8jkgczL/aFkPkH/yTyQbVsoCJtcB8iAdKP3qyHqACfWifuSUBUyuAzIn6wHTzf9/wASSL6Tfprkm/TYdU+Ux8uSH0WJV7lmL7qDjqn8/RL8Bi34VSvKRl1kAAAAASUVORK5CYII="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
-                self.Head_tail, self.dimstyle, self.Dihedral, self.bbox = (None for i in range(4))
+                self.Head_tail, self.Dihedral = (None for i in range(2))
 
             def Branch_Route(self, Tree):
                 """分解Tree操作，树形以及多进程框架代码"""
@@ -4761,21 +5232,24 @@ try:
                     Mid_Point = Offset_Line.PointAt(t)  # 根据t值求中心点
                 return Mid_Point
 
-            def Create_Dim(self, Plane, Start_Point, End_Point, Dim_Point):
+            def Create_Dim(self, Plane, Start_Point, End_Point, Dim_Point, dimstyle):
                 """创建标注"""
                 ann_type = rg.AnnotationType.Rotated  # 标注类型
-                Dimension = rg.LinearDimension.Create(ann_type, self.dimstyle, Plane, Plane.XAxis, Start_Point, End_Point,
+                Dimension = rg.LinearDimension.Create(ann_type, dimstyle, Plane, Plane.XAxis, Start_Point, End_Point,
                                                       Dim_Point, 0)
 
                 True_Value = Dimension.NumericValue  # 真实值
 
+                Dimension = initialization.HAE_LinearDim(Dimension)  # 调用自定义类
                 return Dimension, True_Value
 
             def _run_main(self, tuple_data):
                 """运行主方法"""
-                One_Point, Other_Point, Baseline, coefficient, BasePlane = tuple_data
+                One_Point, Other_Point, Baseline, coefficient, BasePlane, Style = tuple_data
                 Dim_Point = self.Offset_Line_Pt(Baseline, coefficient, BasePlane)  # 线偏移
-                Dimension, True_Value = self.Create_Dim(BasePlane, One_Point, Other_Point, Dim_Point)  # 创建标注
+                dimstyle = self.Find_DimStyle(Style)
+                Dimension, True_Value = self.Create_Dim(BasePlane, One_Point, Other_Point, Dim_Point, dimstyle)  # 创建标注
+
                 return Dimension, True_Value
 
             def _do_main(self, tuple_data):
@@ -4784,7 +5258,7 @@ try:
                 new_list_data = list(b_part_trunk)
                 new_list_data.insert(self.max_index, a_part_trunk)  # 将最长的数据插入到原列表中
 
-                match_Points, match_Baseline, match_coefficient = new_list_data
+                match_Points, match_Baseline, match_coefficient, match_style = new_list_data
                 Ref_Plane = ghc.Line_Pt(match_Baseline[0], rg.Point3d(0, 0, 0)) if match_Baseline[
                                                                                        0] is not None else rg.Plane.WorldXY  # 根据基线得到参考向量
 
@@ -4796,20 +5270,21 @@ try:
                     Points_1_List = Sort_Points[1:]  # 去除首尾两端点
                     Points_2_List = Sort_Points[:-1]
 
-                    Points, Baseline, coefficient, BasePlane = self.match_list(Points_1_List, match_Baseline, match_coefficient,
-                                                                               [Ref_Plane])  # 匹配列表数据
+                    Points, Baseline, coefficient, BasePlane, Style = self.match_list(Points_1_List, match_Baseline, match_coefficient,
+                                                                                      [Ref_Plane], match_style)  # 匹配列表数据
 
-                    zip_list = zip(Points_2_List, Points_1_List, Baseline, coefficient, BasePlane)
+                    zip_list = zip(Points_2_List, Points_1_List, Baseline, coefficient, BasePlane, Style)
                     Dimension, True_Value = zip(*map(self._run_main, zip_list))
 
                     if self.Head_tail:  # 是否包含首尾标注
+                        dimstyle = self.Find_DimStyle(Style[0])
                         Start_Point = Sort_Points[0]  # 起始点
                         End_Point = Sort_Points[-1]  # 结束点
-                        DimensionScale = self.dimstyle.DimensionScale * 3  # 查找标注样式的比例
+                        DimensionScale = dimstyle.DimensionScale * 3  # 查找标注样式的比例
                         Two_coefficient = coefficient[0] * 2 + DimensionScale if coefficient[0] else 2 + DimensionScale  # 设置二次偏移的系数点
                         vector = ghc.Amplitude(ghc.Vector2Pt(Start_Point, BasePlane[0], False)['vector'], Two_coefficient)
                         Head_tail_Dim_Point = ghc.CurveMiddle(ghc.Move(Baseline[0], vector)['geometry'])
-                        Other_Dimension, Other_True_Value = self.Create_Dim(BasePlane[0], Start_Point, End_Point, Head_tail_Dim_Point)
+                        Other_Dimension, Other_True_Value = self.Create_Dim(BasePlane[0], Start_Point, End_Point, Head_tail_Dim_Point, dimstyle)
                         Dimension, True_Value = list(Dimension), list(True_Value)
                         Dimension.append(Other_Dimension)
                         True_Value.append(Other_True_Value)
@@ -4856,7 +5331,6 @@ try:
 
                     Dimension, True_Value = (gd[object]() for _ in range(2))
 
-                    self.dimstyle = self.Find_DimStyle(Style)
                     self.Head_tail = Head_tail
 
                     re_mes = Message.RE_MES([Point_list, Baseline], ['Points', 'Baseline'])
@@ -4864,14 +5338,7 @@ try:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
                     else:
-                        Dimension, True_Value = self.temp_by_match_tree(Point_list, Baseline, Coefficient)
-
-                    no_rendering_line = self.Branch_Route(Dimension)[0]
-                    self.dim = filter(None, list(chain(*no_rendering_line)))
-                    self.bbox = rg.BoundingBox.Empty  # 覆写zoom方法
-                    for _ in self.dim:
-                        if _:
-                            self.bbox.Union(_.GetBoundingBox(True))
+                        Dimension, True_Value = self.temp_by_match_tree(Point_list, Baseline, Coefficient, Style)
 
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
@@ -4880,16 +5347,6 @@ try:
                     return Dimension, True_Value
                 finally:
                     self.Message = 'Continuous dimension'
-
-            def DrawViewportWires(self, args):
-                try:
-                    for sub_dim in self.dim:
-                        args.Display.DrawAnnotation(sub_dim, System.Drawing.Color.FromArgb(0, 150, 0))
-                except:
-                    pass
-
-            def get_ClippingBox(self):
-                return self.bbox
 
 
         # 弧长标注
@@ -4926,7 +5383,7 @@ try:
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
                 self.SetUpParam(p, "Style", "S", "Dimension Style")
-                p.Access = Grasshopper.Kernel.GH_ParamAccess.item
+                p.Access = Grasshopper.Kernel.GH_ParamAccess.tree
                 self.Params.Input.Add(p)
 
                 p = Grasshopper.Kernel.Parameters.Param_String()
@@ -4963,7 +5420,7 @@ try:
                         self.marshal.SetOutput(result[2], DA, 2, True)
 
             def get_Internal_Icon_24x24(self):
-                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAALqSURBVEhLzdV/TIxxHAfwU13nRBcSsVo/SES2EJU2FWvsqK7S2FrRJub6Zf2QfmjNzao127UoU8qOSiOUEkWls8ZKbJa0Fv1T6Y+M5jaWj/fnjoRG7PnDe3tt3x/3PPd8v8/3+31E/0NOg7+hKGzWwy44Dk3gDIJlGWyHJ6CBQ2APgiQSagxFUTAoDEV9rMEbuC0EfMEOZhQjMAYZJEARcGZDBFyCaiiELMiAfOD2KkgES5g2LsAX8MWLwQH2Ao/gDuSCI3yLBOaDVF8TiaxACXchjht+zn5IgT3AU8Q5Bg1gw5WFMjOfBKVcU16s7G+uzdB1NKnoXl2mTlMS25cYH1BiLpW642c8eh75ZRDDD0mDs8BTchIuAscpM1nR0v/8DBHdh3p6N3iBBrrVNNJbTKS7hrYmet1bRFkpwfxASyEGymABTIbfgQmEQh03zJFI/CtL48aJWmn8jYYK86N6QgI9VNbWskB0exkbG2/z9nA+kpYYdKtLm4c/aqMr5UfHzMzEa9FftsTKYpTvMzVzQQs8v65VpTEfiB5SU23mZ88NK5LQ9suwp2RrQd6BAaJ2ulmRPIa6Kv7wzreGru/hm/DGEqXG737ET9TWkE0yqSm/7JnEVp0TMUikpRJ1dCvqvFAmMwtugIW9/aLQ4b5zND5aSe5uDif0vTPPpvbGbOpsOUUmJka8UCbDS7OSC6kJAfX89IW5kQOo/m5apo2zo7XSZZVt+NfqZPhAywNJbUXSMH2qox1+63hDCRZePalg9/RB7sTIiyLCKvHT9wgUOfB8rx7oLqCejnxCmU9UwcJrl3ehfRde0Nir82RpMY//VLCYwlWwqSyJGyJqpDCFh1rfI2D4dAxKUsrVfCyUF0QPoW6u7xEoy4H3wppn2hzdx/c15Onu9Lf74I/hlVTl5mr3mCZuU/P1dBKL9WeLYPHdF+JFCvnG6riD/s2q9LBOiUQi2OeSYxQV7qPYsnnlS5RjgT8u/xiR6AsyOQOkKw3ikwAAAABJRU5ErkJggg=="
+                o = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAALJSURBVEhLxZRbSFRRFIZnyBSKiCjKnqpRo+yh8lZhmPUigQ9aRNhLGRRZkiJihD5GhI9iUGGmNeM4zuSoGRZCGOFbkFj0UnQhCRod81pzPX//2mdmGhs0aib64ePsfc4+6z97rXW24X/rADHpw3+j08RO1qhZAnWUZJC1pILUhMYJ0U5SRe6SE6SBbCIrSFxKIZnkFCkksotikkuMoWstaSE9IW6RapJHltQ2cpacJyfJBSIm+0LzUYLk5CSkm1KRl52OXGLasgFJScsgz8gIkXQuJzGSwKX60FBGsokEHyAo3J+JtpuVeDfaDN+4BZizK7wuC96MNKHlegUK8reHjV6QfLJA4lpHdpMSIgXuY17Q1FgOBHoB9APzDuBrJzBp1ZGx3JNnXiecnXVI27xeTAKknCyQFPEKkS+XPMPWWsWXH6lAwYmOJVGGNHKPteNYyV4YjUYxkjaP0RGCq/XHVXAtKkiA6RHCOwjfCz8XZLf93EkK68U4PhUxSsnkfc4uE/C9G5iy/XxZAjMN8Peoud9l0eDhmmCfMlNGbl5n7SguypLgr0mBBI2WFBgDXZcA7QGDRgX39SAwaX3idXWUeT7fy/SMtW/1u62Hg1O2Vm26i0VnLaZtatcvhxvbGGeViviL+jPSNiIoxQvlXaXE34uA2zoYWhMj/7i1MDDTNR2cc3gDE5aY4oa1krgqzxSpYoVTo03SaMbu9Xxqlc5aVPMfW3I0V4d04aLaQXCn+ZyenpCBSs0X85C+JD7Jn4vHjssqJREDSC0sTfqS+HSIYNBZH+mUiIE7MQZZBJ23L6rWixiwNQMu8zN9SXyS8362obaUX/0wYqCxt/HtPnwuc0xP/42G9+Sk6z+Pz6n3P8eap3va7zLL0R23auQMcbRV4/nTa9zJoJyaQ9pvWvRPtI5MEaSuX423r27I4Zdw1ZMP5KCaxSWD4Qf7rzA0rZoIlAAAAABJRU5ErkJggg=="
                 return System.Drawing.Bitmap(System.IO.MemoryStream(System.Convert.FromBase64String(o)))
 
             def __init__(self):
@@ -5041,17 +5498,19 @@ try:
 
             def Create_Dim(self, tuple):
                 """创建标注"""
-                Arc, Coefficient, OverWrite = tuple
+                Arc, Coefficient, OverWrite, Style = tuple
                 if Arc is not None:
+                    dimstyle = self.Find_DimStyle(Style)
                     Length = Arc.Length
                     ArcDim = rg.AngularDimension(Arc, Coefficient)
-                    ArcDim.DimensionStyleId = self.dimstyle.Id
+                    ArcDim.DimensionStyleId = dimstyle.Id
                     if OverWrite is None:
                         ArcDim.RichText = str(round(Length, 2))
                     else:
                         ArcDim.RichText = OverWrite
                     True_Value = Length
                     DisPlay_Value = ArcDim.PlainUserText
+                    ArcDim = initialization.HAE_AngularDim(ArcDim)  # 调用自定义类
                 else:
                     ArcDim, True_Value, DisPlay_Value = None, None, None
                 return ArcDim, True_Value, DisPlay_Value
@@ -5060,16 +5519,16 @@ try:
                 a_part_trunk, b_part_trunk, origin_path = tuple_data
                 new_list_data = list(b_part_trunk)
                 new_list_data.insert(self.max_index, a_part_trunk)  # 将最长的数据插入到原列表中
-                match_Arc, match_Coefficient, match_OverWrite = new_list_data
+                match_Arc, match_Coefficient, match_OverWrite, match_Style = new_list_data
 
-                Arc, Coefficient, OverWrite = self.match_list(match_Arc, match_Coefficient, match_OverWrite)  # 将数据二次匹配列表里面的数据
+                Arc, Coefficient, OverWrite, Style = self.match_list(match_Arc, match_Coefficient, match_OverWrite, match_Style)  # 将数据二次匹配列表里面的数据
 
-                zip_list = zip(Arc, Coefficient, OverWrite)
+                zip_list = zip(Arc, Coefficient, OverWrite, Style)
                 zip_ungroup_data = ghp.run(self.Create_Dim, zip_list)  # 传入获取主方法中
 
-                dim, True_Value, DisPlay_Value = zip(*zip_ungroup_data)
+                Dim, True_Value, DisPlay_Value = zip(*zip_ungroup_data)
 
-                ungroup_data = map(lambda x: self.split_tree(x, origin_path), [dim, True_Value, DisPlay_Value])
+                ungroup_data = map(lambda x: self.split_tree(x, origin_path), [Dim, True_Value, DisPlay_Value])
 
                 Rhino.RhinoApp.Wait()
                 return ungroup_data
@@ -5111,20 +5570,14 @@ try:
                 try:
                     Dim, True_Value, DisPlay_Value = (gd[object]() for i in range(3))
                     sc.doc = Rhino.RhinoDoc.ActiveDoc
-                    self.dimstyle = self.Find_DimStyle(str(Style))
+                    # self.dimstyle = self.Find_DimStyle(str(Style))
 
                     re_mes = Message.RE_MES([Arc], ['Arc'])
                     if len(re_mes) > 0:
                         for mes_i in re_mes:
                             Message.message2(self, mes_i)
                     else:
-                        Dim, True_Value, DisPlay_Value = self.temp_by_match_tree(Arc, Coefficient, OverWrite)
-                        no_rendering_line = self.Branch_Route(Dim)[0]
-                        self.dim = filter(None, list(chain(*no_rendering_line)))
-                        self.bbox = rg.BoundingBox.Empty  # 覆写zoom方法
-                        for _ in self.dim:
-                            if _:
-                                self.bbox.Union(_.GetBoundingBox(True))
+                        Dim, True_Value, DisPlay_Value = self.temp_by_match_tree(Arc, Coefficient, OverWrite, Style)
 
                     sc.doc.Views.Redraw()
                     ghdoc = GhPython.DocReplacement.GrasshopperDocument()
@@ -5134,16 +5587,6 @@ try:
 
                 finally:
                     self.Message = 'Arc length dimension'
-
-            def DrawViewportWires(self, args):
-                try:
-                    for sub_dim in self.dim:
-                        args.Display.DrawAnnotation(sub_dim, System.Drawing.Color.FromArgb(0, 150, 0))
-                except:
-                    pass
-
-            def get_ClippingBox(self):
-                return self.bbox
 
 
     else:
